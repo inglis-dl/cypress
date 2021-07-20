@@ -4,6 +4,9 @@
 #include <QDebug>
 #include <QMetaEnum>
 #include <QBitArray>
+#include <QDateTime>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtBluetooth/QBluetoothDeviceInfo>
@@ -20,12 +23,13 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui->scanButton->setEnabled(false);
+    ui->clearButton->setEnabled(false);
     ui->connectButton->setEnabled(false);
+    ui->saveButton->setEnabled(false);
 
     readSettings();
 
-    QString s( "test" );
-    ui->listWidget->addItem(s);
+    ui->iDlineEdit->setText("30000001"); // dummy ID for now
 
     // verify that the stored local host (client) is the one saved in settings
     // if client is nullptr, find and assign the first local adapter
@@ -40,12 +44,6 @@ MainWindow::MainWindow(QWidget *parent)
          qDebug() << "added local adapter from list";
        }
     }
-    QList<QBluetoothAddress> devices = client->connectedDevices();
-    if(devices.empty()) {
-        qDebug() << "client has no connected devices";
-    } else {
-        qDebug() << "client has " << QString::number(devices.count()) << " devices";
-    }
 
     agent = new QBluetoothDeviceDiscoveryAgent(this);
 
@@ -56,6 +54,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(agent, &QBluetoothDeviceDiscoveryAgent::finished,
             this, &MainWindow::deviceDiscoveryComplete);
     agent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+
+    connect(ui->saveButton,&QPushButton::clicked, this, &MainWindow::writeMeasurement);
 
 }
 
@@ -78,7 +78,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::readSettings()
 {
-   QSettings settings("/home/dean/Documents/repository/pine_plus/bt.ini",QSettings::IniFormat);
+   QSettings settings(this->appDir.filePath("bt.ini"),QSettings::IniFormat);
    QString address = settings.value("client/address").toString();
    if(!address.isEmpty()) {
      client = new QBluetoothLocalDevice(QBluetoothAddress(address));
@@ -117,7 +117,6 @@ void MainWindow::readSettings()
 
    address = settings.value("peripheral/address").toString();
    if(!address.isEmpty()) {
-     //client = new QBluetoothLocalDevice(QBluetoothAddress(address));
      qDebug() << "constructed peripheral from settings file";
    }
 
@@ -125,7 +124,7 @@ void MainWindow::readSettings()
 
 void MainWindow::writeSettings()
 {
-   QSettings settings("/home/dean/Documents/repository/pine_plus/bt.ini",QSettings::IniFormat);
+   QSettings settings(this->appDir.filePath("bt.ini"),QSettings::IniFormat);
    if(nullptr!=client) {
      settings.setValue("client/name",client->name());
      settings.setValue("client/address",client->address().toString());
@@ -202,10 +201,6 @@ void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
                     agent->metaObject()->indexOfEnumerator("Error"));
         qDebug() << "Error: " << QLatin1String(qme.valueToKey(error));
     }
-
-//    m_deviceScanState = false;
-//    emit devicesUpdated();
-//    emit stateChanged();
 }
 
 void MainWindow::deviceDisconnected()
@@ -476,6 +471,13 @@ measurement
    time_str << h_value_str << j_value_str << s_value_str;
 
    qDebug() << t_value_str << t_format_str << " (" << t_type_str << ") " << date_str.join("-") << " " << time_str.join(":");
+   measurement.clear();
+   measurement.insert("Temperature", QVariant(t_value));
+   measurement.insert("Format", QVariant(t_format_str));
+   measurement.insert("Type", QVariant(t_type_str));
+   measurement.insert("DateTime",QVariant(QDateTime(QDate(y_value,m_value,d_value),QTime(h_value,j_value,s_value))));
+
+   ui->saveButton->setEnabled(true);
 }
 
 void MainWindow::serviceScanError(QLowEnergyController::Error error)
@@ -504,6 +506,31 @@ void MainWindow::serviceScanError(QLowEnergyController::Error error)
                     agent->metaObject()->indexOfEnumerator("Error"));
         qDebug() << "Error: " << QLatin1String(qme.valueToKey(error));
     }
+}
+
+void MainWindow::writeMeasurement()
+{
+   qDebug() << "begin write process ... ";
+
+   QJsonObject json;
+   QMap<QString,QVariant>::const_iterator it = measurement.constBegin();
+   while(it != measurement.constEnd()) {
+     json.insert(it.key(),QJsonValue::fromVariant(it.value()));
+     ++it;
+   }
+   // insert pariticpant barcode
+   QString barcode = ui->iDlineEdit->text().simplified().remove(" ");
+   json.insert("Barcode",QJsonValue(barcode));
+   // the output will be of the form <participant ID>_<now>_<devicename>.json
+   QStringList jsonFile;
+   jsonFile << barcode;
+   jsonFile << QDate().currentDate().toString("yyyyMMdd");
+   jsonFile << "bt_masimo.json";
+   QFile saveFile( this->appDir.filePath( jsonFile.join("_") ) );
+   saveFile.open(QIODevice::WriteOnly);
+   saveFile.write(QJsonDocument(json).toJson());
+
+   qDebug() << "wrote to file " << this->appDir.filePath( jsonFile.join("_") );
 }
 
 

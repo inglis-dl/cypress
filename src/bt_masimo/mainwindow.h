@@ -5,6 +5,7 @@
 #include <QCloseEvent>
 #include <QtBluetooth/QBluetoothDeviceDiscoveryAgent>
 #include <QtBluetooth/QLowEnergyController>
+#include <QDir>
 
 QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceInfo)
 QT_FORWARD_DECLARE_CLASS(QBluetoothLocalDevice)
@@ -29,9 +30,14 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+    void setApplicationDir(QString path) {
+        this->appDir = QDir(path);
+    }
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -51,6 +57,8 @@ private slots:
     void updateTemperatureValue(const QLowEnergyCharacteristic &c, const QByteArray& a);
     void confirmedDescriptorWrite(const QLowEnergyDescriptor& d, const QByteArray& a);
 
+    void writeMeasurement();
+
 private:
     Ui::MainWindow *ui;
 
@@ -62,5 +70,7 @@ private:
     void writeSettings();
 
     bool foundThermometer = false;
+    QDir appDir;
+    QMap<QString,QVariant> measurement;
 };
 #endif // MAINWINDOW_H
