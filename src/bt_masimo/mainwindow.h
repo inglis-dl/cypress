@@ -92,7 +92,9 @@ private:
     void writeSettings();
 
     bool foundThermometer = false;
+    bool foundDeviceInfo = false;
     QDir appDir;
     QMap<QString,QVariant> measurement;
+    QString peripheralMAC;
 };
 #endif // MAINWINDOW_H

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+
 #include <QSettings>
 #include <QDebug>
 #include <QMetaEnum>
@@ -11,11 +12,6 @@
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtBluetooth/QLowEnergyController>
-
-// TODO have the user enter the mac address of the thermometer found on the label on
-// the underside of the device
-//
-const QString peripheralMAC = "C0:26:DA:13:B0:DF";
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -45,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
        }
     }
 
+    // TODO: only do this if the peripheral MAC is not found ?
     agent = new QBluetoothDeviceDiscoveryAgent(this);
 
     connect(agent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
@@ -117,7 +114,9 @@ void MainWindow::readSettings()
 
    address = settings.value("peripheral/address").toString();
    if(!address.isEmpty()) {
-     qDebug() << "constructed peripheral from settings file";
+     peripheralMAC = address;
+     qDebug() << "using peripheral MAC  " << peripheralMAC << " from settings file";
+     ui->addressLineEdit->setText(peripheralMAC);
    }
 
 }
@@ -154,6 +153,7 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo &info)
         qDebug() << "Found target peripheal with MAC " << info.address().toString() << " ... stopping scan";
         agent->stop();
         peripheral = new QBluetoothDeviceInfo(info);
+
         controller = QLowEnergyController::createCentral(*peripheral);
 
         connect(controller, &QLowEnergyController::connected,
@@ -225,6 +225,11 @@ void MainWindow::serviceDiscovered(const QBluetoothUuid &serviceUuid)
       qDebug() << "discovered the health thermometer service";
       foundThermometer = true;
   }
+  else if(serviceUuid == QBluetoothUuid(QBluetoothUuid::DeviceInformation))
+  {
+     qDebug() << "discovered the device information service";
+     foundDeviceInfo = true;
+  }
 }
 
 void MainWindow::serviceDiscoveryComplete()
@@ -238,11 +243,12 @@ void MainWindow::serviceDiscoveryComplete()
       return;
   }
 
-  QLowEnergyService *service = controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::HealthThermometer));
+  QLowEnergyService *service = controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::HealthThermometer), controller);
   if (!service) {
       qDebug() << "Cannot create service for thermometer";
       return;
   }
+  qDebug() << "Heatlh Thermometer " << (QLowEnergyService::PrimaryService == service->type() ? "Primary" : "Included") << " service type";
 
   connect(service, &QLowEnergyService::stateChanged, this, &MainWindow::serviceDetailsState);
 
@@ -251,6 +257,22 @@ void MainWindow::serviceDiscoveryComplete()
   connect(service, &QLowEnergyService::descriptorWritten, this, &MainWindow::confirmedDescriptorWrite);
 
   service->discoverDetails();
+
+  // get the device information
+  if(!foundDeviceInfo)
+  {
+      qDebug() << "error: did not discover the device information service";
+      return;
+  }
+  QLowEnergyService *d_service = controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::DeviceInformation), controller);
+  if (!d_service) {
+      qDebug() << "Cannot create service for thermometer device informatoin";
+      return;
+  }
+  qDebug() << "Device Information " <<  (QLowEnergyService::PrimaryService == d_service->type() ? "Primary" : "Included") << " service type";
+  connect(d_service, &QLowEnergyService::stateChanged, this, &MainWindow::serviceDetailsState);
+  d_service->discoverDetails();
+
 }
 
 void MainWindow::confirmedDescriptorWrite(const QLowEnergyDescriptor& d, const QByteArray& a)
@@ -270,6 +292,16 @@ void MainWindow::confirmedDescriptorWrite(const QLowEnergyDescriptor& d, const Q
 
 void MainWindow::serviceDetailsState(QLowEnergyService::ServiceState newState)
 {
+    if(QLowEnergyService::InvalidService == newState)
+      qDebug() << "new state : " << "invalid service";
+    if(QLowEnergyService::DiscoveryRequired == newState)
+      qDebug() << "new state : " << "discovery required";
+    if(QLowEnergyService::DiscoveringServices == newState)
+      qDebug() << "new state : " << "discovering services";
+    if(QLowEnergyService::ServiceDiscovered == newState)
+      qDebug() << "new state : " << "service discovered";
+    if(QLowEnergyService::LocalService == newState)
+      qDebug() << "new state : " << "local service";
     if (newState != QLowEnergyService::ServiceDiscovered) {
 /*
         // do not hang in "Scanning for characteristics" mode forever
@@ -284,74 +316,67 @@ void MainWindow::serviceDetailsState(QLowEnergyService::ServiceState newState)
         return;
     }
 
+
     auto service = qobject_cast<QLowEnergyService *>(sender());
     if (!service)
     {
         qDebug() << "error: failed to create LE service from sender";
         return;
     }
-    const QLowEnergyCharacteristic tempChar = service->characteristic(QBluetoothUuid(QBluetoothUuid::TemperatureMeasurement));
-    if (!tempChar.isValid())
+
+    qDebug() << "service details discovered for " << service->serviceName();
+    if("Health Thermometer" == service->serviceName() )
     {
-        qDebug() << "Temperature measurement data not found.";
+        /*
+      if(QLowEnergyService::InvalidService == service->state())
+        qDebug() << "state : " << "invalid service";
+      if(QLowEnergyService::DiscoveryRequired == service->state())
+        qDebug() << "state : " << "discovery required";
+      if(QLowEnergyService::DiscoveringServices == service->state())
+        qDebug() << "state : " << "discovering services";
+      if(QLowEnergyService::ServiceDiscovered == service->state())
+        qDebug() << "state : " << "service discovered";
+      if(QLowEnergyService::LocalService == service->state())
+        qDebug() << "state : " << "local service";
+      */
+      const QLowEnergyCharacteristic tempChar = service->characteristic(QBluetoothUuid(QBluetoothUuid::TemperatureMeasurement));
+      if (!tempChar.isValid())
+      {
+        qDebug() << "Temperature characteristic invalid.";
         return;
-    }
+      }
 
-    QLowEnergyDescriptor desc = tempChar.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
-    if (desc.isValid())
+      QLowEnergyDescriptor desc = tempChar.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
+      if (desc.isValid())
+      {
+          qDebug() << "LE CCC descriptor found ... writing";
+          service->writeDescriptor(desc, QByteArray::fromHex("0100"));
+      }
+    }
+    else if("Device Information" == service->serviceName())
     {
-        qDebug() << "LE descriptor found ... writing";
-        service->writeDescriptor(desc, QByteArray::fromHex("0100"));
+       qDebug() << "reading the device information";
+       const QList<QLowEnergyCharacteristic> chars = service->characteristics();
+       for (const QLowEnergyCharacteristic &ch : chars) {
+           qDebug() << "characteristic: " << ch.name() << (ch.isValid()? " valid ":" invalid ") << ", uuid: "<< BLEInfo::uuidToString(ch.uuid())<< " handle: " << BLEInfo::handleToString(ch.handle());
+           qDebug() << "permissions: " << BLEInfo::permissionToString(ch);
+           qDebug() << "contains " << QString::number(ch.descriptors().count()) << " descriptors";
+           qDebug() << "value: " << BLEInfo::valueToString(ch.value()) << " " << QString::number(ch.value().size()) << " bytes";
+
+           // following are optional characteristics that are observed by the masimo thermometer
+           // Firmware Revision String
+           // Software Revision String
+           // PnP ID
+           // "The PnP_ID characteristic is a set of values that used to create a device ID value that is unique for this device.
+           // Included in the characteristic is a Vendor ID Source field, a Vendor ID field, a Product ID field and a Product Version field.
+           // These values are used to identify all devices of a given type/model/version using numbers."
+           // Vendor ID Source uint8 key =1 => "Bluetooth SIG assigned Company Identifier value from the Assigned Numbers document"
+           // key = 2 => "USB Implementer’s Forum assigned Vendor ID value"
+           // Vendor ID uint16  LSO to MSO
+           // Product ID unit16 LSO to MSO
+           // Product Version uint16 LSO to MSO
+       }
     }
-/*
-    const QList<QLowEnergyCharacteristic> chars = service->characteristics();
-    for (const QLowEnergyCharacteristic &ch : chars) {
-        qDebug() << "characteristic: " << ch.name() << (ch.isValid()? " valid ":" invalid ") << ", uuid: "<< BLEInfo::uuidToString(ch.uuid())<< " handle: " << BLEInfo::handleToString(ch.handle());
-        qDebug() << "permissions: " << BLEInfo::permissionToString(ch);
-        qDebug() << "contains " << QString::number(ch.descriptors().count()) << " descriptors";
-        qDebug() << "value: " << BLEInfo::valueToString(ch.value()) << " " << QString::number(ch.value().size()) << " bytes";
-
-        if(ch.descriptors().count()>0)
-        {
-          QList<QLowEnergyDescriptor> descs = ch.descriptors();
-          QLowEnergyDescriptor des = descs.at(0);
-          qDebug() << "descriptor : " <<  des.name() << (des.isValid()? " valid ":" invalid ") << ", uuid: " << BLEInfo::uuidToString(des.uuid()) << " handle: " << BLEInfo::handleToString(des.handle());
-          qDebug() << "value: " << BLEInfo::valueToString(des.value()) << " " << QString::number(des.value().size()) << " bytes";
-        }
-
-        // NOTE that desc.name() and QBluetoothUuid::descriptorToString(des.type()) produce the same result
-        //
-    }
-*/
-
-
-    /*
-
-    switch (newState) {
-    case QLowEnergyService::DiscoveringServices:
-        qDebug() << "Discovering services...";
-        break;
-    case QLowEnergyService::ServiceDiscovered:
-    {
-        setInfo(tr("Service discovered."));
-
-        const QLowEnergyCharacteristic hrChar = m_service->characteristic(QBluetoothUuid(QBluetoothUuid::HeartRateMeasurement));
-        if (!hrChar.isValid()) {
-            setError("HR Data not found.");
-            break;
-        }
-
-        m_notificationDesc = hrChar.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
-        if (m_notificationDesc.isValid())
-            m_service->writeDescriptor(m_notificationDesc, QByteArray::fromHex("0100"));
-
-        break;
-    }
-    default:
-        //nothing for now
-        break;
-    }
-    */
 }
 
 void MainWindow::updateTemperatureValue(const QLowEnergyCharacteristic &c, const QByteArray& a)
