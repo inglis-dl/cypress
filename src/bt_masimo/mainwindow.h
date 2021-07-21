@@ -43,20 +43,39 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
+
+    // QBluetoothDeviceDiscoveryAgent signal receptors
+    //
+    // The agent searches for paired devices cached by the OS's BT local device
+    // If the BT thermometer (peripheral) was previously paired to the client
+    // create and activate a QLowEnergyController to negotiate communication
+    //
     void deviceDiscovered(const QBluetoothDeviceInfo &info);
     void deviceDiscoveryComplete();
     void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error);
 
+    // QLowEnergyController signal receptors
+    //
+    // The controller searches available services offered by the peripheral
+    // If the Health Thermometer service is discovered, the controller
+    // creates a QLowEnergyService to write and read temperature data
+    //
     void serviceDiscovered(const QBluetoothUuid &service);
     void serviceDiscoveryComplete();
     void serviceScanError(QLowEnergyController::Error error);
     void deviceDisconnected();
     void discoverServices();
-    void serviceDetailsState(QLowEnergyService::ServiceState newState);
 
+    // QLowEnergyService signal receptors
+    //
+    // The service negotiates the temperature data request from the peripheral
+    //
+    void serviceDetailsState(QLowEnergyService::ServiceState newState);
     void updateTemperatureValue(const QLowEnergyCharacteristic &c, const QByteArray& a);
     void confirmedDescriptorWrite(const QLowEnergyDescriptor& d, const QByteArray& a);
 
+    // Write the measurement data (temperature, datetime, barcode, device) in json formal to file
+    //
     void writeMeasurement();
 
 private:
@@ -66,6 +85,9 @@ private:
     QBluetoothLocalDevice *client = nullptr;
     QBluetoothDeviceDiscoveryAgent *agent = nullptr;
     QLowEnergyController *controller = nullptr;
+
+    // Read and wrtie storage for client and peripheral addresses in .ini file
+    //
     void readSettings();
     void writeSettings();
 
