@@ -51,7 +51,6 @@ private slots:
     // create and activate a QLowEnergyController to negotiate communication
     //
     void deviceDiscovered(const QBluetoothDeviceInfo &info);
-    void deviceDiscoveryComplete();
     void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error);
 
     // QLowEnergyController signal receptors
@@ -63,7 +62,6 @@ private slots:
     void serviceDiscovered(const QBluetoothUuid &service);
     void serviceDiscoveryComplete();
     void serviceScanError(QLowEnergyController::Error error);
-    void deviceDisconnected();
     void discoverServices();
 
     // QLowEnergyService signal receptors
@@ -95,6 +93,7 @@ private:
     bool foundDeviceInfo = false;
     QDir appDir;
     QMap<QString,QVariant> measurement;
+    QMap<QString,QVariant> device;
     QString peripheralMAC;
 };
 #endif // MAINWINDOW_H
