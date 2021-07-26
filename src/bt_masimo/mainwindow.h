@@ -14,8 +14,6 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-extern const QString peripheralMAC;
-
 class BLEInfo : public QObject
 {
     Q_OBJECT
@@ -36,7 +34,7 @@ public:
     ~MainWindow();
 
     void setApplicationDir(QString path) {
-        this->appDir = QDir(path);
+        this->m_appDir = QDir(path);
     }
 
 protected:
@@ -79,10 +77,10 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
-    QBluetoothDeviceInfo *peripheral = nullptr;
-    QBluetoothLocalDevice *client = nullptr;
-    QBluetoothDeviceDiscoveryAgent *agent = nullptr;
-    QLowEnergyController *controller = nullptr;
+    QBluetoothDeviceInfo *m_peripheral = nullptr;
+    QBluetoothLocalDevice *m_client = nullptr;
+    QBluetoothDeviceDiscoveryAgent *m_agent = nullptr;
+    QLowEnergyController *m_controller = nullptr;
 
     // Read and wrtie storage for client and peripheral addresses in .ini file
     //
@@ -91,9 +89,9 @@ private:
 
     bool foundThermometer = false;
     bool foundDeviceInfo = false;
-    QDir appDir;
-    QMap<QString,QVariant> measurement;
-    QMap<QString,QVariant> device;
-    QString peripheralMAC;
+    QDir m_appDir;
+    QMap<QString,QVariant> m_measurementData;
+    QMap<QString,QVariant> m_deviceData;
+    QString m_peripheralMAC;
 };
 #endif // MAINWINDOW_H

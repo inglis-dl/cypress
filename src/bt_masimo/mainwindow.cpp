@@ -40,118 +40,123 @@ MainWindow::MainWindow(QWidget *parent)
     // Verify that the stored local host (client) is the one saved in settings
     // if client is nullptr, find and assign the first local adapter
     //
-    if(nullptr==client) {
+#ifdef LINUX
+    if(nullptr==m_client) {
        QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
        if(localAdapters.empty()) {
           qDebug() << "failed to find a local adapter";
           close();
        }
        else {
-         client = new QBluetoothLocalDevice(localAdapters.at(0).address());
+         m_client = new QBluetoothLocalDevice(localAdapters.at(0).address());
          qDebug() << "added local adapter from list";
        }
     }
-    if(!peripheralMAC.isEmpty())
+#endif
+
+    if(!m_peripheralMAC.isEmpty())
     {
-      ui->addressLineEdit->setText(peripheralMAC);
+      ui->addressLineEdit->setText(m_peripheralMAC);
     }
 
-    // TODO: skip device discovery and instantiate the peripheral directly
+    // TODO: skip m_deviceData discovery and instantiate the peripheral directly
     // or create a slot for the button click signal to start the agent
     //
     ui->scanButton->setEnabled(true);
 
-      // NOTE: Due to API limitations it is only possible to find devices that have been paired
-      // using Windows' settings on Windows.
-      //
-      agent = new QBluetoothDeviceDiscoveryAgent(this);
+    // NOTE: Due to API limitations it is only possible to find devices that have been paired
+    // using Windows' settings on Windows.
+    //
+    m_agent = new QBluetoothDeviceDiscoveryAgent(this);
 
-      connect(agent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
-            this, &MainWindow::deviceDiscovered);
-      connect(agent, QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
-            this, &MainWindow::deviceScanError);
-      connect(agent, &QBluetoothDeviceDiscoveryAgent::finished,
-            this,[this](){
-              QList<QBluetoothDeviceInfo> devices = agent->discoveredDevices();
-              qDebug() << "Found " << QString::number(devices.count()) << " devices";
-              if(nullptr!=peripheral)
-              {
-                ui->connectButton->setEnabled(true);
-              }
-             });
+    connect(m_agent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
+          this, &MainWindow::deviceDiscovered);
+    connect(m_agent, QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
+          this, &MainWindow::deviceScanError);
+    connect(m_agent, &QBluetoothDeviceDiscoveryAgent::finished,
+          this,[this](){
+            QList<QBluetoothDeviceInfo> devices = m_agent->discoveredDevices();
+            qDebug() << "Found " << QString::number(devices.count()) << " devices";
+            if(nullptr!=m_peripheral)
+            {
+              ui->connectButton->setEnabled(true);
+            }
+           });
 
-      agent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+    m_agent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
 
-      connect(ui->saveButton,&QPushButton::clicked, this, &MainWindow::writeMeasurement);
+    connect(ui->saveButton,&QPushButton::clicked, this, &MainWindow::writeMeasurement);
  }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-    if(nullptr!=client) {
-      delete client;
+    if(nullptr!=m_client) {
+      delete m_client;
     }
-    if(nullptr!=peripheral) {
-      delete peripheral;
+    if(nullptr!=m_peripheral) {
+      delete m_peripheral;
     }
-    if(nullptr!=agent) {
-      delete agent;
+    if(nullptr!=m_agent) {
+      delete m_agent;
     }
-    if(nullptr!=controller) {
-      delete controller;
+    if(nullptr!=m_controller) {
+      delete m_controller;
     }
 }
 
 void MainWindow::readSettings()
 {
-   QSettings settings(this->appDir.filePath("bt.ini"),QSettings::IniFormat);
-   QString address = settings.value("client/address").toString();
-   if(!address.isEmpty()) {
-     client = new QBluetoothLocalDevice(QBluetoothAddress(address));
+   QSettings settings(this->m_appDir.filePath("bt_masimo.ini"),QSettings::IniFormat);
+   QString address;
 
-     if(!client->isValid()) {
+#ifdef LINUX
+   address = settings.value("client/address").toString();
+   if(!address.isEmpty()) {
+     m_client = new QBluetoothLocalDevice(QBluetoothAddress(address));
+
+     if(!m_client->isValid()) {
          qDebug() << "client is invalid";
          close();
      }
-     client->setHostMode(settings.value("client/hostmode").value<QBluetoothLocalDevice::HostMode>());
+     m_client->setHostMode(settings.value("client/hostmode").value<QBluetoothLocalDevice::HostMode>());
      qDebug() << "constructed client from settings file";
 
-     if(client->hostMode()==QBluetoothLocalDevice::HostPoweredOff)
+     if(m_client->hostMode()==QBluetoothLocalDevice::HostPoweredOff)
      {
          qDebug() << "client is powered off";
-         client->powerOn();
+         m_client->powerOn();
      }
-     if(client->hostMode()!=QBluetoothLocalDevice::HostDiscoverable)
+     if(m_client->hostMode()!=QBluetoothLocalDevice::HostDiscoverable)
      {
          qDebug() << "setting client host mode to host discoverable";
-         client->setHostMode(QBluetoothLocalDevice::HostDiscoverable);
+         m_client->setHostMode(QBluetoothLocalDevice::HostDiscoverable);
      }
    }
+#endif
 
    // Get the thermometer MAC address
-   // If none exists, perform device discovery process
+   // If none exists, perform m_deviceData discovery process
    //
    address = settings.value("peripheral/address").toString();
    if(!address.isEmpty()) {
-     peripheralMAC = address;
-     qDebug() << "using peripheral MAC  " << peripheralMAC << " from settings file";
-
+     m_peripheralMAC = address;
+     qDebug() << "using peripheral MAC  " << m_peripheralMAC << " from settings file";
    }
-
 }
 
 void MainWindow::writeSettings()
 {
-   QSettings settings(this->appDir.filePath("bt.ini"),QSettings::IniFormat);
-   if(nullptr!=client) {
-     settings.setValue("client/name",client->name());
-     settings.setValue("client/address",client->address().toString());
-     settings.setValue("client/hostmode",client->hostMode());
+   QSettings settings(m_appDir.filePath("bt_masimo.ini"),QSettings::IniFormat);
+   if(nullptr!=m_client) {
+     settings.setValue("client/name",m_client->name());
+     settings.setValue("client/address",m_client->address().toString());
+     settings.setValue("client/hostmode",m_client->hostMode());
      qDebug() << "wrote client to settings file";
    }
-   if(nullptr!=peripheral) {
-     settings.setValue("peripheral/name",peripheral->name());
-     settings.setValue("peripheral/address",peripheral->address().toString());
+   if(nullptr!=m_peripheral) {
+     settings.setValue("peripheral/name",m_peripheral->name());
+     settings.setValue("peripheral/address",m_peripheral->address().toString());
      qDebug() << "wrote peripheral to settings file";
    }
 }
@@ -167,42 +172,40 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo &info)
 {
     qDebug() << "Found new device:" << info.name() << '(' << info.address().toString() << ')';
 
-    // we can stop the scanning once we find our target device
-    if(info.address().toString()==peripheralMAC) {
+    // we can stop the scanning once we find our target m_deviceData
+    if(info.address().toString()==m_peripheralMAC) {
         qDebug() << "Found target peripheral with MAC " << info.address().toString() << " ... stopping scan";
 
-        //agent->stop(); // stop doesnt cause the finished signal to be emitted!
+        m_peripheral = new QBluetoothDeviceInfo(info);
 
-        peripheral = new QBluetoothDeviceInfo(info);
+        m_controller = QLowEnergyController::createCentral(*m_peripheral);
 
-        controller = QLowEnergyController::createCentral(*peripheral);
-
-        connect(controller, &QLowEnergyController::connected,
+        connect(m_controller, &QLowEnergyController::connected,
                 this,&MainWindow::discoverServices);
 
-        connect(controller, &QLowEnergyController::disconnected,
+        connect(m_controller, &QLowEnergyController::disconnected,
                 this,[this](){
             ui->connectButton->setEnabled(false);
             qDebug() << "controller disconnected from peripheral";
             });
 
-        connect(controller, &QLowEnergyController::serviceDiscovered,
+        connect(m_controller, &QLowEnergyController::serviceDiscovered,
                 this, &MainWindow::serviceDiscovered);
 
-        connect(controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error),
+        connect(m_controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error),
                 this, &MainWindow::serviceScanError);
 
-        connect(controller, &QLowEnergyController::discoveryFinished,
+        connect(m_controller, &QLowEnergyController::discoveryFinished,
                 this, &MainWindow::serviceDiscoveryComplete);
 
-        controller->setRemoteAddressType(QLowEnergyController::PublicAddress);
+        m_controller->setRemoteAddressType(QLowEnergyController::PublicAddress);
 
         ui->connectButton->setEnabled(true);
 
         connect(ui->connectButton,&QPushButton::clicked,
             this,[this](){
             qDebug() << "controller connecting to device";
-            controller->connectToDevice();
+            m_controller->connectToDevice();
             });
     }
 }
@@ -214,8 +217,8 @@ void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
     else if (error == QBluetoothDeviceDiscoveryAgent::InputOutputError)
         qDebug() << "Writing or reading from the device resulted in an error.";
     else {
-        static QMetaEnum qme = agent->metaObject()->enumerator(
-                    agent->metaObject()->indexOfEnumerator("Error"));
+        static QMetaEnum qme = m_agent->metaObject()->enumerator(
+                    m_agent->metaObject()->indexOfEnumerator("Error"));
         qDebug() << "Error: " << QLatin1String(qme.valueToKey(error));
     }
 }
@@ -223,9 +226,9 @@ void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
 void MainWindow::discoverServices()
 {
     ui->connectButton->setEnabled(false); // we are connected, so dont allow repeated connect button clicks until we disconnect
-    qDebug() << (controller->remoteAddressType()==QLowEnergyController::RandomAddress ? "remote address type" : "public address type");
+    qDebug() << (m_controller->remoteAddressType()==QLowEnergyController::RandomAddress ? "remote address type" : "public address type");
     qDebug() << "controller finding device services";
-    controller->discoverServices();
+    m_controller->discoverServices();
 }
 
 void MainWindow::serviceDiscovered(const QBluetoothUuid &serviceUuid)
@@ -247,27 +250,26 @@ void MainWindow::serviceDiscoveryComplete()
 {
   qDebug() << "controller service discovery complete";
 
-  //
   if(!foundThermometer)
   {
       qDebug() << "error: did not discover the health thermometer service";
       return;
   }
 
-  QLowEnergyService *service = controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::HealthThermometer), controller);
-  if (!service) {
+  QLowEnergyService *h_service = m_controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::HealthThermometer), m_controller);
+  if (!h_service) {
       qDebug() << "Cannot create service for thermometer";
       return;
   }
-  qDebug() << "Heatlh Thermometer " << (QLowEnergyService::PrimaryService == service->type() ? "Primary" : "Included") << " service type";
+  qDebug() << "Health Thermometer " << (QLowEnergyService::PrimaryService == h_service->type() ? "Primary" : "Included") << " service type";
 
-  connect(service, &QLowEnergyService::stateChanged, this, &MainWindow::serviceDetailsState);
+  connect(h_service, &QLowEnergyService::stateChanged, this, &MainWindow::serviceDetailsState);
 
-  connect(service, &QLowEnergyService::characteristicChanged, this, &MainWindow::updateTemperatureValue);
+  connect(h_service, &QLowEnergyService::characteristicChanged, this, &MainWindow::updateTemperatureValue);
 
-  connect(service, &QLowEnergyService::descriptorWritten, this, &MainWindow::confirmedDescriptorWrite);
+  connect(h_service, &QLowEnergyService::descriptorWritten, this, &MainWindow::confirmedDescriptorWrite);
 
-  service->discoverDetails();
+  h_service->discoverDetails();
 
   // get the device information
   if(!foundDeviceInfo)
@@ -275,9 +277,9 @@ void MainWindow::serviceDiscoveryComplete()
       qDebug() << "error: did not discover the device information service";
       return;
   }
-  QLowEnergyService *d_service = controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::DeviceInformation), controller);
+  QLowEnergyService *d_service = m_controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::DeviceInformation), m_controller);
   if (!d_service) {
-      qDebug() << "Cannot create service for thermometer device informatoin";
+      qDebug() << "Cannot create service for thermometer device information";
       return;
   }
   qDebug() << "Device Information " <<  (QLowEnergyService::PrimaryService == d_service->type() ? "Primary" : "Included") << " service type";
@@ -292,8 +294,7 @@ void MainWindow::confirmedDescriptorWrite(const QLowEnergyDescriptor& d, const Q
 
    if(d.isValid() && a == QByteArray::fromHex("0100"))
    {
-      qDebug() << "success write";
-      //controller->disconnectFromDevice();
+       qDebug() << "success write";
    }
    else
    {
@@ -358,27 +359,19 @@ void MainWindow::serviceDetailsState(QLowEnergyService::ServiceState newState)
         const QLowEnergyCharacteristic swChar = service->characteristic(QBluetoothUuid(QBluetoothUuid::SoftwareRevisionString));
         if(frvChar.isValid())
         {
-            device.clear();
-            device.insert("Device Name",QVariant(peripheral->name()));
-            device.insert("Device MAC",QVariant(peripheral->address().toString()));
-            device.insert("Firmware Revision", QVariant(frvChar.value()));
-            device.insert("Software Revision", QVariant(swChar.value()));
+            m_deviceData.clear();
+            m_deviceData.insert("Device Name",QVariant(m_peripheral->name()));
+            m_deviceData.insert("Device MAC",QVariant(m_peripheral->address().toString()));
+            m_deviceData.insert("Firmware Revision", QVariant(frvChar.value()));
+            m_deviceData.insert("Software Revision", QVariant(swChar.value()));
         }
 
         /**
-       qDebug() << "reading the service characteristics";
-       const QList<QLowEnergyCharacteristic> chars = service->characteristics();
-       for (const QLowEnergyCharacteristic &ch : chars) {
-           qDebug() << "characteristic: " << ch.name() << (ch.isValid()? " valid ":" invalid ") << ", uuid: "<< BLEInfo::uuidToString(ch.uuid())<< " handle: " << BLEInfo::handleToString(ch.handle());
-           qDebug() << "permissions: " << BLEInfo::permissionToString(ch);
-           qDebug() << "contains " << QString::number(ch.descriptors().count()) << " descriptors";
-           qDebug() << "value: " << BLEInfo::valueToString(ch.value()) << " " << QString::number(ch.value().size()) << " bytes";
-
            // Optional characteristics that are correctly observed by the Masimo TR-1 thermometer
            // Firmware Revision String
            // Software Revision String
            // PnP ID
-           // "The PnP_ID characteristic is a set of values that used to create a device ID value that is unique for this device.
+           // "The PnP_ID characteristic is a set of values that used to create a m_deviceData ID value that is unique for this m_deviceData.
            // Included in the characteristic is a Vendor ID Source field, a Vendor ID field, a Product ID field and a Product Version field.
            // These values are used to identify all devices of a given type/model/version using numbers."
            //
@@ -388,7 +381,6 @@ void MainWindow::serviceDetailsState(QLowEnergyService::ServiceState newState)
            //   Product ID unit16 LSO to MSO
            //   Product Version uint16 LSO to MSO
            // PnP ID is not valid for the Masimo TR-1
-       }
        */
     }
 }
@@ -507,11 +499,11 @@ measurement
    time_str << h_value_str << j_value_str << s_value_str;
 
    qDebug() << t_value_str << t_format_str << " (" << t_type_str << ") " << date_str.join("-") << " " << time_str.join(":");
-   measurement.clear();
-   measurement.insert("Temperature", QVariant(t_value));
-   measurement.insert("Format", QVariant(t_format_str));
-   measurement.insert("Type", QVariant(t_type_str));
-   measurement.insert("DateTime",QVariant(QDateTime(QDate(y_value,m_value,d_value),QTime(h_value,j_value,s_value))));
+   m_measurementData.clear();
+   m_measurementData.insert("Temperature", QVariant(t_value));
+   m_measurementData.insert("Format", QVariant(t_format_str));
+   m_measurementData.insert("Type", QVariant(t_type_str));
+   m_measurementData.insert("DateTime",QVariant(QDateTime(QDate(y_value,m_value,d_value),QTime(h_value,j_value,s_value))));
 
    QStringList str;
    str << t_value_str << t_format_str;
@@ -524,25 +516,25 @@ measurement
 
 void MainWindow::serviceScanError(QLowEnergyController::Error error)
 {
-     qDebug() << "controller error string: " << controller->errorString();
+     qDebug() << "controller error string: " << m_controller->errorString();
 
     if (error == QLowEnergyController::UnknownError)
         qDebug() << "An unknown error has occurred.";
     else if (error == QLowEnergyController::UnknownRemoteDeviceError)
-        qDebug() << "The remote Bluetooth Low Energy device with the address passed to the constructor of this class cannot be found.";
+        qDebug() << "The remote Bluetooth Low Energy m_deviceData with the address passed to the constructor of this class cannot be found.";
     else if (error == QLowEnergyController::NetworkError)
-        qDebug() << "The attempt to read from or write to the remote device failed.";
+        qDebug() << "The attempt to read from or write to the remote m_deviceData failed.";
     else if (error == QLowEnergyController::InvalidBluetoothAdapterError)
-        qDebug() << "The local Bluetooth device with the address passed to the constructor of this class cannot be found or there is no local Bluetooth device.";
+        qDebug() << "The local Bluetooth m_deviceData with the address passed to the constructor of this class cannot be found or there is no local Bluetooth m_deviceData.";
     else if (error == QLowEnergyController::ConnectionError)
-        qDebug() << "The attempt to connect to the remote device failed.";
+        qDebug() << "The attempt to connect to the remote m_deviceData failed.";
     else if (error == QLowEnergyController::AdvertisingError)
         qDebug() << "The attempt to start advertising failed.";
     else if (error == QLowEnergyController::RemoteHostClosedError)
-        qDebug() << "The remote device closed the connection.";
+        qDebug() << "The remote m_deviceData closed the connection.";
     else {
-        static QMetaEnum qme = controller->metaObject()->enumerator(
-                    agent->metaObject()->indexOfEnumerator("Error"));
+        static QMetaEnum qme = m_controller->metaObject()->enumerator(
+                    m_controller->metaObject()->indexOfEnumerator("Error"));
         qDebug() << "Error: " << QLatin1String(qme.valueToKey(error));
     }
 }
@@ -554,13 +546,13 @@ void MainWindow::writeMeasurement()
    // Create a json object with measurement key value pairs
    //
    QJsonObject json;
-   QMap<QString,QVariant>::const_iterator it = measurement.constBegin();
-   while(it != measurement.constEnd()) {
+   QMap<QString,QVariant>::const_iterator it = m_measurementData.constBegin();
+   while(it != m_measurementData.constEnd()) {
      json.insert(it.key(),QJsonValue::fromVariant(it.value()));
      ++it;
    }
-   it = device.constBegin();
-   while(it != device.constEnd()) {
+   it = m_deviceData.constBegin();
+   while(it != m_deviceData.constEnd()) {
      json.insert(it.key(),QJsonValue::fromVariant(it.value()));
      ++it;
    }
@@ -576,11 +568,11 @@ void MainWindow::writeMeasurement()
    jsonFile << barcode;
    jsonFile << QDate().currentDate().toString("yyyyMMdd");
    jsonFile << "bt_masimo.json";
-   QFile saveFile( this->appDir.filePath( jsonFile.join("_") ) );
+   QFile saveFile( m_appDir.filePath( jsonFile.join("_") ) );
    saveFile.open(QIODevice::WriteOnly);
    saveFile.write(QJsonDocument(json).toJson());
 
-   qDebug() << "wrote to file " << this->appDir.filePath( jsonFile.join("_") );
+   qDebug() << "wrote to file " << m_appDir.filePath( jsonFile.join("_") );
 }
 
 QString BLEInfo::uuidToString(const QBluetoothUuid& uuid)
