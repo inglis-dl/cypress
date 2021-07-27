@@ -4,6 +4,7 @@
 #include <QSettings>
 #include <QDebug>
 #include <QMetaEnum>
+#include <QMessageBox>
 #include <QBitArray>
 #include <QDateTime>
 #include <QJsonObject>
@@ -26,12 +27,45 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    if(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod & QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods())
+    {
+        qDebug() <<  "LE discovery enabled";
+    }
+    else
+    {
+        QMessageBox msgBox;
+        msgBox.setText(tr("The host operating system does not support bluetooth "
+                          "low energy discovery."));
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.exec();
+        close();
+    }
+
+
+    // Scan button to scan for device services once a MAC address has been entered manually,
+    // retrieved from .ini, or selected from the list of discovered devices
+    //
     ui->scanButton->setEnabled(false);
+
+    // Clear button to clear the MAC address line edit
+    //
     ui->clearButton->setEnabled(false);
+
+    // Connect button to connect a controller to the peripheral device with the MAC address
+    // of interest
+    //
     ui->connectButton->setEnabled(false);
+
+    // Save button to store measurement and device info to .json
+    //
     ui->saveButton->setEnabled(false);
 
     readSettings();
+    if(!m_peripheralMAC.isEmpty())
+    {
+      ui->addressLineEdit->setText(m_peripheralMAC);
+    }
 
     ui->iDlineEdit->setText("40000001"); // dummy ID for now
 
@@ -40,7 +74,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Verify that the stored local host (client) is the one saved in settings
     // if client is nullptr, find and assign the first local adapter
     //
-#ifdef LINUX
+#ifdef __linux__
     if(nullptr==m_client) {
        QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
        if(localAdapters.empty()) {
@@ -54,18 +88,18 @@ MainWindow::MainWindow(QWidget *parent)
     }
 #endif
 
-    if(!m_peripheralMAC.isEmpty())
-    {
-      ui->addressLineEdit->setText(m_peripheralMAC);
-    }
-
-    // TODO: skip m_deviceData discovery and instantiate the peripheral directly
+/*
+    // TODO: skip device discovery and instantiate the peripheral directly
     // or create a slot for the button click signal to start the agent
     //
     ui->scanButton->setEnabled(true);
-
+*/
     // NOTE: Due to API limitations it is only possible to find devices that have been paired
     // using Windows' settings on Windows.
+    // Create the agent to perform device discovery and populate the address list box
+    // with candidate items.
+    // If the address line edit field has not been filled with a stored peripheral MAC address,
+    // prompt the user to double click to select a device.
     //
     m_agent = new QBluetoothDeviceDiscoveryAgent(this);
 
@@ -74,18 +108,14 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_agent, QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
           this, &MainWindow::deviceScanError);
     connect(m_agent, &QBluetoothDeviceDiscoveryAgent::finished,
-          this,[this](){
-            QList<QBluetoothDeviceInfo> devices = m_agent->discoveredDevices();
-            qDebug() << "Found " << QString::number(devices.count()) << " devices";
-            if(nullptr!=m_peripheral)
-            {
-              ui->connectButton->setEnabled(true);
-            }
-           });
+          this, &MainWindow::deviceDiscoveryFinished);
 
     m_agent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
 
-    connect(ui->saveButton,&QPushButton::clicked, this, &MainWindow::writeMeasurement);
+    connect(ui->saveButton, &QPushButton::clicked,
+          this, &MainWindow::writeMeasurement);
+    connect(ui->addressLineEdit, &QLineEdit::editingFinished,
+          this, &MainWindow::onMACEdit);
  }
 
 MainWindow::~MainWindow()
@@ -110,7 +140,7 @@ void MainWindow::readSettings()
    QSettings settings(this->m_appDir.filePath("bt_masimo.ini"),QSettings::IniFormat);
    QString address;
 
-#ifdef LINUX
+#ifdef __linux__
    address = settings.value("client/address").toString();
    if(!address.isEmpty()) {
      m_client = new QBluetoothLocalDevice(QBluetoothAddress(address));
@@ -172,6 +202,24 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo &info)
 {
     qDebug() << "Found new device:" << info.name() << '(' << info.address().toString() << ')';
 
+    // Add the device to the list
+    //
+    QString label = QString("%1 %2").arg(info.address().toString(),info.name());
+    QList<QListWidgetItem *> items = ui->deviceListWidget->findItems(label, Qt::MatchExactly);
+    if (items.empty()) {
+        QListWidgetItem *item = new QListWidgetItem(label);
+        if(nullptr!=m_client)
+        {
+          QBluetoothLocalDevice::Pairing pairingStatus = m_client->pairingStatus(info.address());
+          if (pairingStatus == QBluetoothLocalDevice::Paired || pairingStatus == QBluetoothLocalDevice::AuthorizedPaired )
+              item->setForeground(QColor(Qt::green));
+          else
+              item->setForeground(QColor(Qt::black));
+        }
+        ui->deviceListWidget->addItem(item);
+        m_deviceList.insert(label,info);
+    }
+/*
     // we can stop the scanning once we find our target m_deviceData
     if(info.address().toString()==m_peripheralMAC) {
         qDebug() << "Found target peripheral with MAC " << info.address().toString() << " ... stopping scan";
@@ -208,6 +256,65 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo &info)
             m_controller->connectToDevice();
             });
     }
+*/
+}
+
+void MainWindow::deviceDiscoveryFinished()
+{
+    QList<QBluetoothDeviceInfo> devices = m_agent->discoveredDevices();
+    qDebug() << "Found " << QString::number(devices.count()) << " devices";
+
+    // if no devices found, warn the user to check the clinet bluetooth adapter
+    // and to pair any peripheral devices
+    // close the program
+    if(devices.empty())
+    {
+        QMessageBox msgBox;
+        msgBox.setText(tr("No bluetooth low energy devices found.  Check that the "
+                          "bluetooth adapter is working and pair the thermometer "
+                          "to it before running this application."));
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.exec();
+        close();
+    }
+
+    // Connect if there are devices to click
+    //
+    connect(ui->deviceListWidget, &QListWidget::itemDoubleClicked, this, &MainWindow::deviceSelected);
+
+    // If we recovered the peripheral MAC from .ini, verify that it is among the devices
+    // discovered.  If it isn't, pop a warning dialog and prompt the user to either select
+    // a device from the list or enter the MAC address manually.
+    // If the peripheral is found, populate the address line edit and enable the
+    // service scan
+    //
+    if(m_peripheralMAC.isEmpty())
+    {
+        // Prompt the user to select the MAC address
+        QMessageBox msgBox;
+        msgBox.setText(tr("Double click the bluetooth thermometer from the list.  If the device "
+          "is not in the list, quit the application and check that the bluetooth adapeter is "
+          "working and pair the thermometer to it before running this application."));
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Abort);
+        msgBox.setButtonText(QMessageBox::Abort,tr("Quit"));
+        connect(msgBox.button(QMessageBox::Abort),&QPushButton::clicked,this,&MainWindow::close);
+        msgBox.exec();
+    }
+    else
+    {
+
+    }
+    if(nullptr!=m_peripheral)
+    {
+      ui->connectButton->setEnabled(true);
+    }
+}
+
+void MainWindow::deviceSelected(QListWidgetItem* item)
+{
+    QBluetoothDeviceInfo info = m_deviceList.value(item->text());
+    ui->addressLineEdit->setText(info.address().toString());
 }
 
 void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
@@ -285,7 +392,6 @@ void MainWindow::serviceDiscoveryComplete()
   qDebug() << "Device Information " <<  (QLowEnergyService::PrimaryService == d_service->type() ? "Primary" : "Included") << " service type";
   connect(d_service, &QLowEnergyService::stateChanged, this, &MainWindow::serviceDetailsState);
   d_service->discoverDetails();
-
 }
 
 void MainWindow::confirmedDescriptorWrite(const QLowEnergyDescriptor& d, const QByteArray& a)
@@ -327,7 +433,6 @@ void MainWindow::serviceDetailsState(QLowEnergyService::ServiceState newState)
 */
         return;
     }
-
 
     auto service = qobject_cast<QLowEnergyService *>(sender());
     if (!service)
@@ -573,6 +678,13 @@ void MainWindow::writeMeasurement()
    saveFile.write(QJsonDocument(json).toJson());
 
    qDebug() << "wrote to file " << m_appDir.filePath( jsonFile.join("_") );
+}
+
+void MainWindow::onMACEdit()
+{
+    // verify that the mac address is real
+    qDebug() << "MAC address entered: " << ui->addressLineEdit->text();
+    m_peripheralMAC = ui->addressLineEdit->text();
 }
 
 QString BLEInfo::uuidToString(const QBluetoothUuid& uuid)

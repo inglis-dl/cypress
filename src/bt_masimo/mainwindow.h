@@ -9,6 +9,7 @@
 
 QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceInfo)
 QT_FORWARD_DECLARE_CLASS(QBluetoothLocalDevice)
+QT_FORWARD_DECLARE_CLASS(QListWidgetItem)
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -50,6 +51,10 @@ private slots:
     //
     void deviceDiscovered(const QBluetoothDeviceInfo &info);
     void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error);
+    void deviceDiscoveryFinished();
+
+    void deviceSelected(QListWidgetItem*);
+
 
     // QLowEnergyController signal receptors
     //
@@ -74,6 +79,10 @@ private slots:
     //
     void writeMeasurement();
 
+    // Assign the peripheral MAC address if valid
+    //
+    void onMACEdit();
+
 private:
     Ui::MainWindow *ui;
 
@@ -87,11 +96,14 @@ private:
     void readSettings();
     void writeSettings();
 
+    void connectToController(const QBluetoothDeviceInfo& info);
+
     bool foundThermometer = false;
     bool foundDeviceInfo = false;
     QDir m_appDir;
     QMap<QString,QVariant> m_measurementData;
     QMap<QString,QVariant> m_deviceData;
     QString m_peripheralMAC;
+    QMap<QString,QBluetoothDeviceInfo> m_deviceList;
 };
 #endif // MAINWINDOW_H
