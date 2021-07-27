@@ -9,10 +9,10 @@ CognitiveTest::CognitiveTest(QWidget *parent)
     inputs = CognitiveIO::ReadInputs(jsonConfigPath);
 
     // Run Cognitive Noodle Test
-    NoodleTest::Run(&inputs);
+    ChoiceReactionTest::Run(&inputs);
 
     // Move results file to desktop
     // TODO: Figure out what to do with results
-    NoodleTest::MoveResultsFile(inputs.path);
+    ChoiceReactionTest::MoveResultsFile(inputs.path);
 
 }

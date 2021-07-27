@@ -3,7 +3,7 @@
 #include <QtWidgets/QMainWindow>
 #include "ui_MainWindow.h"
 #include "InputsModel.h"
-#include "NoodleTest.h"
+#include "ChoiceReactionTest.h"
 #include "CognitiveIO.h"
 
 #include <QString>

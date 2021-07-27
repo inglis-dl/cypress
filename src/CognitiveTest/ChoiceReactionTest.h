@@ -9,7 +9,7 @@
 #include <QDebug>
 #include <QStandardPaths>
 
-static class NoodleTest
+static class ChoiceReactionTest
 {
 public:
 	static void Run(InputsModel* inputs);

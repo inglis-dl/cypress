@@ -1,6 +1,6 @@
-#include "NoodleTest.h"
+#include "ChoiceReactionTest.h"
 
-void NoodleTest::Run(InputsModel* inputs)
+void ChoiceReactionTest::Run(InputsModel* inputs)
 {
 	QString command = inputs->path + "/CCB";
 	QProcess process;
@@ -15,7 +15,7 @@ void NoodleTest::Run(InputsModel* inputs)
 	process.close();
 }
 
-void NoodleTest::MoveResultsFile(QString ccbDirPath)
+void ChoiceReactionTest::MoveResultsFile(QString ccbDirPath)
 {
 	QString resultsDirPath = ccbDirPath + "/results";
 	QDir myDir(resultsDirPath);
