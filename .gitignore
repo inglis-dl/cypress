@@ -2,8 +2,5 @@
 *.ini
 *.vs
 *.vcxproj
-/src/CDTT/CDTT/x64
-/src/CDTT/x64/Debug
-/src/CognitiveTest/x64
-/src/x64/Debug
-/src/Frax/x64
+*.sln
+*\x64
