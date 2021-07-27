@@ -87,7 +87,6 @@
   <ItemGroup>
     <ClCompile Include="FraxIO.cpp" />
     <ClCompile Include="FraxUI.cpp" />
-    <QtRcc Include="Frax.qrc" />
     <QtUic Include="MainWindow.ui" />
     <QtMoc Include="MainWindow.h" />
     <ClCompile Include="MainWindow.cpp" />
