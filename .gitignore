@@ -1,3 +1,6 @@
 *.user
 *.ini
 *.vs
+/src/CDTT/CDTT/x64
+/src/CDTT/x64/Debug
+/src/CognitiveTest/x64
