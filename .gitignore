@@ -1,2 +1,8 @@
 *.user
 *.ini
+*.vs
+*.vcxproj
+*.sln
+*\x64
+*.filters
+*.TMP
