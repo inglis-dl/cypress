@@ -43,6 +43,8 @@ protected:
 
 private slots:
 
+    void scanDevices();
+
     // QBluetoothDeviceDiscoveryAgent signal receptors
     //
     // The agent searches for paired devices cached by the OS's BT local device
@@ -73,7 +75,6 @@ private slots:
     //
     void serviceDetailsState(QLowEnergyService::ServiceState newState);
     void updateTemperatureValue(const QLowEnergyCharacteristic &c, const QByteArray& a);
-    void confirmedDescriptorWrite(const QLowEnergyDescriptor& d, const QByteArray& a);
 
     // Write the measurement data (temperature, datetime, barcode, device) in json formal to file
     //
@@ -81,7 +82,7 @@ private slots:
 
     // Assign the peripheral MAC address if valid
     //
-    void onMACEdit();
+    void onAddressEdit();
 
 private:
     Ui::MainWindow *ui;
@@ -98,8 +99,8 @@ private:
 
     void connectToController(const QBluetoothDeviceInfo& info);
 
-    bool foundThermometer = false;
-    bool foundDeviceInfo = false;
+    bool m_foundThermoService = false;
+    bool m_foundInfoService = false;
     QDir m_appDir;
     QMap<QString,QVariant> m_measurementData;
     QMap<QString,QVariant> m_deviceData;

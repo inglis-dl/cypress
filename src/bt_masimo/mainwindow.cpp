@@ -42,18 +42,16 @@ MainWindow::MainWindow(QWidget *parent)
         close();
     }
 
+    // Scan button to scan for bluetooth low energy peripheral devices
+    //
+    ui->scanButton->setEnabled(true);
 
-    // Scan button to scan for device services once a MAC address has been entered manually,
+    // Verify button to scan for device services once a MAC address has been entered manually,
     // retrieved from .ini, or selected from the list of discovered devices
     //
-    ui->scanButton->setEnabled(false);
+    ui->verifyButton->setEnabled(false);
 
-    // Clear button to clear the MAC address line edit
-    //
-    ui->clearButton->setEnabled(false);
-
-    // Connect button to connect a controller to the peripheral device with the MAC address
-    // of interest
+    // Connect button to connect a controller to the selected and verified peripheral device
     //
     ui->connectButton->setEnabled(false);
 
@@ -61,13 +59,16 @@ MainWindow::MainWindow(QWidget *parent)
     //
     ui->saveButton->setEnabled(false);
 
+    // Read the .ini file for cached local and peripheral device addresses
+    //
     readSettings();
+
     if(!m_peripheralMAC.isEmpty())
     {
       ui->addressLineEdit->setText(m_peripheralMAC);
     }
 
-    ui->iDlineEdit->setText("40000001"); // dummy ID for now
+    ui->barcodeLineEdit->setText("40000001"); // dummy ID for now
 
     // NOTE: QBluetoothLocalDevice is not supported on Windows 7 and 8 targets
     //
@@ -88,34 +89,15 @@ MainWindow::MainWindow(QWidget *parent)
     }
 #endif
 
-/*
-    // TODO: skip device discovery and instantiate the peripheral directly
-    // or create a slot for the button click signal to start the agent
-    //
-    ui->scanButton->setEnabled(true);
-*/
-    // NOTE: Due to API limitations it is only possible to find devices that have been paired
-    // using Windows' settings on Windows.
-    // Create the agent to perform device discovery and populate the address list box
-    // with candidate items.
-    // If the address line edit field has not been filled with a stored peripheral MAC address,
-    // prompt the user to double click to select a device.
-    //
-    m_agent = new QBluetoothDeviceDiscoveryAgent(this);
-
-    connect(m_agent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
-          this, &MainWindow::deviceDiscovered);
-    connect(m_agent, QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
-          this, &MainWindow::deviceScanError);
-    connect(m_agent, &QBluetoothDeviceDiscoveryAgent::finished,
-          this, &MainWindow::deviceDiscoveryFinished);
-
-    m_agent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+    connect(ui->scanButton, &QPushButton::clicked, this, &MainWindow::scanDevices);
 
     connect(ui->saveButton, &QPushButton::clicked,
           this, &MainWindow::writeMeasurement);
+
     connect(ui->addressLineEdit, &QLineEdit::editingFinished,
-          this, &MainWindow::onMACEdit);
+          this, &MainWindow::onAddressEdit);
+
+    scanDevices();
  }
 
 MainWindow::~MainWindow()
@@ -135,9 +117,37 @@ MainWindow::~MainWindow()
     }
 }
 
+void MainWindow::scanDevices()
+{
+    // Whenever scan button is clicked, clear the list and do the scanning
+    // If a peripheral address is in the line edit, it is retained
+    //
+    ui->deviceListWidget->clear();
+    m_deviceList.clear();
+
+    // NOTE: Due to API limitations it is only possible to find devices that have been paired
+    // using Windows' settings on Win OS.
+    // Create the agent to perform device discovery and populate the address list box
+    // with candidate items.
+    // If the address line edit field has not been filled with a stored peripheral address,
+    // prompt the user to double click to select a device.
+    //
+    if(nullptr==m_agent) {
+      m_agent = new QBluetoothDeviceDiscoveryAgent(this);
+
+      connect(m_agent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
+            this, &MainWindow::deviceDiscovered);
+      connect(m_agent, QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
+            this, &MainWindow::deviceScanError);
+      connect(m_agent, &QBluetoothDeviceDiscoveryAgent::finished,
+            this, &MainWindow::deviceDiscoveryFinished);
+    }
+    m_agent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+}
+
 void MainWindow::readSettings()
 {
-   QSettings settings(this->m_appDir.filePath("bt_masimo.ini"),QSettings::IniFormat);
+   QSettings settings(m_appDir.filePath("bt_masimo.ini"), QSettings::IniFormat);
    QString address;
 
 #ifdef __linux__
@@ -165,8 +175,8 @@ void MainWindow::readSettings()
    }
 #endif
 
-   // Get the thermometer MAC address
-   // If none exists, perform m_deviceData discovery process
+   // Get the thermometer MAC address.
+   // If none exists perform device discovery process
    //
    address = settings.value("peripheral/address").toString();
    if(!address.isEmpty()) {
@@ -264,9 +274,9 @@ void MainWindow::deviceDiscoveryFinished()
     QList<QBluetoothDeviceInfo> devices = m_agent->discoveredDevices();
     qDebug() << "Found " << QString::number(devices.count()) << " devices";
 
-    // if no devices found, warn the user to check the clinet bluetooth adapter
-    // and to pair any peripheral devices
-    // close the program
+    // If no devices found, warn the user to check the client bluetooth adapter
+    // and to pair any peripheral devices, then close the application
+    //
     if(devices.empty())
     {
         QMessageBox msgBox;
@@ -332,9 +342,13 @@ void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
 
 void MainWindow::discoverServices()
 {
-    ui->connectButton->setEnabled(false); // we are connected, so dont allow repeated connect button clicks until we disconnect
+    // After controller is connected disable connect button clicks until disconnected from peripheral
+    //
+    ui->connectButton->setEnabled(false);
+
     qDebug() << (m_controller->remoteAddressType()==QLowEnergyController::RandomAddress ? "remote address type" : "public address type");
     qDebug() << "controller finding device services";
+
     m_controller->discoverServices();
 }
 
@@ -344,12 +358,12 @@ void MainWindow::serviceDiscovered(const QBluetoothUuid &serviceUuid)
   if(serviceUuid == QBluetoothUuid(QBluetoothUuid::HealthThermometer))
   {
       qDebug() << "discovered the health thermometer service";
-      foundThermometer = true;
+      m_foundThermoService = true;
   }
   else if(serviceUuid == QBluetoothUuid(QBluetoothUuid::DeviceInformation))
   {
      qDebug() << "discovered the device information service";
-     foundDeviceInfo = true;
+     m_foundInfoService = true;
   }
 }
 
@@ -357,55 +371,46 @@ void MainWindow::serviceDiscoveryComplete()
 {
   qDebug() << "controller service discovery complete";
 
-  if(!foundThermometer)
+  if(!m_foundThermoService)
   {
       qDebug() << "error: did not discover the health thermometer service";
       return;
   }
 
-  QLowEnergyService *h_service = m_controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::HealthThermometer), m_controller);
-  if (!h_service) {
-      qDebug() << "Cannot create service for thermometer";
+  QLowEnergyService *thermo_service = m_controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::HealthThermometer), m_controller);
+  if (!thermo_service) {
+      qDebug() << "cannot create health thermometer service";
       return;
   }
-  qDebug() << "Health Thermometer " << (QLowEnergyService::PrimaryService == h_service->type() ? "Primary" : "Included") << " service type";
+  qDebug() << "health thermometer service type: " << (QLowEnergyService::PrimaryService == thermo_service->type() ? "Primary" : "Included");
 
-  connect(h_service, &QLowEnergyService::stateChanged, this, &MainWindow::serviceDetailsState);
+  connect(thermo_service, &QLowEnergyService::stateChanged, this, &MainWindow::serviceDetailsState);
 
-  connect(h_service, &QLowEnergyService::characteristicChanged, this, &MainWindow::updateTemperatureValue);
+  connect(thermo_service, &QLowEnergyService::descriptorWritten,
+          this, [](const QLowEnergyDescriptor& d, const QByteArray& a) {
+          qDebug() << ((d.isValid() && a == QByteArray::fromHex("0100"))?"success descriptor write":"descriptor write error");
+        });
 
-  connect(h_service, &QLowEnergyService::descriptorWritten, this, &MainWindow::confirmedDescriptorWrite);
+  connect(thermo_service, &QLowEnergyService::characteristicChanged, this, &MainWindow::updateTemperatureValue);
 
-  h_service->discoverDetails();
+  thermo_service->discoverDetails();
 
   // get the device information
-  if(!foundDeviceInfo)
+  if(!m_foundInfoService)
   {
       qDebug() << "error: did not discover the device information service";
       return;
   }
-  QLowEnergyService *d_service = m_controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::DeviceInformation), m_controller);
-  if (!d_service) {
-      qDebug() << "Cannot create service for thermometer device information";
+  QLowEnergyService *info_service = m_controller->createServiceObject(QBluetoothUuid(QBluetoothUuid::DeviceInformation), m_controller);
+  if (!info_service) {
+      qDebug() << "cannot create thermometer device information service";
       return;
   }
-  qDebug() << "Device Information " <<  (QLowEnergyService::PrimaryService == d_service->type() ? "Primary" : "Included") << " service type";
-  connect(d_service, &QLowEnergyService::stateChanged, this, &MainWindow::serviceDetailsState);
-  d_service->discoverDetails();
-}
+  qDebug() << "device information service type: " <<  (QLowEnergyService::PrimaryService == info_service->type() ? "Primary" : "Included");
 
-void MainWindow::confirmedDescriptorWrite(const QLowEnergyDescriptor& d, const QByteArray& a)
-{
-   qDebug() << "confirmed descriptor write with value: " << BLEInfo::valueToString(a);
+  connect(info_service, &QLowEnergyService::stateChanged, this, &MainWindow::serviceDetailsState);
 
-   if(d.isValid() && a == QByteArray::fromHex("0100"))
-   {
-       qDebug() << "success write";
-   }
-   else
-   {
-       qDebug() << "write error";
-   }
+  info_service->discoverDetails();
 }
 
 void MainWindow::serviceDetailsState(QLowEnergyService::ServiceState newState)
@@ -664,7 +669,7 @@ void MainWindow::writeMeasurement()
 
    // Insert participant barcode
    //
-   QString barcode = ui->iDlineEdit->text().simplified().remove(" ");
+   QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
    json.insert("Barcode",QJsonValue(barcode));
 
    // Output .json file will be of the form <participant ID>_<now>_<devicename>.json
@@ -680,7 +685,7 @@ void MainWindow::writeMeasurement()
    qDebug() << "wrote to file " << m_appDir.filePath( jsonFile.join("_") );
 }
 
-void MainWindow::onMACEdit()
+void MainWindow::onAddressEdit()
 {
     // verify that the mac address is real
     qDebug() << "MAC address entered: " << ui->addressLineEdit->text();
