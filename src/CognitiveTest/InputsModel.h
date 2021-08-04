@@ -6,8 +6,9 @@ class InputsModel
 {
 public:
 	QString path = "";
-	QString userName = "";
+	QString userID = "";
 	QString dcsSiteName = "";
-	QString interviewId = "";
+	QString interviewerID = "";
 	QString language = "";
+	bool isTest = false;
 };

@@ -10,8 +10,9 @@
 class CognitiveIO
 {
 public:
-	static InputsModel ReadInputs(QString path);
+	static void ReadJsonInputs(QString path, InputsModel* inputs);
+	static InputsModel ReadCommandLineInputs(int argc, char* argv[]);
 private:
-	static InputsModel CreateInputsModel(QJsonObject* json);
+	static void AddArgToInputs(int argNum, int* unexpectedArgs, InputsModel* inputs, QString* argument);
 };
 

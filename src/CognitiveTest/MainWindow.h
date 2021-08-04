@@ -14,7 +14,7 @@ class CognitiveTest : public QMainWindow
     Q_OBJECT
 
 public:
-    CognitiveTest(QWidget *parent = Q_NULLPTR);
+    CognitiveTest(InputsModel initialInputs, QWidget* parent = Q_NULLPTR);
 
 private:
     Ui::CognitiveTestClass ui;
