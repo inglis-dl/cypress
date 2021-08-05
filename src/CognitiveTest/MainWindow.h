@@ -15,9 +15,11 @@ class CognitiveTest : public QMainWindow
 
 public:
     CognitiveTest(InputsModel initialInputs, QWidget* parent = Q_NULLPTR);
+    int GetExitCode() { return exitCode; }
 
 private:
     Ui::CognitiveTestClass ui;
     InputsModel inputs;
     QString jsonConfigPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/CognitiveTestInput.json";
+    int exitCode = ExitCodes::Continue;
 };

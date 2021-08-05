@@ -6,10 +6,6 @@ CognitiveTest::CognitiveTest(InputsModel initialInputs, QWidget *parent)
     ui.setupUi(this);
     inputs = initialInputs;
 
-    if (inputs.isTest) {
-        return;
-    }
-
     // Load Json into inputs
     CognitiveIO::ReadJsonInputs(jsonConfigPath, &inputs);
 

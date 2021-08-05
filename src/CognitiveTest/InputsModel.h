@@ -10,5 +10,4 @@ public:
 	QString dcsSiteName = "";
 	QString interviewerID = "";
 	QString language = "";
-	bool isTest = false;
 };
