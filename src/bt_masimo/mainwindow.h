@@ -64,7 +64,7 @@ private slots:
     // If the Health Thermometer service is discovered, the controller
     // creates a QLowEnergyService to write and read temperature data
     //
-    void serviceDiscovered(const QBluetoothUuid &service);
+    void serviceDiscovered(const QBluetoothUuid &uuid);
     void serviceDiscoveryComplete();
     void serviceScanError(QLowEnergyController::Error error);
     void discoverServices();
@@ -84,7 +84,7 @@ private slots:
     //
     void onAddressEdit();
 
-    void discoverPeripheralServices();
+    void discoverPeripheralServices(const QBluetoothDeviceInfo &info);
 
 private:
     Ui::MainWindow *ui;
@@ -99,7 +99,7 @@ private:
     void readSettings();
     void writeSettings();
 
-    void connectToController(const QBluetoothDeviceInfo& info);
+    void connectToController(const QBluetoothDeviceInfo &info);
 
     bool m_foundThermoService = false;
     bool m_foundInfoService = false;

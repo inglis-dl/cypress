@@ -83,6 +83,11 @@ MainWindow::MainWindow(QWidget *parent)
     if(nullptr==m_client) {
        QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
        if(localAdapters.empty()) {
+           QMessageBox msgBox;
+           msgBox.setText(tr("The host operating system has no local bluetooth "
+                             "low energy adapter."));
+           msgBox.setIcon(QMessageBox::Critical);
+           msgBox.exec();
           qDebug() << "failed to find a local adapter";
           close();
        }
@@ -99,6 +104,9 @@ MainWindow::MainWindow(QWidget *parent)
           this, &MainWindow::writeMeasurement);
 
     connect(ui->addressLineEdit, &QLineEdit::editingFinished,
+          this, &MainWindow::onAddressEdit);
+
+    connect(ui->addressLineEdit, &QLineEdit::textChanged,
           this, &MainWindow::onAddressEdit);
 
     scanDevices();
@@ -145,6 +153,8 @@ void MainWindow::scanDevices()
             this, &MainWindow::deviceScanError);
       connect(m_agent, &QBluetoothDeviceDiscoveryAgent::finished,
             this, &MainWindow::deviceDiscoveryFinished);
+      connect(m_agent, &QBluetoothDeviceDiscoveryAgent::canceled,
+              this, &MainWindow::deviceDiscoveryFinished);
     }
     m_agent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
 }
@@ -234,6 +244,11 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo &info)
         }
         ui->deviceListWidget->addItem(item);
         m_deviceList.insert(label,info);
+
+        if(info.address().toString()==m_peripheralMAC)
+        {
+            m_agent->stop();
+        }
     }
 }
 
@@ -256,7 +271,7 @@ void MainWindow::deviceDiscoveryFinished()
         msgBox.setIcon(QMessageBox::Critical);
         msgBox.exec();
 
-        //TODO: error point - ensure return of an error value to the main cypress application
+        // TODO: error point - ensure return of an error value to the main cypress application
         close();
     }
 
@@ -266,15 +281,29 @@ void MainWindow::deviceDiscoveryFinished()
     // If the peripheral is found, populate the address line edit and enable the
     // service scan
     //
-    // TODO: we have to search for a key that starts with the mac address
-    //
-    if(m_deviceList.contains(m_peripheralMAC))
+
+    bool found = false;
+    QBluetoothDeviceInfo info;
+    if(!m_peripheralMAC.isEmpty())
     {
-       // ensure the line edit has this value
+      QMap<QString,QBluetoothDeviceInfo>::const_iterator it = m_deviceList.constBegin();
+      while(it != m_deviceList.constEnd() && !found) {
+        found = it.key().contains(m_peripheralMAC);
+        if(found) info = it.value();
+        ++it;
+      }
+    }
+    if(found)
+    {
+        qDebug() << "found the peripheral with mac address " << m_peripheralMAC;
+
+        // Ensure the line edit has this value
+        //
         ui->addressLineEdit->setText(m_peripheralMAC);
-       // initiate service discovery
+
+       // Initiate service discovery
        // TODO: verbose update to window status bar, eg., "...discovering services, please wait"
-       // this->discoverPeripheralServices();
+       this->discoverPeripheralServices(info);
     }
     else
     {
@@ -289,19 +318,17 @@ void MainWindow::deviceDiscoveryFinished()
         connect(msgBox.button(QMessageBox::Abort),&QPushButton::clicked,this,&MainWindow::close);
         msgBox.exec();
     }
-    if(nullptr!=m_peripheral)
-    {
-      ui->connectButton->setEnabled(true);
-    }
 }
 
 void MainWindow::deviceSelected(QListWidgetItem* item)
 {
+    qDebug() << "device selected from list " <<  item->text();
     QBluetoothDeviceInfo info = m_deviceList.value(item->text());
+    qDebug() << "setting the line edit programmatically to " << info.address().toString();
     ui->addressLineEdit->setText(info.address().toString());
-    // initiate service discovery
-    // TODO: verbose update to window status bar, eg., "...discovering services, please wait"
-    // this->discoverPeripheralServices();
+
+    qDebug() << "selected device and now descovering its services";
+    this->discoverPeripheralServices(info);
 }
 
 void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
@@ -329,40 +356,40 @@ void MainWindow::discoverServices()
     m_controller->discoverServices();
 }
 
-void MainWindow::serviceDiscovered(const QBluetoothUuid &serviceUuid)
+void MainWindow::serviceDiscovered(const QBluetoothUuid &uuid)
 {
   qDebug() << "service discovered ";
-  if(serviceUuid == QBluetoothUuid(QBluetoothUuid::HealthThermometer))
+  if(uuid == QBluetoothUuid(QBluetoothUuid::HealthThermometer))
   {
       qDebug() << "discovered the health thermometer service";
       m_foundThermoService = true;
   }
-  else if(serviceUuid == QBluetoothUuid(QBluetoothUuid::DeviceInformation))
+  else if(uuid == QBluetoothUuid(QBluetoothUuid::DeviceInformation))
   {
      qDebug() << "discovered the device information service";
      m_foundInfoService = true;
   }
 }
 
-void MainWindow::discoverPeripheralServices()
+void MainWindow::discoverPeripheralServices(const QBluetoothDeviceInfo &info)
 {
     // sanity check
     //
-    if(m_peripheralMAC.isEmpty() || !m_deviceList.contains(m_peripheralMAC))
+    if(m_peripheralMAC.isEmpty() || !info.isValid())
     {
-        qDebug() << "ERROR: no peripheral to search for services";
+        qDebug() << "ERROR: no peripheral to search for services" <<
+                     (m_peripheralMAC.isEmpty()?"empty peripheral mac " : "peripheral mac ok ") <<
+                    (info.isValid()?"device info is valid ":"device info is invalid" ) <<
+                    "terminating!";
         close();
     }
-    if(nullptr != m_peripheral && m_peripheral->address().toString()!=m_peripheralMAC)
+    if(nullptr != m_peripheral)
     {
         delete m_peripheral;
         m_peripheral = nullptr;
     }
 
-    if(m_peripheral == nullptr)
-    {
-       m_peripheral = new QBluetoothDeviceInfo(m_deviceList.value(m_peripheralMAC));
-    }
+    m_peripheral = new QBluetoothDeviceInfo(info);
 
     m_controller = QLowEnergyController::createCentral(*m_peripheral);
 
@@ -647,7 +674,7 @@ measurement
    str << t_value_str << t_format_str;
    ui->temperatureLineEdit->setText(str.join(" "));
    str.clear();
-   str << date_str << time_str;
+   str << date_str.join("-") << time_str.join(":");
    ui->dateTimeLineEdit->setText(str.join(" "));
    ui->saveButton->setEnabled(true);
 }
