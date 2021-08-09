@@ -59,6 +59,10 @@ MainWindow::MainWindow(QWidget *parent)
     //
     ui->saveButton->setEnabled(false);
 
+    // as soon as there are LE devices in the ui list, allow click to select a mac address
+    //
+    connect(ui->deviceListWidget, &QListWidget::itemDoubleClicked, this, &MainWindow::deviceSelected);
+
     // Read the .ini file for cached local and peripheral device addresses
     //
     readSettings();
@@ -208,6 +212,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
+// add a device to the ui list
+//
 void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo &info)
 {
     qDebug() << "Found new device:" << info.name() << '(' << info.address().toString() << ')';
@@ -229,46 +235,10 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo &info)
         ui->deviceListWidget->addItem(item);
         m_deviceList.insert(label,info);
     }
-/*
-    // we can stop the scanning once we find our target m_deviceData
-    if(info.address().toString()==m_peripheralMAC) {
-        qDebug() << "Found target peripheral with MAC " << info.address().toString() << " ... stopping scan";
-
-        m_peripheral = new QBluetoothDeviceInfo(info);
-
-        m_controller = QLowEnergyController::createCentral(*m_peripheral);
-
-        connect(m_controller, &QLowEnergyController::connected,
-                this,&MainWindow::discoverServices);
-
-        connect(m_controller, &QLowEnergyController::disconnected,
-                this,[this](){
-            ui->connectButton->setEnabled(false);
-            qDebug() << "controller disconnected from peripheral";
-            });
-
-        connect(m_controller, &QLowEnergyController::serviceDiscovered,
-                this, &MainWindow::serviceDiscovered);
-
-        connect(m_controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error),
-                this, &MainWindow::serviceScanError);
-
-        connect(m_controller, &QLowEnergyController::discoveryFinished,
-                this, &MainWindow::serviceDiscoveryComplete);
-
-        m_controller->setRemoteAddressType(QLowEnergyController::PublicAddress);
-
-        ui->connectButton->setEnabled(true);
-
-        connect(ui->connectButton,&QPushButton::clicked,
-            this,[this](){
-            qDebug() << "controller connecting to device";
-            m_controller->connectToDevice();
-            });
-    }
-*/
 }
 
+// enable discovered devices selection
+//
 void MainWindow::deviceDiscoveryFinished()
 {
     QList<QBluetoothDeviceInfo> devices = m_agent->discoveredDevices();
@@ -285,12 +255,10 @@ void MainWindow::deviceDiscoveryFinished()
                           "to it before running this application."));
         msgBox.setIcon(QMessageBox::Critical);
         msgBox.exec();
+
+        //TODO: error point - ensure return of an error value to the main cypress application
         close();
     }
-
-    // Connect if there are devices to click
-    //
-    connect(ui->deviceListWidget, &QListWidget::itemDoubleClicked, this, &MainWindow::deviceSelected);
 
     // If we recovered the peripheral MAC from .ini, verify that it is among the devices
     // discovered.  If it isn't, pop a warning dialog and prompt the user to either select
@@ -298,7 +266,17 @@ void MainWindow::deviceDiscoveryFinished()
     // If the peripheral is found, populate the address line edit and enable the
     // service scan
     //
-    if(m_peripheralMAC.isEmpty())
+    // TODO: we have to search for a key that starts with the mac address
+    //
+    if(m_deviceList.contains(m_peripheralMAC))
+    {
+       // ensure the line edit has this value
+        ui->addressLineEdit->setText(m_peripheralMAC);
+       // initiate service discovery
+       // TODO: verbose update to window status bar, eg., "...discovering services, please wait"
+       // this->discoverPeripheralServices();
+    }
+    else
     {
         // Prompt the user to select the MAC address
         QMessageBox msgBox;
@@ -311,10 +289,6 @@ void MainWindow::deviceDiscoveryFinished()
         connect(msgBox.button(QMessageBox::Abort),&QPushButton::clicked,this,&MainWindow::close);
         msgBox.exec();
     }
-    else
-    {
-
-    }
     if(nullptr!=m_peripheral)
     {
       ui->connectButton->setEnabled(true);
@@ -325,6 +299,9 @@ void MainWindow::deviceSelected(QListWidgetItem* item)
 {
     QBluetoothDeviceInfo info = m_deviceList.value(item->text());
     ui->addressLineEdit->setText(info.address().toString());
+    // initiate service discovery
+    // TODO: verbose update to window status bar, eg., "...discovering services, please wait"
+    // this->discoverPeripheralServices();
 }
 
 void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
@@ -365,6 +342,57 @@ void MainWindow::serviceDiscovered(const QBluetoothUuid &serviceUuid)
      qDebug() << "discovered the device information service";
      m_foundInfoService = true;
   }
+}
+
+void MainWindow::discoverPeripheralServices()
+{
+    // sanity check
+    //
+    if(m_peripheralMAC.isEmpty() || !m_deviceList.contains(m_peripheralMAC))
+    {
+        qDebug() << "ERROR: no peripheral to search for services";
+        close();
+    }
+    if(nullptr != m_peripheral && m_peripheral->address().toString()!=m_peripheralMAC)
+    {
+        delete m_peripheral;
+        m_peripheral = nullptr;
+    }
+
+    if(m_peripheral == nullptr)
+    {
+       m_peripheral = new QBluetoothDeviceInfo(m_deviceList.value(m_peripheralMAC));
+    }
+
+    m_controller = QLowEnergyController::createCentral(*m_peripheral);
+
+    connect(m_controller, &QLowEnergyController::connected,
+        this,&MainWindow::discoverServices);
+
+    connect(m_controller, &QLowEnergyController::disconnected,
+         this,[this](){
+            ui->connectButton->setEnabled(false);
+            qDebug() << "controller disconnected from peripheral";
+            });
+
+    connect(m_controller, &QLowEnergyController::serviceDiscovered,
+        this, &MainWindow::serviceDiscovered);
+
+    connect(m_controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error),
+        this, &MainWindow::serviceScanError);
+
+    connect(m_controller, &QLowEnergyController::discoveryFinished,
+        this, &MainWindow::serviceDiscoveryComplete);
+
+    m_controller->setRemoteAddressType(QLowEnergyController::PublicAddress);
+
+    ui->connectButton->setEnabled(true);
+
+    connect(ui->connectButton,&QPushButton::clicked,
+        this,[this](){
+        qDebug() << "controller connecting to device";
+        m_controller->connectToDevice();
+        });
 }
 
 void MainWindow::serviceDiscoveryComplete()

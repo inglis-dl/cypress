@@ -84,6 +84,8 @@ private slots:
     //
     void onAddressEdit();
 
+    void discoverPeripheralServices();
+
 private:
     Ui::MainWindow *ui;
 
