@@ -71,9 +71,11 @@ MainWindow::MainWindow(QWidget *parent)
     // if client is nullptr, find and assign the first local adapter
     //
 #ifdef __linux__
-    if(nullptr==m_client) {
+    if(nullptr == m_client)
+    {
        QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
-       if(localAdapters.empty()) {
+       if(localAdapters.empty())
+       {
            QMessageBox msgBox;
            msgBox.setText(tr("The host operating system has no local bluetooth "
                              "low energy adapter."));
@@ -82,7 +84,8 @@ MainWindow::MainWindow(QWidget *parent)
           qDebug() << "failed to find a local adapter";
           close();
        }
-       else {
+       else
+       {
          m_client = new QBluetoothLocalDevice(localAdapters.at(0).address());
          qDebug() << "added local adapter from list";
        }
@@ -98,16 +101,20 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-    if(nullptr!=m_client) {
+    if(nullptr != m_client)
+    {
       delete m_client;
     }
-    if(nullptr!=m_peripheral) {
+    if(nullptr != m_peripheral)
+    {
       delete m_peripheral;
     }
-    if(nullptr!=m_agent) {
+    if(nullptr != m_agent)
+    {
       delete m_agent;
     }
-    if(nullptr!=m_controller) {
+    if(nullptr != m_controller)
+    {
       delete m_controller;
     }
 }
@@ -156,7 +163,8 @@ void MainWindow::readSettings()
    {
      m_client = new QBluetoothLocalDevice(QBluetoothAddress(address));
 
-     if(!m_client->isValid()) {
+     if(!m_client->isValid())
+     {
          qDebug() << "client is invalid";
          close();
      }
@@ -289,13 +297,10 @@ void MainWindow::deviceDiscoveryFinished()
     {
         qDebug() << "found the peripheral with mac address " << m_peripheralMAC;
 
-        // Ensure the line edit has this value
-        //
         ui->addressLineEdit->setText(m_peripheralMAC);
 
        // Initiate service discovery
-       // TODO: verbose update to window status bar, eg., "...discovering services, please wait"
-
+       //
        this->discoverPeripheralServices(info);
     }
     else
