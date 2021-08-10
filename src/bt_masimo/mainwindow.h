@@ -7,6 +7,8 @@
 #include <QtBluetooth/QLowEnergyController>
 #include <QDir>
 
+// test comment
+
 QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceInfo)
 QT_FORWARD_DECLARE_CLASS(QBluetoothLocalDevice)
 QT_FORWARD_DECLARE_CLASS(QListWidgetItem)
