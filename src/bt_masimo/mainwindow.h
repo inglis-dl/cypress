@@ -7,8 +7,6 @@
 #include <QtBluetooth/QLowEnergyController>
 #include <QDir>
 
-// test comment
-
 QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceInfo)
 QT_FORWARD_DECLARE_CLASS(QBluetoothLocalDevice)
 QT_FORWARD_DECLARE_CLASS(QListWidgetItem)
@@ -59,7 +57,6 @@ private slots:
 
     void deviceSelected(QListWidgetItem*);
 
-
     // QLowEnergyController signal receptors
     //
     // The controller searches available services offered by the peripheral
@@ -76,15 +73,11 @@ private slots:
     // The service negotiates the temperature data request from the peripheral
     //
     void serviceDetailsState(QLowEnergyService::ServiceState newState);
-    void updateTemperatureValue(const QLowEnergyCharacteristic &c, const QByteArray& a);
+    void updateTemperatureValue(const QLowEnergyCharacteristic &c, const QByteArray &a);
 
     // Write the measurement data (temperature, datetime, barcode, device) in json formal to file
     //
     void writeMeasurement();
-
-    // Assign the peripheral MAC address if valid
-    //
-    void onAddressEdit();
 
     void discoverPeripheralServices(const QBluetoothDeviceInfo &info);
 
