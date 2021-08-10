@@ -2,13 +2,13 @@
 enum ExitCodes {
 	Successful = 0,
 
-	// Argument error codes
-	TooFewArguments = 2,
-	TooManyArguments = 3,
-	InvalidUserId = 4,
-	InvalidSiteName = 5,
-	InvalidInterviewerId = 6,
-	InvalidLanguage = 7,
+	// Input error codes (2)
+	UnknownMode = 2,
+	ProblemWithJsonInputsPath = 2,
+	InvalidOrMissingUserId = 2,
+	InvalidOrMissingSitename = 2,
+	InvalidOrMissingInterviewerID = 2,
+	InvalidOrMissingLanguage = 2,
 
 	// Setup error codes
 	JsonSettingsNotFound = 11,

@@ -8,9 +8,8 @@ const QString Strings::French = "French";
 const QString Strings::cmdInput_English = "en";
 const QString Strings::cmdInput_French = "fr";
 
-// Command line flags
-const QString Strings::cmdFlag_test = "-test";
-const QString Strings::cmdFlag_fullTest = "-fullTest";
-
 // Json arguments
-const QString Strings::jsonArg_ccbFolderPath = "CCBFolderPath";
+const QString Strings::jsonArg_userID = "userID";
+const QString Strings::jsonArg_siteName = "siteName";
+const QString Strings::jsonArg_interviewerID = "interviewerID";
+const QString Strings::jsonArg_language = "language";

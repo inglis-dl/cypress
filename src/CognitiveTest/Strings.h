@@ -11,10 +11,9 @@ public:
 	static const QString cmdInput_English;
 	static const QString cmdInput_French;
 
-	// Command line flags
-	static const QString cmdFlag_test;
-	static const QString cmdFlag_fullTest;
-
 	// Json arguments
-	static const QString jsonArg_ccbFolderPath;
+	static const QString jsonArg_userID;
+	static const QString jsonArg_siteName;
+	static const QString jsonArg_interviewerID;
+	static const QString jsonArg_language;
 };

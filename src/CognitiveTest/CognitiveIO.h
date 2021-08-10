@@ -1,6 +1,7 @@
 #pragma once
 #include "InputsModel.h"
 #include "ExitCodesEnum.h"
+#include "ModesEnum.h"
 #include "Strings.h"
 
 #include <QString>
@@ -8,18 +9,16 @@
 #include <QTextStream>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QApplication>
+#include <QCommandLineParser>
 
 class CognitiveIO
 {
 public:
-	static void ReadJsonInputs(QString path, InputsModel* inputs);
-	static int CreateInputsModelFromCmdArgs(int argc, char* argv[], InputsModel* commandLineInputs);
+	static int ParseCommandLineArgs(QApplication* app, InputsModel* commandLineInputs);
 private:
-	static int AddArgToInputs(int argNum, InputsModel* inputs, QString* argument);
-	static int DetermineExitCode(int argNum, bool test, bool fullTest);
-	static bool ValidateUserIDCmdArg(QString userID);
-	static bool ValidateSiteNameCmdArg(QString siteName);
-	static bool ValidateInterviewerIDCmdArg(QString interviewerID);
-	static bool ValidateLanguageCmdArg(QString language);
+	static void ParseCommandLineInputs(QApplication* app, InputsModel* inputs);
+	static int AddJsonInputs(InputsModel* inputs);
+	static int DetermineExitCode(InputsModel* inputs);
 };
 
