@@ -1,4 +1,5 @@
 #include "BPTruBPM200.h"
+#include "CRC8.h"
 
 BPTruBPM200::BPTruBPM200(QWidget *parent)
     : QMainWindow(parent)
