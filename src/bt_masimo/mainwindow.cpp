@@ -35,6 +35,12 @@ MainWindow::MainWindow(QWidget *parent)
       close();
     }
 
+    // Connect the peripheral mac address property notify signal to catch
+    // read from ini file
+    //
+    connect(&m_manager, &BluetoothLEManager::peripheralMACChanged,
+            ui->addressLineEdit, &QLineEdit::setText);
+
     // Read the .ini file for cached local and peripheral device addresses
     //
     QSettings settings(m_appDir.filePath("bt_masimo.ini"), QSettings::IniFormat);
@@ -50,7 +56,6 @@ MainWindow::MainWindow(QWidget *parent)
       qDebug() << "failed to find a local adapter";
       close();
     }
-
 
     // Connect button to connect a controller to a verified peripheral device
     //
@@ -69,9 +74,6 @@ MainWindow::MainWindow(QWidget *parent)
         m_manager.selectDevice(item->text());
       }
     );
-
-    connect(&m_manager, &BluetoothLEManager::peripheralMACChanged,
-            ui->addressLineEdit, &QLineEdit::setText);
 
     connect(&m_manager, &BluetoothLEManager::temperatureChanged,
             ui->temperatureLineEdit, &QLineEdit::setText);
@@ -93,7 +95,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&m_manager, &BluetoothLEManager::canConnect,
             this,[this](){
        ui->connectButton->setEnabled(true);
-       ui->statusBar->showMessage("Ready to connect to peripheral device.");
+       // do not update status bar message if waiting for data to be saved
+       //
+       if(!ui->saveButton->isEnabled())
+         ui->statusBar->showMessage("Ready to connect to peripheral device.");
     });
 
     connect(&m_manager, &BluetoothLEManager::connected,
@@ -107,7 +112,7 @@ MainWindow::MainWindow(QWidget *parent)
        ui->statusBar->showMessage("Ready to save temperature data.");
     });
 
-    connect(&m_manager, &BluetoothLEManager::select,
+    connect(&m_manager, &BluetoothLEManager::canSelect,
             this,[this](){
         // Prompt the user to select the MAC address
         QMessageBox msgBox;
@@ -128,17 +133,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->saveButton, &QPushButton::clicked,
           this, &MainWindow::writeMeasurement);
+
+    m_manager.scanDevices();
  }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-
-void MainWindow::showEvent(QShowEvent *event)
-{
-    QMainWindow::showEvent(event);
-    m_manager.scanDevices();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

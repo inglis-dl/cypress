@@ -30,7 +30,6 @@ public slots:
 
 protected:
     void closeEvent(QCloseEvent *event) override;
-    void showEvent(QShowEvent *event) override;
 
 private slots:
 
