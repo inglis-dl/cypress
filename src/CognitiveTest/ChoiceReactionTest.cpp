@@ -2,14 +2,14 @@
 
 void ChoiceReactionTest::Run(InputsModel* inputs)
 {
-	QString command = inputs->path + "/CCB";
+	QString command = inputs->CCBFolderPath + "/CCB";
 	QProcess process;
 	QStringList arguments;
-	arguments << "/u" + inputs-> userName 
+	arguments << "/u" + inputs-> userID 
 			  << "/c" + inputs-> dcsSiteName 
-			  << "/i" + inputs-> interviewId
+			  << "/i" + inputs-> interviewerID
 			  << "/l" + inputs-> language;
-	process.setWorkingDirectory(inputs->path);
+	process.setWorkingDirectory(inputs->CCBFolderPath);
 	process.start(command, arguments);
 	process.waitForFinished(100000000);
 	process.close();

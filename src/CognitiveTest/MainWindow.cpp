@@ -1,18 +1,15 @@
 #include "MainWindow.h"
 
-CognitiveTest::CognitiveTest(QWidget *parent)
+CognitiveTest::CognitiveTest(InputsModel initialInputs, QWidget *parent)
     : QMainWindow(parent)
 {
     ui.setupUi(this);
-
-    // Load Json into inputs
-    inputs = CognitiveIO::ReadInputs(jsonConfigPath);
+    inputs = initialInputs;
 
     // Run Cognitive Noodle Test
     ChoiceReactionTest::Run(&inputs);
 
     // Move results file to desktop
     // TODO: Figure out what to do with results
-    ChoiceReactionTest::MoveResultsFile(inputs.path);
-
+    ChoiceReactionTest::MoveResultsFile(inputs.CCBFolderPath);
 }
