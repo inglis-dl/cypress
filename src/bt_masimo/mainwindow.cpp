@@ -43,7 +43,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Read the .ini file for cached local and peripheral device addresses
     //
-    QSettings settings(m_appDir.filePath("bt_masimo.ini"), QSettings::IniFormat);
+    QDir dir = QCoreApplication::applicationDirPath();
+    QSettings settings(dir.filePath("bt_masimo.ini"), QSettings::IniFormat);
     m_manager.loadSettings(settings);
 
     if(!m_manager.localAdapterEnabled())
@@ -132,9 +133,10 @@ MainWindow::MainWindow(QWidget *parent)
           &m_manager, &BluetoothLEManager::connectPeripheral);
 
     connect(ui->saveButton, &QPushButton::clicked,
-          this, &MainWindow::writeMeasurement);
-
-    m_manager.scanDevices();
+      this, [this]{
+        writeOutput();
+      }
+    );
  }
 
 MainWindow::~MainWindow()
@@ -142,11 +144,17 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::run()
+{
+    readInput();
+    m_manager.scanDevices();
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     qDebug() << "close event called";
-
-    QSettings settings(m_appDir.filePath("bt_masimo.ini"), QSettings::IniFormat);
+    QDir dir = QCoreApplication::applicationDirPath();
+    QSettings settings(dir.filePath("bt_masimo.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
 
     event->accept();
@@ -169,7 +177,27 @@ void MainWindow::updateDeviceList(const QString &label)
     }
 }
 
-void MainWindow::writeMeasurement()
+void MainWindow::readInput()
+{
+    // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
+    //
+    if(m_inputFileName.isEmpty()) return;
+    QFileInfo info(m_inputFileName);
+    if(info.exists())
+    {
+      QFile file;
+      file.setFileName(m_inputFileName);
+      file.open(QIODevice::ReadOnly | QIODevice::Text);
+      QString val = file.readAll();
+      file.close();
+      QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
+      QJsonObject o = d.object();
+      QJsonValue v = o.value(QString("Barcode"));
+      qDebug() << "input barcode " << v.toString();
+    }
+}
+
+void MainWindow::writeOutput()
 {
    qDebug() << "begin write process ... ";
 
@@ -199,17 +227,48 @@ void MainWindow::writeMeasurement()
    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
    json.insert("Barcode",QJsonValue(barcode));
 
-   // Output .json file will be of the form <participant ID>_<now>_<devicename>.json
+   QString fileName;
+
+   // Use the output filename if it has a valid path
+   // If the path is invalid, use the directory where the application exe resides
+   // If the output filename is empty default output .json file is of the form
+   // <participant ID>_<now>_<devicename>.json
    //
-   QStringList jsonFile;
-   jsonFile << barcode;
-   jsonFile << QDate().currentDate().toString("yyyyMMdd");
-   jsonFile << "bt_masimo.json";
-   QFile saveFile( m_appDir.filePath( jsonFile.join("_") ) );
+   bool constructDefault = false;
+
+   // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
+   //
+   if(m_outputFileName.isEmpty())
+       constructDefault = true;
+   else
+   {
+     QFileInfo info(m_outputFileName);
+     QDir dir = info.absoluteDir();
+     if(dir.exists())
+       fileName = m_outputFileName;
+     else
+       constructDefault = true;
+   }
+   if(constructDefault)
+   {
+       QDir dir = QCoreApplication::applicationDirPath();
+       if(m_outputFileName.isEmpty())
+       {
+         QStringList list;
+         list << barcode;
+         list << QDate().currentDate().toString("yyyyMMdd");
+         list << "bt_masimo.json";
+         fileName = dir.filePath( list.join("_") );
+       }
+       else
+         fileName = dir.filePath( m_outputFileName );
+   }
+
+   QFile saveFile( fileName );
    saveFile.open(QIODevice::WriteOnly);
    saveFile.write(QJsonDocument(json).toJson());
 
-   qDebug() << "wrote to file " << m_appDir.filePath( jsonFile.join("_") );
+   qDebug() << "wrote to file " << fileName;
 
    ui->statusBar->showMessage("Temperature data recorded.  Close when ready.");
 }
