@@ -3,107 +3,82 @@
 
 #include <QMainWindow>
 #include <QCloseEvent>
-#include <QtBluetooth/QBluetoothDeviceDiscoveryAgent>
-#include <QtBluetooth/QLowEnergyController>
 #include <QDir>
 
-QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceInfo)
-QT_FORWARD_DECLARE_CLASS(QBluetoothLocalDevice)
 QT_FORWARD_DECLARE_CLASS(QListWidgetItem)
+
+#include "BluetoothLEManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class BLEInfo : public QObject
-{
-    Q_OBJECT
-public:
-    static QString uuidToString(const QBluetoothUuid&);
-    static QString valueToString(const QByteArray&);
-    static QString handleToString(const QLowEnergyHandle&);
-    static QString permissionToString(const QLowEnergyCharacteristic&);
-};
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    Q_PROPERTY(QString inputFileName READ inputFileName WRITE setInputFileName)
+    Q_PROPERTY(QString outputFileName READ outputFileName WRITE setOutputFileName)
+    Q_PROPERTY(QString mode READ mode WRITE setMode)
+    Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void setApplicationDir(QString path) {
-        this->m_appDir = QDir(path);
-    }
+    // Set the expected keys that should be read from an input
+    // json file
+    //
+    void setInputKeys(const QList<QString> &keys);
+
+    // Set the expected output keys that will be written
+    // with device data content to json file
+    //
+    void setOutputKeys(const QList<QString> &keys);
+
+    // Call after setting the input and output keys
+    // This method internally calls readInput
+    void initialize();
+
+    // Call after initialize, launch the application and run
+    // the device
+    //
+    void run();
+
+    // Call after run to finish any remaining tasks like auto write to output file
+    //
+    void finish();
+
+    void setInputFileName(const QString& name) { m_inputFileName = name; }
+    QString inputFileName() { return m_inputFileName; }
+    void setOutputFileName(const QString& name) { m_outputFileName = name; }
+    QString outputFileName() { return m_outputFileName; }
+    void setMode(const QString& mode) { m_mode = mode.toLower(); }
+    QString mode() { return m_mode; }
+    void setVerbose(const bool& verbose) { m_verbose = verbose; }
+    bool isVerbose(){ return m_verbose; }
+
+public slots:
+    void updateDeviceList(const QString &label);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
 
-    // QBluetoothDeviceDiscoveryAgent signal receptors
-    //
-    // The agent searches for paired devices cached by the OS's BT local device
-    // If the BT thermometer (peripheral) was previously paired to the client
-    // create and activate a QLowEnergyController to negotiate communication
-    //
-    void deviceDiscovered(const QBluetoothDeviceInfo &info);
-    void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error);
-    void deviceDiscoveryFinished();
-
-    void deviceSelected(QListWidgetItem*);
-
-
-    // QLowEnergyController signal receptors
-    //
-    // The controller searches available services offered by the peripheral
-    // If the Health Thermometer service is discovered, the controller
-    // creates a QLowEnergyService to write and read temperature data
-    //
-    void serviceDiscovered(const QBluetoothUuid &service);
-    void serviceDiscoveryComplete();
-    void serviceScanError(QLowEnergyController::Error error);
-    void discoverServices();
-
-    // QLowEnergyService signal receptors
-    //
-    // The service negotiates the temperature data request from the peripheral
-    //
-    void serviceDetailsState(QLowEnergyService::ServiceState newState);
-    void updateTemperatureValue(const QLowEnergyCharacteristic &c, const QByteArray& a);
-    void confirmedDescriptorWrite(const QLowEnergyDescriptor& d, const QByteArray& a);
-
-    // Write the measurement data (temperature, datetime, barcode, device) in json formal to file
-    //
-    void writeMeasurement();
-
-    // Assign the peripheral MAC address if valid
-    //
-    void onMACEdit();
-
 private:
+    void readInput();
+    void writeOutput();
+
     Ui::MainWindow *ui;
 
-    QBluetoothDeviceInfo *m_peripheral = nullptr;
-    QBluetoothLocalDevice *m_client = nullptr;
-    QBluetoothDeviceDiscoveryAgent *m_agent = nullptr;
-    QLowEnergyController *m_controller = nullptr;
+    QString m_inputFileName;
+    QString m_outputFileName;
+    QString m_mode;
+    bool m_verbose;
+    QMap<QString,QVariant> m_inputData;
+    QMap<QString,QVariant> m_outputData;
 
-    // Read and wrtie storage for client and peripheral addresses in .ini file
-    //
-    void readSettings();
-    void writeSettings();
-
-    void connectToController(const QBluetoothDeviceInfo& info);
-
-    bool foundThermometer = false;
-    bool foundDeviceInfo = false;
-    QDir m_appDir;
-    QMap<QString,QVariant> m_measurementData;
-    QMap<QString,QVariant> m_deviceData;
-    QString m_peripheralMAC;
-    QMap<QString,QBluetoothDeviceInfo> m_deviceList;
+    BluetoothLEManager m_manager;
 };
 #endif // MAINWINDOW_H
