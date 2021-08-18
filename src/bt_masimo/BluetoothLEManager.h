@@ -19,6 +19,7 @@ class BluetoothLEManager : public QObject
     Q_PROPERTY(QString peripheralMAC MEMBER m_peripheralMAC NOTIFY peripheralMACChanged)
     Q_PROPERTY(QString temperature MEMBER m_temperature NOTIFY temperatureChanged)
     Q_PROPERTY(QString datetime MEMBER m_datetime NOTIFY datetimeChanged)
+    Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
 
 public:
     explicit BluetoothLEManager(QObject *parent = nullptr);
@@ -32,8 +33,22 @@ public:
     void loadSettings(const QSettings &);
     void saveSettings(QSettings*);
 
+    void setVerbose(const bool& verbose) { m_verbose = verbose; }
+    bool isVerbose(){ return m_verbose; }
+
     const QMap<QString,QVariant>&  getMeasurementData(){return m_measurementData;}
     const QMap<QString,QVariant>&  getDeviceData(){return m_deviceData;}
+
+    QMap<QString,QVariant> getData(){
+        QMap<QString,QVariant> map(m_measurementData);
+        QMap<QString,QVariant>::const_iterator it = m_deviceData.constBegin();
+        while(it != m_deviceData.constEnd())
+        {
+          map[it.key()] = it.value();
+          ++it;
+        }
+        return map;
+    }
 
 signals:
 
@@ -105,8 +120,9 @@ private slots:
 
     void connectToController(const QBluetoothDeviceInfo &info);
 
-    bool m_foundThermoService = false;
-    bool m_foundInfoService = false;
+    bool m_verbose;
+    bool m_foundThermoService;
+    bool m_foundInfoService;
     QMap<QString,QVariant> m_measurementData;
     QMap<QString,QVariant> m_deviceData;
 
@@ -115,8 +131,6 @@ private slots:
     QString m_datetime;
 
     QMap<QString,QBluetoothDeviceInfo> m_deviceList;
-
-    QLowEnergyDescriptor m_notificationDesc;
 
     void clearData();
     void disconnectPeripheral();

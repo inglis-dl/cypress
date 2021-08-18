@@ -10,20 +10,30 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 
-#include <QtBluetooth/QBluetoothLocalDevice>
-#include <QtBluetooth/QBluetoothDeviceInfo>
-#include <QtBluetooth/QLowEnergyController>
-
 #include "BluetoothLEManager.h"
-
-
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , m_verbose(false)
     , m_manager(this)
 {
     ui->setupUi(this);
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+
+void MainWindow::initialize()
+{
+    m_manager.setVerbose(m_verbose);
+
+    // require a barcode as input
+    //
+    readInput();
 
     if(!m_manager.lowEnergyEnabled())
     {
@@ -32,6 +42,9 @@ MainWindow::MainWindow(QWidget *parent)
                         "low energy discovery."));
       msgBox.setIcon(QMessageBox::Critical);
       msgBox.exec();
+
+      // TODO: return error code
+      //
       close();
     }
 
@@ -54,7 +67,12 @@ MainWindow::MainWindow(QWidget *parent)
                           "low energy adapter."));
       msgBox.setIcon(QMessageBox::Critical);
       msgBox.exec();
-      qDebug() << "failed to find a local adapter";
+
+      if(m_verbose)
+          qDebug() << "failed to find a local adapter";
+
+      // TODO: return error code
+      //
       close();
     }
 
@@ -71,7 +89,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->deviceListWidget, &QListWidget::itemDoubleClicked,
             this,[this](QListWidgetItem* item)
       {
-        qDebug() << "device selected from list " <<  item->text();
+        if(m_verbose)
+            qDebug() << "device selected from list " <<  item->text();
         m_manager.selectDevice(item->text());
       }
     );
@@ -127,7 +146,10 @@ MainWindow::MainWindow(QWidget *parent)
         msgBox.exec();
     });
 
-    ui->barcodeLineEdit->setText("40000001"); // dummy ID for now
+    if(m_inputData.contains("Barcode") && m_inputData["Barcode"].isValid())
+       ui->barcodeLineEdit->setText(m_inputData["Barcode"].toString());
+    else
+       ui->barcodeLineEdit->setText("00000000"); // dummy
 
     connect(ui->connectButton, &QPushButton::clicked,
           &m_manager, &BluetoothLEManager::connectPeripheral);
@@ -137,22 +159,31 @@ MainWindow::MainWindow(QWidget *parent)
         writeOutput();
       }
     );
- }
+}
 
-MainWindow::~MainWindow()
+void MainWindow::setInputKeys(const QList<QString> &keys)
 {
-    delete ui;
+   m_inputData.clear();
+   for(int i=0;i<keys.size();i++)
+       m_inputData.insert(keys[i],QVariant());
+}
+
+void MainWindow::setOutputKeys(const QList<QString> &keys)
+{
+   m_outputData.clear();
+   for(int i=0;i<keys.size();i++)
+       m_outputData.insert(keys[i],QVariant());
 }
 
 void MainWindow::run()
 {
-    readInput();
     m_manager.scanDevices();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    qDebug() << "close event called";
+    if(m_verbose)
+        qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath("bt_masimo.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
@@ -177,11 +208,18 @@ void MainWindow::updateDeviceList(const QString &label)
     }
 }
 
+void MainWindow::finish()
+{
+}
+
 void MainWindow::readInput()
 {
-    // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
+    // TODO: if the run mode is not debug, an input file name is mandatory, throw an error
     //
-    if(m_inputFileName.isEmpty()) return;
+    if(m_inputFileName.isEmpty())
+    {
+        return;
+    }
     QFileInfo info(m_inputFileName);
     if(info.exists())
     {
@@ -190,42 +228,62 @@ void MainWindow::readInput()
       file.open(QIODevice::ReadOnly | QIODevice::Text);
       QString val = file.readAll();
       file.close();
+
       QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject o = d.object();
-      QJsonValue v = o.value(QString("Barcode"));
-      qDebug() << "input barcode " << v.toString();
+      QMapIterator<QString,QVariant> it(m_inputData);
+      QList<QString> keys = m_inputData.keys();
+      for(int i=0;i<keys.size();i++)
+      {
+          QJsonValue v = o.value(keys[i]);
+          // TODO: error report all missing expected key values
+          //
+          if(!v.isUndefined())
+              m_inputData[keys[i]] = v.toVariant();
+      }
     }
 }
 
 void MainWindow::writeOutput()
 {
-   qDebug() << "begin write process ... ";
+   if(m_verbose)
+       qDebug() << "begin write process ... ";
 
-   QMap<QString,QVariant> m_measurementData = m_manager.getMeasurementData();
+   QMap<QString,QVariant> data = m_manager.getData();
+
+   if(m_verbose)
+       qDebug() << "data retrieved from device ... ";
+
+   // copy in expected device data
+   //
+   QMap<QString,QVariant>::const_iterator it = data.constBegin();
+   while(it != data.constEnd())
+   {
+     if(m_outputData.contains(it.key()))
+        m_outputData[it.key()] = it.value();
+     ++it;
+   }
+
+   // get the most recent input barcode
+   //
+   m_outputData["Barcode"] = ui->barcodeLineEdit->text().simplified().remove(" ");
 
    // Create a json object with measurement key value pairs
    //
    QJsonObject json;
-   QMap<QString,QVariant>::const_iterator it = m_measurementData.constBegin();
-   while(it != m_measurementData.constEnd())
+   it = m_outputData.constBegin();
+   int missingCount = 0;
+   while(it != m_outputData.constEnd())
    {
-     json.insert(it.key(),QJsonValue::fromVariant(it.value()));
+     if(m_outputData.contains(it.key()))
+         json.insert(it.key(),QJsonValue::fromVariant(it.value()));
+     else
+         missingCount++;
      ++it;
    }
 
-   QMap<QString,QVariant> m_deviceData = m_manager.getDeviceData();
-
-   it = m_deviceData.constBegin();
-   while(it != m_deviceData.constEnd())
-   {
-     json.insert(it.key(),QJsonValue::fromVariant(it.value()));
-     ++it;
-   }
-
-   // Insert participant barcode
-   //
-   QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
-   json.insert("Barcode",QJsonValue(barcode));
+   if(m_verbose)
+       qDebug() << "determine file output name ... ";
 
    QString fileName;
 
@@ -255,7 +313,7 @@ void MainWindow::writeOutput()
        if(m_outputFileName.isEmpty())
        {
          QStringList list;
-         list << barcode;
+         list << m_outputData["Barcode"].toString();
          list << QDate().currentDate().toString("yyyyMMdd");
          list << "bt_masimo.json";
          fileName = dir.filePath( list.join("_") );
@@ -268,7 +326,8 @@ void MainWindow::writeOutput()
    saveFile.open(QIODevice::WriteOnly);
    saveFile.write(QJsonDocument(json).toJson());
 
-   qDebug() << "wrote to file " << fileName;
+   if(m_verbose)
+       qDebug() << "wrote to file " << fileName;
 
    ui->statusBar->showMessage("Temperature data recorded.  Close when ready.");
 }
