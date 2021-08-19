@@ -57,7 +57,7 @@ void MainWindow::initialize()
     // Read the .ini file for cached local and peripheral device addresses
     //
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("bt_masimo.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath("lowenergythermometer.ini"), QSettings::IniFormat);
     m_manager.loadSettings(settings);
 
     if(!m_manager.localAdapterEnabled())
@@ -185,7 +185,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if(m_verbose)
         qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("bt_masimo.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath("lowenergythermometer.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
 
     event->accept();
@@ -315,7 +315,7 @@ void MainWindow::writeOutput()
          QStringList list;
          list << m_outputData["Barcode"].toString();
          list << QDate().currentDate().toString("yyyyMMdd");
-         list << "bt_masimo.json";
+         list << "lowenergythermometer.json";
          fileName = dir.filePath( list.join("_") );
        }
        else

@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName("CLSA");
     QCoreApplication::setOrganizationDomain("clsa-elcv.ca");
-    QCoreApplication::setApplicationName("bt_masimo");
+    QCoreApplication::setApplicationName("LowEnergyThermometer");
 
     // TODO: for debug mode command line arg, where no
     // GUI is required we can run a non-gui version
