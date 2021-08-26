@@ -3,9 +3,11 @@
 #include <QtWidgets/QMainWindow>
 #include "ui_BPTruBPM200.h"
 
-#include <QQueue>
+#include <QCloseEvent>
 
-#include "BPMMessage.h"
+#include "hidapi.h"
+#include "CRC8.h"
+#include "BPMCommunicationHelper.h"
 
 class BPTruBPM200 : public QMainWindow
 {
@@ -21,7 +23,8 @@ public slots:
     void OnCycleClicked();
 private:
     Ui::BPTruBPM200Class ui;
+    void closeEvent(QCloseEvent* event);
+    int testHidApi();
     void SetupSlots();
-    QQueue<BPMMessage> writeQueue;
-    QQueue<BPMMessage> readQueue;
+    BPMCommunicationHelper bpmCommunication;
 };
