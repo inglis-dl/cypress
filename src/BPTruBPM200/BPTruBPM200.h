@@ -8,6 +8,8 @@
 #include "hidapi.h"
 #include "CRC8.h"
 #include "BPMCommunicationHelper.h"
+#include "BPMResponse.h"
+#include "Wait.h"
 
 class BPTruBPM200 : public QMainWindow
 {
@@ -21,10 +23,12 @@ public slots:
     void OnClearClicked();
     void OnReviewClicked();
     void OnCycleClicked();
+
+    void OnBPMResponse();
 private:
     Ui::BPTruBPM200Class ui;
+    bool isLive = true;
     void closeEvent(QCloseEvent* event);
-    int testHidApi();
     void SetupSlots();
     BPMCommunicationHelper bpmCommunication;
 };
