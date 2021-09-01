@@ -4,6 +4,9 @@
 
 int main(int argc, char *argv[])
 {
+    QCoreApplication::setOrganizationName("CLSA");
+    QCoreApplication::setOrganizationDomain("clsa-elcv.ca");
+    QCoreApplication::setApplicationName("Cypress");
     QCoreApplication app(argc, argv);
 
     QTranslator translator;
@@ -16,10 +19,19 @@ int main(int argc, char *argv[])
         }
     }
 
+    
+
     // TODO
     // - command line parsing
+    // expect input json defining which instrument to run
+    // 
+
+    // read in any .ini file settings
+    //
+
+
     // - logging categories
-    // - singleton
+    // - singleton ?
     // - error codes
     // - dialog classes
     // - default .ini settings

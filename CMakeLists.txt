@@ -17,7 +17,7 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core LinguistTools REQUIRED)
 set(TS_FILES cypress_en_CA.ts)
 
 add_executable(cypress
-  main.cpp
+  ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${TS_FILES}
 )
 target_link_libraries(cypress Qt${QT_VERSION_MAJOR}::Core)
