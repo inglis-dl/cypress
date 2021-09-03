@@ -60,13 +60,13 @@
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="devicesGroupBox">
+     <widget class="QGroupBox" name="serialPortGroupBox">
       <property name="title">
-       <string>devices</string>
+       <string>serial ports</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
        <item>
-        <widget class="QListWidget" name="deviceListWidget">
+        <widget class="QListWidget" name="serialPortListWidget">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
            <horstretch>0</horstretch>
@@ -78,19 +78,19 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QLabel" name="macLabel">
+          <widget class="QLabel" name="serialPortLabel">
            <property name="text">
-            <string>MAC Address:</string>
+            <string>Serial Port:</string>
            </property>
            <property name="buddy">
-            <cstring>addressLineEdit</cstring>
+            <cstring>serialPortLineEdit</cstring>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="addressLineEdit">
+          <widget class="QLineEdit" name="serialPortLineEdit">
            <property name="inputMask">
-            <string>HH:HH:HH:HH:HH:HH;_</string>
+            <string/>
            </property>
            <property name="readOnly">
             <bool>true</bool>
@@ -129,6 +129,20 @@
            </property>
            <property name="text">
             <string>Connect</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="zeroButton">
+           <property name="text">
+            <string>Zero</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="measureButton">
+           <property name="text">
+            <string>Measure</string>
            </property>
           </widget>
          </item>

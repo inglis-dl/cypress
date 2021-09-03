@@ -1,6 +1,6 @@
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport
 
 CONFIG += c++11
 
@@ -21,7 +21,8 @@ FORMS += \
     MainWindow.ui
 
 TRANSLATIONS += \
-    Weighscale_en_CA.ts
+    WeighScale_ec_CA.ts
+
 CONFIG += lrelease
 CONFIG += embed_translations
 

@@ -1,12 +1,14 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
+#include <QCloseEvent>
 #include <QDate>
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QMessageBox>
 #include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -29,6 +31,12 @@ void MainWindow::initialize()
 
   readInput();
 
+  // Connect the serial port property notify signal to catch
+  // read from ini file
+  //
+  connect(&m_manager, &WeighScaleManager::serialPortChanged,
+          ui->serialPortLineEdit, &QLineEdit::setText);
+
   // Read the .ini file for cached local and peripheral device addresses
   //
   QDir dir = QCoreApplication::applicationDirPath();
@@ -43,12 +51,112 @@ void MainWindow::initialize()
   //
   ui->saveButton->setEnabled(false);
 
+  ui->zeroButton->setEnabled(false);
+
+  ui->measureButton->setEnabled(false);
+
+  // as soon as there are serial ports in the list, allow click to select port
+  //
+  connect(ui->serialPortListWidget, &QListWidget::itemDoubleClicked,
+          this,[this](QListWidgetItem* item)
+    {
+      if(m_verbose)
+          qDebug() << "device selected from list " <<  item->text();
+      m_manager.selectDevice(item->text());
+    }
+  );
+
   connect(&m_manager, &WeighScaleManager::weightChanged,
           ui->weightLineEdit, &QLineEdit::setText);
 
   connect(&m_manager, &WeighScaleManager::datetimeChanged,
           ui->dateTimeLineEdit, &QLineEdit::setText);
 
+  connect(&m_manager, &WeighScaleManager::scanning,
+          this,[this]()
+    {
+      ui->serialPortListWidget->clear();
+      ui->statusBar->showMessage("Discovering serial ports ... please wait");
+    }
+  );
+
+  connect(&m_manager, &WeighScaleManager::discovered,
+          this, &MainWindow::updateDeviceList);
+
+  connect(&m_manager, &WeighScaleManager::canSelect,
+          this,[this](){
+      // Prompt the user to select the MAC address
+      QMessageBox msgBox;
+      msgBox.setText(tr("Double click the port from the list.  If the device "
+        "is not in the list, quit the application and check that the port is "
+        "working and connect the weigh scale to it before running this application."));
+      msgBox.setIcon(QMessageBox::Warning);
+      msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Abort);
+      msgBox.setButtonText(QMessageBox::Abort,tr("Quit"));
+      connect(msgBox.button(QMessageBox::Abort),&QPushButton::clicked,this,&MainWindow::close);
+      msgBox.exec();
+  });
+
+  connect(&m_manager, &WeighScaleManager::canConnect,
+          this,[this](){
+     ui->connectButton->setEnabled(true);
+     // do not update status bar message if waiting for data to be saved
+     //
+     if(!ui->saveButton->isEnabled())
+       ui->statusBar->showMessage("Ready to connect to serial port.");
+  });
+
+  connect(ui->connectButton, &QPushButton::clicked,
+        &m_manager, &WeighScaleManager::connectToPort);
+
+  connect(ui->zeroButton, &QPushButton::clicked,
+        &m_manager, &WeighScaleManager::zero);
+
+  connect(&m_manager, &WeighScaleManager::connected,
+          this,[this](){
+      qDebug() << "ready to zero scale";
+          ui->zeroButton->setEnabled(true);
+  });
+
+  connect(ui->measureButton, &QPushButton::clicked,
+        &m_manager, &WeighScaleManager::measure);
+
+  connect(&m_manager, &WeighScaleManager::canMeasure,
+          this,[this](){
+      qDebug() << "ready to measure";
+          ui->measureButton->setEnabled(true);
+  });
+
+  if(m_inputData.contains("Barcode") && m_inputData["Barcode"].isValid())
+     ui->barcodeLineEdit->setText(m_inputData["Barcode"].toString());
+  else
+     ui->barcodeLineEdit->setText("00000000"); // dummy
+
+  connect(ui->saveButton, &QPushButton::clicked,
+    this, [this]{
+      writeOutput();
+    }
+  );
+}
+
+void MainWindow::updateDeviceList(const QString &label)
+{
+    // Add the device to the list
+    //
+    QList<QListWidgetItem *> items = ui->serialPortListWidget->findItems(label, Qt::MatchExactly);
+    if(items.empty())
+    {
+        QListWidgetItem *item = new QListWidgetItem(label);
+
+        // TODO: consider checking if the weigh scale is running on
+        // the port
+        if(m_manager.isDefined(label))
+          item->setForeground(QColor(Qt::green));
+        else
+          item->setForeground(QColor(Qt::black));
+
+        ui->serialPortListWidget->addItem(item);
+    }
 }
 
 void MainWindow::setInputKeys(const QList<QString> &keys)
@@ -67,12 +175,24 @@ void MainWindow::setOutputKeys(const QList<QString> &keys)
 
 void MainWindow::run()
 {
-//    m_manager.scanDevices();
+    m_manager.scanDevices();
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if(m_verbose)
+        qDebug() << "close event called";
+    QDir dir = QCoreApplication::applicationDirPath();
+    QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
+    m_manager.saveSettings(&settings);
+
+    event->accept();
+}
+
+// TODO: consider removing "finish" and using override of "clostEvent"
+// instead
 void MainWindow::finish()
 {
-//    m_manager.scanDevices();
 }
 
 void MainWindow::readInput()
@@ -178,7 +298,7 @@ void MainWindow::writeOutput()
          QStringList list;
          list << m_outputData["Barcode"].toString();
          list << QDate().currentDate().toString("yyyyMMdd");
-         list << "lowenergythermometer.json";
+         list << "weighscale.json";
          fileName = dir.filePath( list.join("_") );
        }
        else

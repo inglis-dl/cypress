@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QMap>
 
+QT_FORWARD_DECLARE_CLASS(QCloseEvent)
+
 #include "WeighScaleManager.h"
 
 QT_BEGIN_NAMESPACE
@@ -54,6 +56,12 @@ public:
     QString mode() { return m_mode; }
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose(){ return m_verbose; }
+
+public slots:
+    void updateDeviceList(const QString &);
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     Ui::MainWindow *ui;

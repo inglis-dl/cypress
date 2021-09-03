@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QMap>
+#include <QSerialPort>
+#include <QSerialPortInfo>
 #include <QVariant>
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
@@ -10,12 +12,19 @@ QT_FORWARD_DECLARE_CLASS(QSettings)
 class WeighScaleManager : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QString serialPort MEMBER m_serialPort NOTIFY serialPortChanged)
     Q_PROPERTY(QString weight MEMBER m_weight NOTIFY weightChanged)
     Q_PROPERTY(QString datetime MEMBER m_datetime NOTIFY datetimeChanged)
     Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
 
 public:
     explicit WeighScaleManager(QObject *parent = nullptr);
+
+    bool localPortsEnabled();
+    bool isDefined(const QString &);
+
+    void selectDevice(const QString &);
+    void scanDevices();
 
     void loadSettings(const QSettings &);
     void saveSettings(QSettings*);
@@ -37,19 +46,55 @@ public:
         return map;
     }
 
+public slots:
+
+    void connectToPort();
+    void zero();
+    void measure();
+
 signals:
 
+    void scanning();
+    void discovered(const QString &);
+
+    // prompt the user to select the port from list of scanned port devices
+    void canSelect();
+
+    // a port was found in the list of discovered ports and serial was
+    // selected and set to portSerial
+    void selected();
+
+    // port ready to connect
+    void canConnect();
+
+    // data is available to write
+    void canWrite();
+
+    void canMeasure();
+
+    // connected to port
+    void connected();
+
+    void serialPortChanged(const QString &);
     void weightChanged(const QString &);
     void datetimeChanged(const QString &);
 
+private slots:
+
+    void setDevice(const QSerialPortInfo &);
+
 private:
 
+    QScopedPointer<QSerialPort> m_port;
     QMap<QString,QVariant> m_measurementData;
     QMap<QString,QVariant> m_deviceData;
+
+    QMap<QString,QSerialPortInfo> m_deviceList;
 
     QString m_weight;
     QString m_datetime;
     bool m_verbose;
+    QString m_serialPort;
 
     void clearData();
 

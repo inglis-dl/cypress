@@ -59,7 +59,12 @@ int main(int argc, char *argv[])
 
     // Default when not run from command line we assume verbose is desired
     //
-    bool verbose = parser.isSet(verboseOption);
+    bool verbose = true;
+    if(1<QCoreApplication::arguments().size())
+    {
+      qDebug() << " not empty app args: " << QString::number(QCoreApplication::arguments().size());
+      verbose = parser.isSet(verboseOption);
+    }
 
     QString inputFilename;
     if(parser.isSet(inputOption))
@@ -97,6 +102,7 @@ int main(int argc, char *argv[])
     QList<QString> outputKeys;
     outputKeys.append("Barcode");
     outputKeys.append("DateTime");
+    /*
     outputKeys.append("Device MAC");
     outputKeys.append("Device Name");
     outputKeys.append("Firmware Revision");
@@ -104,7 +110,7 @@ int main(int argc, char *argv[])
     outputKeys.append("Temperature Scale");
     outputKeys.append("Temperature Value");
     outputKeys.append("Temperature Type");
-
+    */
     MainWindow window;
     window.setInputFileName(inputFilename);
     window.setOutputFileName(outputFilename);
