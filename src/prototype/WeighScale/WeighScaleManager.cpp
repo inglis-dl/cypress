@@ -1,5 +1,6 @@
 #include "WeighScaleManager.h"
 
+#include <QDateTime>
 #include <QDebug>
 #include <QSerialPortInfo>
 #include <QSettings>
@@ -195,10 +196,67 @@ void WeighScaleManager::connectToPort()
 
 void WeighScaleManager::zero()
 {
-    emit canMeasure();
+    if(m_port->isOpen())
+    {
+      QByteArray z("z");
+      m_port->write(z);
+      if(QSerialPort::NoError==m_port->error())
+      {
+          qDebug() << "success zeroing";
+      }
+      else
+      {
+          qDebug() << "error occured zeroing " << m_port->errorString();
+      }
+      emit canMeasure();
+    }
 }
 
 void WeighScaleManager::measure()
 {
-    emit canWrite();
+    if(m_port->isOpen())
+    {
+      QByteArray p("p");
+      m_port->write(p);
+      if(QSerialPort::NoError==m_port->error())
+      {
+          qDebug() << "success reading";
+          QByteArray output = m_port->readAll();
+          QString s(output);
+          qDebug() << "output: " << s ;
+          // parse the output
+          // read from the end of the string back
+          // format is
+          // ...<SP>xxxxxxxx<SP>uu<SP>mmmmm<SP><CR><LF>
+          // xxxxxxx is the weight with decimal point and "_" sign,
+          // if neg uu is the unit (lb or kg)
+          // mmmmm is the mode (gross or net)
+          // strip off the last two chars
+          // split on <SP>
+          // loop and trim results
+          output.chop(2);
+          output = output.trimmed();
+          QList<QByteArray> parts = output.split(' ');
+          if(3<=parts.size())
+          {
+              QString weightStr = QString(parts[0]);
+              QString unitStr = QString(parts[1]);
+              QString modeStr = QString(parts[2]);
+              QDateTime dt = QDateTime::currentDateTime();
+              QString d = dt.date().toString("yyyy-MM-dd");
+              QString t = dt.time().toString("hh:mm:ss");
+
+              qDebug() << "parsed output " << weightStr
+                       << "(" << unitStr << ")"
+                       << " " << modeStr << ", "
+                       << d << " " << t;
+
+          }
+      }
+      else
+      {
+          qDebug() << "error occured reading " << m_port->errorString();
+      }
+      emit canWrite();
+    }
 }
