@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QSerialPortInfo>
 #include <QSettings>
+#include <QtMath>
 
 WeighScaleManager::WeighScaleManager(QObject *parent) : QObject(parent),
     m_verbose(false)
@@ -17,21 +18,20 @@ bool WeighScaleManager::localPortsEnabled()
 
 void WeighScaleManager::loadSettings(const QSettings &settings)
 {
-    QString port = settings.value("client/port").toString();
-
-    if(!port.isEmpty())
+    QString portName = settings.value("client/port").toString();
+    if(!portName.isEmpty())
     {
-      setProperty("serialPort", port);
+      setProperty("portName", portName);
       if(m_verbose)
-          qDebug() << "using serial port " << m_serialPort << " from settings file";
+          qDebug() << "using serial port " << m_portName << " from settings file";
     }
 }
 
 void WeighScaleManager::saveSettings(QSettings *settings)
 {
-    if(!m_port.isNull())
+    if(!m_portName.isNull())
     {
-      settings->setValue("client/port",m_port->portName());
+      settings->setValue("client/port",m_portName);
       if(m_verbose)
           qDebug() << "wrote serial port to settings file";
     }
@@ -48,6 +48,7 @@ void WeighScaleManager::clearData()
 void WeighScaleManager::scanDevices()
 {
     m_deviceList.clear();
+    m_portInfo = QSerialPortInfo();
     emit scanning();
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
     {
@@ -76,14 +77,17 @@ void WeighScaleManager::scanDevices()
     }
     if(m_verbose)
         qDebug() << "Found " << QString::number(m_deviceList.count()) << " ports";
+
+    // if we have a port from the ini file, check if it is still available on the system
+    //
     bool found = false;
     QSerialPortInfo info;
-    if(!m_serialPort.isEmpty())
+    if(!m_portName.isEmpty())
     {
         QMap<QString,QSerialPortInfo>::const_iterator it = m_deviceList.constBegin();
         while(it != m_deviceList.constEnd() && !found)
         {
-          found = it.key().contains(m_serialPort);
+          found = it.key().contains(m_portName);
           if(found) info = it.value();
           ++it;
         }
@@ -91,9 +95,8 @@ void WeighScaleManager::scanDevices()
     if(found)
     {
         if(m_verbose)
-            qDebug() << "found the port with serial " << m_serialPort;
-       // Initiate service discovery preparation
-       //
+            qDebug() << "found the port  " << m_portName;
+
        this->setDevice(info);
     }
     else
@@ -106,8 +109,9 @@ void WeighScaleManager::selectDevice(const QString &label)
 {
     if(m_deviceList.contains(label))
     {
+      m_portInfo = QSerialPortInfo();
       QSerialPortInfo info = m_deviceList.value(label);
-      setProperty("serialPort",info.portName());
+      setProperty("portName",info.portName());
       setDevice(info);
       if(m_verbose)
          qDebug() << "device selected from label " <<  label;
@@ -116,7 +120,7 @@ void WeighScaleManager::selectDevice(const QString &label)
 
 void WeighScaleManager::setDevice(const QSerialPortInfo &info)
 {
-    if(m_serialPort.isEmpty() || info.isNull())
+    if(m_portName.isEmpty() || info.isNull())
     {
         if(m_verbose)
             qDebug() << "ERROR: no port available";
@@ -142,29 +146,22 @@ void WeighScaleManager::setDevice(const QSerialPortInfo &info)
     if(!info.description().isEmpty())
       m_deviceData["Description"] = info.description();
 
-    m_port.reset(new QSerialPort(info));
-    if(m_port->open(QIODevice::ReadWrite))
+    //QSerialPort port(info);
+    m_port.setPort(info);
+    m_port.setDataBits(QSerialPort::Data8);
+    m_port.setParity(QSerialPort::NoParity);
+    m_port.setStopBits(QSerialPort::OneStop);
+    m_port.setBaudRate(QSerialPort::Baud9600);
+    if(m_port.open(QSerialPort::ReadWrite))
     {
-        qDebug() << "port " << info.portName() << " can read write";
-        connect(m_port.data(),&QSerialPort::errorOccurred,
-                this,[this](QSerialPort::SerialPortError error){
-            if(m_verbose)
-            {
-                QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"),QString::SkipEmptyParts);
-                qDebug() << "serial port reported error " << s.join(" ").toLower();
-            }
-        }
-        );
-        emit canConnect();
+      m_portInfo = info;
+      emit canConnect();
     }
     else
     {
-        qDebug() << "port " << info.portName() << " can not read from";
+        qDebug() << "error: failed to open serial port: " << m_port.errorString();
     }
-    if(m_port->isOpen())
-    {
-       m_port->close();
-    }
+    m_port.close();
 }
 
 bool WeighScaleManager::isDefined(const QString &label)
@@ -178,85 +175,73 @@ bool WeighScaleManager::isDefined(const QString &label)
     return defined;
 }
 
-void WeighScaleManager::connectToPort()
-{
-    if(m_port.isNull())
-    {
-        qDebug() << "ERROR: the port object is not allocated";
-       return;
-    }
-    m_port->open(QIODevice::ReadWrite);
-    m_port->setDataBits(QSerialPort::Data8);
-    m_port->setParity(QSerialPort::NoParity);
-    m_port->setStopBits(QSerialPort::OneStop);
-    m_port->setBaudRate(QSerialPort::Baud9600);
-
-    emit connected();
-}
-
 void WeighScaleManager::zero()
 {
-    if(m_port->isOpen())
+    if(m_port.open(QSerialPort::ReadWrite))
     {
-      QByteArray z("z");
-      m_port->write(z);
-      if(QSerialPort::NoError==m_port->error())
-      {
-          qDebug() << "success zeroing";
-      }
-      else
-      {
-          qDebug() << "error occured zeroing " << m_port->errorString();
-      }
-      emit canMeasure();
+        m_port.write(QByteArray("z"));
+        while(m_port.waitForBytesWritten(1000))
+        {
+        }
+        m_port.write(QByteArray("p"));
+        if(m_port.waitForReadyRead(1000))
+        {
+            QByteArray arr = m_port.readAll();
+            while (m_port.waitForReadyRead(10))
+                arr += m_port.readAll();
+            if(!arr.isEmpty())
+            {
+              arr.chop(2);
+              arr = arr.trimmed();
+              QList<QByteArray> parts = arr.split(' ');
+              if(3<=parts.size())
+              {
+                 double value = qFabs(QVariant(parts.first()).toDouble());
+                 if(0.0==value)
+                 {
+                     qDebug() << "ok, scale confirmed zero: " << QString(parts.first());
+                     emit canMeasure();
+                 }
+              }
+            }
+        }
+        m_port.close();
     }
-}
+} 
 
 void WeighScaleManager::measure()
 {
-    if(m_port->isOpen())
+    if(m_port.open(QSerialPort::ReadWrite))
     {
-      QByteArray p("p");
-      m_port->write(p);
-      if(QSerialPort::NoError==m_port->error())
-      {
-          qDebug() << "success reading";
-          QByteArray output = m_port->readAll();
-          QString s(output);
-          qDebug() << "output: " << s ;
-          // parse the output
-          // read from the end of the string back
-          // format is
-          // ...<SP>xxxxxxxx<SP>uu<SP>mmmmm<SP><CR><LF>
-          // xxxxxxx is the weight with decimal point and "_" sign,
-          // if neg uu is the unit (lb or kg)
-          // mmmmm is the mode (gross or net)
-          // strip off the last two chars
-          // split on <SP>
-          // loop and trim results
-          output.chop(2);
-          output = output.trimmed();
-          QList<QByteArray> parts = output.split(' ');
-          if(3<=parts.size())
-          {
-              QString weightStr = QString(parts[0]);
-              QString unitStr = QString(parts[1]);
-              QString modeStr = QString(parts[2]);
-              QDateTime dt = QDateTime::currentDateTime();
-              QString d = dt.date().toString("yyyy-MM-dd");
-              QString t = dt.time().toString("hh:mm:ss");
+        m_port.write(QByteArray("p"));
+        if(m_port.waitForReadyRead(1000))
+        {
+            QByteArray arr = m_port.readAll();
+            while (m_port.waitForReadyRead(10))
+                arr += m_port.readAll();
+            if(!arr.isEmpty())
+            {
+              arr.chop(2);
+              arr = arr.trimmed();
+              QList<QByteArray> parts = arr.split(' ');
+              if(3<=parts.size())
+              {
+                  QString weightStr = QString(parts[0]);
+                  QString unitStr = QString(parts[1]);
+                  QString modeStr = QString(parts[2]);
+                  QDateTime dt = QDateTime::currentDateTime();
+                  QString d = dt.date().toString("yyyy-MM-dd");
+                  QString t = dt.time().toString("hh:mm:ss");
 
-              qDebug() << "parsed output " << weightStr
-                       << "(" << unitStr << ")"
-                       << " " << modeStr << ", "
-                       << d << " " << t;
+                  qDebug() << "parsed output " << weightStr
+                           << "(" << unitStr << ")"
+                           << " " << modeStr << ", "
+                           << d << " " << t;
 
-          }
-      }
-      else
-      {
-          qDebug() << "error occured reading " << m_port->errorString();
-      }
-      emit canWrite();
+                  emit canWrite();
+              }
+            }
+        }
+        m_port.close();
     }
 }

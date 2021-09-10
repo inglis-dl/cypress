@@ -34,7 +34,7 @@ void MainWindow::initialize()
   // Connect the serial port property notify signal to catch
   // read from ini file
   //
-  connect(&m_manager, &WeighScaleManager::serialPortChanged,
+  connect(&m_manager, &WeighScaleManager::portNameChanged,
           ui->serialPortLineEdit, &QLineEdit::setText);
 
   // Read the .ini file for cached local and peripheral device addresses
@@ -42,10 +42,6 @@ void MainWindow::initialize()
   QDir dir = QCoreApplication::applicationDirPath();
   QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
   m_manager.loadSettings(settings);
-
-  // Connect button to connect a controller to a verified peripheral device
-  //
-  ui->connectButton->setEnabled(false);
 
   // Save button to store measurement and device info to .json
   //
@@ -97,25 +93,13 @@ void MainWindow::initialize()
       msgBox.exec();
   });
 
-  connect(&m_manager, &WeighScaleManager::canConnect,
-          this,[this](){
-     ui->connectButton->setEnabled(true);
-     // do not update status bar message if waiting for data to be saved
-     //
-     if(!ui->saveButton->isEnabled())
-       ui->statusBar->showMessage("Ready to connect to serial port.");
-  });
-
-  connect(ui->connectButton, &QPushButton::clicked,
-        &m_manager, &WeighScaleManager::connectToPort);
-
   connect(ui->zeroButton, &QPushButton::clicked,
         &m_manager, &WeighScaleManager::zero);
 
-  connect(&m_manager, &WeighScaleManager::connected,
+  connect(&m_manager, &WeighScaleManager::canConnect,
           this,[this](){
-      qDebug() << "ready to zero scale";
-          ui->zeroButton->setEnabled(true);
+      qDebug() << "ready to zero";
+      ui->zeroButton->setEnabled(true);
   });
 
   connect(ui->measureButton, &QPushButton::clicked,

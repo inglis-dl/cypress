@@ -12,7 +12,7 @@ QT_FORWARD_DECLARE_CLASS(QSettings)
 class WeighScaleManager : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString serialPort MEMBER m_serialPort NOTIFY serialPortChanged)
+    Q_PROPERTY(QString portName MEMBER m_portName NOTIFY portNameChanged)
     Q_PROPERTY(QString weight MEMBER m_weight NOTIFY weightChanged)
     Q_PROPERTY(QString datetime MEMBER m_datetime NOTIFY datetimeChanged)
     Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
@@ -48,7 +48,7 @@ public:
 
 public slots:
 
-    void connectToPort();
+    //void connectToPort();
     void zero();
     void measure();
 
@@ -72,10 +72,7 @@ signals:
 
     void canMeasure();
 
-    // connected to port
-    void connected();
-
-    void serialPortChanged(const QString &);
+    void portNameChanged(const QString &);
     void weightChanged(const QString &);
     void datetimeChanged(const QString &);
 
@@ -85,16 +82,17 @@ private slots:
 
 private:
 
-    QScopedPointer<QSerialPort> m_port;
+    QString m_portName;
     QMap<QString,QVariant> m_measurementData;
     QMap<QString,QVariant> m_deviceData;
 
     QMap<QString,QSerialPortInfo> m_deviceList;
+    QSerialPortInfo m_portInfo;
+    QSerialPort m_port;
 
     QString m_weight;
     QString m_datetime;
     bool m_verbose;
-    QString m_serialPort;
 
     void clearData();
 
