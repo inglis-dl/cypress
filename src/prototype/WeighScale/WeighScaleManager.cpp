@@ -41,14 +41,11 @@ void WeighScaleManager::clearData()
 {
     m_measurementData.clear();
     m_deviceData.clear();
-    setProperty("weight", "");
-    setProperty("datetime", "");
 }
 
 void WeighScaleManager::scanDevices()
 {
     m_deviceList.clear();
-    m_portInfo = QSerialPortInfo();
     emit scanning();
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
     {
@@ -109,7 +106,6 @@ void WeighScaleManager::selectDevice(const QString &label)
 {
     if(m_deviceList.contains(label))
     {
-      m_portInfo = QSerialPortInfo();
       QSerialPortInfo info = m_deviceList.value(label);
       setProperty("portName",info.portName());
       setDevice(info);
@@ -146,7 +142,6 @@ void WeighScaleManager::setDevice(const QSerialPortInfo &info)
     if(!info.description().isEmpty())
       m_deviceData["Description"] = info.description();
 
-    //QSerialPort port(info);
     m_port.setPort(info);
     m_port.setDataBits(QSerialPort::Data8);
     m_port.setParity(QSerialPort::NoParity);
@@ -154,7 +149,6 @@ void WeighScaleManager::setDevice(const QSerialPortInfo &info)
     m_port.setBaudRate(QSerialPort::Baud9600);
     if(m_port.open(QSerialPort::ReadWrite))
     {
-      m_portInfo = info;
       emit canConnect();
     }
     else
@@ -187,27 +181,25 @@ void WeighScaleManager::zero()
         if(m_port.waitForReadyRead(1000))
         {
             QByteArray arr = m_port.readAll();
-            while (m_port.waitForReadyRead(10))
+            while(m_port.waitForReadyRead(10))
                 arr += m_port.readAll();
-            if(!arr.isEmpty())
-            {
-              arr.chop(2);
-              arr = arr.trimmed();
-              QList<QByteArray> parts = arr.split(' ');
-              if(3<=parts.size())
-              {
-                 double value = qFabs(QVariant(parts.first()).toDouble());
-                 if(0.0==value)
-                 {
-                     qDebug() << "ok, scale confirmed zero: " << QString(parts.first());
-                     emit canMeasure();
-                 }
-              }
-            }
+
+            Measurement m;
+//            qDebug() << "ok class decl";
+            m.setName("WEIGHT");
+//            qDebug() << "ok class set name";
+            m.fromArray(arr);
+//            qDebug() << "ok class from Array";
+            if(m.isZero())
+              emit canMeasure();
+//            qDebug() << "ok class can zero";
+
+            qDebug() << m;
+//            qDebug() << "ok class debug";
         }
         m_port.close();
     }
-} 
+}
 
 void WeighScaleManager::measure()
 {
@@ -219,28 +211,18 @@ void WeighScaleManager::measure()
             QByteArray arr = m_port.readAll();
             while (m_port.waitForReadyRead(10))
                 arr += m_port.readAll();
-            if(!arr.isEmpty())
+
+            Measurement m;
+            m.setName("WEIGHT");
+            m.fromArray(arr);
+            if(m.isValid())
             {
-              arr.chop(2);
-              arr = arr.trimmed();
-              QList<QByteArray> parts = arr.split(' ');
-              if(3<=parts.size())
-              {
-                  QString weightStr = QString(parts[0]);
-                  QString unitStr = QString(parts[1]);
-                  QString modeStr = QString(parts[2]);
-                  QDateTime dt = QDateTime::currentDateTime();
-                  QString d = dt.date().toString("yyyy-MM-dd");
-                  QString t = dt.time().toString("hh:mm:ss");
-
-                  qDebug() << "parsed output " << weightStr
-                           << "(" << unitStr << ")"
-                           << " " << modeStr << ", "
-                           << d << " " << t;
-
-                  emit canWrite();
-              }
+                m_measurementData.push_back(m);
+                emit measured(m.toString());
+                if(2<=m_measurementData.size())
+                    emit canWrite();
             }
+            qDebug() << m;
         }
         m_port.close();
     }

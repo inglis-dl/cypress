@@ -7,14 +7,14 @@
 #include <QSerialPortInfo>
 #include <QVariant>
 
+#include "Measurement.h"
+
 QT_FORWARD_DECLARE_CLASS(QSettings)
 
 class WeighScaleManager : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString portName MEMBER m_portName NOTIFY portNameChanged)
-    Q_PROPERTY(QString weight MEMBER m_weight NOTIFY weightChanged)
-    Q_PROPERTY(QString datetime MEMBER m_datetime NOTIFY datetimeChanged)
     Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
 
 public:
@@ -32,11 +32,12 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose(){ return m_verbose; }
 
-    const QMap<QString,QVariant>&  getMeasurementData(){return m_measurementData;}
+    const QList<Measurement>&  getMeasurementData(){return m_measurementData;}
     const QMap<QString,QVariant>&  getDeviceData(){return m_deviceData;}
 
-    QMap<QString,QVariant> getData(){
-        QMap<QString,QVariant> map(m_measurementData);
+    /*
+    QMap<Measurement> getData(){
+        QList<QString,QVariant> map(m_measurementData);
         QMap<QString,QVariant>::const_iterator it = m_deviceData.constBegin();
         while(it != m_deviceData.constEnd())
         {
@@ -45,10 +46,10 @@ public:
         }
         return map;
     }
+    */
 
 public slots:
 
-    //void connectToPort();
     void zero();
     void measure();
 
@@ -68,13 +69,14 @@ signals:
     void canConnect();
 
     // data is available to write
+    void measured(const QString &);
+
     void canWrite();
 
     void canMeasure();
 
     void portNameChanged(const QString &);
-    void weightChanged(const QString &);
-    void datetimeChanged(const QString &);
+
 
 private slots:
 
@@ -83,19 +85,15 @@ private slots:
 private:
 
     QString m_portName;
-    QMap<QString,QVariant> m_measurementData;
+    QList<Measurement> m_measurementData;
     QMap<QString,QVariant> m_deviceData;
 
     QMap<QString,QSerialPortInfo> m_deviceList;
-    QSerialPortInfo m_portInfo;
     QSerialPort m_port;
 
-    QString m_weight;
-    QString m_datetime;
     bool m_verbose;
 
     void clearData();
-
 };
 
 #endif // WEIGHSCALEMANAGER_H

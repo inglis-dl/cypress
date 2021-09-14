@@ -59,6 +59,7 @@ public:
 
 public slots:
     void updateDeviceList(const QString &);
+    void updateMeasurementList(const QString &);
 
 protected:
     void closeEvent(QCloseEvent *event) override;

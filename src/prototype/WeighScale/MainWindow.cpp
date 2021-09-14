@@ -62,25 +62,23 @@ void MainWindow::initialize()
     }
   );
 
-  connect(&m_manager, &WeighScaleManager::weightChanged,
-          ui->weightLineEdit, &QLineEdit::setText);
-
-  connect(&m_manager, &WeighScaleManager::datetimeChanged,
-          ui->dateTimeLineEdit, &QLineEdit::setText);
-
   connect(&m_manager, &WeighScaleManager::scanning,
           this,[this]()
     {
       ui->serialPortListWidget->clear();
-      ui->statusBar->showMessage("Discovering serial ports ... please wait");
+      ui->statusBar->showMessage("Discovering serial ports...");
     }
   );
 
   connect(&m_manager, &WeighScaleManager::discovered,
           this, &MainWindow::updateDeviceList);
 
+  connect(&m_manager, &WeighScaleManager::measured,
+          this, &MainWindow::updateMeasurementList);
+
   connect(&m_manager, &WeighScaleManager::canSelect,
           this,[this](){
+      ui->statusBar->showMessage("Ready to select...");
       // Prompt the user to select the MAC address
       QMessageBox msgBox;
       msgBox.setText(tr("Double click the port from the list.  If the device "
@@ -99,7 +97,10 @@ void MainWindow::initialize()
   connect(&m_manager, &WeighScaleManager::canConnect,
           this,[this](){
       qDebug() << "ready to zero";
+      ui->statusBar->showMessage("Ready to zero...");
       ui->zeroButton->setEnabled(true);
+      ui->measureButton->setEnabled(false);
+      ui->saveButton->setEnabled(false);
   });
 
   connect(ui->measureButton, &QPushButton::clicked,
@@ -108,7 +109,8 @@ void MainWindow::initialize()
   connect(&m_manager, &WeighScaleManager::canMeasure,
           this,[this](){
       qDebug() << "ready to measure";
-          ui->measureButton->setEnabled(true);
+      ui->statusBar->showMessage("Ready to measure...");
+      ui->measureButton->setEnabled(true);
   });
 
   if(m_inputData.contains("Barcode") && m_inputData["Barcode"].isValid())
@@ -140,6 +142,20 @@ void MainWindow::updateDeviceList(const QString &label)
           item->setForeground(QColor(Qt::black));
 
         ui->serialPortListWidget->addItem(item);
+    }
+}
+
+void MainWindow::updateMeasurementList(const QString &label)
+{
+    // Add the device to the list
+    //
+    QList<QListWidgetItem *> items = ui->measurementListWidget->findItems(label, Qt::MatchExactly);
+    if(items.empty())
+    {
+        QListWidgetItem *item = new QListWidgetItem(label);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Checked);
+        ui->measurementListWidget->addItem(item);
     }
 }
 
@@ -216,7 +232,7 @@ void MainWindow::writeOutput()
    if(m_verbose)
        qDebug() << "begin write process ... ";
 
-   QMap<QString,QVariant> data = m_manager.getData();
+   QMap<QString,QVariant> data;// = m_manager.getData();
 
    if(m_verbose)
        qDebug() << "data retrieved from device ... ";
