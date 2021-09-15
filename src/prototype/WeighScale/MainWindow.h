@@ -44,10 +44,6 @@ public:
     //
     void run();
 
-    // Call after run to finish any remaining tasks like auto write to output file
-    //
-    void finish();
-
     void setInputFileName(const QString& name) { m_inputFileName = name; }
     QString inputFileName() { return m_inputFileName; }
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
@@ -73,6 +69,7 @@ private:
     QString m_outputFileName;
     QString m_mode;
     bool m_verbose;
+
     QMap<QString,QVariant> m_inputData;
     QMap<QString,QVariant> m_outputData;
 

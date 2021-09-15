@@ -113,6 +113,14 @@ void MainWindow::initialize()
       ui->measureButton->setEnabled(true);
   });
 
+  connect(&m_manager, &WeighScaleManager::canWrite,
+          this,[this](){
+      qDebug() << "ready to write";
+      ui->statusBar->showMessage("Ready to write...");
+      ui->saveButton->setEnabled(true);
+  });
+
+
   if(m_inputData.contains("Barcode") && m_inputData["Barcode"].isValid())
      ui->barcodeLineEdit->setText(m_inputData["Barcode"].toString());
   else
@@ -189,12 +197,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
-// TODO: consider removing "finish" and using override of "clostEvent"
-// instead
-void MainWindow::finish()
-{
-}
-
 void MainWindow::readInput()
 {
     // TODO: if the run mode is not debug, an input file name is mandatory, throw an error
@@ -232,38 +234,13 @@ void MainWindow::writeOutput()
    if(m_verbose)
        qDebug() << "begin write process ... ";
 
-   QMap<QString,QVariant> data;// = m_manager.getData();
+   QJsonObject json = m_manager.toJsonObject();
 
-   if(m_verbose)
-       qDebug() << "data retrieved from device ... ";
 
-   // copy in expected device data
-   //
-   QMap<QString,QVariant>::const_iterator it = data.constBegin();
-   while(it != data.constEnd())
-   {
-     if(m_outputData.contains(it.key()))
-        m_outputData[it.key()] = it.value();
-     ++it;
-   }
+   qDebug() << "received json measurement data";
 
-   // get the most recent input barcode
-   //
-   m_outputData["Barcode"] = ui->barcodeLineEdit->text().simplified().remove(" ");
-
-   // Create a json object with measurement key value pairs
-   //
-   QJsonObject json;
-   it = m_outputData.constBegin();
-   int missingCount = 0;
-   while(it != m_outputData.constEnd())
-   {
-     if(m_outputData.contains(it.key()))
-         json.insert(it.key(),QJsonValue::fromVariant(it.value()));
-     else
-         missingCount++;
-     ++it;
-   }
+   QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
+   json.insert("barcode",QJsonValue(barcode));
 
    if(m_verbose)
        qDebug() << "determine file output name ... ";
@@ -296,7 +273,7 @@ void MainWindow::writeOutput()
        if(m_outputFileName.isEmpty())
        {
          QStringList list;
-         list << m_outputData["Barcode"].toString();
+         list << barcode;
          list << QDate().currentDate().toString("yyyyMMdd");
          list << "weighscale.json";
          fileName = dir.filePath( list.join("_") );

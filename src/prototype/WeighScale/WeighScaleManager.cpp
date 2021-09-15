@@ -2,16 +2,19 @@
 
 #include <QDateTime>
 #include <QDebug>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QSerialPortInfo>
 #include <QSettings>
 #include <QtMath>
 
 WeighScaleManager::WeighScaleManager(QObject *parent) : QObject(parent),
-    m_verbose(false)
+    m_verbose(false),
+    m_numberOfMeasurements(1)
 {
 }
 
-bool WeighScaleManager::localPortsEnabled()
+bool WeighScaleManager::localPortsEnabled() const
 {
     return !QSerialPortInfo::availablePorts().empty();
 }
@@ -27,9 +30,9 @@ void WeighScaleManager::loadSettings(const QSettings &settings)
     }
 }
 
-void WeighScaleManager::saveSettings(QSettings *settings)
+void WeighScaleManager::saveSettings(QSettings *settings) const
 {
-    if(!m_portName.isNull())
+    if(!m_portName.isEmpty())
     {
       settings->setValue("client/port",m_portName);
       if(m_verbose)
@@ -49,22 +52,24 @@ void WeighScaleManager::scanDevices()
     emit scanning();
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
     {
-        // get the device data
-        if(info.hasProductIdentifier())
-          qDebug() << "product id:" << QString::number(info.productIdentifier());
-        if(info.hasVendorIdentifier())
-          qDebug() << "vendor id:" << QString::number(info.vendorIdentifier());
-        if(!info.manufacturer().isEmpty())
-          qDebug() << "manufacturer:" << info.manufacturer();
-        if(!info.portName().isEmpty())
-          qDebug() << "port name:" << info.portName();
-        if(!info.serialNumber().isEmpty())
-          qDebug() << "serial number:" << info.serialNumber();
-        if(!info.systemLocation().isEmpty())
-          qDebug() << "system location:" << info.systemLocation();
-        if(!info.description().isEmpty())
-          qDebug() << "description:" << info.description();
-
+        if(m_verbose)
+        {
+          // get the device data
+          if(info.hasProductIdentifier())
+            qDebug() << "product id:" << QString::number(info.productIdentifier());
+          if(info.hasVendorIdentifier())
+            qDebug() << "vendor id:" << QString::number(info.vendorIdentifier());
+          if(!info.manufacturer().isEmpty())
+            qDebug() << "manufacturer:" << info.manufacturer();
+          if(!info.portName().isEmpty())
+            qDebug() << "port name:" << info.portName();
+          if(!info.serialNumber().isEmpty())
+            qDebug() << "serial number:" << info.serialNumber();
+          if(!info.systemLocation().isEmpty())
+            qDebug() << "system location:" << info.systemLocation();
+          if(!info.description().isEmpty())
+            qDebug() << "description:" << info.description();
+        }
         QString label = QString("%1 %2").arg(info.portName(),info.description());
         if(!m_deviceList.contains(label))
         {
@@ -94,7 +99,7 @@ void WeighScaleManager::scanDevices()
         if(m_verbose)
             qDebug() << "found the port  " << m_portName;
 
-       this->setDevice(info);
+       setDevice(info);
     }
     else
     {
@@ -149,16 +154,34 @@ void WeighScaleManager::setDevice(const QSerialPortInfo &info)
     m_port.setBaudRate(QSerialPort::Baud9600);
     if(m_port.open(QSerialPort::ReadWrite))
     {
-      emit canConnect();
+      // try to read the id of the scale
+        m_port.write(QByteArray("i"));
+        QByteArray arr;
+        if(m_port.waitForReadyRead(1000))
+        {
+            arr = m_port.readAll();
+            while(m_port.waitForReadyRead(10))
+                arr += m_port.readAll();
+
+        }
+        if(!arr.isEmpty())
+        {
+            arr = arr.simplified();
+            m_deviceData["Scale Software ID"] = arr;
+            qDebug() << "scale ID found " << arr;
+            emit canConnect();
+        }
+        else
+            qDebug() << "no scale id, array returned empty, port error " << m_port.errorString();
     }
     else
     {
-        qDebug() << "error: failed to open serial port: " << m_port.errorString();
+      qDebug() << "error: failed to open serial port: " << m_port.errorString();
     }
     m_port.close();
 }
 
-bool WeighScaleManager::isDefined(const QString &label)
+bool WeighScaleManager::isDefined(const QString &label) const
 {
     bool defined = false;
     if(m_deviceList.contains(label))
@@ -185,17 +208,11 @@ void WeighScaleManager::zero()
                 arr += m_port.readAll();
 
             Measurement m;
-//            qDebug() << "ok class decl";
-            m.setName("WEIGHT");
-//            qDebug() << "ok class set name";
             m.fromArray(arr);
-//            qDebug() << "ok class from Array";
             if(m.isZero())
               emit canMeasure();
-//            qDebug() << "ok class can zero";
 
             qDebug() << m;
-//            qDebug() << "ok class debug";
         }
         m_port.close();
     }
@@ -213,17 +230,56 @@ void WeighScaleManager::measure()
                 arr += m_port.readAll();
 
             Measurement m;
-            m.setName("WEIGHT");
             m.fromArray(arr);
             if(m.isValid())
             {
                 m_measurementData.push_back(m);
                 emit measured(m.toString());
-                if(2<=m_measurementData.size())
+                if(m_numberOfMeasurements <= m_measurementData.size())
                     emit canWrite();
             }
             qDebug() << m;
         }
         m_port.close();
     }
+}
+
+QJsonObject WeighScaleManager::toJsonObject() const
+{
+    QMap<QString,QVariant>::const_iterator it = m_deviceData.constBegin();
+    QJsonObject jsonD;
+    while(it != m_deviceData.constEnd())
+    {
+        jsonD.insert(it.key(),QJsonValue::fromVariant(it.value()));
+        ++it;
+    }
+    QList<Measurement>::const_iterator mit = m_measurementData.constBegin();
+    QMap<QString,QJsonArray> jmap;
+    while(mit != m_measurementData.constEnd())
+    {
+        QMap<QString,QVariant> c = mit->getCharacteristicValues();
+        it = c.constBegin();
+        while(it != c.constEnd())
+        {
+          if(!jmap.contains(it.key()))
+          {
+             jmap[it.key()] = QJsonArray();
+          }
+          jmap[it.key()].append(QJsonValue::fromVariant(it.value()));
+          ++it;
+        }
+        ++mit;
+    }
+    QJsonObject jsonM;
+    QMap<QString,QJsonArray>::const_iterator jit = jmap.constBegin();
+    while(jit != jmap.constEnd())
+    {
+        jsonM.insert(jit.key(),jit.value());
+        ++jit;
+    }
+    QJsonObject json;
+    json.insert("device",QJsonValue(jsonD));
+    json.insert("measurement",QJsonValue(jsonM));
+
+    return json;
 }
