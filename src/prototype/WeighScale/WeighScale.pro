@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     Measurement.cpp \
+    MeasurementBase.cpp \
     WeighScaleManager.cpp \
     main.cpp \
     MainWindow.cpp
@@ -17,6 +18,7 @@ SOURCES += \
 HEADERS += \
     MainWindow.h \
     Measurement.h \
+    MeasurementBase.h \
     WeighScaleManager.h
 
 FORMS += \

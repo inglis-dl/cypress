@@ -1,18 +1,6 @@
 #include "Measurement.h"
 
 #include <QDateTime>
-#include <QDebug>
-
-Measurement::Measurement(const Measurement &other)
-{
-    m_characteristicValues = other.m_characteristicValues;
-}
-
-Measurement& Measurement::operator=(const Measurement &other)
-{
-    m_characteristicValues = other.m_characteristicValues;
-    return *this;
-}
 
 void Measurement::fromArray(const QByteArray &arr)
 {
@@ -46,11 +34,6 @@ bool Measurement::isZero() const
     return isValid() && 0.0f == m_characteristicValues["weight"].toFloat();
 }
 
-void Measurement::reset()
-{
-    m_characteristicValues.clear();
-}
-
 QString Measurement::toString() const
 {
     QDateTime dt = m_characteristicValues["timestamp"].toDateTime();
@@ -63,14 +46,3 @@ QString Measurement::toString() const
     list << w << u << m << d << t;
     return list.join(" ");
 }
-
-QDebug operator<<(QDebug dbg, const Measurement &measurement)
-{
-    const QString output = measurement.toString();
-    if (output.isEmpty())
-        dbg.nospace() << "Measurement()";
-    else
-        dbg.nospace() << "Measurement(" << output << " ...)";
-    return dbg.maybeSpace();
-}
-

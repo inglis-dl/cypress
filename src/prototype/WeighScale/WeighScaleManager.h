@@ -37,9 +37,6 @@ public:
     void setNumberOfMeasurements(const quint8& n){ m_numberOfMeasurements = 0<n?n:1;}
     quint8 getNumberOfMeasurements() const {return m_numberOfMeasurements;}
 
-    const QList<Measurement>&  getMeasurementData(){return m_measurementData;}
-    const QMap<QString,QVariant>&  getDeviceData(){return m_deviceData;}
-
     QJsonObject toJsonObject() const;
 
 public slots:
