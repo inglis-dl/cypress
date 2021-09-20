@@ -2,10 +2,30 @@
 
 #include "BPMMessage.h"
 #include "BPTruBPM200.h"
+#include "AckEnum.h"
 
 class Ack
 {
 public:
+	static QString GetPrintableType(BPMMessage* msg) {
+		switch (msg->GetData0()) {
+		case (int)AckEnum::HandShake:
+			return "Handshake";
+		case (int)AckEnum::Clear:
+			return "Clear";
+		case (int)AckEnum::Start:
+			return "Start";
+		case (int)AckEnum::Stop:
+			return "Stop";
+		case (int)AckEnum::Review:
+			return "Review";
+		case (int)AckEnum::Cycle:
+			return "Cycle";
+		default:
+			return msg->GetFullMsg();
+		}
+	}
+
 	static void Interpret(BPMMessage* msg, Ui::BPTruBPM200Class* bpm200) {
 		switch (msg->GetData0()) {
 		case 0:

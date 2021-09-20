@@ -6,24 +6,24 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>806</width>
-    <height>418</height>
+    <width>714</width>
+    <height>393</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>BPTruBPM200</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QWidget" name="verticalLayoutWidget">
+   <widget class="QWidget" name="verticalLayoutWidget_2">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>0</y>
-      <width>771</width>
-      <height>331</height>
+      <y>10</y>
+      <width>691</width>
+      <height>341</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="OnyxStyleVerticleLayout">
      <item>
       <layout class="QHBoxLayout" name="UserIDHorizontalLayout">
        <item>
@@ -57,11 +57,133 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="BPMButtonsHorizontalLayout">
+      <layout class="QHBoxLayout" name="InfoHorizontalLayout">
+       <item>
+        <layout class="QGridLayout" name="InstrumentGridLayout">
+         <item row="2" column="0">
+          <widget class="QLabel" name="FirmwareLabel">
+           <property name="text">
+            <string>Firmware</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="InstrumentTitle">
+           <property name="text">
+            <string>&lt;b&gt;Instrument&lt;/b&gt;</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::RichText</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLabel" name="FirmwareVal">
+           <property name="text">
+            <string>---</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="StateVal">
+           <property name="text">
+            <string>---</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="StateLabel">
+           <property name="text">
+            <string>State</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="SpacerLabel">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="CurrentMeasurementGridLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="CurrentMeasurementTitle">
+           <property name="text">
+            <string>&lt;b&gt;Current Measurement&lt;/b&gt;</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::RichText</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="ReadingLabel">
+           <property name="text">
+            <string>Reading:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="CycleLabel">
+           <property name="text">
+            <string>Cycle (min):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLabel" name="ReadingVal">
+           <property name="text">
+            <string>---</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="CycleVal">
+           <property name="text">
+            <string>---</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="PressureLabel">
+           <property name="text">
+            <string>Cuff Pressure</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="PressureVal">
+           <property name="text">
+            <string>---</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QTableView" name="tableView"/>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="Buttons">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetMinimumSize</enum>
+       </property>
        <item>
         <widget class="QPushButton" name="StartButton">
          <property name="text">
           <string>Start</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="AddButton">
+         <property name="text">
+          <string>Add</string>
          </property>
         </widget>
        </item>
@@ -73,190 +195,16 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="ClearButton">
+        <widget class="QPushButton" name="ExitButton">
          <property name="text">
-          <string>Clear</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="ReviewButton">
-         <property name="text">
-          <string>Review</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="CycleButton">
-         <property name="text">
-          <string>Cycle</string>
+          <string>Exit</string>
          </property>
         </widget>
        </item>
       </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="BPValsHorizontalLayout">
-       <item>
-        <widget class="QLabel" name="SystolicLabel">
-         <property name="text">
-          <string>Systolic (mmHg):</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="SystolicVal">
-         <property name="text">
-          <string>---</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="DiastolicLabel">
-         <property name="text">
-          <string>Diastolic (mmHg):</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="DiastolicVal">
-         <property name="text">
-          <string>---</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="PulseLabel">
-         <property name="text">
-          <string>Pulse:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="PulseVal">
-         <property name="text">
-          <string>---</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="BPAvgValsHorizontalLayout">
-       <item>
-        <widget class="QLabel" name="AvgSystolicLabel">
-         <property name="text">
-          <string>Avg Systolic (mmHg):</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="AvgSystolicVal">
-         <property name="text">
-          <string>---</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="AvdDiastolicLabel">
-         <property name="text">
-          <string>Avg Diastolic (mmHg): </string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="AvgDiastolicVal">
-         <property name="text">
-          <string>---</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="AvgPulseLabel">
-         <property name="text">
-          <string>Avg Pulse:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="AvgPulseVal">
-         <property name="text">
-          <string>---</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="BPVals2HorizontalLayout">
-       <item>
-        <widget class="QLabel" name="PressureLabel">
-         <property name="text">
-          <string>Pressure:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="PressureVal">
-         <property name="text">
-          <string>---</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="ReadingLabel">
-         <property name="text">
-          <string>Reading:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="ReadingVal">
-         <property name="text">
-          <string>---</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="CycleLabel">
-         <property name="text">
-          <string>Cycle (min):</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="CycleVal">
-         <property name="text">
-          <string>---</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QTextBrowser" name="ErrorsTextBrowser">
-       <property name="html">
-        <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Error occured:&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;12:31:16 too many motion artifiacts&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-      </widget>
      </item>
     </layout>
    </widget>
-  </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>806</width>
-     <height>21</height>
-    </rect>
-   </property>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">

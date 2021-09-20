@@ -2,10 +2,28 @@
 
 #include "BPMMessage.h"
 #include "BPTruBPM200.h"
+#include "DataEnum.h"
 
 class Data
 {
 public:
+	static QString GetPrintableType(BPMMessage* msg) {
+		switch (msg->GetMsgId()) {
+		case (int)DataEnum::BPAverage:
+			return "BPAverage";
+		case (int)DataEnum::BPResult:
+			return "BPResult";
+		case (int)DataEnum::DeflatingCuffPressure:
+			return "DeflatingCuffPressure";
+		case (int)DataEnum::InflatingCuffPressure:
+			return "InflatingCuffPressure";
+		case (int)DataEnum::Review:
+			return "Review";
+		default:
+			return msg->GetFullMsg();
+		}
+	}
+
 	static void Interpret(BPMMessage* msg, Ui::BPTruBPM200Class* bpm200) {
 		switch (msg->GetMsgId()) {
 		case 65:// Bp Average
@@ -33,18 +51,18 @@ public:
 
 	static void BPAverage(BPMMessage* msg, Ui::BPTruBPM200Class* bpm200, bool isReview) {
 		int sbp = msg->GetData1();
-		bpm200->AvgSystolicVal->setText(QString::number(sbp));
+		//bpm200->AvgSystolicVal->setText(QString::number(sbp));
 		int dbp = msg->GetData2();
-		bpm200->AvgDiastolicVal->setText(QString::number(dbp));
+		//bpm200->AvgDiastolicVal->setText(QString::number(dbp));
 
 		int pulse = msg->GetData3();
-		if (isReview) {
+		/*if (isReview) {
 			bpm200->AvgPulseVal->setText(QString::number(pulse) + " (R)");
 		}
 		else {
 			int count = msg->GetData0();
 			bpm200->AvgPulseVal->setText(QString::number(pulse) + " (" + QString::number(count) + ")");
-		}
+		}*/
 	}
 
 	static void BPResult(BPMMessage* msg, Ui::BPTruBPM200Class* bpm200, bool isReview) {
@@ -54,11 +72,11 @@ public:
 		}
 
 		int sbp = msg->GetData1();
-		bpm200->SystolicVal->setText(QString::number(sbp));
+		//bpm200->SystolicVal->setText(QString::number(sbp));
 		int dbp = msg->GetData2();
-		bpm200->DiastolicVal->setText(QString::number(dbp));
+		//bpm200->DiastolicVal->setText(QString::number(dbp));
 		int pulse = msg->GetData3();
-		bpm200->PulseVal->setText(QString::number(pulse));
+		//bpm200->PulseVal->setText(QString::number(pulse));
 	}
 
 	static void Review(BPMMessage* msg, Ui::BPTruBPM200Class* bpm200) {

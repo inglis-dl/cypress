@@ -2,10 +2,28 @@
 
 #include "BPMMessage.h"
 #include "BPTruBPM200.h"
+#include "ButtonsEnum.h"
 
 class Buttons
 {
 public:
+	static QString GetPrintableType(BPMMessage* msg) {
+		switch (msg->GetData0()) {
+		case (int)ButtonsEnum::Cleared:
+			return "Clear";
+		case (int)ButtonsEnum::Started:
+			return "Start";
+		case (int)ButtonsEnum::Stopped:
+			return "Stop";
+		case (int)ButtonsEnum::Review:
+			return "Review";
+		case (int)ButtonsEnum::Cycled:
+			return "Cycle";
+		default:
+			return msg->GetFullMsg();
+		}
+	}
+
 	static void Interpret(BPMMessage* msg, Ui::BPTruBPM200Class* bpm200) {
 		switch (msg->GetData0()) {
 		case 1:

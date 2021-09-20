@@ -8,8 +8,11 @@
 #include "hidapi.h"
 #include "CRC8.h"
 #include "BPMCommunicationHelper.h"
-#include "BPMResponse.h"
 #include "Wait.h"
+#include "UiHelper.h"
+#include "StateMachine.h"
+#include "StateEnum.h"
+#include "MeasuringState.h"
 
 class BPTruBPM200 : public QMainWindow
 {
@@ -19,16 +22,24 @@ public:
     BPTruBPM200(QWidget *parent = Q_NULLPTR);
 public slots:
     void OnStartClicked();
+    void OnAddClicked();
     void OnStopClicked();
-    void OnClearClicked();
-    void OnReviewClicked();
-    void OnCycleClicked();
+    void OnExitClicked();
 
     void OnBPMResponse();
 private:
     Ui::BPTruBPM200Class ui;
+    UiHelper uiHelper; // ORDER DEPENDENCY
+    //StateMachine* stateMachine; // ORDER DEPENDENCY
     bool isLive = true;
+    BPMCommunicationHelper bpmCommunication;
+    StateEnum stateEnum = StateEnum::Uninitialized;
+
     void closeEvent(QCloseEvent* event);
     void SetupSlots();
-    BPMCommunicationHelper bpmCommunication;
+    void SetState(StateEnum newState);
+
+    void UseConnectingState(BPMMessage* bpmMessage);
+    void UseReadyState(BPMMessage* bpmMessage);
+    void UseMeasuringState(BPMMessage* bpmMessage);
 };
