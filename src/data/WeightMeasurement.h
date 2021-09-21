@@ -1,11 +1,11 @@
-#ifndef MEASUREMENT_H
-#define MEASUREMENT_H
+#ifndef WEIGHTMEASUREMENT_H
+#define WEIGHTMEASUREMENT_H
 
 #include "MeasurementBase.h"
 
 /*!
- * \class Measurement
- * \brief A Measurement class
+ * \class WeightMeasurement
+ * \brief A WeightMeasurement class
  *
  * Measurements of weight are derived from a
  * Rice Lake digital weigh scale over RS232 serial
@@ -16,7 +16,7 @@
  * \sa MeasurementBase
  */
 
-class Measurement :  public MeasurementBase
+class WeightMeasurement :  public MeasurementBase
 {   
 public:
     void fromArray(const QByteArray &);
@@ -26,10 +26,8 @@ public:
     bool isValid() const;
 
     bool isZero() const;
-
-protected:
 };
 
-Q_DECLARE_METATYPE(Measurement);
+Q_DECLARE_METATYPE(WeightMeasurement);
 
-#endif // MEASUREMENT_H
+#endif // WEIGHTMEASUREMENT_H

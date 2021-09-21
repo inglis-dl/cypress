@@ -25,16 +25,6 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    // Set the expected keys that should be read from an input
-    // json file
-    //
-    void setInputKeys(const QList<QString> &keys);
-
-    // Set the expected output keys that will be written
-    // with device data content to json file
-    //
-    void setOutputKeys(const QList<QString> &keys);
-
     // Call after setting the input and output keys
     // This method internally calls readInput
     void initialize();
@@ -61,10 +51,10 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
-    Ui::MainWindow *ui;
     void readInput();
     void writeOutput();
 
+    Ui::MainWindow *ui;
     QString m_inputFileName;
     QString m_outputFileName;
     QString m_mode;

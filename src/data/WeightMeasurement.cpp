@@ -1,8 +1,8 @@
-#include "Measurement.h"
+#include "WeightMeasurement.h"
 
 #include <QDateTime>
 
-void Measurement::fromArray(const QByteArray &arr)
+void WeightMeasurement::fromArray(const QByteArray &arr)
 {
     if(!arr.isEmpty())
     {
@@ -18,7 +18,7 @@ void Measurement::fromArray(const QByteArray &arr)
     }
 }
 
-bool Measurement::isValid() const
+bool WeightMeasurement::isValid() const
 {
     bool ok;
     float fval = m_characteristicValues["weight"].toFloat(&ok);
@@ -29,20 +29,21 @@ bool Measurement::isValid() const
       && 0.0f <= fval;
 }
 
-bool Measurement::isZero() const
+bool WeightMeasurement::isZero() const
 {
     return isValid() && 0.0f == m_characteristicValues["weight"].toFloat();
 }
 
-QString Measurement::toString() const
+QString WeightMeasurement::toString() const
 {
-    QDateTime dt = m_characteristicValues["timestamp"].toDateTime();
     QString w = m_characteristicValues["weight"].toString();
     QString u = m_characteristicValues["units"].toString();
     QString m = m_characteristicValues["mode"].toString();
-    QStringList list;
+    QDateTime dt = m_characteristicValues["timestamp"].toDateTime();
     QString d = dt.date().toString("yyyy-MM-dd");
     QString t = dt.time().toString("hh:mm:ss");
+
+    QStringList list;
     list << w << u << m << d << t;
     return list.join(" ");
 }

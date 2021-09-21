@@ -7,7 +7,7 @@
 #include <QSerialPortInfo>
 #include <QVariant>
 
-#include "Measurement.h"
+#include "../../data/WeightMeasurement.h"
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
 QT_FORWARD_DECLARE_CLASS(QJsonObject)
@@ -81,7 +81,7 @@ private slots:
 
 private:
 
-    QList<Measurement> m_measurementData;
+    QList<WeightMeasurement> m_measurementData;
     QMap<QString,QVariant> m_deviceData;
 
     QMap<QString,QSerialPortInfo> m_deviceList;

@@ -74,35 +74,11 @@ int main(int argc, char *argv[])
           qDebug() << "mode option set with " << mode;
     }
 
-    // Expected keys from the input json file, such as gender, barcode, side, dob etc.
-    //
-    QList<QString> inputKeys;
-    inputKeys.append("Barcode");
-
-    // TODO: use device agnostic keys that can map an expected data type and a
-    // machine dependent name.  The list could contain simple class objects
-    // comprised of agnostic QString key, value type to convert from QVariant,
-    // and QString machine variable name.  For use cases where machine names are meaningless
-    // the agnostic key is the machine variable name.
-    //
-    QList<QString> outputKeys;
-    outputKeys.append("Barcode");
-    outputKeys.append("DateTime");
-    outputKeys.append("Device MAC");
-    outputKeys.append("Device Name");
-    outputKeys.append("Firmware Revision");
-    outputKeys.append("Software Revision");
-    outputKeys.append("Temperature Scale");
-    outputKeys.append("Temperature Value");
-    outputKeys.append("Temperature Type");
-
     MainWindow window;
     window.setInputFileName(inputFilename);
     window.setOutputFileName(outputFilename);
     window.setMode(mode);
-    window.setVerbose(verbose);
-    window.setInputKeys(inputKeys);
-    window.setOutputKeys(outputKeys);
+    window.setVerbose(true/*verbose*/);
 
     window.initialize();
     window.show();

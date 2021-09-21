@@ -207,7 +207,7 @@ void WeighScaleManager::zero()
             while(m_port.waitForReadyRead(10))
                 arr += m_port.readAll();
 
-            Measurement m;
+            WeightMeasurement m;
             m.fromArray(arr);
             if(m.isZero())
               emit canMeasure();
@@ -229,7 +229,7 @@ void WeighScaleManager::measure()
             while (m_port.waitForReadyRead(10))
                 arr += m_port.readAll();
 
-            Measurement m;
+            WeightMeasurement m;
             m.fromArray(arr);
             if(m.isValid())
             {
@@ -247,13 +247,13 @@ void WeighScaleManager::measure()
 QJsonObject WeighScaleManager::toJsonObject() const
 {
     QMap<QString,QVariant>::const_iterator it = m_deviceData.constBegin();
-    QJsonObject jsonD;
+    QJsonObject jsonObjDevice;
     while(it != m_deviceData.constEnd())
     {
-        jsonD.insert(it.key(),QJsonValue::fromVariant(it.value()));
+        jsonObjDevice.insert(it.key(),QJsonValue::fromVariant(it.value()));
         ++it;
     }
-    QList<Measurement>::const_iterator mit = m_measurementData.constBegin();
+    QList<WeightMeasurement>::const_iterator mit = m_measurementData.constBegin();
     QMap<QString,QJsonArray> jmap;
     while(mit != m_measurementData.constEnd())
     {
@@ -270,16 +270,16 @@ QJsonObject WeighScaleManager::toJsonObject() const
         }
         ++mit;
     }
-    QJsonObject jsonM;
+    QJsonObject jsonObjMeasurement;
     QMap<QString,QJsonArray>::const_iterator jit = jmap.constBegin();
     while(jit != jmap.constEnd())
     {
-        jsonM.insert(jit.key(),jit.value());
+        jsonObjMeasurement.insert(jit.key(),jit.value());
         ++jit;
     }
     QJsonObject json;
-    json.insert("device",QJsonValue(jsonD));
-    json.insert("measurement",QJsonValue(jsonM));
+    json.insert("device",QJsonValue(jsonObjDevice));
+    json.insert("measurement",QJsonValue(jsonObjMeasurement));
 
     return json;
 }

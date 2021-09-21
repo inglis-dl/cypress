@@ -7,6 +7,8 @@
 #include <QtBluetooth/QLowEnergyController>
 #include <QtBluetooth/QBluetoothLocalDevice>
 
+#include "../../data/TemperatureMeasurement.h"
+
 QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceInfo)
 QT_FORWARD_DECLARE_CLASS(QSettings)
 QT_FORWARD_DECLARE_CLASS(QBluetoothUuid)
@@ -17,17 +19,15 @@ class BluetoothLEManager : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QString peripheralMAC MEMBER m_peripheralMAC NOTIFY peripheralMACChanged)
-    Q_PROPERTY(QString temperature MEMBER m_temperature NOTIFY temperatureChanged)
-    Q_PROPERTY(QString datetime MEMBER m_datetime NOTIFY datetimeChanged)
     Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
 
 public:
     explicit BluetoothLEManager(QObject *parent = nullptr);
 
-    bool lowEnergyEnabled();
-    bool localAdapterEnabled();
+    bool lowEnergyEnabled() const;
+    bool localAdapterEnabled() const;
     void selectAdapter(const QString &);
-    bool isPairedTo(const QString &);
+    bool isPairedTo(const QString &) const;
     void selectDevice(const QString &);
     void scanDevices();
     void loadSettings(const QSettings &);
@@ -36,25 +36,12 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose(){ return m_verbose; }
 
-    const QMap<QString,QVariant>&  getMeasurementData(){return m_measurementData;}
-    const QMap<QString,QVariant>&  getDeviceData(){return m_deviceData;}
-
-    QMap<QString,QVariant> getData(){
-        QMap<QString,QVariant> map(m_measurementData);
-        QMap<QString,QVariant>::const_iterator it = m_deviceData.constBegin();
-        while(it != m_deviceData.constEnd())
-        {
-          map[it.key()] = it.value();
-          ++it;
-        }
-        return map;
-    }
+    QJsonObject toJsonObject() const;
 
 signals:
 
     void peripheralMACChanged(const QString &);
     void temperatureChanged(const QString &);
-    void datetimeChanged(const QString &);
 
     void scanning();
 
@@ -75,6 +62,8 @@ signals:
 
     // connected to peripheral
     void connected();
+
+    void measured(const QString &);
 
 public slots:
     void connectPeripheral();
@@ -123,12 +112,10 @@ private slots:
     bool m_verbose;
     bool m_foundThermoService;
     bool m_foundInfoService;
-    QMap<QString,QVariant> m_measurementData;
-    QMap<QString,QVariant> m_deviceData;
 
+    QMap<QString,QVariant> m_deviceData;
+    QList<TemperatureMeasurement> m_measurementData;
     QString m_peripheralMAC;
-    QString m_temperature;
-    QString m_datetime;
 
     QMap<QString,QBluetoothDeviceInfo> m_deviceList;
 

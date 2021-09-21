@@ -47,8 +47,12 @@ void MainWindow::initialize()
   //
   ui->saveButton->setEnabled(false);
 
+  // Zero the scale
+  //
   ui->zeroButton->setEnabled(false);
 
+  // Read the weight measurement off the scale
+  //
   ui->measureButton->setEnabled(false);
 
   // as soon as there are serial ports in the list, allow click to select port
@@ -167,20 +171,6 @@ void MainWindow::updateMeasurementList(const QString &label)
     }
 }
 
-void MainWindow::setInputKeys(const QList<QString> &keys)
-{
-   m_inputData.clear();
-   for(int i=0;i<keys.size();i++)
-       m_inputData.insert(keys[i],QVariant());
-}
-
-void MainWindow::setOutputKeys(const QList<QString> &keys)
-{
-   m_outputData.clear();
-   for(int i=0;i<keys.size();i++)
-       m_outputData.insert(keys[i],QVariant());
-}
-
 void MainWindow::run()
 {
     m_manager.scanDevices();
@@ -214,13 +204,13 @@ void MainWindow::readInput()
       QString val = file.readAll();
       file.close();
 
-      QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
-      QJsonObject o = d.object();
+      QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
+      QJsonObject jsonObj = jsonDoc.object();
       QMapIterator<QString,QVariant> it(m_inputData);
       QList<QString> keys = m_inputData.keys();
       for(int i=0;i<keys.size();i++)
       {
-          QJsonValue v = o.value(keys[i]);
+          QJsonValue v = jsonObj.value(keys[i]);
           // TODO: error report all missing expected key values
           //
           if(!v.isUndefined())
@@ -234,13 +224,12 @@ void MainWindow::writeOutput()
    if(m_verbose)
        qDebug() << "begin write process ... ";
 
-   QJsonObject json = m_manager.toJsonObject();
-
+   QJsonObject jsonObj = m_manager.toJsonObject();
 
    qDebug() << "received json measurement data";
 
    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
-   json.insert("barcode",QJsonValue(barcode));
+   jsonObj.insert("barcode",QJsonValue(barcode));
 
    if(m_verbose)
        qDebug() << "determine file output name ... ";
@@ -284,7 +273,7 @@ void MainWindow::writeOutput()
 
    QFile saveFile( fileName );
    saveFile.open(QIODevice::WriteOnly);
-   saveFile.write(QJsonDocument(json).toJson());
+   saveFile.write(QJsonDocument(jsonObj).toJson());
 
    if(m_verbose)
        qDebug() << "wrote to file " << fileName;

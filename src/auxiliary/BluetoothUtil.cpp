@@ -1,11 +1,7 @@
 #include "BluetoothUtil.h"
 
-#include <QtBluetooth/QBluetoothUuid>
-#include <QtBluetooth/QLowEnergyCharacteristic>
-
 #include <QByteArray>
 #include <QString>
-
 
 QString BluetoothUtil::uuidToString(const QBluetoothUuid &uuid)
 {

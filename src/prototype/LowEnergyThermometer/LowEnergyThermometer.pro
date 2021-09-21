@@ -9,14 +9,18 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    ../../auxiliary/BluetoothUtil.cpp \
+    ../../data/MeasurementBase.cpp \
+    ../../data/TemperatureMeasurement.cpp \
     BluetoothLEManager.cpp \
-    BluetoothUtil.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
+    ../../auxiliary/BluetoothUtil.h \
+    ../../data/MeasurementBase.h \
+    ../../data/TemperatureMeasurement.h \
     BluetoothLEManager.h \
-    BluetoothUtil.h \
     mainwindow.h
 
 FORMS += \
