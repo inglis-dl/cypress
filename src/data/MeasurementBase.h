@@ -1,8 +1,8 @@
 #ifndef MEASUREMENTBASE_H
 #define MEASUREMENTBASE_H
 
-#include <QVariant>
 #include <QMap>
+#include <QVariant>
 
 /*!
  * \class MeasurementBase

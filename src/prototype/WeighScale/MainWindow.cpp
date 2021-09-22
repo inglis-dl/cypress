@@ -193,6 +193,7 @@ void MainWindow::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
+        qDebug() << "no input file";
         return;
     }
     QFileInfo info(m_inputFileName);
@@ -203,20 +204,26 @@ void MainWindow::readInput()
       file.open(QIODevice::ReadOnly | QIODevice::Text);
       QString val = file.readAll();
       file.close();
+      qDebug() << val;
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject jsonObj = jsonDoc.object();
       QMapIterator<QString,QVariant> it(m_inputData);
-      QList<QString> keys = m_inputData.keys();
+      QList<QString> keys = jsonObj.keys();
       for(int i=0;i<keys.size();i++)
       {
           QJsonValue v = jsonObj.value(keys[i]);
           // TODO: error report all missing expected key values
           //
           if(!v.isUndefined())
+          {
               m_inputData[keys[i]] = v.toVariant();
+              qDebug() << keys[i] << v.toVariant();
+          }
       }
     }
+    else
+        qDebug() << m_inputFileName << " file does not exist";
 }
 
 void MainWindow::writeOutput()

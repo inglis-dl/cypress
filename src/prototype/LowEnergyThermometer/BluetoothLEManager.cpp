@@ -2,10 +2,10 @@
 
 #include <QBitArray>
 #include <QDateTime>
-#include <QSettings>
 #include <QtBluetooth/QBluetoothHostInfo>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QSettings>
 
 /**
  * Qt 5.14 adds a native Win32 port supporting Classic Bluetooth on Windows 7 or newer, and Bluetooth LE on Windows 8 or newer.

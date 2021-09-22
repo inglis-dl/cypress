@@ -1,16 +1,16 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
-
-#include <QSettings>
-#include <QDebug>
-#include <QMetaEnum>
-#include <QMessageBox>
-#include <QBitArray>
-#include <QDateTime>
-#include <QJsonObject>
-#include <QJsonDocument>
+#include "MainWindow.h"
+#include "ui_MainWindow.h"
 
 #include "BluetoothLEManager.h"
+
+#include <QBitArray>
+#include <QDateTime>
+#include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QMessageBox>
+#include <QMetaEnum>
+#include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -30,8 +30,6 @@ void MainWindow::initialize()
 {
     m_manager.setVerbose(m_verbose);
 
-    // require a barcode as input
-    //
     readInput();
 
     if(!m_manager.lowEnergyEnabled())
@@ -196,6 +194,7 @@ void MainWindow::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
+        qDebug() << "no input file";
         return;
     }
     QFileInfo info(m_inputFileName);
@@ -206,20 +205,26 @@ void MainWindow::readInput()
       file.open(QIODevice::ReadOnly | QIODevice::Text);
       QString val = file.readAll();
       file.close();
+      qDebug() << val;
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject jsonObj = jsonDoc.object();
       QMapIterator<QString,QVariant> it(m_inputData);
-      QList<QString> keys = m_inputData.keys();
+      QList<QString> keys = jsonObj.keys();
       for(int i=0;i<keys.size();i++)
       {
           QJsonValue v = jsonObj.value(keys[i]);
           // TODO: error report all missing expected key values
           //
           if(!v.isUndefined())
+          {
               m_inputData[keys[i]] = v.toVariant();
+              qDebug() << keys[i] << v.toVariant();
+          }
       }
     }
+    else
+        qDebug() << m_inputFileName << " file does not exist";
 }
 
 void MainWindow::writeOutput()
