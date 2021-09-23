@@ -97,6 +97,6 @@ StateEnum ReadyState::OnButton(BPMMessage* msg)
 
 void ReadyState::LogUnexpectedResponse(QString responseType, QString category)
 {
-    QString logMsg = QString("Unexpected Response: %1 (%2)").arg(responseType, category);
+    QString logMsg = QString("Unexpected Response (Ready): % 1 (% 2)").arg(responseType, category);
     Logger::Log(logMsg);
 }

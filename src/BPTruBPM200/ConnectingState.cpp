@@ -76,6 +76,6 @@ void ConnectingState::OnNotification(BPMMessage* msg)
 
 void ConnectingState::LogUnexpectedResponse(QString responseType, QString category)
 {
-    QString logMsg = QString("Unexpected Response: %1 (%2)").arg(responseType, category);
+    QString logMsg = QString("Unexpected Response (Connecting): %1 (%2)").arg(responseType, category);
     Logger::Log(logMsg);
 }

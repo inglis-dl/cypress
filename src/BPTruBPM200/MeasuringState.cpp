@@ -7,12 +7,11 @@ MeasuringState::MeasuringState(UiHelper* helper, BPMCommunicationHelper* communi
 
 StateEnum MeasuringState::GetState()
 {
-    return StateEnum::READY;
+    return StateEnum::MEASURING;
 }
 
 StateEnum MeasuringState::ProcessMessage(BPMMessage* msg)
 {
-    // TODO: Figure out why inflation message goes to buttons
     switch (msg->GetMsgId()) {
     case (int)ResponseTypeEnum::Ack:
         return OnAck(msg);
@@ -121,6 +120,6 @@ void MeasuringState::EndMeasures()
 
 void MeasuringState::LogUnexpectedResponse(QString responseType, QString category)
 {
-    QString logMsg = QString("Unexpected Response: %1 (%2)").arg(responseType, category);
+    QString logMsg = QString("Unexpected Response (Measuring): %1 (%2)").arg(responseType, category);
     Logger::Log(logMsg);
 }
