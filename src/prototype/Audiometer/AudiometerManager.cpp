@@ -1,5 +1,7 @@
 #include "AudiometerManager.h"
 
+#include "../../data/AudiometerTest.h"
+
 #include <QDateTime>
 #include <QDebug>
 #include <QJsonArray>
@@ -191,14 +193,15 @@ void AudiometerManager::connectPort()
 
       connect(&m_port, &QSerialPort::errorOccurred,
               this,[this](QSerialPort::SerialPortError error){
+          Q_UNUSED(error)
                   qDebug() << "AN ERROR OCCURED: " << m_port.errorString();
               });
       connect(&m_port,&QSerialPort::dataTerminalReadyChanged,
-              this,[this](bool set){
+              this,[](bool set){
           qDebug() << "data terminal ready DTR changed to " << (set?"high":"low");
       });
       connect(&m_port,&QSerialPort::requestToSendChanged,
-              this,[this](bool set){
+              this,[](bool set){
           qDebug() << "request to send RTS changed to " << (set?"high":"low");
       });
       emit canMeasure();
@@ -224,27 +227,35 @@ bool AudiometerManager::isDefined(const QString &label) const
     return defined;
 }
 
+bool AudiometerManager::hasEndCode(const QByteArray &arr)
+{
+    if( arr.size() < 6 ) return false;
+    // try and interpret the last 6 bytes
+    int size = arr.size();
+    return (
+       0x0d == arr.at(size-1) &&
+       0x17 == arr.at(size-4) &&
+        'p' == arr.at(size-5) &&
+        '~' == arr.at(size-6));
+}
+
 void AudiometerManager::readData()
 {
     QByteArray data = m_port.readAll();
     m_buffer += data;
     qDebug() << "read data got " << QString(data);
 
-    if(HearingMeasurement::hasEndCode(m_buffer))
+    if(AudiometerManager::hasEndCode(m_buffer))
     {
         qDebug() << "finished reading messages, final size " << QString::number(m_buffer.size());
         qDebug() << QString(m_buffer);
         emit measured(QString(m_buffer));
 
-        HearingMeasurement m;
-        m.fromArray(m_buffer);
-        qDebug() << m.getFlag();
-        qDebug() << m.getExaminerID();
-        qDebug() << m.getTestDateTime().toString();
-        qDebug() << m.getCalibrationDate().toString();
-        m.getLeftHearingTestLevels();
-        qDebug() << m.getPatientID();
-        m.getRightHearingTestLevels();
+        AudiometerTest t;
+        t.fromArray(m_buffer);
+        t.toString();
+
+
     }
     else
     {

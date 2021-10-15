@@ -10,15 +10,19 @@ CONFIG += c++11
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../data/AudiometerTest.cpp \
     ../../data/HearingMeasurement.cpp \
     ../../data/MeasurementBase.cpp \
+    ../../data/TestBase.cpp \
     AudiometerManager.cpp \
     main.cpp \
     MainWindow.cpp
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../data/AudiometerTest.h \
     ../../data/HearingMeasurement.h \
+    ../../data/TestBase.h \
     MainWindow.h \
     ../../data/MeasurementBase.h \
     AudiometerManager.h

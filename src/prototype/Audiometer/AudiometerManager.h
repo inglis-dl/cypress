@@ -89,6 +89,8 @@ signals:
 
 private:
 
+    static bool hasEndCode(const QByteArray &);
+
     QList<HearingMeasurement> m_measurementData;
     QMap<QString,QVariant> m_deviceData;
 

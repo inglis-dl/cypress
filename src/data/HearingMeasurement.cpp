@@ -2,26 +2,12 @@
 
 #include <QDateTime>
 #include <QDebug>
+#include <QRegExp>
 
-void HearingMeasurement::fromArray(const QByteArray &arr)
-{
-    if(!arr.isEmpty() && hasEndCode(arr))
-    {
-        m_array = arr;
+QMap<QString,QString> HearingMeasurement::codeLookup = HearingMeasurement::initCodeLookup();
+QMap<QString,QString> HearingMeasurement::outcomeLookup = HearingMeasurement::initOutcomeLookup();
+QMap<int,QString> HearingMeasurement::frequencyLookup = HearingMeasurement::initFrequencyLookup();
 
-
-
-      // each measurement atom is a dB response for a specific frequency
-        /*
-      QByteArray bytes(arr.simplified());
-      QList<QByteArray> parts = bytes.split(' ');
-      if(3 <= parts.size())
-      {
-        m_characteristicValues["weight"] = QString::number(parts[0].toFloat(),'f',1);
-        m_characteristicValues["units"] = QString(parts[1]);
-        m_characteristicValues["mode"] = QString(parts[2]);
-        m_characteristicValues["timestamp"] = QDateTime::currentDateTime();
-       */
  /*
   *    opal expects
   *
@@ -64,135 +50,111 @@ RES_LEFT_8K_ERR
   *
   */
 
+// a hearing threshold level can either be a valid integer
+// value in dB at a specific frequency and side or it can be an error code combined with a recommended
+// outcome
+// the characteristics for a given measurement are:
+// frequency label string
+// threshold level integer (can be null but there must be an error code)
+// side left or right string
+// error code string  (default no error or null)
+// error code label string (default null)
+// outcome string (default null)
 
 
+QMap<QString,QString> HearingMeasurement::initCodeLookup()
+{
+    QMap<QString,QString> map;
+    map["AA"] = "NOT_TESTED";
+    map["DD"] = "DELETED";
+    map["EA"] = "CONTRALATERAL_RECORDED";
+    map["EB"] = "BASELINE_SHIFT";
+    map["EC"] = "ADJACENT_FREQ";
+    map["ED"] = "OUT_OF_RANGE";
+    map["EE"] = "NO_RESPONSE";
+    map["EF"] = "NO_THRESHOLD";
+    map["E1"] = "NO_RESPONSE_1K";
+    map["E2"] = "NO_THRESHOLD_1K";
+    map["E3"] = "VERIFY_FAILED_1K";
+    map["E4"] = "HANDSWITCH_ERROR";
+    map["E5"] = "RESPONSE_NO_TONE";
+    map["E6"] = "NO_THRESHOLD_AGAIN";
+    map["E7"] = "TOO_MANY_FAILURES";
+    map["E8"] = "EQUIPMENT_ERROR";
+    return map;
+}
+
+QMap<QString,QString> HearingMeasurement::initOutcomeLookup()
+{
+    QMap<QString,QString> map;
+    map["NOT_TESTED"] = "RUN_TEST";
+    map["DELETED"] = "NONE";
+    map["CONTRALATERAL_RECORDED"] = "RERUN_TEST";
+    map["BASELINE_SHIFT"] = "RERUN_TEST";
+    map["ADJACENT_FREQ"] = "RERUN_TEST";
+    map["OUT_OF_RANGE"] = "RERUN_TEST";
+    map["NO_RESPONSE"] = "RERUN_TEST";
+    map["NO_THRESHOLD"] = "RERUN_TEST";
+    map["NO_RESPONSE_1K"] = "REINSTRUCT_SUBJECT";
+    map["NO_THRESHOLD_1K"] = "REINSTRUCT_SUBJECT";
+    map["VERIFY_FAILED_1K"] = "REINSTRUCT_SUBJECT";
+    map["HANDSWITCH_ERROR"] = "REINSTRUCT_SUBJECT";
+    map["RESPONSE_NO_TONE"] = "REINSTRUCT_SUBJECT";
+    map["NO_THRESHOLD_AGAIN"] = "REINSTRUCT_SUBJECT";
+    map["TOO_MANY_FAILURES"] = "REINSTRUCT_SUBJECT";
+    map["EQUIPMENT_ERROR"] = "CONTACT_SERVICE";
+    return map;
+}
+
+QMap<int,QString> HearingMeasurement::initFrequencyLookup()
+{
+    QMap<int,QString> map;
+    map[0] = "1 kHz Test";
+    map[1] = "500 Hz";
+    map[2] = "1 kHz";
+    map[3] = "2 kHz";
+    map[4] = "3 kHz";
+    map[5] = "4 kHz";
+    map[6] = "6 kHz";
+    map[7] = "8 kHz";
+    return map;
+}
+
+void HearingMeasurement::fromCode(const int &index, const QString &code)
+{
+    reset();
+    // is the index a valid index ?
+    if(frequencyLookup.contains(index))
+    {
+       setCharacteristic("test",frequencyLookup[index])         ;
+       setCharacteristic("units","dB");
+       if(codeLookup.contains(code))
+       {
+         QString err = codeLookup[code];
+         setCharacteristic("error",err);
+         setCharacteristic("outcome",outcomeLookup[err]);
+       }
+       else
+       {
+           setCharacteristic("error","");
+           setCharacteristic("outcome","");
+           QRegExp r("\\d*");
+           if(r.exactMatch(code))
+           {
+              setCharacteristic("HTL",code.toInt());
+           }
+       }
     }
 }
 
-QString HearingMeasurement::readArray(const quint8 &begin, const quint8 &end) const
-{
-    int len = end-begin+1;
-    qDebug() << "reading bytes from " << begin << " to " << end;
-    return 0<len && end<m_array.size() ? QString::fromLatin1(m_array.mid(begin, len)) : QString();
-}
-
-char HearingMeasurement::getFlag() const
-{
-    return m_array.at(0);
-}
-
-QString HearingMeasurement::getPatientID() const
-{
-    return readArray(4,17).trimmed();
-}
-
-QString HearingMeasurement::getTestID() const
-{
-    return readArray(18,34).trimmed();
-}
-
-QDateTime HearingMeasurement::getTestDateTime() const
-{
-    QString d_str = readArray(35,50).trimmed();
-    if(d_str.contains("A"))
-        d_str.replace("A","1");
-    qDebug() << "test date string " << d_str;
-    return QDateTime::fromString(d_str,"MM/dd/yyHH:mm:ss").addYears(100);
-}
-
-QDate HearingMeasurement::getCalibrationDate() const
-{
-    QString d_str = readArray(51,58).trimmed();
-    qDebug() << "calib date string " << d_str;
-    return QDate::fromString(d_str,"MM/dd/yy").addYears(100);
-}
-
-QString HearingMeasurement::getExaminerID() const
-{
-    return readArray(59,74).trimmed();
-}
-
-QMap<QString,quint8> HearingMeasurement::getLeftHearingTestLevels() const
-{
-    QString s = readArray(75,106).trimmed();
-    qDebug() << "HTL left: " << s;
-    QStringList s_list = s.split(QRegExp("\\s+")).replaceInStrings(QRegExp("^\\s+|\\s+$"),"");
-    int i=0;
-    foreach(QString atom , s_list)
-      qDebug() << "htl left " << QString::number(i++) << " " << atom;
-
-    QMap<QString,quint8> htl;
-    //htl["1KT"] =
-    return htl;
-}
-
-QMap<QString,quint8> HearingMeasurement::getRightHearingTestLevels() const
-{
-    QString s = readArray(107,138).trimmed();
-    qDebug() << "HTL right: " << s;
-    QStringList s_list = s.split(QRegExp("\\s+")).replaceInStrings(QRegExp("^\\s+|\\s+$"),"");
-    int i=0;
-    foreach(QString atom , s_list)
-      qDebug() << "htl right " << QString::number(i++) << " " << atom;
-
-    QMap<QString,quint8> htl;
-    //htl["1KT"] =
-    return htl;
-
-}
-
-QMap<QString,QString> HearingMeasurement::getLeftHearingTestCodes() const
-{
-    QMap<QString,QString> htl;
-    //htl["1KT"] =
-    return htl;
-
-}
-
-QMap<QString,QString> HearingMeasurement::getRightHearingTestCodes() const
-{
-    QMap<QString,QString> htl;
-    //htl["1KT"] =
-    return htl;
-
-}
-
-QMap<QString,QString> HearingMeasurement::getLeftHearingTestOutcomes() const
-{
-    QMap<QString,QString> htl;
-    //htl["1KT"] =
-    return htl;
-
-}
-
-QMap<QString,QString> HearingMeasurement::getRightHearingTestOutcomes() const
-{
-    QMap<QString,QString> htl;
-    //htl["1KT"] =
-    return htl;
-
-}
 
 bool HearingMeasurement::isValid() const
 {
     bool ok = true;
-    if(m_array.isEmpty() || !hasEndCode(m_array)) return false;
     return ok;
 }
 
 QString HearingMeasurement::toString() const
 {
-  return QString();
-}
-
-bool HearingMeasurement::hasEndCode(const QByteArray &arr)
-{
-    if( arr.size() < 6 ) return false;
-    // try and interpret the last 6 bytes
-    int size = arr.size();
-    return (
-       0x0d == arr.at(size-1) &&
-       0x17 == arr.at(size-4) &&
-        'p' == arr.at(size-5) &&
-        '~' == arr.at(size-6));
+  return MeasurementBase::toString();
 }

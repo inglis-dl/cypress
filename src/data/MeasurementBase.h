@@ -28,6 +28,10 @@ public:
     MeasurementBase() = default;
     ~MeasurementBase() = default;
     MeasurementBase(const MeasurementBase &);
+    MeasurementBase(const QString &key, const QVariant &value)
+    {
+        m_characteristicValues[key]=value;
+    }
     MeasurementBase &operator=(const MeasurementBase &);
 
     virtual QString toString() const;
