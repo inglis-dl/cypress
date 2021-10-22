@@ -252,10 +252,10 @@ void AudiometerManager::readData()
         emit measured(QString(m_buffer));
 
         AudiometerTest t;
+        qDebug() << "manager ready to initialize test from buffer";
         t.fromArray(m_buffer);
-        t.toString();
-
-
+        qDebug() << "manager ready to dump test to string";
+        qDebug() << t.toString();
     }
     else
     {

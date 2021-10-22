@@ -14,11 +14,11 @@ public:
 
     void fromArray(const QByteArray &);
 
-    QString toString() const;
+    QString toString() const override;
 
-    bool isValid() const;
+    bool isValid() const override;
 
-    void reset();
+    void reset() override;
 
     static bool hasEndCode(const QByteArray &);
 
@@ -31,7 +31,7 @@ public:
 
 private:
     QByteArray m_array;
-    QString readArray(const quint8 &begin, const quint8 &end) const;
+    QString readArray(const quint8 &, const quint8 &) const;
 };
 
 Q_DECLARE_METATYPE(AudiometerTest);

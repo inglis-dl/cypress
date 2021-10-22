@@ -2,6 +2,7 @@
 
 #include <QDateTime>
 #include <QDebug>
+#include <QStringBuilder>
 
 AudiometerTest::AudiometerTest(const AudiometerTest &other) : TestBase(other)
 {
@@ -17,16 +18,53 @@ AudiometerTest& AudiometerTest::operator=(const AudiometerTest &other)
 
 bool AudiometerTest::isValid() const
 {
-    bool ok = true;
-    return ok;
+    bool okMeta =
+      m_metadata.hasCharacteristic("patient ID") &&
+      m_metadata.hasCharacteristic("test datetime") &&
+      m_metadata.hasCharacteristic("last calibration date") &&
+      m_metadata.hasCharacteristic("test ID");
+
+    bool okTest = true;
+
+    foreach(MeasurementBase x, m_measurementList)
+    {
+        HearingMeasurement* child = static_cast<HearingMeasurement*>(&x);
+        qDebug() << "audiometertest isValid checking a cast hearing measurement";
+        if(child->isValid())
+        {
+            qDebug() << "tring to validate but measurement is invalid: " << child->toString();
+            okTest = false;
+            break;
+        }
+        qDebug() << "trying un cast " << (x.isValid() ? "X IS OK" : "X INVALID");
+
+    }
+    qDebug() << "meta ok: " << (okMeta?"OK":"INVALID") <<
+                 " test ok: " << (okTest?"OK":"INVALID");
+    return okMeta && okTest;
 }
 
 QString AudiometerTest::toString() const
 {
-    qDebug() << m_metadata;
-    foreach(auto x, m_measurementList)
-        qDebug() << x;
-    return QString();
+    QString s;
+    qDebug() << "audiometertest toString begin";
+    if(isValid())
+    {
+        qDebug() << "audiometertest toString building stringlist";
+        QStringList l;
+        l << QString("patient ID: ") % m_metadata.getCharacteristic("patient ID").toString();
+        l << QString("test ID: ") % m_metadata.getCharacteristic("test ID").toString();
+        l << QString("test datetime: ") % m_metadata.getCharacteristic("test datetime").toDateTime().toString("yyyy-MM-dd hh:mm:ss");
+        l << QString("last calibration date: ") % m_metadata.getCharacteristic("last calibration date").toDate().toString("yyyy-MM-dd");
+        foreach(MeasurementBase x, m_measurementList)
+        {
+            HearingMeasurement* child = static_cast<HearingMeasurement*>(&x);
+            l << child->toString();
+        }
+        qDebug() << "audiometertest toString joining stringlist";
+        s = l.join("\n");
+    }
+    return s;
 }
 
 void AudiometerTest::reset()
@@ -62,11 +100,13 @@ void AudiometerTest::fromArray(const QByteArray &arr)
 
         foreach(auto x, l_htl)
         {
-            addMeasurement(x);
+          qDebug() << "adding " << x.toString();
+          addMeasurement(x);
         }
         foreach(auto x, r_htl)
         {
-            addMeasurement(x);
+          qDebug() << "adding " << x.toString();
+          addMeasurement(x);
         }
     }
 }
@@ -112,13 +152,11 @@ QList<HearingMeasurement> AudiometerTest::getHearingThresholdLevels(const QStrin
   qDebug() << "HTL " << side;
   QStringList s_list = s.split(QRegExp("\\s+")).replaceInStrings(QRegExp("^\\s+|\\s+$"),"");
   int i=0;
-  foreach(QString atom , s_list)
+  foreach(auto atom, s_list)
   {
     HearingMeasurement m;
-    m.fromCode(i,atom);
-    m.setCharacteristic("side",side.toLower());
+    m.fromCode(side, i++, atom);
     htl.append(m);
-    qDebug() << "htl value " << QString::number(i++) << " " << atom;
   }
 
   return htl;

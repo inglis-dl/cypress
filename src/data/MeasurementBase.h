@@ -44,7 +44,7 @@ public:
       m_characteristicValues[key]=value;
     }
 
-    QVariant getCharacteristic(const QString &key) const
+    inline QVariant getCharacteristic(const QString &key) const
     {
         return m_characteristicValues.contains(key) ?
                m_characteristicValues[key] : QVariant();
@@ -55,8 +55,14 @@ public:
         return m_characteristicValues;
     }
 
-protected:
+    inline bool hasCharacteristic(const QString &key) const
+    {
+        return m_characteristicValues.contains(key) &&
+               !m_characteristicValues[key].isNull() &&
+                m_characteristicValues[key].isValid();
+    }
 
+protected:
     QMap<QString,QVariant> m_characteristicValues;
 };
 

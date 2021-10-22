@@ -20,20 +20,28 @@ public:
     virtual void reset();
 
     void addMeasurement(const MeasurementBase &);
+
     void setMetatadata(const MeasurementBase &other)
     {
         m_metadata = other;
     }
+
     void addMetadata(const QString &key, const QVariant &value)
     {
         m_metadata.setCharacteristic(key,value);
     }
-    QList<MeasurementBase> getMeasurementList()
+
+    QVariant getMetadata(const QString &key) const
+    {
+        return m_metadata.getCharacteristic(key);
+    }
+
+    QList<MeasurementBase> getMeasurementList() const
     {
         return m_measurementList;
     }
 
-    MeasurementBase getMetadata()
+    MeasurementBase getMetadata() const
     {
         return m_metadata;
     }

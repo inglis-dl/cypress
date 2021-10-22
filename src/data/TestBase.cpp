@@ -1,6 +1,7 @@
 #include "TestBase.h"
 
 #include <QJsonArray>
+#include <QDebug>
 
 TestBase::TestBase(const TestBase &other)
 {
@@ -35,6 +36,7 @@ bool TestBase::isValid() const
 
 QString TestBase::toString() const
 {
+    qDebug() << "in testbase returning empty string from toString";
     return QString();
 }
 

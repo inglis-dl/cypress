@@ -13,12 +13,15 @@
 class HearingMeasurement :  public MeasurementBase
 {   
 public:
+    HearingMeasurement() : MeasurementBase(){};
+    //~HearingMeasurement() = default;
+    HearingMeasurement(const HearingMeasurement &);
 
-    void fromCode(const int &, const QString &);
+    void fromCode(const QString &, const int &, const QString &);
 
-    QString toString() const;
+    QString toString() const override;
 
-    bool isValid() const;    
+    bool isValid() const override;
 
     static QMap<QString,QString> initCodeLookup();
     static QMap<QString,QString> initOutcomeLookup();
