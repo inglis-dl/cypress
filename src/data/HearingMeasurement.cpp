@@ -172,18 +172,18 @@ QString HearingMeasurement::toString() const
   QString s;
   if(isValid())
   {
-    s = m_characteristicValues["side"].toString() %
+    s = getCharacteristic("side").toString() %
       QString(" ") %
-      m_characteristicValues["test"].toString() %
+      getCharacteristic("test").toString() %
       QString(": ") %
       (hasCharacteristic("HTL") ?
-        m_characteristicValues["HTL"].toString() %
+        getCharacteristic("HTL").toString() %
         QString(" (") %
-        m_characteristicValues["units"].toString() %
+        getCharacteristic("units").toString() %
         QString(")") :
-        m_characteristicValues["error"].toString() %
+        getCharacteristic("error").toString() %
         QString(" (") %
-        m_characteristicValues["outcome"].toString() %
+        getCharacteristic("outcome").toString() %
         QString(")")
       );
   }

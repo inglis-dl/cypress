@@ -64,6 +64,16 @@ public:
 
     void addMeasurement(const T &);
 
+    void pop_front()
+    {
+        m_measurementList.pop_front();
+    }
+
+    void pop_back()
+    {
+        m_measurementList.pop_back();
+    }
+
     int getNumberOfMeasurements() const
     {
         return m_measurementList.size();
