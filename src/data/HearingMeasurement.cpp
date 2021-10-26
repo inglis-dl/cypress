@@ -61,14 +61,7 @@ RES_LEFT_8K_ERR
 // error code string  (default no error or null)
 // error code label string (default null)
 // outcome string (default null)
-
-
-HearingMeasurement::HearingMeasurement(const HearingMeasurement &other)
-    : MeasurementBase(other)
-{
-    m_characteristicValues = other.m_characteristicValues;
-}
-
+//
 QMap<QString,QString> HearingMeasurement::initCodeLookup()
 {
     QMap<QString,QString> map;
@@ -133,58 +126,52 @@ QMap<int,QString> HearingMeasurement::initFrequencyLookup()
 void HearingMeasurement::fromCode(const QString &side, const int &index, const QString &code)
 {
     reset();
-    // is the index a valid index ?
     if(frequencyLookup.contains(index))
     {
-        qDebug() <<
-          "build measurement for " <<
-          side << " "
-          << QString::number(index) << " " << code;
-       setCharacteristic("side",side.toLower());
-       setCharacteristic("test",frequencyLookup[index]);
-       setCharacteristic("units","dB");
-       setCharacteristic("error",QVariant());
-       setCharacteristic("outcome",QVariant());
-       if(codeLookup.contains(code))
-       {
-         QString err = codeLookup[code];
-         setCharacteristic("error",err);
-         setCharacteristic("outcome",outcomeLookup[err]);
-       }
-       else
-       {
-         QRegExp r("\\d*");
-         if(r.exactMatch(code))
-         {
-           setCharacteristic("HTL",code.toInt());
-         }
-       }
+      setCharacteristic("side",side.toLower());
+      setCharacteristic("test",frequencyLookup[index]);
+      setCharacteristic("units","dB");
+      setCharacteristic("error",QVariant());
+      setCharacteristic("outcome",QVariant());
+      if(codeLookup.contains(code))
+      {
+        QString err = codeLookup[code];
+        setCharacteristic("error",err);
+        setCharacteristic("outcome",outcomeLookup[err]);
+      }
+      else
+      {
+        QRegExp r("\\d*");
+        if(r.exactMatch(code))
+        {
+          setCharacteristic("HTL",code.toInt());
+        }
+      }
     }
 }
 
 bool HearingMeasurement::isValid() const
 {
-    // minimum requirements:
     // side test: HTL (units) OR error (outcome)
     bool ok =
-            hasCharacteristic("side") &&
-            hasCharacteristic("test") &&
-            hasCharacteristic("units") &&
-            (hasCharacteristic("HTL") ||
-             (hasCharacteristic("error") &&
-             hasCharacteristic("outcome")));
-    qDebug() << "measure is " << (ok ? "OK" : "INVALID");
+      hasCharacteristic("side") &&
+      hasCharacteristic("test") &&
+      hasCharacteristic("units") &&
+      (
+        hasCharacteristic("HTL") ||
+        (
+          hasCharacteristic("error") &&
+          hasCharacteristic("outcome")
+        )
+      );
     return ok;
 }
 
 QString HearingMeasurement::toString() const
 {
   QString s;
-  qDebug() << "in hearing measurement class toString";
   if(isValid())
   {
-     qDebug() << "in hearing measurement class toString building the string";
-
     s = m_characteristicValues["side"].toString() %
       QString(" ") %
       m_characteristicValues["test"].toString() %
@@ -199,7 +186,16 @@ QString HearingMeasurement::toString() const
         m_characteristicValues["outcome"].toString() %
         QString(")")
       );
-    qDebug() << "built string: " << s;
   }
   return s;
+}
+
+QDebug operator<<(QDebug dbg, const HearingMeasurement &item)
+{
+    const QString s = item.toString();
+    if (s.isEmpty())
+        dbg.nospace() << "Hearing Measurement()";
+    else
+        dbg.nospace() << "Hearing Measurement(" << s << " ...)";
+    return dbg.maybeSpace();
 }

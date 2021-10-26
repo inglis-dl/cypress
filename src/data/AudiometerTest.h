@@ -4,13 +4,29 @@
 #include "TestBase.h"
 #include "HearingMeasurement.h"
 
-class AudiometerTest : TestBase
+/*!
+ * \class AudiometerTest
+ * \brief A Trementrics RA300 Audiometer test class
+ *
+ * Concrete implementation of TestBase using HearingMeasurement
+ * class specialization.  This class parses the binary data stream
+ * obtained as a QByteArray from the RS232 interface controlled by the AudiometerManager
+ * class.  Test parameters such as participant ID (barcode) are stored
+ * as meta data (see MeasurementBase) while hearing threshold levels (HTL)
+ * are stored 8 frequeency tests per side left and right for a total of
+ * 16 tests.  In case of a HTL error code received in the byte array,
+ * the measurement data for the frequency in question consists of an
+ * error code string and a resolution outcome string.
+ *
+ * \sa AudiometerManager, HearingMeasurement, MeasurementBase
+ *
+ */
+
+class AudiometerTest : public TestBase<HearingMeasurement>
 {
 public:
     AudiometerTest() = default;
     ~AudiometerTest() = default;
-    AudiometerTest(const AudiometerTest &);
-    AudiometerTest &operator=(const AudiometerTest &);
 
     void fromArray(const QByteArray &);
 
@@ -18,24 +34,22 @@ public:
 
     bool isValid() const override;
 
-    void reset() override;
+    QJsonObject toJsonObject() const override;
 
     static bool hasEndCode(const QByteArray &);
-
-    QString   getPatientID() const;
-    QString   getTestID() const;
-    QDateTime getTestDateTime() const;
-    QDate     getCalibrationDate() const;
-    QString   getExaminerID() const;
-    QList<HearingMeasurement> getHearingThresholdLevels(const QString& side) const;
 
 private:
     QByteArray m_array;
     QString readArray(const quint8 &, const quint8 &) const;
+
+    QString   readPatientID() const;
+    QString   readTestID() const;
+    QDateTime readTestDateTime() const;
+    QDate     readCalibrationDate() const;
+    QString   readExaminerID() const;
+    QList<HearingMeasurement> readHearingThresholdLevels(const QString& side) const;
 };
 
 Q_DECLARE_METATYPE(AudiometerTest);
-
-QDebug operator<<(QDebug dbg, const AudiometerTest &);
 
 #endif // AUDIOMETERTEST_H

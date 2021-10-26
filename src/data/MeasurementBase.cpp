@@ -2,29 +2,16 @@
 
 #include <QDebug>
 
-MeasurementBase::MeasurementBase(const MeasurementBase &other)
-{
-    m_characteristicValues = other.m_characteristicValues;
-}
-
-MeasurementBase& MeasurementBase::operator=(const MeasurementBase &other)
-{
-    m_characteristicValues = other.m_characteristicValues;
-    return *this;
-}
-
 bool MeasurementBase::isValid() const
 {
-    qDebug() << "in measurement base isValid";
     bool ok = true;
-    for( auto it = m_characteristicValues.constBegin(),
-         end = m_characteristicValues.constEnd(); it != end; ++it)
+    for(auto&& x : m_characteristicValues)
     {
-        if(it.value().isNull())
-        {
-            ok = false;
-            break;
-        }
+      if(x.isNull())
+      {
+        ok = false;
+        break;
+      }
     }
     return ok;
 }
@@ -36,24 +23,20 @@ void MeasurementBase::reset()
 
 QString MeasurementBase::toString() const
 {
-    qDebug() << "in measurement base toString building with a string list";
-    QStringList list;
-    for( auto it = m_characteristicValues.constBegin(),
-         end = m_characteristicValues.constEnd(); it != end; ++it)
+    QStringList l;
+    for(auto&& x :  m_characteristicValues)
     {
-        list << it.value().toString();
+      l << x.toString();
     }
-    qDebug() << "in measurement base toString returning a joined string list";
-    return list.join(" ");
+    return l.join(" ");
 }
 
-QDebug operator<<(QDebug dbg, const MeasurementBase &measurement)
+QDebug operator<<(QDebug dbg, const MeasurementBase &item)
 {
-    const QString output = measurement.toString();
-    if (output.isEmpty())
-        dbg.nospace() << "Measurement()";
+    const QString s = item.toString();
+    if (s.isEmpty())
+      dbg.nospace() << "Measurement()";
     else
-        dbg.nospace() << "Measurement(" << output << " ...)";
+      dbg.nospace() << "Measurement(" << s << " ...)";
     return dbg.maybeSpace();
 }
-

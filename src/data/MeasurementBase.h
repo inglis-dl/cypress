@@ -8,15 +8,20 @@
  * \class MeasurementBase
  * \brief A Base Measurement class
  *
- * Measurements of are composed of atomic elements or "characteristics".
+ * Measurements are composed of atomic elements or "characteristics".
  * This class facilitates parsing measurement data from different
  * instruments into component characteristics, such as value, units etc.
  * and stores them labeled by QString keys as QVariant object values in a QMap.
  * The measurement can be retrieved as a QString for UI purposes.
  *
- * \note  This class stores one measurement only.  A manager
- * class should be used to store multiple measurements.  Child classes
- * must implement toString and isValid methods.
+ * \note  This class stores one or more characteristics which taken as whole
+ * can represent a single measurement.  A Test class inherited from TestBase
+ * should be used to store multiple measurements.
+ *
+ * Child classes should override toString and isValid methods as appropriate.
+ *
+ * This class can also be used to store instrument characteristics such as
+ * serial number, model number etc.
  *
  * \sa QVariant, QString, QMap
  *
@@ -27,16 +32,9 @@ class MeasurementBase
 public:
     MeasurementBase() = default;
     ~MeasurementBase() = default;
-    MeasurementBase(const MeasurementBase &);
-    MeasurementBase(const QString &key, const QVariant &value)
-    {
-        m_characteristicValues[key]=value;
-    }
-    MeasurementBase &operator=(const MeasurementBase &);
 
     virtual QString toString() const;
     virtual bool isValid() const;
-
     void reset();
 
     void setCharacteristic(const QString &key, const QVariant &value)
@@ -72,10 +70,12 @@ inline bool operator==(const MeasurementBase &lhs, const MeasurementBase &rhs)
 {
     return  lhs.getCharacteristicValues()==rhs.getCharacteristicValues();
 }
+
 inline bool operator!=(const MeasurementBase &lhs, const MeasurementBase &rhs)
 {
     return !(lhs == rhs);
 }
-QDebug operator<<(QDebug dbg, const MeasurementBase &measurement);
+
+QDebug operator<<(QDebug dbg, const MeasurementBase &);
 
 #endif // MEASUREMENTBASE_H

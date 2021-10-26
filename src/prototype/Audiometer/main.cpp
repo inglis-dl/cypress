@@ -36,14 +36,10 @@ int main(int argc, char *argv[])
     window.setOutputFileName(parser.getOutputFilename());
     window.setMode(parser.getRunMode());
     window.setVerbose(true/*parser.getVerbose()*/);
-    qDebug() << "ok1";
 
     window.initialize();
-    qDebug() << "ok2";
     window.show();
-    qDebug() << "ok3";
     window.run();
-    qDebug() << "ok4";
 
     return app.exec();
 }

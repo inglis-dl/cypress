@@ -13,9 +13,8 @@
 class HearingMeasurement :  public MeasurementBase
 {   
 public:
-    HearingMeasurement() : MeasurementBase(){};
-    //~HearingMeasurement() = default;
-    HearingMeasurement(const HearingMeasurement &);
+    HearingMeasurement() = default;
+    ~HearingMeasurement() = default;
 
     void fromCode(const QString &, const int &, const QString &);
 
@@ -28,11 +27,13 @@ public:
     static QMap<int,QString> initFrequencyLookup();
 
 private:
-    static QMap<QString,QString> codeLookup;// = HearingMeasurement::initCodeLookup();
-    static QMap<QString,QString> outcomeLookup;// = HearingMeasurement::initOutcomeLookup();
-    static QMap<int,QString> frequencyLookup;// = HearingMeasurement::initFrequencyLookup();
+    static QMap<QString,QString> codeLookup;
+    static QMap<QString,QString> outcomeLookup;
+    static QMap<int,QString> frequencyLookup;
 };
 
 Q_DECLARE_METATYPE(HearingMeasurement);
+
+QDebug operator<<(QDebug dbg, const HearingMeasurement &);
 
 #endif // HEARINGMEASUREMENT_H

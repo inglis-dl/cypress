@@ -49,19 +49,14 @@ void MainWindow::initialize()
   //
   ui->saveButton->setEnabled(false);
 
-  // Zero the scale
-  //
-//  ui->zeroButton->setEnabled(false);
-
   // Read the weight measurement off the scale
   //
   ui->measureButton->setEnabled(false);
 
   // as soon as there are serial ports in the list, allow click to select port
   //
-
   connect(ui->serialPortComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-          this,[this](int index)
+          this,[this]()
     {
       if(m_verbose)
           qDebug() << "device selected from list " <<  ui->serialPortComboBox->currentText();
@@ -69,7 +64,7 @@ void MainWindow::initialize()
     }
   );
 
-  connect(&m_manager, &AudiometerManager::scanning,
+  connect(&m_manager, &AudiometerManager::scanningDevices,
           this,[this]()
     {
       ui->serialPortComboBox->clear();
@@ -77,13 +72,10 @@ void MainWindow::initialize()
     }
   );
 
-  connect(&m_manager, &AudiometerManager::discovered,
+  connect(&m_manager, &AudiometerManager::deviceDiscovered,
           this, &MainWindow::updateDeviceList);
 
-  connect(&m_manager, &AudiometerManager::measured,
-          this, &MainWindow::updateMeasurementList);
-
-  connect(&m_manager, &AudiometerManager::canSelect,
+  connect(&m_manager, &AudiometerManager::canSelectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to select...");
       // Prompt the user to select the serial port
@@ -98,7 +90,7 @@ void MainWindow::initialize()
       msgBox.exec();
   });
 
-  connect(&m_manager, &AudiometerManager::canConnect,
+  connect(&m_manager, &AudiometerManager::canConnectDevice,
           this,[this](){
       qDebug() << "ready to connect";
       ui->statusBar->showMessage("Ready to connect...");
@@ -108,10 +100,10 @@ void MainWindow::initialize()
   });
 
   connect(ui->serialPortConnectButton, &QPushButton::clicked,
-          &m_manager, &AudiometerManager::connectPort);
+          &m_manager, &AudiometerManager::connectDevice);
 
   connect(ui->measureButton, &QPushButton::clicked,
-        &m_manager, &AudiometerManager::measure);
+        &m_manager, &AudiometerManager::writeDevice);
 
   connect(&m_manager, &AudiometerManager::canMeasure,
           this,[this](){
@@ -123,10 +115,10 @@ void MainWindow::initialize()
   connect(&m_manager, &AudiometerManager::canWrite,
           this,[this](){
       qDebug() << "ready to write";
+      updateMeasurementDisplay();
       ui->statusBar->showMessage("Ready to write...");
       ui->saveButton->setEnabled(true);
   });
-
 
   if(m_inputData.contains("Barcode") && m_inputData["Barcode"].isValid())
      ui->barcodeLineEdit->setText(m_inputData["Barcode"].toString());
@@ -144,25 +136,16 @@ void MainWindow::updateDeviceList(const QString &label)
 {
     // Add the device to the list
     //
-
     int index = ui->serialPortComboBox->findText(label);
     if(-1==index)
     {
         ui->serialPortComboBox->addItem(label);
-        index = ui->serialPortComboBox->count()-1;
-        // TODO: consider checking if the weigh scale is running on
+        // TODO: consider checking if the audiometer is running on
         // the port
-        if(m_manager.isDefined(label))
-            ui->serialPortComboBox->setItemData(index,QColor(Qt::green),Qt::DecorationRole);
-          //item->setForeground(QColor(Qt::green));
-        else
-          //item->setForeground(QColor(Qt::black));
-            ui->serialPortComboBox->setItemData(index,QColor(Qt::black),Qt::DecorationRole);
-
     }
 }
 
-void MainWindow::updateMeasurementList(const QString &label)
+void MainWindow::updateMeasurementDisplay()
 {
     // Add the device to the list
     //
@@ -190,7 +173,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath("audiometer.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
-    m_manager.disconnectPort();
+    m_manager.disconnectDevice();
 
     event->accept();
 }

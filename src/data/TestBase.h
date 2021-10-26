@@ -1,60 +1,93 @@
 #ifndef TESTBASE_H
 #define TESTBASE_H
 
-#include <QJsonObject>
-#include <QList>
 #include "MeasurementBase.h"
 
+#include <QList>
+
+/*!
+ * \class TestBase
+ * \brief An abstract Test class templated over measurement type
+ *
+ * Tests are comprised of instrument characteristics, or meta data,
+ * and measurements.  Template specialization is done on the
+ * measurement class parameter type, such as a HearingMeasurement.
+ *
+ * Inherited classes must implement the pure virtual methods:
+ * toString, isValid, toJsonObject
+ *
+ * \sa MeasurementBase, AutiometerTest, QList
+ *
+ */
+
+QT_FORWARD_DECLARE_CLASS(QJsonObject)
+
+template <class T>
 class TestBase
 {
 public:
     TestBase() = default;
-    ~TestBase() = default;
-    TestBase(const TestBase &);
-    virtual TestBase &operator=(const TestBase &);
+    virtual ~TestBase() = default;
 
-    virtual QString toString() const;
+    virtual QString toString() const = 0;
 
-    virtual bool isValid() const;
+    virtual bool isValid() const = 0;
 
-    virtual void reset();
+    virtual QJsonObject toJsonObject() const = 0;
 
-    void addMeasurement(const MeasurementBase &);
+    void reset();
 
-    void setMetatadata(const MeasurementBase &other)
+    void setMetataData(const MeasurementBase &other)
     {
-        m_metadata = other;
+        m_metaData = other;
     }
 
-    void addMetadata(const QString &key, const QVariant &value)
+    MeasurementBase getMetaData() const
     {
-        m_metadata.setCharacteristic(key,value);
+        return m_metaData;
     }
 
-    QVariant getMetadata(const QString &key) const
+    void addMetaDataCharacteristic(const QString &key, const QVariant &value)
     {
-        return m_metadata.getCharacteristic(key);
+        m_metaData.setCharacteristic(key,value);
     }
 
-    QList<MeasurementBase> getMeasurementList() const
+    QVariant getMetaDataCharacteristic(const QString &key) const
     {
-        return m_measurementList;
+        return m_metaData.getCharacteristic(key);
     }
 
-    MeasurementBase getMetadata() const
+    bool hasMetaDataCharacteristic(const QString &key) const
     {
-        return m_metadata;
+        return m_metaData.hasCharacteristic(key);
     }
 
-    QJsonObject toJsonObject() const;
+    void addMeasurement(const T &);
+
+    int getNumberOfMeasurements() const
+    {
+        return m_measurementList.size();
+    }
 
 protected:
-    QList<MeasurementBase> m_measurementList;
-    MeasurementBase m_metadata;
+    QList<T> m_measurementList;
+
+private:
+    MeasurementBase m_metaData;
 };
 
-Q_DECLARE_METATYPE(TestBase);
+template <class T>
+void TestBase<T>::reset()
+{
+    m_metaData.reset();
+    m_measurementList.clear();
+}
 
-QDebug operator<<(QDebug dbg, const TestBase &);
+template <class T>
+void TestBase<T>::addMeasurement(const T &item)
+{
+    if(!m_measurementList.contains(item))
+      m_measurementList.append(item);
+}
 
 #endif // TESTBASE_H

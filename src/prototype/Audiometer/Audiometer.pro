@@ -13,7 +13,6 @@ SOURCES += \
     ../../data/AudiometerTest.cpp \
     ../../data/HearingMeasurement.cpp \
     ../../data/MeasurementBase.cpp \
-    ../../data/TestBase.cpp \
     AudiometerManager.cpp \
     main.cpp \
     MainWindow.cpp

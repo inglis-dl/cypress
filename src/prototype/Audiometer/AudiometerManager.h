@@ -7,7 +7,7 @@
 #include <QSerialPortInfo>
 #include <QVariant>
 
-#include "../../data/HearingMeasurement.h"
+#include "../../data/AudiometerTest.h"
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
 QT_FORWARD_DECLARE_CLASS(QJsonObject)
@@ -16,18 +16,32 @@ class AudiometerManager : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString portName MEMBER m_portName NOTIFY portNameChanged)
+    Q_PROPERTY(QString deviceName MEMBER m_deviceName NOTIFY deviceNameChanged)
     Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
-    Q_PROPERTY(quint8 numberOfMeasurements READ getNumberOfMeasurements WRITE setNumberOfMeasurements)
 
 public:
     explicit AudiometerManager(QObject *parent = nullptr);
 
-    bool localPortsEnabled() const;
-    bool isDefined(const QString &) const;
+    // check if any devices (serial ports) are available
+    //
+    bool devicesAvailable() const;
 
-    void selectDevice(const QString &);
+    // scan for available devices (serial ports)
+    // emits scanning signal at start
+    // populates a list of devices using serial port name as key
+    // emits discovered signal with the serial port name when a port is discovered
+    // if the ini stored port is found
+    //   setDevice
+    // else
+    //   emits canSelect signal
+    //
     void scanDevices();
+
+    // select a device (serial port) by name
+    // checks of the named port is in the list of scanned devices
+    // and calls setDevice
+    //
+    void selectDevice(const QString &);
 
     void loadSettings(const QSettings &);
     void saveSettings(QSettings*) const;
@@ -35,77 +49,92 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() const { return m_verbose; }
 
-    void setNumberOfMeasurements(const quint8& n){ m_numberOfMeasurements = 0<n?n:1;}
-    quint8 getNumberOfMeasurements() const {return m_numberOfMeasurements;}
-
     QJsonObject toJsonObject() const;
-
-
-    enum class State {
-        CONNECTED,
-        DISCONNECTED
-    };
 
 public slots:
 
-    void connectPort();
+    // connect to the serial port
+    // opens the serial port with required parametere (baud rate etc.)
+    // connects the port readyRead signal to the readDevice slot
+    // emits canMeasure signal if the port is open
+    //
+    void connectDevice();
 
-    void disconnectPort();
+    // disconnect from the serial port
+    //
+    void disconnectDevice();
 
-    // retrieve the last weight measurement from the scale
-    void measure();
+    // send write request over RS232 to retrieve data from the audiometer
+    //
+    void writeDevice();
 
-    void readData();
+    // retrieve data from the audiometer over RS232
+    // emits canWrite signal if the test data is valid
+    //
+    void readDevice();
+
+    // set the serial port
+    //
     void setDevice(const QSerialPortInfo &);
 
 signals:
 
     // port scanning started
-    void scanning();
+    // (update GUI status)
+    //
+    void scanningDevices();
 
     // a single port was discovered during the scan process
-    void discovered(const QString &);
+    // (update GUI list of ports)
+    //
+    void deviceDiscovered(const QString &);
 
     // a list of scanned port devices is avaiable for selection
-    void canSelect();
+    // (update GUI to prompt for user to select a port)
+    //
+    void canSelectDevice();
 
     // a port was selected from the list of discovered ports
-    void selected();
+    //
+    void deviceSelected();
 
     // port ready to connect
-    void canConnect();
+    // (update GUI enable connect button)
+    //
+    void canConnectDevice();
 
-    // data is available to write
-    void measured(const QString &);
-
+    // valid test completed and ready to write to output
+    // (update GUI enable write button and update the results display)
+    //
     void canWrite();
 
-    // ready to measure after zeroing out the scale
+    // ready to measure and receive data
+    // (update GUI enable measure button)
+    //
     void canMeasure();
 
-    void portNameChanged(const QString &);
-
-    void stateChanged(const State &);
+    //
+    void deviceNameChanged(const QString &);
 
 private:
 
-    static bool hasEndCode(const QByteArray &);
+    bool hasEndCode(const QByteArray &);
 
-    QList<HearingMeasurement> m_measurementData;
-    QMap<QString,QVariant> m_deviceData;
+    // keep device data separate from test data
+    //
+    MeasurementBase m_deviceData;
+
+    AudiometerTest m_test;
 
     QMap<QString,QSerialPortInfo> m_deviceList;
     QSerialPort m_port;
-    QString m_portName;
+    QString m_deviceName;
 
     bool m_verbose;
-    quint8 m_numberOfMeasurements;
 
     QByteArray m_buffer;
 
     void clearData();
-
-    State m_state;
 };
 
 #endif // AUDIOMETERMANAGER_H
