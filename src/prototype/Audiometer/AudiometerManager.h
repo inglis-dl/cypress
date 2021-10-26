@@ -113,7 +113,6 @@ signals:
     //
     void canMeasure();
 
-    //
     void deviceNameChanged(const QString &);
 
 private:

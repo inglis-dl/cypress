@@ -34,7 +34,7 @@ void MainWindow::initialize()
   // Connect the serial port property notify signal to catch
   // read from ini file
   //
-  connect(&m_manager, &WeighScaleManager::portNameChanged,
+  connect(&m_manager, &WeighScaleManager::deviceNameChanged,
           ui->serialPortLineEdit, &QLineEdit::setText);
 
   // Read the .ini file for cached local and peripheral device addresses
@@ -66,7 +66,7 @@ void MainWindow::initialize()
     }
   );
 
-  connect(&m_manager, &WeighScaleManager::scanning,
+  connect(&m_manager, &WeighScaleManager::scanningDevices,
           this,[this]()
     {
       ui->serialPortListWidget->clear();
@@ -74,13 +74,13 @@ void MainWindow::initialize()
     }
   );
 
-  connect(&m_manager, &WeighScaleManager::discovered,
+  connect(&m_manager, &WeighScaleManager::deviceDiscovered,
           this, &MainWindow::updateDeviceList);
 
-  connect(&m_manager, &WeighScaleManager::measured,
+  connect(&m_manager, &WeighScaleManager::canWrite,
           this, &MainWindow::updateMeasurementList);
 
-  connect(&m_manager, &WeighScaleManager::canSelect,
+  connect(&m_manager, &WeighScaleManager::canSelectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to select...");
       // Prompt the user to select the MAC address
@@ -96,9 +96,9 @@ void MainWindow::initialize()
   });
 
   connect(ui->zeroButton, &QPushButton::clicked,
-        &m_manager, &WeighScaleManager::zero);
+        &m_manager, &WeighScaleManager::zeroDevice);
 
-  connect(&m_manager, &WeighScaleManager::canConnect,
+  connect(&m_manager, &WeighScaleManager::canConnectDevice,
           this,[this](){
       qDebug() << "ready to zero";
       ui->statusBar->showMessage("Ready to zero...");

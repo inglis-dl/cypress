@@ -1,6 +1,7 @@
 #include "WeightMeasurement.h"
 
 #include <QDateTime>
+#include <QDebug>
 
 void WeightMeasurement::fromArray(const QByteArray &arr)
 {
@@ -50,4 +51,14 @@ QString WeightMeasurement::toString() const
     QStringList l;
     l << w << u << m << d << t;
     return l.join(" ");
+}
+
+QDebug operator<<(QDebug dbg, const WeightMeasurement &item)
+{
+    const QString s = item.toString();
+    if (s.isEmpty())
+        dbg.nospace() << "Weight Measurement()";
+    else
+        dbg.nospace() << "Weight Measurement(" << s << " ...)";
+    return dbg.maybeSpace();
 }

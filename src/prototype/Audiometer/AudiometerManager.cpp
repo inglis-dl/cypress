@@ -188,7 +188,7 @@ void AudiometerManager::connectDevice()
       m_port.setStopBits(QSerialPort::OneStop);
       m_port.setBaudRate(QSerialPort::Baud9600);
 
-      connect( &m_port, &QSerialPort::readyRead,
+      connect(&m_port, &QSerialPort::readyRead,
                this, &AudiometerManager::readDevice);
 
       connect(&m_port, &QSerialPort::errorOccurred,
@@ -197,12 +197,12 @@ void AudiometerManager::connectDevice()
                   qDebug() << "AN ERROR OCCURED: " << m_port.errorString();
               });
 
-      connect(&m_port,&QSerialPort::dataTerminalReadyChanged,
+      connect(&m_port, &QSerialPort::dataTerminalReadyChanged,
               this,[](bool set){
           qDebug() << "data terminal ready DTR changed to " << (set?"high":"low");
       });
 
-      connect(&m_port,&QSerialPort::requestToSendChanged,
+      connect(&m_port, &QSerialPort::requestToSendChanged,
               this,[](bool set){
           qDebug() << "request to send RTS changed to " << (set?"high":"low");
       });
@@ -259,7 +259,7 @@ void AudiometerManager::readDevice()
 
 void AudiometerManager::writeDevice()
 {
-    // prepare to receive test data
+    // prepare to receive data
     //
     m_buffer.clear();
     m_buffer.reserve(1024);
