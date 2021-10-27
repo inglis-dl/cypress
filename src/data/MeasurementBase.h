@@ -32,9 +32,23 @@ class MeasurementBase
 public:
     MeasurementBase() = default;
     ~MeasurementBase() = default;
+    MeasurementBase(const MeasurementBase &other)
+    {
+        m_characteristicValues = other.m_characteristicValues;
+    }
+    MeasurementBase operator=(const MeasurementBase &other)
+    {
+        m_characteristicValues = other.m_characteristicValues;
+        return *this;
+    }
+
 
     virtual QString toString() const;
+
     virtual bool isValid() const;
+
+    virtual QJsonObject toJsonObject() const;
+
     void reset();
 
     void setCharacteristic(const QString &key, const QVariant &value)

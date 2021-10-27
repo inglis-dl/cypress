@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QStandardItemModel>
 #include <QVariant>
 
 #include "../../data/WeighScaleTest.h"
@@ -49,6 +50,8 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() const { return m_verbose; }
 
+    void buildModel(QStandardItemModel *);
+
     QJsonObject toJsonObject() const;
 
 public slots:
@@ -85,6 +88,10 @@ public slots:
     void measure();
 
 signals:
+
+    // the underlying test data has changed
+    //
+    void dataChanged();
 
     // port scanning started
     // (update GUI status)

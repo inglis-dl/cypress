@@ -34,6 +34,10 @@ public:
 
     bool isValid() const override;
 
+    bool isPartial() const;
+
+    HearingMeasurement getMeasurement(const QString&, const int&);
+
     QJsonObject toJsonObject() const override;
 
     static bool hasEndCode(const QByteArray &);

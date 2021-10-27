@@ -1,5 +1,7 @@
 #include "WeighScaleManager.h"
 
+#include "../../data/WeighScaleTest.h"
+
 #include <QDateTime>
 #include <QDebug>
 #include <QJsonArray>
@@ -11,6 +13,20 @@
 WeighScaleManager::WeighScaleManager(QObject *parent) : QObject(parent),
     m_verbose(false)
 {
+}
+
+void WeighScaleManager::buildModel(QStandardItemModel* model)
+{
+    WeightMeasurement m;
+    for(int row=0;row<2;row++)
+    {
+        QString s = "NA";
+        m = m_test.getMeasurement(row);
+        if(m.isValid())
+           s = m.toString();
+        QStandardItem* item = model->item(row,0);
+        item->setData(s, Qt::DisplayRole);
+    }
 }
 
 bool WeighScaleManager::devicesAvailable() const
@@ -47,6 +63,8 @@ void WeighScaleManager::clearData()
 {
     m_deviceData.reset();
     m_test.reset();
+
+    emit dataChanged();
 }
 
 void WeighScaleManager::scanDevices()
@@ -177,8 +195,6 @@ void WeighScaleManager::setDevice(const QSerialPortInfo &info)
 
 void WeighScaleManager::connectDevice()
 {
-    this->disconnectDevice();
-
     if(m_port.open(QSerialPort::ReadWrite))
     {
       m_port.setDataBits(QSerialPort::Data8);
@@ -224,6 +240,9 @@ void WeighScaleManager::disconnectDevice()
 {
     if(m_port.isOpen())
         m_port.close();
+
+    clearData();
+    emit canConnectDevice();
 }
 
 bool WeighScaleManager::isDefined(const QString &label) const
@@ -258,6 +277,11 @@ void WeighScaleManager::readDevice()
       else if("p" == QString(m_request))
       {
          m_test.fromArray(m_buffer);
+         if(m_test.isValid())
+         {
+             // emit the can write signal
+             emit canWrite();
+         }
       }
       else if("z" == QString(m_request))
       {
@@ -270,6 +294,8 @@ void WeighScaleManager::readDevice()
       {
           //TODO: emit error
       }
+
+      emit dataChanged();
     }
 }
 
@@ -281,42 +307,7 @@ void WeighScaleManager::measure()
 
 QJsonObject WeighScaleManager::toJsonObject() const
 {
-    /*
-    QMap<QString,QVariant>::const_iterator it = m_deviceData.constBegin();
-    QJsonObject jsonObjDevice;
-    while(it != m_deviceData.constEnd())
-    {
-        jsonObjDevice.insert(it.key(),QJsonValue::fromVariant(it.value()));
-        ++it;
-    }
-    QList<WeightMeasurement>::const_iterator mit = m_measurementData.constBegin();
-    QMap<QString,QJsonArray> jmap;
-    while(mit != m_measurementData.constEnd())
-    {
-        QMap<QString,QVariant> c = mit->getCharacteristicValues();
-        it = c.constBegin();
-        while(it != c.constEnd())
-        {
-          if(!jmap.contains(it.key()))
-          {
-             jmap[it.key()] = QJsonArray();
-          }
-          jmap[it.key()].append(QJsonValue::fromVariant(it.value()));
-          ++it;
-        }
-        ++mit;
-    }
-    QJsonObject jsonObjMeasurement;
-    QMap<QString,QJsonArray>::const_iterator jit = jmap.constBegin();
-    while(jit != jmap.constEnd())
-    {
-        jsonObjMeasurement.insert(jit.key(),jit.value());
-        ++jit;
-    }
-*/
     QJsonObject json;
-    //json.insert("device",QJsonValue(jsonObjDevice));
-    //json.insert("measurement",QJsonValue(jsonObjMeasurement));
-
+    json.insert("device",m_deviceData.toJsonObject());
     return json;
 }

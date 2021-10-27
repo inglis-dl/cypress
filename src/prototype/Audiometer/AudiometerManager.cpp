@@ -15,6 +15,28 @@ AudiometerManager::AudiometerManager(QObject *parent) : QObject(parent),
 {
 }
 
+void AudiometerManager::buildModel(QStandardItemModel* model)
+{
+    HearingMeasurement m;
+
+    QVector<QString> v_side({"left","right"});
+
+    for(auto&& side : v_side)
+    {
+      int i_freq = 0;
+      int col = "left" == side ? 0 : 1;
+      for(int row=0;row<8;row++)
+      {
+        m = m_test.getMeasurement(side,i_freq);
+        if(!m.isValid())
+           m.fromCode(side,i_freq,"AA");
+        QStandardItem* item = model->item(row,col);
+        item->setData(m.toString(), Qt::DisplayRole);
+        i_freq++;
+      }
+    }
+}
+
 bool AudiometerManager::devicesAvailable() const
 {
     qDebug() << "checking available ports";
@@ -49,6 +71,8 @@ void AudiometerManager::clearData()
 {
     m_deviceData.reset();
     m_test.reset();
+
+    emit dataChanged();
 }
 
 void AudiometerManager::scanDevices()
@@ -179,8 +203,6 @@ void AudiometerManager::setDevice(const QSerialPortInfo &info)
 
 void AudiometerManager::connectDevice()
 {
-    this->disconnectDevice();
-
     if(m_port.open(QSerialPort::ReadWrite))
     {
       m_port.setDataBits(QSerialPort::Data8);
@@ -217,6 +239,9 @@ void AudiometerManager::disconnectDevice()
 {
     if(m_port.isOpen())
         m_port.close();
+
+    clearData();
+    emit canConnectDevice();
 }
 
 bool AudiometerManager::hasEndCode(const QByteArray &arr)
@@ -253,6 +278,8 @@ void AudiometerManager::readDevice()
             // emit the can write signal
             emit canWrite();
         }
+
+        emit dataChanged();
         // TODO emit error
     }
 }
@@ -274,42 +301,7 @@ void AudiometerManager::writeDevice()
 
 QJsonObject AudiometerManager::toJsonObject() const
 {
-//    QMap<QString,QVariant>::const_iterator it = m_deviceData.constBegin();
-//    QJsonObject jsonObjDevice;
-//    while(it != m_deviceData.constEnd())
-//    {
-//        jsonObjDevice.insert(it.key(),QJsonValue::fromVariant(it.value()));
-//        ++it;
-//    }
-    /*
-    QList<HearingMeasurement>::const_iterator mit = m_measurementData.constBegin();
-    QMap<QString,QJsonArray> jmap;
-    while(mit != m_measurementData.constEnd())
-    {
-        QMap<QString,QVariant> c = mit->getCharacteristicValues();
-        it = c.constBegin();
-        while(it != c.constEnd())
-        {
-          if(!jmap.contains(it.key()))
-          {
-             jmap[it.key()] = QJsonArray();
-          }
-          jmap[it.key()].append(QJsonValue::fromVariant(it.value()));
-          ++it;
-        }
-        ++mit;
-    }
-    QJsonObject jsonObjMeasurement;
-    QMap<QString,QJsonArray>::const_iterator jit = jmap.constBegin();
-    while(jit != jmap.constEnd())
-    {
-        jsonObjMeasurement.insert(jit.key(),jit.value());
-        ++jit;
-    }
-    */
-    QJsonObject json;
-//    json.insert("device",QJsonValue(jsonObjDevice));
-    //json.insert("measurement",QJsonValue(jsonObjMeasurement));
-
+    QJsonObject json = m_test.toJsonObject();
+    json.insert("device",m_deviceData.toJsonObject());
     return json;
 }

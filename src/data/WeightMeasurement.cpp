@@ -41,6 +41,9 @@ bool WeightMeasurement::isZero() const
 
 QString WeightMeasurement::toString() const
 {
+  QString s;
+  if(isValid())
+  {
     QString w = getCharacteristic("weight").toString();
     QString u = getCharacteristic("units").toString();
     QString m = getCharacteristic("mode").toString();
@@ -50,7 +53,9 @@ QString WeightMeasurement::toString() const
 
     QStringList l;
     l << w << u << m << d << t;
-    return l.join(" ");
+    s = l.join(" ");
+  }
+  return s;
 }
 
 QDebug operator<<(QDebug dbg, const WeightMeasurement &item)

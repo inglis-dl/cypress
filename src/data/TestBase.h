@@ -64,6 +64,10 @@ public:
 
     void addMeasurement(const T &);
 
+    T getMeasurement(const quint32 &);
+
+    T* find_first(const QString& key, const QVariant& value);
+
     void pop_front()
     {
         m_measurementList.pop_front();
@@ -80,9 +84,7 @@ public:
     }
 
 protected:
-    QList<T> m_measurementList;
-
-private:
+    QVector<T> m_measurementList;
     MeasurementBase m_metaData;
 };
 
@@ -98,6 +100,31 @@ void TestBase<T>::addMeasurement(const T &item)
 {
     if(!m_measurementList.contains(item))
       m_measurementList.append(item);
+}
+
+template <class T>
+T TestBase<T>::getMeasurement(const quint32 &i)
+{
+    T m;
+    if((int)i < m_measurementList.size())
+      m = m_measurementList.at(i);
+    return m;
+}
+
+template <class T>
+T* TestBase<T>::find_first(const QString& key, const QVariant& value)
+{
+    for(auto&& x : m_measurementList)
+    {
+        for(auto&& v : x.toStdMap())
+        {
+            if(v.first==key && v.second==value)
+            {
+                return &x;
+            }
+        }
+    }
+    return nullptr;
 }
 
 #endif // TESTBASE_H

@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QStandardItemModel>
 #include <QVariant>
 
 #include "../../data/AudiometerTest.h"
@@ -51,6 +52,8 @@ public:
 
     QJsonObject toJsonObject() const;
 
+    void buildModel(QStandardItemModel *);
+
 public slots:
 
     // connect to the serial port
@@ -78,6 +81,10 @@ public slots:
     void setDevice(const QSerialPortInfo &);
 
 signals:
+
+    // the underlying test data has changed
+    //
+    void dataChanged();
 
     // port scanning started
     // (update GUI status)

@@ -1,6 +1,7 @@
 #include "MeasurementBase.h"
 
 #include <QDebug>
+#include <QJsonObject>
 
 bool MeasurementBase::isValid() const
 {
@@ -29,6 +30,16 @@ QString MeasurementBase::toString() const
       l << x.toString();
     }
     return l.join(" ");
+}
+
+QJsonObject MeasurementBase::toJsonObject() const
+{
+    QJsonObject json;
+    for(auto&& x : m_characteristicValues.toStdMap())
+    {
+        json.insert(x.first, QJsonValue::fromVariant(x.second));
+    }
+    return json;
 }
 
 QDebug operator<<(QDebug dbg, const MeasurementBase &item)

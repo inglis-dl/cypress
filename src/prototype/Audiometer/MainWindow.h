@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QMap>
+#include <QStandardItemModel>
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
@@ -48,14 +49,13 @@ public:
 
 public slots:
     void updateDeviceList(const QString &);
-    void updateMeasurementDisplay();
+    void writeOutput();
 
 protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
     void readInput();
-    void writeOutput();
 
     Ui::MainWindow *ui;
     QString m_inputFileName;
@@ -67,5 +67,8 @@ private:
     QMap<QString,QVariant> m_outputData;
 
     AudiometerManager m_manager;
+
+    QStandardItemModel m_model;
 };
+
 #endif // MAINWINDOW_H

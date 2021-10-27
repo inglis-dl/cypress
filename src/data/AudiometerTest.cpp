@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QStringBuilder>
 
 bool AudiometerTest::isValid() const
@@ -26,6 +27,23 @@ bool AudiometerTest::isValid() const
       }
     }
     return okMeta && okTest;
+}
+
+bool AudiometerTest::isPartial() const
+{
+    bool okTest = 0 < getNumberOfMeasurements();
+    if(okTest)
+    {
+      for(auto&& x : m_measurementList)
+      {
+        if(!x.isValid())
+        {
+          okTest = false;
+          break;
+        }
+      }
+    }
+    return okTest;
 }
 
 QString AudiometerTest::toString() const
@@ -131,7 +149,31 @@ QList<HearingMeasurement> AudiometerTest::readHearingThresholdLevels(const QStri
   return htl;
 }
 
+HearingMeasurement AudiometerTest::getMeasurement(const QString& side, const int& index)
+{
+    HearingMeasurement m;
+    for(auto&& x : m_measurementList)
+    {
+        if(side == x.getCharacteristic("side").toString() &&
+           HearingMeasurement::frequencyLookup[index] == x.getCharacteristic("test"))
+        {
+            m = x;
+            break;
+        }
+    }
+    return m;
+}
+
 QJsonObject AudiometerTest::toJsonObject() const
 {
-    return QJsonObject();
+    QJsonArray jsonArr;
+    for(auto&& x : m_measurementList)
+    {
+        QJsonObject test = x.toJsonObject();
+        jsonArr.append(test);
+    }
+    QJsonObject json;
+    json.insert("test meta data",m_metaData.toJsonObject());
+    json.insert("test results",jsonArr);
+    return json;
 }

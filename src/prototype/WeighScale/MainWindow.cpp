@@ -18,6 +18,13 @@ MainWindow::MainWindow(QWidget *parent)
     , m_manager(this)
 {
     ui->setupUi(this);
+
+    for(int row=0;row<2;row++)
+    {
+      QStandardItem* item = new QStandardItem();
+      m_model.setItem(row,0,item);
+    }
+    m_model.setHeaderData(0,Qt::Horizontal,"Weight Tests",Qt::DisplayRole);
 }
 
 MainWindow::~MainWindow()
@@ -31,11 +38,10 @@ void MainWindow::initialize()
 
   readInput();
 
-  // Connect the serial port property notify signal to catch
-  // read from ini file
-  //
-  connect(&m_manager, &WeighScaleManager::deviceNameChanged,
-          ui->serialPortLineEdit, &QLineEdit::setText);
+  if(m_inputData.contains("Barcode") && m_inputData["Barcode"].isValid())
+     ui->barcodeLineEdit->setText(m_inputData["Barcode"].toString());
+  else
+     ui->barcodeLineEdit->setText("00000000"); // dummy
 
   // Read the .ini file for cached local and peripheral device addresses
   //
@@ -55,39 +61,39 @@ void MainWindow::initialize()
   //
   ui->measureButton->setEnabled(false);
 
-  // as soon as there are serial ports in the list, allow click to select port
+  // Connect to the device
   //
-  connect(ui->serialPortListWidget, &QListWidget::itemDoubleClicked,
-          this,[this](QListWidgetItem* item)
-    {
-      if(m_verbose)
-          qDebug() << "device selected from list " <<  item->text();
-      m_manager.selectDevice(item->text());
-    }
-  );
+  ui->connectButton->setEnabled(false);
 
+  // Disconnect from the device
+  //
+  ui->disconnectButton->setEnabled(false);
+
+  // Scan for devices
+  //
   connect(&m_manager, &WeighScaleManager::scanningDevices,
           this,[this]()
     {
-      ui->serialPortListWidget->clear();
+      ui->deviceComboBox->clear();
       ui->statusBar->showMessage("Discovering serial ports...");
     }
   );
 
+  // Update the drop down list as devices are discovered during scanning
+  //
   connect(&m_manager, &WeighScaleManager::deviceDiscovered,
           this, &MainWindow::updateDeviceList);
 
-  connect(&m_manager, &WeighScaleManager::canWrite,
-          this, &MainWindow::updateMeasurementList);
-
+  // Prompt user to select a device from the drop down list when previously
+  // cached device information in the ini file is unavailable or invalid
+  //
   connect(&m_manager, &WeighScaleManager::canSelectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to select...");
-      // Prompt the user to select the MAC address
       QMessageBox msgBox;
-      msgBox.setText(tr("Double click the port from the list.  If the device "
+      msgBox.setText(tr("Select the port from the list.  If the device "
         "is not in the list, quit the application and check that the port is "
-        "working and connect the weigh scale to it before running this application."));
+        "working and connect the audiometer to it before running this application."));
       msgBox.setIcon(QMessageBox::Warning);
       msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Abort);
       msgBox.setButtonText(QMessageBox::Abort,tr("Quit"));
@@ -95,79 +101,100 @@ void MainWindow::initialize()
       msgBox.exec();
   });
 
-  connect(ui->zeroButton, &QPushButton::clicked,
-        &m_manager, &WeighScaleManager::zeroDevice);
+  // Select a device (serial port) from drop down list
+  //
+  connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+          this,[this]()
+    {
+      if(m_verbose)
+          qDebug() << "device selected from list " <<  ui->deviceComboBox->currentText();
+      m_manager.selectDevice(ui->deviceComboBox->currentText());
+    }
+  );
 
+  // Ready to connect device
+  //
   connect(&m_manager, &WeighScaleManager::canConnectDevice,
           this,[this](){
-      qDebug() << "ready to zero";
-      ui->statusBar->showMessage("Ready to zero...");
-      ui->zeroButton->setEnabled(true);
+      qDebug() << "ready to connect";
+      ui->statusBar->showMessage("Ready to connect...");
+      ui->connectButton->setEnabled(true);
+      ui->zeroButton->setEnabled(false);
+      ui->disconnectButton->setEnabled(false);
       ui->measureButton->setEnabled(false);
       ui->saveButton->setEnabled(false);
   });
 
+  // Connect to device
+  //
+  connect(ui->connectButton, &QPushButton::clicked,
+          &m_manager, &WeighScaleManager::connectDevice);
+
+  // Connection is established: enable measurement requests
+  //
+  connect(&m_manager, &WeighScaleManager::canMeasure,
+          this,[this](){
+      qDebug() << "ready to measure";
+      ui->statusBar->showMessage("Ready to measure...");
+      ui->connectButton->setEnabled(false);
+      ui->disconnectButton->setEnabled(true);
+      ui->zeroButton->setEnabled(true);
+      ui->measureButton->setEnabled(true);
+  });
+
+  // Disconnect from device
+  //
+  connect(ui->disconnectButton, &QPushButton::clicked,
+          &m_manager, &WeighScaleManager::disconnectDevice);
+
+  // Zero the scale
+  //
+  connect(ui->zeroButton, &QPushButton::clicked,
+        &m_manager, &WeighScaleManager::zeroDevice);
+
+  // Request a measurement from the device
+  //
   connect(ui->measureButton, &QPushButton::clicked,
         &m_manager, &WeighScaleManager::measure);
 
-  connect(&m_manager, &WeighScaleManager::canMeasure,
+  // Update the UI with any data
+  //
+  connect(&m_manager, &WeighScaleManager::dataChanged,
+          this,[this](){
+      m_manager.buildModel(&m_model);
+      ui->testdataTableView->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+  });
+
+  // All measurements received: enable write test results
+  //
+  connect(&m_manager, &WeighScaleManager::canWrite,
           this,[this](){
       qDebug() << "ready to measure";
       ui->statusBar->showMessage("Ready to measure...");
       ui->measureButton->setEnabled(true);
   });
 
-  connect(&m_manager, &WeighScaleManager::canWrite,
-          this,[this](){
-      qDebug() << "ready to write";
-      ui->statusBar->showMessage("Ready to write...");
-      ui->saveButton->setEnabled(true);
-  });
-
-
-  if(m_inputData.contains("Barcode") && m_inputData["Barcode"].isValid())
-     ui->barcodeLineEdit->setText(m_inputData["Barcode"].toString());
-  else
-     ui->barcodeLineEdit->setText("00000000"); // dummy
-
+  // Write test data to output
+  //
   connect(ui->saveButton, &QPushButton::clicked,
-    this, [this]{
-      writeOutput();
-    }
-  );
+    this, &MainWindow::writeOutput);
+
+  // Close the application
+  //
+  connect(ui->closeButton, &QPushButton::clicked,
+          this, &MainWindow::close);
+
+  emit m_manager.dataChanged();
 }
 
 void MainWindow::updateDeviceList(const QString &label)
 {
     // Add the device to the list
     //
-    QList<QListWidgetItem *> items = ui->serialPortListWidget->findItems(label, Qt::MatchExactly);
-    if(items.empty())
+    int index = ui->deviceComboBox->findText(label);
+    if(-1 == index)
     {
-        QListWidgetItem *item = new QListWidgetItem(label);
-
-        // TODO: consider checking if the weigh scale is running on
-        // the port
-        if(m_manager.isDefined(label))
-          item->setForeground(QColor(Qt::green));
-        else
-          item->setForeground(QColor(Qt::black));
-
-        ui->serialPortListWidget->addItem(item);
-    }
-}
-
-void MainWindow::updateMeasurementList(const QString &label)
-{
-    // Add the device to the list
-    //
-    QList<QListWidgetItem *> items = ui->measurementListWidget->findItems(label, Qt::MatchExactly);
-    if(items.empty())
-    {
-        QListWidgetItem *item = new QListWidgetItem(label);
-        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-        item->setCheckState(Qt::Checked);
-        ui->measurementListWidget->addItem(item);
+        ui->deviceComboBox->addItem(label);
     }
 }
 
