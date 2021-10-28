@@ -4,7 +4,6 @@
 #include <QLocale>
 #include <QTranslator>
 #include "../../auxiliary/CommandLineParser.h"
-#include <QDebug>
 
 int main(int argc, char *argv[])
 {

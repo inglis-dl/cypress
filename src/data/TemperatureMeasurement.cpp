@@ -71,14 +71,14 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      //
      QBitArray f_arr = QBitArray::fromBits(arr.data(),3);
      QString t_format_str = f_arr.at(0) ? "F" : "C";
-     m_characteristicValues["units"] = t_format_str;
+     setCharacteristic("units", t_format_str);
 
      // Temperature:
      //
      QByteArray t_arr = arr.mid(1,2);
      std::reverse(t_arr.begin(), t_arr.end());
      float t_value = t_arr.toHex().toInt(nullptr,16)*0.1;
-     m_characteristicValues["temperature"] = QString::number(t_value,'f',1);
+     setCharacteristic("temperature", t_value);
 
      // Datetime:
      //
@@ -90,36 +90,50 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      int h_value = arr.mid(9,1).toHex().toInt(nullptr,16);
      int j_value = arr.mid(10,1).toHex().toInt(nullptr,16);
      int s_value = arr.mid(11,1).toHex().toInt(nullptr,16);
-     m_characteristicValues["timestamp"] = QDateTime(QDate(y_value,m_value,d_value),QTime(h_value,j_value,s_value));
+     setCharacteristic("timestamp",
+       QDateTime(
+         QDate(y_value,m_value,d_value),
+         QTime(h_value,j_value,s_value)
+       )
+     );
 
      // Temperature location type:
      //
      int t_type = arr.mid(12,1).toHex().toInt(nullptr,16);
-     m_characteristicValues["mode"] = t_type == 1 ? "body" : "surface/room";
+     QString m_str = 1 == t_type ? "body" : "surface/room";
+     setCharacteristic("mode", m_str);
   }
 }
 
 bool TemperatureMeasurement::isValid() const
 {
-    bool ok;
-    float fval = m_characteristicValues["temperature"].toFloat(&ok);
-    return ok
-      && !m_characteristicValues["units"].toString().isEmpty()
-      && !m_characteristicValues["mode"].toString().isEmpty()
-      && m_characteristicValues["timestamp"].toDateTime().isValid()
-      && 0.0 <= fval;
+  bool ok = false;
+
+  if(hasCharacteristic("temperature"))
+  {
+    getCharacteristic("temperature").toFloat(&ok);
+    ok = ok &&
+    hasCharacteristic("units") &&
+    hasCharacteristic("mode") &&
+    hasCharacteristic("timestamp");
+  }
+  return ok;
 }
 
 QString TemperatureMeasurement::toString() const
 {
-    QString w = m_characteristicValues["temperature"].toString();
-    QString u = m_characteristicValues["units"].toString();
-    QString m = m_characteristicValues["mode"].toString();
-    QDateTime dt = m_characteristicValues["timestamp"].toDateTime();
-    QString d = dt.date().toString("yyyy-MM-dd");
-    QString t = dt.time().toString("hh:mm:ss");
-
-    QStringList list;
-    list << w << u << m << d << t;
-    return list.join(" ");
+    QString s;
+    if(isValid())
+    {
+      QString w = QString::number(getCharacteristic("temperature").toFloat(),'f',1);
+      QString u = getCharacteristic("units").toString();
+      QString m = getCharacteristic("mode").toString();
+      QDateTime dt = getCharacteristic("timestamp").toDateTime();
+      QString d = dt.date().toString("yyyy-MM-dd");
+      QString t = dt.time().toString("hh:mm:ss");
+      QStringList l;
+      l << w << u << m << d << t;
+      s = l.join(" ");
+    }
+    return s;
 }

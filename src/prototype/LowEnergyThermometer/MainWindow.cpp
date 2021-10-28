@@ -4,8 +4,10 @@
 #include "BluetoothLEManager.h"
 
 #include <QBitArray>
+#include <QCloseEvent>
 #include <QDateTime>
 #include <QDebug>
+#include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMessageBox>
@@ -30,8 +32,6 @@ void MainWindow::initialize()
 {
     m_manager.setVerbose(m_verbose);
 
-    readInput();
-
     if(!m_manager.lowEnergyEnabled())
     {
       QMessageBox msgBox;
@@ -45,11 +45,14 @@ void MainWindow::initialize()
       close();
     }
 
-    // Connect the peripheral mac address property notify signal to catch
-    // read from ini file
+    readInput();
+
+    // Populate barcode display
     //
-    connect(&m_manager, &BluetoothLEManager::peripheralMACChanged,
-            ui->addressLineEdit, &QLineEdit::setText);
+    if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
+       ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
+    else
+       ui->barcodeLineEdit->setText("00000000"); // dummy
 
     // Read the .ini file for cached local and peripheral device addresses
     //
@@ -140,10 +143,7 @@ void MainWindow::initialize()
         msgBox.exec();
     });
 
-    if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
-       ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
-    else
-       ui->barcodeLineEdit->setText("00000000"); // dummy
+
 
     connect(ui->connectButton, &QPushButton::clicked,
           &m_manager, &BluetoothLEManager::connectPeripheral);

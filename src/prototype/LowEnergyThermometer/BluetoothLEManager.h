@@ -30,6 +30,7 @@ public:
     bool isPairedTo(const QString &) const;
     void selectDevice(const QString &);
     void scanDevices();
+
     void loadSettings(const QSettings &);
     void saveSettings(QSettings*);
 
@@ -113,7 +114,10 @@ private slots:
     bool m_foundThermoService;
     bool m_foundInfoService;
 
-    QMap<QString,QVariant> m_deviceData;
+    // keep device data separate from test data
+    //
+    MeasurementBase m_deviceData;
+
     QList<TemperatureMeasurement> m_measurementData;
     QString m_peripheralMAC;
 

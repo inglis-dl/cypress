@@ -261,7 +261,7 @@ void BluetoothLEManager::clearData()
     m_foundThermoService = false;
     m_foundInfoService = false;
     m_measurementData.clear();
-    m_deviceData.clear();
+    m_deviceData.reset();
     setProperty("temperature", "");
     setProperty("datetime", "");
 }
@@ -290,8 +290,8 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
         m_controller->disconnectFromDevice();
     }
 
-    m_deviceData["Device Name"] = info.name();
-    m_deviceData["Device MAC"] = info.address().toString();
+    m_deviceData.setCharacteristic("Device Name", info.name());
+    m_deviceData.setCharacteristic("Device MAC", info.address().toString());
 
     m_peripheral.reset(new QBluetoothDeviceInfo(info));
     m_controller.reset(QLowEnergyController::createCentral(*m_peripheral));
@@ -469,8 +469,8 @@ void BluetoothLEManager::serviceStateChanged(QLowEnergyService::ServiceState sta
 void BluetoothLEManager::disconnectPeripheral()
 {
      if(!m_measurementData.isEmpty() &&
-         m_deviceData.contains("Firmware Revision") &&
-         m_deviceData.contains("Software Revision")    )
+         m_deviceData.hasCharacteristic("Firmware Revision") &&
+         m_deviceData.hasCharacteristic("Software Revision")    )
      {
          if(m_verbose)
              qDebug() << "data complete, ready to disconnect, emitting canWrite signal";
@@ -487,13 +487,19 @@ void BluetoothLEManager::updateInfoData(const QLowEnergyCharacteristic &c, const
     {
       if(m_verbose)
           qDebug() << "device info firmware revision update";
-      m_deviceData["Firmware Revision"] = (c.isValid() ? QVariant(value) : QVariant());
+      if(c.isValid())
+      {
+        m_deviceData.setCharacteristic("Firmware Revision", QString(value));
+      }
     }
     else if(c.uuid() == QBluetoothUuid(QBluetoothUuid::SoftwareRevisionString))
     {
       if(m_verbose)
           qDebug() << "device info software revision update";
-      m_deviceData["Software Revision"] = (c.isValid() ? QVariant(value) : QVariant());
+      if(c.isValid())
+      {
+        m_deviceData.setCharacteristic("Software Revision", QString(value));
+      }
     }
 
     disconnectPeripheral();
@@ -525,20 +531,13 @@ void BluetoothLEManager::updateTemperatureData(const QLowEnergyCharacteristic &c
 
 QJsonObject BluetoothLEManager::toJsonObject() const
 {
-    QMap<QString,QVariant>::const_iterator it = m_deviceData.constBegin();
-    QJsonObject jsonObjDevice;
-    while(it != m_deviceData.constEnd())
-    {
-        jsonObjDevice.insert(it.key(),QJsonValue::fromVariant(it.value()));
-        ++it;
-    }
     QList<TemperatureMeasurement>::const_iterator mit = m_measurementData.constBegin();
     QMap<QString,QJsonArray> jmap;
 
     while(mit != m_measurementData.constEnd())
     {
         QMap<QString,QVariant> c = mit->getCharacteristicValues();
-        it = c.constBegin();
+        QMap<QString,QVariant>::const_iterator it = c.constBegin();
         while(it != c.constEnd())
         {
           if(!jmap.contains(it.key()))
@@ -559,7 +558,7 @@ QJsonObject BluetoothLEManager::toJsonObject() const
         ++jit;
     }
     QJsonObject json;
-    json.insert("device",QJsonValue(jsonObjDevice));
+    json.insert("device",m_deviceData.toJsonObject());
     json.insert("measurement",QJsonValue(jsonObjMeasurement));
 
     return json;

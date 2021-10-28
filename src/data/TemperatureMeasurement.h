@@ -21,11 +21,15 @@ class TemperatureMeasurement :  public MeasurementBase
 public:
     void fromArray(const QByteArray &);
 
-    QString toString() const;
+    // String representation for debug and GUI display purposes
+    //
+    QString toString() const override;
 
-    bool isValid() const;
+    bool isValid() const override;
 };
 
 Q_DECLARE_METATYPE(TemperatureMeasurement);
+
+QDebug operator<<(QDebug dbg, const MeasurementBase &);
 
 #endif // TEMPERATUREMEASUREMENT_H
