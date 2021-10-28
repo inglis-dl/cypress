@@ -42,11 +42,14 @@ public:
         return *this;
     }
 
-
+    // String representation for debug and GUI display purposes
+    //
     virtual QString toString() const;
 
     virtual bool isValid() const;
 
+    // String keys are converted to snake_case
+    //
     virtual QJsonObject toJsonObject() const;
 
     void reset();

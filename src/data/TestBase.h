@@ -29,10 +29,14 @@ public:
     TestBase() = default;
     virtual ~TestBase() = default;
 
+    // String representation for debug and GUI display purposes
+    //
     virtual QString toString() const = 0;
 
     virtual bool isValid() const = 0;
 
+    // String keys are converted to snake_case
+    //
     virtual QJsonObject toJsonObject() const = 0;
 
     void reset();

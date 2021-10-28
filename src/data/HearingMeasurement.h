@@ -18,6 +18,8 @@ public:
 
     void fromCode(const QString &, const int &, const QString &);
 
+    // String representation for debug and GUI display purposes
+    //
     QString toString() const override;
 
     bool isValid() const override;

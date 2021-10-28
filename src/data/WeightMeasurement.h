@@ -24,6 +24,8 @@ public:
 
     void fromArray(const QByteArray &);
 
+    // String representation for debug and GUI display purposes
+    //
     QString toString() const override;
 
     bool isValid() const override;

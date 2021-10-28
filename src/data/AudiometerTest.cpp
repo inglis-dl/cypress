@@ -173,7 +173,7 @@ QJsonObject AudiometerTest::toJsonObject() const
         jsonArr.append(test);
     }
     QJsonObject json;
-    json.insert("test meta data",m_metaData.toJsonObject());
-    json.insert("test results",jsonArr);
+    json.insert("test_meta_data",m_metaData.toJsonObject());
+    json.insert("test_results",jsonArr);
     return json;
 }

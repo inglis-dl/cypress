@@ -30,6 +30,8 @@ public:
 
     void fromArray(const QByteArray &);
 
+    // String representation for debug and GUI display purposes
+    //
     QString toString() const override;
 
     bool isValid() const override;
@@ -38,6 +40,8 @@ public:
 
     HearingMeasurement getMeasurement(const QString&, const int&);
 
+    // String keys are converted to snake_case
+    //
     QJsonObject toJsonObject() const override;
 
     static bool hasEndCode(const QByteArray &);

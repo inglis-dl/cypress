@@ -37,7 +37,7 @@ QJsonObject MeasurementBase::toJsonObject() const
     QJsonObject json;
     for(auto&& x : m_characteristicValues.toStdMap())
     {
-        json.insert(x.first, QJsonValue::fromVariant(x.second));
+        json.insert(QString(x.first).toLower().replace(QRegExp("[\\s]+"),"_"), QJsonValue::fromVariant(x.second));
     }
     return json;
 }
