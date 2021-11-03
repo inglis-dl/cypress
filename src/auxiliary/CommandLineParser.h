@@ -15,23 +15,28 @@ public:
         CommandLineOk,
         CommandLineError,
         CommandLineMissingArg,
+        CommandLineModeError,
         CommandLineInputFileError,
-        CommandLineOutputPathError
+        CommandLineOutputPathError,
+        CommandLineVersionRequested,
+        CommandLineHelpRequested
     };
     Q_ENUM(CommandLineParseResult)
 
-    CommandLineParseResult parseCommandLine( const QCoreApplication& app);
+    QString helpText(){ return m_parser.helpText(); }
+
+    CommandLineParseResult parseCommandLine( const QCoreApplication &, QString *);
 
     QString getInputFilename() const {return m_inputFilename;}
     QString getOutputFilename() const {return m_outputFilename;}
-    QString getRunMode() const {return m_runMode;}
+    QString getMode() const {return m_mode;}
     bool getVerbose() const {return m_verbose;}
 
 private:
     QCommandLineParser m_parser;
     QString m_inputFilename;
     QString m_outputFilename;
-    QString m_runMode;
+    QString m_mode;
     bool m_verbose;
 };
 
