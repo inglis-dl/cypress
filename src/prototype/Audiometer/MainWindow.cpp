@@ -43,6 +43,7 @@ MainWindow::~MainWindow()
 void MainWindow::initialize()
 {
   m_manager.setVerbose(m_verbose);
+  m_manager.setMode(m_mode);
 
   // Read inputs, such as interview barcode
   //

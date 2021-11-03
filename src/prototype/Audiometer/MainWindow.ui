@@ -94,7 +94,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="deviceComboBox"/>
+          <widget class="QComboBox" name="deviceComboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>1</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="connectButton">

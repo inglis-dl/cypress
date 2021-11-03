@@ -19,6 +19,7 @@ class AudiometerManager : public QObject
 
     Q_PROPERTY(QString deviceName MEMBER m_deviceName NOTIFY deviceNameChanged)
     Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
+    Q_PROPERTY(QString mode READ mode WRITE setMode)
 
 public:
     explicit AudiometerManager(QObject *parent = nullptr);
@@ -50,6 +51,9 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() const { return m_verbose; }
 
+    void setMode(const QString& mode) { m_mode = mode; }
+    QString mode() { return m_mode; }
+
     QJsonObject toJsonObject() const;
 
     void buildModel(QStandardItemModel *);
@@ -70,6 +74,8 @@ public slots:
     // send write request over RS232 to retrieve data from the audiometer
     //
     void writeDevice();
+
+private slots:
 
     // retrieve data from the audiometer over RS232
     // emits canWrite signal if the test data is valid
@@ -137,6 +143,14 @@ private:
     QString m_deviceName;
 
     bool m_verbose;
+
+    // mode of operation
+    // - "simulate" - no devices are connected and the manager
+    // responds to the UI signals and slots as though in live mode with valid
+    // device and test data
+    // - "live" - production mode
+    //
+    QString m_mode;
 
     QByteArray m_buffer;
 

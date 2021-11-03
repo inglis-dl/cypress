@@ -11,7 +11,8 @@
 #include <QtMath>
 
 AudiometerManager::AudiometerManager(QObject *parent) : QObject(parent),
-    m_verbose(false)
+    m_verbose(false),
+    m_mode("default")
 {
 }
 
@@ -39,10 +40,15 @@ void AudiometerManager::buildModel(QStandardItemModel* model)
 
 bool AudiometerManager::devicesAvailable() const
 {
+    if("simulate" == m_mode)
+    {
+        return true;
+    }
     qDebug() << "checking available ports";
     QList<QSerialPortInfo> list = QSerialPortInfo::availablePorts();
     bool ok = !list.empty();
     qDebug() << "got list result and returning";
+
     return ok;
 }
 
@@ -80,6 +86,17 @@ void AudiometerManager::scanDevices()
     m_deviceList.clear();
     emit scanningDevices();
     qDebug() << "start scanning for devices ....";
+
+    if("simulate" == m_mode)
+    {
+      QSerialPortInfo info;
+      QString label = m_deviceName.isEmpty() ? "simulated_device" : m_deviceName;
+      m_deviceList.insert(label,info);
+      emit deviceDiscovered(label);
+      qDebug() << "found device " << label;
+      setDevice(info);
+      return;
+    }
 
     for(auto&& info : QSerialPortInfo::availablePorts())
     {
@@ -158,6 +175,21 @@ void AudiometerManager::selectDevice(const QString &label)
 
 void AudiometerManager::setDevice(const QSerialPortInfo &info)
 {
+    if("simulate" == m_mode)
+    {
+       clearData();
+       // get the device data
+       m_deviceData.setCharacteristic("port product ID", "simulated produce ID");
+       m_deviceData.setCharacteristic("port vendor ID", "simulated vendor ID");
+       m_deviceData.setCharacteristic("port manufacturer", "simulated manufacturer");
+       m_deviceData.setCharacteristic("port name", (m_deviceName.isEmpty() ? "simulated_device" : m_deviceName));
+       m_deviceData.setCharacteristic("port serial number", "simulated serial number");
+       m_deviceData.setCharacteristic("port system location", "simulated system location");
+       m_deviceData.setCharacteristic("port description", "simulated description");
+       emit canConnectDevice();
+       return;
+    }
+
     if(m_deviceName.isEmpty() || info.isNull())
     {
         if(m_verbose)
@@ -203,6 +235,12 @@ void AudiometerManager::setDevice(const QSerialPortInfo &info)
 
 void AudiometerManager::connectDevice()
 {
+    if("simulate" == m_mode)
+    {
+        emit canMeasure();
+        return;
+    }
+
     if(m_port.open(QSerialPort::ReadWrite))
     {
       m_port.setDataBits(QSerialPort::Data8);
@@ -237,6 +275,13 @@ void AudiometerManager::connectDevice()
 
 void AudiometerManager::disconnectDevice()
 {
+    if("simulate" == m_mode)
+    {
+       clearData();
+       emit canConnectDevice();
+       return;
+    }
+
     if(m_port.isOpen())
         m_port.close();
 
@@ -258,9 +303,17 @@ bool AudiometerManager::hasEndCode(const QByteArray &arr)
 
 void AudiometerManager::readDevice()
 {
-    QByteArray data = m_port.readAll();
-    m_buffer += data;
-    qDebug() << "read data got " << QString(data);
+   if("simulate" == m_mode)
+    {
+        QString simdata("\u00010\u0002012340000      0005580101112443111/01/2108:55:0004/01/20000000000       35  10  E2  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA       ~p\u0017;(\r");
+        m_buffer = QByteArray(simdata.toLatin1());
+    }
+    else
+    {
+      QByteArray data = m_port.readAll();
+      m_buffer += data;
+    }
+    qDebug() << "read data got " << QString(m_buffer);
 
     if(hasEndCode(m_buffer))
     {
@@ -291,6 +344,11 @@ void AudiometerManager::writeDevice()
     m_buffer.clear();
     m_buffer.reserve(1024);
 
+    if("simulate" == m_mode)
+    {
+        readDevice();
+        return;
+    }
     // send the request to the device and then read the data
     // in readData()
     //
