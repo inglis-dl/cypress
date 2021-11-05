@@ -19,9 +19,7 @@ AudiometerManager::AudiometerManager(QObject *parent) : QObject(parent),
 void AudiometerManager::buildModel(QStandardItemModel* model)
 {
     HearingMeasurement m;
-
     QVector<QString> v_side({"left","right"});
-
     for(auto&& side : v_side)
     {
       int i_freq = 0;
@@ -275,18 +273,15 @@ void AudiometerManager::connectDevice()
 
 void AudiometerManager::disconnectDevice()
 {
+    clearData();
+    emit canConnectDevice();
     if("simulate" == m_mode)
     {
-       clearData();
-       emit canConnectDevice();
        return;
     }
 
     if(m_port.isOpen())
         m_port.close();
-
-    clearData();
-    emit canConnectDevice();
 }
 
 bool AudiometerManager::hasEndCode(const QByteArray &arr)

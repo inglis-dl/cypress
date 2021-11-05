@@ -10,6 +10,7 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QSettings>
+#include <QSizePolicy>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -30,6 +31,12 @@ MainWindow::MainWindow(QWidget *parent)
     m_model.setHeaderData(0,Qt::Horizontal,"Left",Qt::DisplayRole);
     m_model.setHeaderData(1,Qt::Horizontal,"Right",Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
+
+    this->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+    ui->testdataTableView->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->verticalHeader()->hide();
 }
 
 MainWindow::~MainWindow()
@@ -163,8 +170,32 @@ void MainWindow::initialize()
   //
   connect(&m_manager, &AudiometerManager::dataChanged,
           this,[this](){
+      qDebug() <<" START data changed";
+
       m_manager.buildModel(&m_model);
-      ui->testdataTableView->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+
+      QHeaderView *h = ui->testdataTableView->horizontalHeader();
+      QHeaderView *v = ui->testdataTableView->verticalHeader();
+
+      ui->testdataTableView->resizeColumnsToContents();
+      QSize s(h->length()+v->width(),v->length()+h->height());
+
+      if(m_tableSize.isNull())
+      {
+          m_tableSize = s; // first time default table size
+          m_sectionSize = QSize(h->sectionSize(0),h->sectionSize(1));
+      }
+      else
+      {
+          ui->testdataTableView->setMinimumSize(
+                      qMax(m_tableSize.width(),s.width()),
+                      qMax(m_tableSize.height(),s.height()));
+          h->resizeSection(0,qMax(m_sectionSize.width(),h->sectionSize(0)));
+          h->resizeSection(1,qMax(m_sectionSize.height(),h->sectionSize(1)));
+      }
+
+      this->resizeFromTable();
+      qDebug() <<" END data changed";
   });
 
   // All measurements received: enable write test results
@@ -187,6 +218,24 @@ void MainWindow::initialize()
           this, &MainWindow::close);
 
   emit m_manager.dataChanged();
+}
+
+void MainWindow::resizeFromTable()
+{
+    QSize ts = ui->testdataTableView->minimumSize();
+    QSize s = ui->testdataTableView->size();
+    int dx = s.width() - ts.width();
+    int dy = s.height() - ts.height();
+    qDebug() << "resize from table dx, dy: "<<QString::number(dx)<<" "<<QString::number(dy);
+
+    if(dx!=0 || dy!=0)
+    {
+       QSize s = this->size();
+       qDebug() << "resize width from " << QString::number(s.width()) << " to " << QString::number(s.width()+dx);
+       qDebug() << "resize height from " << QString::number(s.height()) << " to " << QString::number(s.height()+dy);
+       this->resize( s.width()-dx, s.height()-dy );
+       this->repaint();
+    }
 }
 
 void MainWindow::updateDeviceList(const QString &label)
