@@ -28,8 +28,6 @@ public:
     //
     void initialize();
 
-    void resizeFromTable();
-
     // Call after initialize, launch the application and run
     // the device
     //
@@ -62,8 +60,6 @@ private:
     QString m_outputFileName;
     QString m_mode;
     bool m_verbose;
-    QSize m_tableSize;
-    QSize m_sectionSize;
 
     QMap<QString,QVariant> m_inputData;
     QMap<QString,QVariant> m_outputData;

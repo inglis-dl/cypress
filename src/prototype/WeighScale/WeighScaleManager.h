@@ -18,6 +18,7 @@ class WeighScaleManager : public QObject
     Q_OBJECT
     Q_PROPERTY(QString deviceName MEMBER m_deviceName NOTIFY deviceNameChanged)
     Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
+    Q_PROPERTY(QString mode READ mode WRITE setMode)
 
 public:
     explicit WeighScaleManager(QObject *parent = nullptr);
@@ -25,6 +26,7 @@ public:
     // check if any devices (serial ports) are available
     //
     bool devicesAvailable() const;
+
     bool isDefined(const QString &) const;
 
     // scan for available devices (serial ports)
@@ -50,9 +52,12 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() const { return m_verbose; }
 
-    void buildModel(QStandardItemModel *);
+    void setMode(const QString& mode) { m_mode = mode; }
+    QString mode() { return m_mode; }
 
     QJsonObject toJsonObject() const;
+
+    void buildModel(QStandardItemModel *);
 
 public slots:
 
@@ -75,6 +80,12 @@ public slots:
     // TODO: preset the code that is being written to
     void writeDevice();
 
+    // retrieve a measurement from the device
+    //
+    void measure();
+
+private slots:
+
     // retrieve data from the scale over RS232
     // emits canWrite signal if the test data is valid
     // Read is based on the last written code
@@ -84,8 +95,6 @@ public slots:
     // set the serial port
     //
     void setDevice(const QSerialPortInfo &);
-
-    void measure();
 
 signals:
 
@@ -128,6 +137,7 @@ signals:
     void canMeasure();
 
     void deviceNameChanged(const QString &);
+
 private:
 
     // keep device data separate from test data
@@ -141,6 +151,14 @@ private:
     QString m_deviceName;
 
     bool m_verbose;
+
+    // mode of operation
+    // - "simulate" - no devices are connected and the manager
+    // responds to the UI signals and slots as though in live mode with valid
+    // device and test data
+    // - "live" - production mode
+    //
+    QString m_mode;
 
     QByteArray m_buffer;
     QByteArray m_request;

@@ -46,7 +46,7 @@ CommandLineParser::CommandLineParseResult CommandLineParser::parseCommandLine(
     m_parser.addOption(modeOption);
 
     QCommandLineOption verboseOption(
-       QStringList() << "v" << "verbose",
+       QStringList() << "d" << "verbose",
        QCoreApplication::translate(
          "main","Verbose mode. Prints out verbose debug information."));
     m_parser.addOption(verboseOption);

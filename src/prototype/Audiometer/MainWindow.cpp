@@ -20,6 +20,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // allocate 2 columns x 8 rows of hearing measurement items
+    //
     for(int col=0;col<2;col++)
     {
       for(int row=0;row<8;row++)
@@ -32,8 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_model.setHeaderData(1,Qt::Horizontal,"Right",Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
 
-    this->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
-    ui->testdataTableView->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->verticalHeader()->hide();
@@ -132,7 +133,6 @@ void MainWindow::initialize()
   //
   connect(&m_manager, &AudiometerManager::canConnectDevice,
           this,[this](){
-      qDebug() << "ready to connect";
       ui->statusBar->showMessage("Ready to connect...");
       ui->connectButton->setEnabled(true);
       ui->disconnectButton->setEnabled(false);
@@ -149,7 +149,6 @@ void MainWindow::initialize()
   //
   connect(&m_manager, &AudiometerManager::canMeasure,
           this,[this](){
-      qDebug() << "ready to measure";
       ui->statusBar->showMessage("Ready to measure...");
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
@@ -170,39 +169,27 @@ void MainWindow::initialize()
   //
   connect(&m_manager, &AudiometerManager::dataChanged,
           this,[this](){
-      qDebug() <<" START data changed";
-
       m_manager.buildModel(&m_model);
 
       QHeaderView *h = ui->testdataTableView->horizontalHeader();
-      QHeaderView *v = ui->testdataTableView->verticalHeader();
-
-      ui->testdataTableView->resizeColumnsToContents();
-      QSize s(h->length()+v->width(),v->length()+h->height());
-
-      if(m_tableSize.isNull())
-      {
-          m_tableSize = s; // first time default table size
-          m_sectionSize = QSize(h->sectionSize(0),h->sectionSize(1));
-      }
-      else
-      {
-          ui->testdataTableView->setMinimumSize(
-                      qMax(m_tableSize.width(),s.width()),
-                      qMax(m_tableSize.height(),s.height()));
-          h->resizeSection(0,qMax(m_sectionSize.width(),h->sectionSize(0)));
-          h->resizeSection(1,qMax(m_sectionSize.height(),h->sectionSize(1)));
-      }
-
-      this->resizeFromTable();
-      qDebug() <<" END data changed";
+      QSize ts_pre = ui->testdataTableView->size();
+      h->resizeSections(QHeaderView::ResizeToContents);
+      ui->testdataTableView->setColumnWidth(0,h->sectionSize(0));
+      ui->testdataTableView->setColumnWidth(1,h->sectionSize(1));
+      ui->testdataTableView->resize(
+                  h->sectionSize(0)+h->sectionSize(1)+2,
+                  8*(ui->testdataTableView->rowHeight(0)+1)+
+                  h->height());
+      QSize ts_post = ui->testdataTableView->size();
+      int dx = ts_post.width()-ts_pre.width();
+      int dy = ts_post.height()-ts_pre.height();
+      this->resize(this->width()+dx,this->height()+dy);
   });
 
   // All measurements received: enable write test results
   //
   connect(&m_manager, &AudiometerManager::canWrite,
           this,[this](){
-      qDebug() << "ready to write";
       ui->statusBar->showMessage("Ready to write...");
       ui->saveButton->setEnabled(true);
   });
@@ -218,24 +205,6 @@ void MainWindow::initialize()
           this, &MainWindow::close);
 
   emit m_manager.dataChanged();
-}
-
-void MainWindow::resizeFromTable()
-{
-    QSize ts = ui->testdataTableView->minimumSize();
-    QSize s = ui->testdataTableView->size();
-    int dx = s.width() - ts.width();
-    int dy = s.height() - ts.height();
-    qDebug() << "resize from table dx, dy: "<<QString::number(dx)<<" "<<QString::number(dy);
-
-    if(dx!=0 || dy!=0)
-    {
-       QSize s = this->size();
-       qDebug() << "resize width from " << QString::number(s.width()) << " to " << QString::number(s.width()+dx);
-       qDebug() << "resize height from " << QString::number(s.height()) << " to " << QString::number(s.height()+dy);
-       this->resize( s.width()-dx, s.height()-dy );
-       this->repaint();
-    }
 }
 
 void MainWindow::updateDeviceList(const QString &label)
@@ -262,7 +231,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QSettings settings(dir.filePath("audiometer.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
     m_manager.disconnectDevice();
-
     event->accept();
 }
 
@@ -311,8 +279,6 @@ void MainWindow::writeOutput()
        qDebug() << "begin write process ... ";
 
    QJsonObject jsonObj = m_manager.toJsonObject();
-
-   qDebug() << "received json measurement data";
 
    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
    jsonObj.insert("barcode",QJsonValue(barcode));

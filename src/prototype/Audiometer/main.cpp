@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     window.setInputFileName(parser.getInputFilename());
     window.setOutputFileName(parser.getOutputFilename());
     window.setMode(parser.getMode());
-    window.setVerbose(true/*parser.getVerbose()*/);
+    window.setVerbose(parser.getVerbose());
 
     window.initialize();
     window.show();

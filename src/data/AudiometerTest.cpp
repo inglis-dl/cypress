@@ -136,7 +136,6 @@ QList<HearingMeasurement> AudiometerTest::readHearingThresholdLevels(const QStri
     readArray(75,106).trimmed() :
     readArray(107,138).trimmed();
 
-  qDebug() << "HTL " << side;
   QStringList s_list = s.split(QRegExp("\\s+")).replaceInStrings(QRegExp("^\\s+|\\s+$"),"");
   int i_freq = 0;
   foreach(auto atom, s_list)

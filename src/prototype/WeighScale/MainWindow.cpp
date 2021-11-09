@@ -19,12 +19,20 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // allocate 1 column x 2 rows of weight measurement items
+    //
     for(int row=0;row<2;row++)
     {
       QStandardItem* item = new QStandardItem();
       m_model.setItem(row,0,item);
     }
     m_model.setHeaderData(0,Qt::Horizontal,"Weight Tests",Qt::DisplayRole);
+    ui->testdataTableView->setModel(&m_model);
+
+    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->verticalHeader()->hide();
 }
 
 MainWindow::~MainWindow()
@@ -35,9 +43,14 @@ MainWindow::~MainWindow()
 void MainWindow::initialize()
 {
   m_manager.setVerbose(m_verbose);
+  m_manager.setMode(m_mode);
 
+  // Read inputs, such as interview barcode
+  //
   readInput();
 
+  // Populate barcode display
+  //
   if(m_inputData.contains("Barcode") && m_inputData["Barcode"].isValid())
      ui->barcodeLineEdit->setText(m_inputData["Barcode"].toString());
   else
@@ -116,7 +129,6 @@ void MainWindow::initialize()
   //
   connect(&m_manager, &WeighScaleManager::canConnectDevice,
           this,[this](){
-      qDebug() << "ready to connect";
       ui->statusBar->showMessage("Ready to connect...");
       ui->connectButton->setEnabled(true);
       ui->zeroButton->setEnabled(false);
@@ -134,12 +146,12 @@ void MainWindow::initialize()
   //
   connect(&m_manager, &WeighScaleManager::canMeasure,
           this,[this](){
-      qDebug() << "ready to measure";
       ui->statusBar->showMessage("Ready to measure...");
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
       ui->zeroButton->setEnabled(true);
       ui->measureButton->setEnabled(true);
+      ui->saveButton->setEnabled(false);
   });
 
   // Disconnect from device
@@ -162,16 +174,25 @@ void MainWindow::initialize()
   connect(&m_manager, &WeighScaleManager::dataChanged,
           this,[this](){
       m_manager.buildModel(&m_model);
-      ui->testdataTableView->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+
+      QSize ts_pre = ui->testdataTableView->size();
+      ui->testdataTableView->setColumnWidth(0,ui->testdataTableView->size().width()-2);
+      ui->testdataTableView->resize(
+                  ui->testdataTableView->width(),
+                  2*(ui->testdataTableView->rowHeight(0)+1)+
+                  ui->testdataTableView->horizontalHeader()->height());
+      QSize ts_post = ui->testdataTableView->size();
+      int dx = ts_post.width()-ts_pre.width();
+      int dy = ts_post.height()-ts_pre.height();
+      this->resize(this->width()+dx,this->height()+dy);
   });
 
   // All measurements received: enable write test results
   //
   connect(&m_manager, &WeighScaleManager::canWrite,
           this,[this](){
-      qDebug() << "ready to measure";
-      ui->statusBar->showMessage("Ready to measure...");
-      ui->measureButton->setEnabled(true);
+      ui->statusBar->showMessage("Ready to save results...");
+      ui->saveButton->setEnabled(true);
   });
 
   // Write test data to output
@@ -210,7 +231,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
-
+    m_manager.disconnectDevice();
     event->accept();
 }
 
@@ -259,8 +280,6 @@ void MainWindow::writeOutput()
        qDebug() << "begin write process ... ";
 
    QJsonObject jsonObj = m_manager.toJsonObject();
-
-   qDebug() << "received json measurement data";
 
    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
    jsonObj.insert("barcode",QJsonValue(barcode));

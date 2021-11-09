@@ -11,17 +11,17 @@
 #include <QtMath>
 
 WeighScaleManager::WeighScaleManager(QObject *parent) : QObject(parent),
-    m_verbose(false)
+    m_verbose(false),
+    m_mode("default")
 {
 }
 
 void WeighScaleManager::buildModel(QStandardItemModel* model)
 {
-    WeightMeasurement m;
-    for(int row=0;row<2;row++)
+    for(int row = 0; row < 2; row++)
     {
         QString s = "NA";
-        m = m_test.getMeasurement(row);
+        WeightMeasurement m = m_test.getMeasurement(row);
         if(m.isValid())
            s = m.toString();
         QStandardItem* item = model->item(row,0);
@@ -31,10 +31,12 @@ void WeighScaleManager::buildModel(QStandardItemModel* model)
 
 bool WeighScaleManager::devicesAvailable() const
 {
-    qDebug() << "checking available ports";
+    if("simulate" == m_mode)
+    {
+        return true;
+    }
     QList<QSerialPortInfo> list = QSerialPortInfo::availablePorts();
     bool ok = !list.empty();
-    qDebug() << "got list result and returning";
     return ok;
 }
 
@@ -71,11 +73,23 @@ void WeighScaleManager::scanDevices()
 {
     m_deviceList.clear();
     emit scanningDevices();
-    qDebug() << "start scanning for devices ....";
+    if(m_verbose)
+      qDebug() << "start scanning for devices ....";
+
+    if("simulate" == m_mode)
+    {
+      QSerialPortInfo info;
+      QString label = m_deviceName.isEmpty() ? "simulated_device" : m_deviceName;
+      m_deviceList.insert(label,info);
+      emit deviceDiscovered(label);
+      if(m_verbose)
+        qDebug() << "found device " << label;
+      setDevice(info);
+      return;
+    }
 
     for(auto&& info : QSerialPortInfo::availablePorts())
     {
-        qDebug() << "in loop";
         if(m_verbose)
         {
           // get the device data
@@ -94,12 +108,11 @@ void WeighScaleManager::scanDevices()
           if(!info.description().isEmpty())
             qDebug() << "description:" << info.description();
         }
-        QString label = QString("%1 %2").arg(info.portName(),info.description());
+        QString label = info.portName();
         if(!m_deviceList.contains(label))
         {
             m_deviceList.insert(label,info);
             emit deviceDiscovered(label);
-            qDebug() << "found device " << label;
         }
     }
     if(m_verbose)
@@ -114,7 +127,7 @@ void WeighScaleManager::scanDevices()
         QMap<QString,QSerialPortInfo>::const_iterator it = m_deviceList.constBegin();
         while(it != m_deviceList.constEnd() && !found)
         {
-          found = it.key().contains(m_deviceName);
+          found = it.key() == m_deviceName;
           if(found) info = it.value();
           ++it;
         }
@@ -132,8 +145,6 @@ void WeighScaleManager::scanDevices()
       //
       emit canSelectDevice();
     }
-
-    qDebug() << "done scanning for ports";
 }
 
 void WeighScaleManager::selectDevice(const QString &label)
@@ -150,6 +161,21 @@ void WeighScaleManager::selectDevice(const QString &label)
 
 void WeighScaleManager::setDevice(const QSerialPortInfo &info)
 {
+    if("simulate" == m_mode)
+    {
+       clearData();
+       // get the device data
+       m_deviceData.setCharacteristic("port product ID", "simulated produce ID");
+       m_deviceData.setCharacteristic("port vendor ID", "simulated vendor ID");
+       m_deviceData.setCharacteristic("port manufacturer", "simulated manufacturer");
+       m_deviceData.setCharacteristic("port name", (m_deviceName.isEmpty() ? "simulated_device" : m_deviceName));
+       m_deviceData.setCharacteristic("port serial number", "simulated serial number");
+       m_deviceData.setCharacteristic("port system location", "simulated system location");
+       m_deviceData.setCharacteristic("port description", "simulated description");
+       emit canConnectDevice();
+       return;
+    }
+
     if(m_deviceName.isEmpty() || info.isNull())
     {
         if(m_verbose)
@@ -179,22 +205,23 @@ void WeighScaleManager::setDevice(const QSerialPortInfo &info)
     m_port.setPort(info);
     if(m_port.open(QSerialPort::ReadWrite))
     {
-      qDebug() << "ok, can open port for readwrite";
-
       // signal the GUI that the port is connectable so that
       // the connect button can be clicked
       //
       emit canConnectDevice();
-    }
-    else
-    {
-      qDebug() << "error: failed to open serial port: " << m_port.errorString();
     }
     m_port.close();
 }
 
 void WeighScaleManager::connectDevice()
 {
+    if("simulate" == m_mode)
+    {
+        m_request = QByteArray("i");
+        writeDevice();
+        return;
+    }
+
     if(m_port.open(QSerialPort::ReadWrite))
     {
       m_port.setDataBits(QSerialPort::Data8);
@@ -223,6 +250,8 @@ void WeighScaleManager::connectDevice()
 
       // try and read the scale ID, if we can do that then emit the
       // canMeasure signal
+      // the canMeasure signal is emitted from readDevice slot on successful read
+      //
       m_request = QByteArray("i");
       writeDevice();
     }
@@ -233,20 +262,37 @@ void WeighScaleManager::writeDevice()
     // prepare to receive data
     //
     m_buffer.clear();
+
+    if("simulate" == m_mode)
+    {
+        if(m_verbose)
+          qDebug() << "in simulate mode writeDevice with request " << QString(m_request);
+        readDevice();
+        return;
+    }
+
     m_port.write(m_request);
 }
 
 void WeighScaleManager::disconnectDevice()
 {
-    if(m_port.isOpen())
-        m_port.close();
-
     clearData();
     emit canConnectDevice();
+    if("simulate" == m_mode)
+    {
+       return;
+    }
+
+    if(m_port.isOpen())
+        m_port.close();
 }
 
 bool WeighScaleManager::isDefined(const QString &label) const
 {
+    if("simulate" == m_mode)
+    {
+       return true;
+    }
     bool defined = false;
     if(m_deviceList.contains(label))
     {
@@ -262,17 +308,45 @@ void WeighScaleManager::zeroDevice()
     writeDevice();
 }
 
+void WeighScaleManager::measure()
+{
+    m_request = QByteArray("p");
+    writeDevice();
+}
+
 void WeighScaleManager::readDevice()
 {
-    QByteArray data = m_port.readAll();
-    m_buffer += data;
-    qDebug() << "read data got " << QString(data);
+    if("simulate" == m_mode)
+    {
+        QString simdata;
+        if("i" == QString(m_request))
+         {
+           simdata = "12345";
+         }
+         else if("z" == QString(m_request))
+         {
+           simdata = "0.0 C body";
+         }
+         else if("p" == QString(m_request))
+         {
+            simdata = "36.1 C body";
+         }
+         m_buffer = QByteArray(simdata.toUtf8());
+    }
+    else
+    {
+      QByteArray data = m_port.readAll();
+      m_buffer += data;
+    }
+    if(m_verbose)
+      qDebug() << "read device received buffer " << QString(m_buffer);
 
     if(!m_buffer.isEmpty())
     {
       if("i" == QString(m_request))
       {
-         m_deviceData.setCharacteristic("software ID", QString(m_buffer.simplified()));
+        m_deviceData.setCharacteristic("software ID", QString(m_buffer.simplified()));
+        emit canMeasure();
       }
       else if("p" == QString(m_request))
       {
@@ -290,24 +364,14 @@ void WeighScaleManager::readDevice()
           if(m.isZero())
             emit canMeasure();
       }
-      else
-      {
-          //TODO: emit error
-      }
 
       emit dataChanged();
     }
 }
 
-void WeighScaleManager::measure()
-{
-    m_request = QByteArray("p");
-    writeDevice();
-}
-
 QJsonObject WeighScaleManager::toJsonObject() const
 {
-    QJsonObject json;
+    QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
     return json;
 }

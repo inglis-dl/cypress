@@ -18,7 +18,6 @@ AudiometerManager::AudiometerManager(QObject *parent) : QObject(parent),
 
 void AudiometerManager::buildModel(QStandardItemModel* model)
 {
-    HearingMeasurement m;
     QVector<QString> v_side({"left","right"});
     for(auto&& side : v_side)
     {
@@ -26,7 +25,7 @@ void AudiometerManager::buildModel(QStandardItemModel* model)
       int col = "left" == side ? 0 : 1;
       for(int row=0;row<8;row++)
       {
-        m = m_test.getMeasurement(side,i_freq);
+        HearingMeasurement m = m_test.getMeasurement(side,i_freq);
         if(!m.isValid())
            m.fromCode(side,i_freq,"AA");
         QStandardItem* item = model->item(row,col);
@@ -42,11 +41,8 @@ bool AudiometerManager::devicesAvailable() const
     {
         return true;
     }
-    qDebug() << "checking available ports";
     QList<QSerialPortInfo> list = QSerialPortInfo::availablePorts();
     bool ok = !list.empty();
-    qDebug() << "got list result and returning";
-
     return ok;
 }
 
@@ -83,7 +79,8 @@ void AudiometerManager::scanDevices()
 {
     m_deviceList.clear();
     emit scanningDevices();
-    qDebug() << "start scanning for devices ....";
+    if(m_verbose)
+      qDebug() << "start scanning for devices ....";
 
     if("simulate" == m_mode)
     {
@@ -91,14 +88,14 @@ void AudiometerManager::scanDevices()
       QString label = m_deviceName.isEmpty() ? "simulated_device" : m_deviceName;
       m_deviceList.insert(label,info);
       emit deviceDiscovered(label);
-      qDebug() << "found device " << label;
+      if(m_verbose)
+        qDebug() << "found device " << label;
       setDevice(info);
       return;
     }
 
     for(auto&& info : QSerialPortInfo::availablePorts())
     {
-        qDebug() << "in loop";
         if(m_verbose)
         {
           // get the device data
@@ -155,8 +152,6 @@ void AudiometerManager::scanDevices()
       //
       emit canSelectDevice();
     }
-
-    qDebug() << "done scanning for ports";
 }
 
 void AudiometerManager::selectDevice(const QString &label)
@@ -308,19 +303,12 @@ void AudiometerManager::readDevice()
       QByteArray data = m_port.readAll();
       m_buffer += data;
     }
-    qDebug() << "read data got " << QString(m_buffer);
+    if(m_verbose)
+      qDebug() << "read device received buffer " << QString(m_buffer);
 
     if(hasEndCode(m_buffer))
     {
-        qDebug() << "finished reading messages, final size " << QString::number(m_buffer.size());
-        qDebug() << QString(m_buffer);
-        qDebug() << "manager ready to initialize test from buffer";
-
         m_test.fromArray(m_buffer);
-
-        qDebug() << "manager ready to dump test to string";
-
-        qDebug() << m_test.toString();
         if(m_test.isValid())
         {
             // emit the can write signal
@@ -328,7 +316,6 @@ void AudiometerManager::readDevice()
         }
 
         emit dataChanged();
-        // TODO emit error
     }
 }
 
