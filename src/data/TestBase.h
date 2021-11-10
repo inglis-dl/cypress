@@ -26,8 +26,16 @@ template <class T>
 class TestBase
 {
 public:
-    TestBase() = default;
+    TestBase()
+    {
+        m_maximumNumberOfMeasurements = 1000;
+    }
     virtual ~TestBase() = default;
+
+    // When a fixed maximum number of measurements is
+    // established, the newest elements are kept and
+    // the older ones are removed from the list
+    //
 
     // String representation for debug and GUI display purposes
     //
@@ -72,24 +80,25 @@ public:
 
     T* find_first(const QString& key, const QVariant& value);
 
-    void pop_front()
-    {
-        m_measurementList.pop_front();
-    }
-
-    void pop_back()
-    {
-        m_measurementList.pop_back();
-    }
-
     int getNumberOfMeasurements() const
     {
         return m_measurementList.size();
     }
 
+    void setMaximumNumberOfMeasurements(const int& max)
+    {
+        m_maximumNumberOfMeasurements = 0 < max ? max : 1;
+    }
+
+    int getMaximumNumberOfMeasurements() const
+    {
+        return m_maximumNumberOfMeasurements;
+    }
+
 protected:
     QVector<T> m_measurementList;
     MeasurementBase m_metaData;
+    int m_maximumNumberOfMeasurements;
 };
 
 template <class T>
@@ -103,7 +112,11 @@ template <class T>
 void TestBase<T>::addMeasurement(const T &item)
 {
     if(!m_measurementList.contains(item))
-      m_measurementList.append(item);
+    {
+        m_measurementList.append(item);
+        if(m_maximumNumberOfMeasurements < m_measurementList.size())
+            m_measurementList.pop_front();
+    }
 }
 
 template <class T>

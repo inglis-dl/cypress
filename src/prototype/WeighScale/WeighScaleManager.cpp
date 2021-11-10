@@ -14,11 +14,12 @@ WeighScaleManager::WeighScaleManager(QObject *parent) : QObject(parent),
     m_verbose(false),
     m_mode("default")
 {
+  m_test.setMaximumNumberOfMeasurements(2);
 }
 
 void WeighScaleManager::buildModel(QStandardItemModel* model)
 {
-    for(int row = 0; row < 2; row++)
+    for(int row = 0; row < m_test.getMaximumNumberOfMeasurements(); row++)
     {
         QString s = "NA";
         WeightMeasurement m = m_test.getMeasurement(row);

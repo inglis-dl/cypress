@@ -6,7 +6,7 @@
 
 bool WeighScaleTest::isValid() const
 {
-    bool okTest = 2 == getNumberOfMeasurements();
+    bool okTest = getNumberOfMeasurements() == getMaximumNumberOfMeasurements();
     if(okTest)
     {
       for(auto&& x : m_measurementList)
@@ -41,14 +41,12 @@ void WeighScaleTest::fromArray(const QByteArray &arr)
     if(!arr.isEmpty())
     {
        // only add to the end and keep the last two tests
-        //
+       //
        WeightMeasurement m;
        m.fromArray(arr);
        if(m.isValid())
        {
          addMeasurement(m);
-         if(2 < getNumberOfMeasurements())
-           pop_front();
        }
     }
 }
