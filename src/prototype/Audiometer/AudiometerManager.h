@@ -11,7 +11,6 @@
 #include "../../data/AudiometerTest.h"
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
-QT_FORWARD_DECLARE_CLASS(QJsonObject)
 
 class AudiometerManager : public QObject
 {

@@ -11,7 +11,6 @@
 #include "../../data/WeighScaleTest.h"
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
-QT_FORWARD_DECLARE_CLASS(QJsonObject)
 
 class WeighScaleManager : public QObject
 {
