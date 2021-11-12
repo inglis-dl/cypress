@@ -123,12 +123,14 @@ void WeighScaleManager::scanDevices()
     //
     bool found = false;
     QSerialPortInfo info;
+    QString label;
     if(!m_deviceName.isEmpty())
     {
         QMap<QString,QSerialPortInfo>::const_iterator it = m_deviceList.constBegin();
         while(it != m_deviceList.constEnd() && !found)
         {
-          found = it.key() == m_deviceName;
+          label = it.key();
+          found = label == m_deviceName;
           if(found) info = it.value();
           ++it;
         }
@@ -138,6 +140,7 @@ void WeighScaleManager::scanDevices()
       if(m_verbose)
         qDebug() << "found the ini stored port  " << m_deviceName;
 
+      emit deviceSelected(label);
       setDevice(info);
     }
     else

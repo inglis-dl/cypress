@@ -97,6 +97,14 @@ void MainWindow::initialize()
   connect(&m_manager, &WeighScaleManager::deviceDiscovered,
           this, &MainWindow::updateDeviceList);
 
+  connect(&m_manager, &WeighScaleManager::deviceSelected,
+          this,[this](const QString &label){
+      if(label!=ui->deviceComboBox->currentText())
+      {
+          ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findText(label));
+      }
+  });
+
   // Prompt user to select a device from the drop down list when previously
   // cached device information in the ini file is unavailable or invalid
   //
@@ -213,10 +221,12 @@ void MainWindow::updateDeviceList(const QString &label)
     // Add the device to the list
     //
     int index = ui->deviceComboBox->findText(label);
+    bool oldState = ui->deviceComboBox->blockSignals(true);
     if(-1 == index)
     {
         ui->deviceComboBox->addItem(label);
     }
+    ui->deviceComboBox->blockSignals(oldState);
 }
 
 void MainWindow::run()

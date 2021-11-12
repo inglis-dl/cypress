@@ -111,14 +111,14 @@ signals:
     //
     void deviceDiscovered(const QString &);
 
-    // a list of scanned port devices is avaiable for selection
+    // a list of scanned serial port devices is avaiable for selection
     // (update GUI to prompt for user to select a port)
     //
     void canSelectDevice();
 
     // a port was selected from the list of discovered ports
     //
-    void deviceSelected();
+    void deviceSelected(const QString &);
 
     // port ready to connect
     // (update GUI enable connect button)
