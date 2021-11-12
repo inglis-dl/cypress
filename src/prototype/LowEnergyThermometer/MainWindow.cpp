@@ -21,6 +21,21 @@ MainWindow::MainWindow(QWidget *parent)
     , m_manager(this)
 {
     ui->setupUi(this);
+
+    // allocate 1 column x 1 rows of temperature measurement items
+    //
+    for(int row = 0; row < 2; row++)
+    {
+      QStandardItem* item = new QStandardItem();
+      m_model.setItem(row,0,item);
+    }
+    m_model.setHeaderData(0,Qt::Horizontal,"Temperature Tests",Qt::DisplayRole);
+    ui->testdataTableView->setModel(&m_model);
+
+    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->verticalHeader()->hide();
 }
 
 MainWindow::~MainWindow()
@@ -31,6 +46,13 @@ MainWindow::~MainWindow()
 void MainWindow::initialize()
 {
     m_manager.setVerbose(m_verbose);
+    m_manager.setMode(m_mode);
+
+    // Read the .ini file for cached local and peripheral device addresses
+    //
+    QDir dir = QCoreApplication::applicationDirPath();
+    QSettings settings(dir.filePath("lowenergythermometer.ini"), QSettings::IniFormat);
+    m_manager.loadSettings(settings);
 
     if(!m_manager.lowEnergyEnabled())
     {
@@ -44,23 +66,7 @@ void MainWindow::initialize()
       //
       close();
     }
-
-    readInput();
-
-    // Populate barcode display
-    //
-    if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
-       ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
-    else
-       ui->barcodeLineEdit->setText("00000000"); // dummy
-
-    // Read the .ini file for cached local and peripheral device addresses
-    //
-    QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("lowenergythermometer.ini"), QSettings::IniFormat);
-    m_manager.loadSettings(settings);
-
-    if(!m_manager.localAdapterEnabled())
+    if(!m_manager.localDeviceEnabled())
     {
       QMessageBox msgBox;
       msgBox.setText(tr("The host operating system has no local bluetooth "
@@ -76,65 +82,67 @@ void MainWindow::initialize()
       close();
     }
 
-    // Connect button to connect a controller to a verified peripheral device
+    // Read inputs, such as interview barcode
     //
-    ui->connectButton->setEnabled(false);
+    readInput();
+
+    // Populate barcode display
+    //
+    if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
+       ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
+    else
+       ui->barcodeLineEdit->setText("00000000"); // dummy
 
     // Save button to store measurement and device info to .json
     //
     ui->saveButton->setEnabled(false);
 
-    // as soon as there are LE devices in the ui list, allow click to select a mac address
+    // Read the measurement off the device
     //
-    connect(ui->deviceListWidget, &QListWidget::itemDoubleClicked,
-            this,[this](QListWidgetItem* item)
-      {
-        if(m_verbose)
-            qDebug() << "device selected from list " <<  item->text();
-        m_manager.selectDevice(item->text());
-      }
-    );
+    ui->measureButton->setEnabled(false);
 
-    connect(&m_manager, &BluetoothLEManager::measured,
-            ui->temperatureLineEdit, &QLineEdit::setText);
+    // Connect to the device
+    //
+    ui->connectButton->setEnabled(false);
 
-    connect(&m_manager, &BluetoothLEManager::scanning,
+    // Disconnect from the device
+    //
+    ui->disconnectButton->setEnabled(false);
+
+    // scan for bluetooth low energy peripheral devices
+    //
+    ui->scanButton->setEnabled(true);
+
+    connect(ui->scanButton, &QPushButton::clicked,
+            &m_manager, &BluetoothLEManager::scanDevices);
+
+    connect(&m_manager, &BluetoothLEManager::scanningDevices,
             this,[this]()
       {
-        ui->deviceListWidget->clear();
+        ui->deviceComboBox->clear();
         ui->statusBar->showMessage("Discovering devices ... please wait");
       }
     );
 
-    connect(&m_manager, &BluetoothLEManager::discovered,
+    // Update the drop down list as devices are discovered during scanning
+    //
+    connect(&m_manager, &BluetoothLEManager::deviceDiscovered,
             this, &MainWindow::updateDeviceList);
 
-    connect(&m_manager, &BluetoothLEManager::canConnect,
-            this,[this](){
-       ui->connectButton->setEnabled(true);
-       // do not update status bar message if waiting for data to be saved
-       //
-       if(!ui->saveButton->isEnabled())
-         ui->statusBar->showMessage("Ready to connect to peripheral device.");
+    connect(&m_manager, &BluetoothLEManager::deviceSelected,
+            this,[this](const QString &label){
+        if(label!=ui->deviceComboBox->currentText())
+        {
+            ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findText(label));
+        }
     });
 
-    connect(&m_manager, &BluetoothLEManager::connected,
+    connect(&m_manager, &BluetoothLEManager::canSelectDevice,
             this,[this](){
-       ui->connectButton->setEnabled(false);
-    });
-
-    connect(&m_manager, &BluetoothLEManager::canWrite,
-            this,[this](){
-       ui->saveButton->setEnabled(true);
-       ui->statusBar->showMessage("Ready to save temperature data.");
-    });
-
-    connect(&m_manager, &BluetoothLEManager::canSelect,
-            this,[this](){
-        // Prompt the user to select the MAC address
+        ui->statusBar->showMessage("Ready to select1...");
         QMessageBox msgBox;
         msgBox.setText(tr("Double click the bluetooth thermometer from the list.  If the device "
-          "is not in the list, quit the application and check that the bluetooth adapeter is "
+          "is not in the list, turn on the device and click Scan or quit the application and check that the bluetooth adapeter is "
           "working and pair the thermometer to it before running this application."));
         msgBox.setIcon(QMessageBox::Warning);
         msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Abort);
@@ -143,16 +151,92 @@ void MainWindow::initialize()
         msgBox.exec();
     });
 
-
-
-    connect(ui->connectButton, &QPushButton::clicked,
-          &m_manager, &BluetoothLEManager::connectPeripheral);
-
-    connect(ui->saveButton, &QPushButton::clicked,
-      this, [this](){
-        writeOutput();
+    // Select a bluetooth low energy device from the drop down list
+    //
+    connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this,[this]()
+      {
+        if(m_verbose)
+            qDebug() << "device selected from list " <<  ui->deviceComboBox->currentText();
+        m_manager.selectDevice(ui->deviceComboBox->currentText());
       }
     );
+
+    // Ready to connect device
+    //
+    connect(&m_manager, &BluetoothLEManager::canConnectDevice,
+            this,[this](){
+        qDebug() << "ready to connect";
+        ui->statusBar->showMessage("Ready to connect...");
+        ui->connectButton->setEnabled(true);
+        ui->disconnectButton->setEnabled(false);
+        ui->measureButton->setEnabled(false);
+        ui->saveButton->setEnabled(false);
+    });
+
+    // Connect to device
+    //
+    connect(ui->connectButton, &QPushButton::clicked,
+          &m_manager, &BluetoothLEManager::connectDevice);
+
+    // Connection is established: enable measurement requests
+    //
+    connect(&m_manager, &BluetoothLEManager::canMeasure,
+            this,[this](){
+        ui->statusBar->showMessage("Ready to measure...");
+        ui->connectButton->setEnabled(false);
+        ui->disconnectButton->setEnabled(true);
+        ui->measureButton->setEnabled(true);
+        ui->saveButton->setEnabled(false);
+    });
+
+    // Disconnect from device
+    //
+    connect(ui->disconnectButton, &QPushButton::clicked,
+            &m_manager, &BluetoothLEManager::disconnectDevice);
+
+    // Request a measurement from the device
+    //
+    connect(ui->measureButton, &QPushButton::clicked,
+          &m_manager, &BluetoothLEManager::measure);
+
+    // Update the UI with any data
+    //
+    connect(&m_manager, &BluetoothLEManager::dataChanged,
+            this,[this](){
+        m_manager.buildModel(&m_model);
+
+        QSize ts_pre = ui->testdataTableView->size();
+        ui->testdataTableView->setColumnWidth(0,ui->testdataTableView->size().width()-2);
+        ui->testdataTableView->resize(
+                    ui->testdataTableView->width(),
+                    2*(ui->testdataTableView->rowHeight(0) + 1) +
+                    ui->testdataTableView->horizontalHeader()->height());
+        QSize ts_post = ui->testdataTableView->size();
+        int dx = ts_post.width()-ts_pre.width();
+        int dy = ts_post.height()-ts_pre.height();
+        this->resize(this->width()+dx,this->height()+dy);
+    });
+
+    // All measurements received: enable write test results
+    //
+    connect(&m_manager, &BluetoothLEManager::canWrite,
+            this,[this](){
+       ui->statusBar->showMessage("Ready to save results...");
+       ui->saveButton->setEnabled(true);
+    });
+
+    // Write test data to output
+    //
+    connect(ui->saveButton, &QPushButton::clicked,
+      this, &MainWindow::writeOutput);
+
+    // Close the application
+    //
+    connect(ui->closeButton, &QPushButton::clicked,
+            this, &MainWindow::close);
+
+    emit m_manager.dataChanged();
 }
 
 void MainWindow::run()
@@ -175,17 +259,13 @@ void MainWindow::updateDeviceList(const QString &label)
 {
     // Add the device to the list
     //
-    QList<QListWidgetItem *> items = ui->deviceListWidget->findItems(label, Qt::MatchExactly);
-    if(items.empty())
+    int index = ui->deviceComboBox->findText(label);
+    bool oldState = ui->deviceComboBox->blockSignals(true);
+    if(-1 == index)
     {
-        QListWidgetItem *item = new QListWidgetItem(label);
-        if(m_manager.isPairedTo(label))
-          item->setForeground(QColor(Qt::green));
-        else
-          item->setForeground(QColor(Qt::black));
-
-        ui->deviceListWidget->addItem(item);
+        ui->deviceComboBox->addItem(label);
     }
+    ui->deviceComboBox->blockSignals(oldState);
 }
 
 void MainWindow::readInput()
@@ -233,8 +313,6 @@ void MainWindow::writeOutput()
         qDebug() << "begin write process ... ";
 
     QJsonObject jsonObj = m_manager.toJsonObject();
-
-    qDebug() << "received json measurement data";
 
     QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
     jsonObj.insert("barcode",QJsonValue(barcode));

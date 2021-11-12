@@ -13,6 +13,7 @@ SOURCES += \
     ../../auxiliary/BluetoothUtil.cpp \
     ../../data/MeasurementBase.cpp \
     ../../data/TemperatureMeasurement.cpp \
+    ../../data/TemperatureTest.cpp \
     BluetoothLEManager.cpp \
     MainWindow.cpp \
     main.cpp
@@ -22,6 +23,8 @@ HEADERS += \
     ../../auxiliary/BluetoothUtil.h \
     ../../data/MeasurementBase.h \
     ../../data/TemperatureMeasurement.h \
+    ../../data/TemperatureTest.h \
+    ../../data/TestBase.h \
     BluetoothLEManager.h \
     MainWindow.h
 

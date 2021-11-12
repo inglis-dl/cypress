@@ -102,7 +102,19 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      int t_type = arr.mid(12,1).toHex().toInt(nullptr,16);
      QString m_str = 1 == t_type ? "body" : "surface/room";
      setCharacteristic("mode", m_str);
+
+     qDebug() << "received byte array: " << toString();
   }
+}
+
+TemperatureMeasurement TemperatureMeasurement::simulate()
+{
+   TemperatureMeasurement m;
+   m.setCharacteristic("mode","body");
+   m.setCharacteristic("units","C");
+   m.setCharacteristic("temperature",36.1f);
+   m.setCharacteristic("timestamp",QDateTime::currentDateTime());
+   return m;
 }
 
 bool TemperatureMeasurement::isValid() const
@@ -130,7 +142,7 @@ QString TemperatureMeasurement::toString() const
       QString m = getCharacteristic("mode").toString();
       QDateTime dt = getCharacteristic("timestamp").toDateTime();
       QString d = dt.date().toString("yyyy-MM-dd");
-      QString t = dt.time().toString("hh:mm:ss");
+      QString t = dt.time().toString("HH:mm:ss");
       QStringList l;
       l << w << u << m << d << t;
       s = l.join(" ");

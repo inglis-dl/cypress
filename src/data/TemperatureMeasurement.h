@@ -26,6 +26,8 @@ public:
     QString toString() const override;
 
     bool isValid() const override;
+
+    static TemperatureMeasurement simulate();
 };
 
 Q_DECLARE_METATYPE(TemperatureMeasurement);

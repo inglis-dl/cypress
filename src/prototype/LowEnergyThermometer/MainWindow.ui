@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>425</width>
-    <height>465</height>
+    <width>578</width>
+    <height>372</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Temperature Measurement</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,1">
+   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0">
     <item>
      <widget class="QGroupBox" name="idGroupBox">
       <property name="sizePolicy">
@@ -64,39 +64,48 @@
       <property name="title">
        <string>devices</string>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
-       <item>
-        <widget class="QListWidget" name="deviceListWidget">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-        </widget>
-       </item>
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
           <widget class="QLabel" name="macLabel">
            <property name="text">
-            <string>MAC Address:</string>
-           </property>
-           <property name="buddy">
-            <cstring>addressLineEdit</cstring>
+            <string>Address:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="addressLineEdit">
-           <property name="inputMask">
-            <string>HH:HH:HH:HH:HH:HH;_</string>
+          <widget class="QComboBox" name="deviceComboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>1</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
-           <property name="readOnly">
-            <bool>true</bool>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QPushButton" name="scanButton">
+           <property name="text">
+            <string>Scan</string>
            </property>
-           <property name="clearButtonEnabled">
-            <bool>false</bool>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="connectButton">
+           <property name="text">
+            <string>Connect</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="disconnectButton">
+           <property name="text">
+            <string>Disconnect</string>
            </property>
           </widget>
          </item>
@@ -116,19 +125,13 @@
       <property name="title">
        <string>measure</string>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1">
+      <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
-          <widget class="QPushButton" name="connectButton">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
+          <widget class="QPushButton" name="measureButton">
            <property name="text">
-            <string>Connect</string>
+            <string>Measure</string>
            </property>
           </widget>
          </item>
@@ -145,37 +148,17 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QPushButton" name="closeButton">
+           <property name="text">
+            <string>Close</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item>
-        <layout class="QFormLayout" name="formLayout">
-         <property name="sizeConstraint">
-          <enum>QLayout::SetDefaultConstraint</enum>
-         </property>
-         <property name="fieldGrowthPolicy">
-          <enum>QFormLayout::ExpandingFieldsGrow</enum>
-         </property>
-         <property name="verticalSpacing">
-          <number>6</number>
-         </property>
-         <item row="0" column="0">
-          <widget class="QLabel" name="temperatureLabel">
-           <property name="text">
-            <string>Temperature:</string>
-           </property>
-           <property name="buddy">
-            <cstring>temperatureLineEdit</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="temperatureLineEdit">
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QTableView" name="testdataTableView"/>
        </item>
       </layout>
      </widget>
