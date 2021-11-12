@@ -1,0 +1,90 @@
+{
+	"BUILD_DIR" : "C:/Users/clsa/source/repos/cypress/out/build/x64-Debug/cypress_autogen",
+	"CMAKE_BINARY_DIR" : "C:/Users/clsa/source/repos/cypress/out/build/x64-Debug",
+	"CMAKE_CURRENT_BINARY_DIR" : "C:/Users/clsa/source/repos/cypress/out/build/x64-Debug",
+	"CMAKE_CURRENT_SOURCE_DIR" : "C:/Users/clsa/source/repos/cypress",
+	"CMAKE_EXECUTABLE" : "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+	"CMAKE_LIST_FILES" : 
+	[
+		"C:/Users/clsa/source/repos/cypress/CMakeLists.txt",
+		"C:/Users/clsa/source/repos/cypress/out/build/x64-Debug/CMakeFiles/3.20.21032501-MSVC_2/CMakeSystem.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/CMakeSystemSpecificInitialize.cmake",
+		"C:/Users/clsa/source/repos/cypress/out/build/x64-Debug/CMakeFiles/3.20.21032501-MSVC_2/CMakeCXXCompiler.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/CMakeSystemSpecificInformation.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/CMakeGenericSystem.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/CMakeInitializeConfigs.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/Platform/Windows.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/Platform/WindowsPaths.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/CMakeCXXInformation.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/CMakeLanguageInformation.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/Compiler/MSVC-CXX.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/Compiler/CMakeCommonCompilerMacros.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/Platform/Windows-MSVC-CXX.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/Platform/Windows-MSVC.cmake",
+		"C:/Users/clsa/source/repos/cypress/out/build/x64-Debug/CMakeFiles/3.20.21032501-MSVC_2/CMakeRCCompiler.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/CMakeRCInformation.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/CMakeCommonLanguageInclude.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5/Qt5ConfigVersion.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5/Qt5Config.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5/Qt5ConfigVersion.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5/Qt5Config.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5/Qt5ModuleLocation.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Core/Qt5CoreConfigVersion.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Core/Qt5CoreConfig.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Core/Qt5CoreConfigExtras.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Core/Qt5CoreConfigExtrasMkspecDir.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Core/Qt5CoreMacros.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/CMakeParseArguments.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5LinguistTools/Qt5LinguistToolsConfigVersion.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5LinguistTools/Qt5LinguistToolsConfig.cmake",
+		"C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5LinguistTools/Qt5LinguistToolsMacros.cmake",
+		"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.20/Modules/CMakeParseArguments.cmake"
+	],
+	"CMAKE_SOURCE_DIR" : "C:/Users/clsa/source/repos/cypress",
+	"DEP_FILE" : "C:/Users/clsa/source/repos/cypress/out/build/x64-Debug/cypress_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "cypress_autogen/timestamp",
+	"HEADERS" : [],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "C:/Users/clsa/source/repos/cypress/out/build/x64-Debug/cypress_autogen/include",
+	"MOC_COMPILATION_FILE" : "C:/Users/clsa/source/repos/cypress/out/build/x64-Debug/cypress_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : [ "QT_CORE_LIB", "WIN32" ],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"C:/Users/clsa/source/repos/cypress/out/build/x64-Debug",
+		"C:/Users/clsa/source/repos/cypress",
+		"C:/Qt/5.15.2/msvc2019_64/include",
+		"C:/Qt/5.15.2/msvc2019_64/include/QtCore",
+		"C:/Qt/5.15.2/msvc2019_64/mkspecs/win32-msvc"
+	],
+	"MOC_MACRO_NAMES" : [ "Q_OBJECT", "Q_GADGET", "Q_NAMESPACE", "Q_NAMESPACE_EXPORT" ],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : [],
+	"MOC_PREDEFS_FILE" : "",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 2,
+	"PARSE_CACHE_FILE" : "C:/Users/clsa/source/repos/cypress/out/build/x64-Debug/CMakeFiles/cypress_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "C:/Qt/5.15.2/msvc2019_64/bin/moc.exe",
+	"QT_UIC_EXECUTABLE" : "",
+	"QT_VERSION_MAJOR" : 5,
+	"QT_VERSION_MINOR" : 15,
+	"SETTINGS_FILE" : "C:/Users/clsa/source/repos/cypress/out/build/x64-Debug/CMakeFiles/cypress_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[ "C:/Users/clsa/source/repos/cypress/src/main.cpp", "MU", null ]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"VERBOSITY" : 0
+}
