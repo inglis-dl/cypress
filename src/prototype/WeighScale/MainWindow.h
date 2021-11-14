@@ -17,11 +17,6 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString inputFileName READ inputFileName WRITE setInputFileName)
-    Q_PROPERTY(QString outputFileName READ outputFileName WRITE setOutputFileName)
-    Q_PROPERTY(QString mode READ mode WRITE setMode)
-    Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
-
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
