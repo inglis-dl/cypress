@@ -13,6 +13,8 @@ SOURCES += \
     ../../data/WeighScaleTest.cpp \
     ../../data/WeightMeasurement.cpp \
     ../../data/MeasurementBase.cpp \
+    ../../managers/ManagerBase.cpp \
+    ../../managers/SerialPortManager.cpp \
     WeighScaleManager.cpp \
     main.cpp \
     MainWindow.cpp
@@ -22,6 +24,8 @@ HEADERS += \
     ../../data/WeighScaleTest.h \
     ../../data/WeightMeasurement.h \
     ../../data/TestBase.h \
+    ../../managers/ManagerBase.h \
+    ../../managers/SerialPortManager.h \
     MainWindow.h \
     ../../data/MeasurementBase.h \
     WeighScaleManager.h
