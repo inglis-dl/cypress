@@ -13,6 +13,8 @@ SOURCES += \
     ../../data/AudiometerTest.cpp \
     ../../data/HearingMeasurement.cpp \
     ../../data/MeasurementBase.cpp \
+    ../../managers/ManagerBase.cpp \
+    ../../managers/SerialPortManager.cpp \
     AudiometerManager.cpp \
     main.cpp \
     MainWindow.cpp
@@ -22,6 +24,8 @@ HEADERS += \
     ../../data/AudiometerTest.h \
     ../../data/HearingMeasurement.h \
     ../../data/TestBase.h \
+    ../../managers/ManagerBase.h \
+    ../../managers/SerialPortManager.h \
     MainWindow.h \
     ../../data/MeasurementBase.h \
     AudiometerManager.h

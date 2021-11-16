@@ -163,7 +163,7 @@ void MainWindow::initialize()
   // Request a measurement from the device
   //
   connect(ui->measureButton, &QPushButton::clicked,
-        &m_manager, &AudiometerManager::writeDevice);
+        &m_manager, &AudiometerManager::measure);
 
   // Update the UI with any data
   //
