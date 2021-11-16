@@ -144,7 +144,7 @@ void HearingMeasurement::fromCode(const QString &side, const int &index, const Q
         QRegExp r("\\d*");
         if(r.exactMatch(code))
         {
-          setCharacteristic("HTL",code.toInt());
+          setCharacteristic("level",code.toInt());
         }
       }
     }
@@ -152,13 +152,13 @@ void HearingMeasurement::fromCode(const QString &side, const int &index, const Q
 
 bool HearingMeasurement::isValid() const
 {
-    // side test: HTL (units) OR error (outcome)
+    // side test: level(units) OR error (outcome)
     bool ok =
       hasCharacteristic("side") &&
       hasCharacteristic("test") &&
       hasCharacteristic("units") &&
       (
-        hasCharacteristic("HTL") ||
+        hasCharacteristic("level") ||
         (
           hasCharacteristic("error") &&
           hasCharacteristic("outcome")
@@ -176,8 +176,8 @@ QString HearingMeasurement::toString() const
       QString(" ") %
       getCharacteristic("test").toString() %
       QString(": ") %
-      (hasCharacteristic("HTL") ?
-        getCharacteristic("HTL").toString() %
+      (hasCharacteristic("level") ?
+        getCharacteristic("level").toString() %
         QString(" (") %
         getCharacteristic("units").toString() %
         QString(")") :
