@@ -1,41 +1,55 @@
 #include "MainWindow.h"
 #include <QtWidgets/QApplication>
-#include <QTextStream>
-
-#include "CognitiveIO.h"
-#include "ExitCodesEnum.h"
+#include "../../auxiliary/CommandLineParser.h"
+#include <QMessageBox>
+#include <QString>
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
     QApplication::setOrganizationName("CLSA");
     QApplication::setOrganizationDomain("clsa-elcv.ca");
-    QApplication::setApplicationName("cypress_cognitive-test");
+    QApplication::setApplicationName("CognitiveTest");
+    QApplication::setApplicationVersion("1.0.0");
 
-    // Read the command line arguments and create an inputs model
-    InputsModel inputs;
-    int exitCode = CognitiveIO::ParseCommandLineArgs(&app, &inputs);
+    QApplication app(argc, argv);
 
-    qDebug() << "Main.cpp:" <<  endl;
-    qDebug() << "mode: " << inputs.mode << endl;
-    qDebug() << "json inputs: " + inputs.jsonInputsPath << endl;
-    qDebug() << "json output path: " + inputs.jsonOutputsPath << endl;
-    qDebug() << "json user id: " + inputs.userID << endl;
-    qDebug() << "json site name: " + inputs.dcsSiteName << endl;
-    qDebug() << "json interviewer id: " + inputs.interviewerID << endl;
-    qDebug() << "json language: " + inputs.language << endl;
-    
-    // If command line arguments are invalid, return with the corresponding exitcode
-    if (exitCode != ExitCodes::Continue) {
-        return exitCode;
+    // Need to pull changes from development branch to get all features of commandLineParser
+    CommandLineParser parser;
+    QString errMessage;
+    switch (parser.parseCommandLine(app, &errMessage))
+    {
+    case CommandLineParser::CommandLineHelpRequested:
+        QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
+            "<html><head/><body><pre>"
+            + parser.helpText() + "</pre></body></html>");
+        return 0;
+    case  CommandLineParser::CommandLineVersionRequested:
+        QMessageBox::information(0, QGuiApplication::applicationDisplayName(),
+            QGuiApplication::applicationDisplayName() + ' '
+            + QCoreApplication::applicationVersion());
+        return 0;
+    case CommandLineParser::CommandLineOk:
+        break;
+    case CommandLineParser::CommandLineError:
+    case CommandLineParser::CommandLineInputFileError:
+    case CommandLineParser::CommandLineOutputPathError:
+    case CommandLineParser::CommandLineMissingArg:
+    case CommandLineParser::CommandLineModeError:
+        QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
+            "<html><head/><body><h2>" + errMessage + "</h2><pre>"
+            + parser.helpText() + "</pre></body></html>");
+        return 1;
     }
 
-    // At this point command line arguments have been validated and settings read in
-    // Exit with succesful code if the app is running in ghost mode
-    if (inputs.mode == Modes::ghost) return ExitCodes::Successful;
-
     // Start App
-    CognitiveTest w(inputs);
+    CognitiveTest w;
+    w.setInputFileName(parser.getInputFilename());
+    w.setOutputFileName(parser.getOutputFilename());
+    w.setMode(parser.getMode());
+    w.setVerbose(parser.getVerbose());
+
+    w.initialize();
     w.show();
+    w.run();
     return app.exec();
 }
