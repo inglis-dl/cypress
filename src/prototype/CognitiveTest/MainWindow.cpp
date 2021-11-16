@@ -22,19 +22,28 @@ void CognitiveTest::initialize()
     //
     readInput();
 
+    QDir dir = QCoreApplication::applicationDirPath();
+    qDebug() << "Dir: " << dir;
+    QSettings settings(dir.filePath("cognitive.ini"), QSettings::IniFormat);
+
+    m_manager.loadSettings(settings);
+
     // TODO: Add necessary UI elements
 }
 
 void CognitiveTest::run()
 {
-    // TODO: Check that these actually exist inside the json file
-    QString CCBFolderPath = (m_inputData[QString("CCBFolderPath")]).toString();
-    QString userId = (m_inputData[QString("userID")]).toString();
-    QString dcsSiteName = (m_inputData[QString("dcsSiteName")]).toString();;
-    QString interviewerId = (m_inputData[QString("interviewerID")]).toString();;
-    QString language = (m_inputData[QString("language")]).toString();;
-    m_manager.LaunchTest(CCBFolderPath,userId, dcsSiteName, interviewerId, language);
-    m_manager.MoveResultsFile(CCBFolderPath, m_outputFileName);
+    QString userId = (m_inputData[QString("barcode")]).toString();
+    QString language = (m_inputData[QString("language")]).toString();
+
+    // TODO: Should probably do something more regardles of verbose or not
+    if (isVerbose()) {
+        if (userId.isEmpty()) qDebug() << "No barcode found in json input file";
+        if (language.isEmpty()) qDebug() << "No language found in json input file";
+    }
+
+    m_manager.LaunchTest(userId, language);
+    m_manager.MoveResultsFile(m_outputFileName);
 }
 
 void CognitiveTest::readInput()

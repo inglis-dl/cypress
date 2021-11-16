@@ -3,8 +3,10 @@
 #include <QObject>
 #include <QProcess>
 #include <QString>
+#include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QSettings>
 
 class CognitiveTestManager: public QObject
 {
@@ -15,19 +17,22 @@ public:
 	/// <summary>
 	/// Launch the cognitive test
 	/// </summary>
-	bool LaunchTest(QString CCBFolderPath, QString userId, QString dcsSiteName, QString interviewerId, QString language);
+	bool LaunchTest(QString userId, QString language);
 	
 	/// <summary>
 	/// Move the results file to the proper output path
 	/// </summary>
 	/// <param name="path"></param>
-	bool MoveResultsFile(QString ccbFolderPath, QString outputPath);
+	bool MoveResultsFile(QString outputPath);
 
 
 	void setVerbose(const bool& verbose) { m_verbose = verbose; }
 	bool isVerbose() const { return m_verbose; }
 
 	void setMode(const QString& mode) { m_mode = mode; }
+
+	void loadSettings(const QSettings&);
+	void saveSettings(QSettings*) const;
 
 private:
 	bool m_verbose;
@@ -39,5 +44,9 @@ private:
 	// - "live" - production mode
 	//
 	QString m_mode;
+
+	QString executable;
+	QString ccbFolderPath;
+	QString resultsFolderName;
 };
 

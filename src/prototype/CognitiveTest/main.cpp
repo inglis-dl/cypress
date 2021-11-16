@@ -14,8 +14,8 @@ int main(int argc, char *argv[])
 
     // Start App
     CognitiveTest w;
-    w.setInputFileName("C:/Users/clsa/Documents/SampleJsonFiles/CognitiveTestInput.json");
-    w.setOutputFileName("C:/Users/clsa/Documents/SampleJsonFiles");
+    w.setInputFileName("C:/Users/clsa/source/repos/CypressBuilds/CognitiveTest/CognitiveTestInput.json");
+    w.setOutputFileName("C:/Users/clsa/source/repos/CypressBuilds/CognitiveTest/Output");
     w.setMode("live");
     w.setVerbose(true);
 
