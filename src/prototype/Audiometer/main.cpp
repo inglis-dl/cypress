@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName("CLSA");
     QCoreApplication::setOrganizationDomain("clsa-elcv.ca");
-    QCoreApplication::setApplicationName("WeighScale");
+    QCoreApplication::setApplicationName("Audiometer");
     QCoreApplication::setApplicationVersion("1.0.0");
 
     QApplication app(argc, argv);
@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
     for (const QString &locale : uiLanguages) {
-        const QString baseName = "weighscale_" + QLocale(locale).name();
+        const QString baseName = "audiometer_" + QLocale(locale).name();
         if (translator.load(":/i18n/" + baseName)) {
             app.installTranslator(&translator);
             break;

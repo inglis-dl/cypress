@@ -19,15 +19,22 @@
 class WeightMeasurement :  public MeasurementBase
 {   
 public:
+    WeightMeasurement() = default;
+    ~WeightMeasurement() = default;
+
     void fromArray(const QByteArray &);
 
-    QString toString() const;
+    // String representation for debug and GUI display purposes
+    //
+    QString toString() const override;
 
-    bool isValid() const;
+    bool isValid() const override;
 
     bool isZero() const;
 };
 
 Q_DECLARE_METATYPE(WeightMeasurement);
+
+QDebug operator<<(QDebug dbg, const WeightMeasurement &);
 
 #endif // WEIGHTMEASUREMENT_H

@@ -1,6 +1,6 @@
-#include "WeighScaleManager.h"
+#include "AudiometerManager.h"
 
-#include "../../data/WeighScaleTest.h"
+#include "../../data/AudiometerTest.h"
 
 #include <QDateTime>
 #include <QDebug>
@@ -10,27 +10,32 @@
 #include <QSettings>
 #include <QtMath>
 
-WeighScaleManager::WeighScaleManager(QObject *parent) : QObject(parent),
+AudiometerManager::AudiometerManager(QObject *parent) : QObject(parent),
     m_verbose(false),
     m_mode("default")
 {
-  m_test.setMaximumNumberOfMeasurements(2);
 }
 
-void WeighScaleManager::buildModel(QStandardItemModel* model)
+void AudiometerManager::buildModel(QStandardItemModel* model)
 {
-    for(int row = 0; row < m_test.getMaximumNumberOfMeasurements(); row++)
+    QVector<QString> v_side({"left","right"});
+    for(auto&& side : v_side)
     {
-        QString s = "NA";
-        WeightMeasurement m = m_test.getMeasurement(row);
-        if(m.isValid())
-           s = m.toString();
-        QStandardItem* item = model->item(row,0);
-        item->setData(s, Qt::DisplayRole);
+      int i_freq = 0;
+      int col = "left" == side ? 0 : 1;
+      for(int row=0;row<8;row++)
+      {
+        HearingMeasurement m = m_test.getMeasurement(side,i_freq);
+        if(!m.isValid())
+           m.fromCode(side,i_freq,"AA");
+        QStandardItem* item = model->item(row,col);
+        item->setData(m.toString(), Qt::DisplayRole);
+        i_freq++;
+      }
     }
 }
 
-bool WeighScaleManager::devicesAvailable() const
+bool AudiometerManager::devicesAvailable() const
 {
     if("simulate" == m_mode)
     {
@@ -41,7 +46,7 @@ bool WeighScaleManager::devicesAvailable() const
     return ok;
 }
 
-void WeighScaleManager::loadSettings(const QSettings &settings)
+void AudiometerManager::loadSettings(const QSettings &settings)
 {
     QString name = settings.value("client/port").toString();
     if(!name.isEmpty())
@@ -52,7 +57,7 @@ void WeighScaleManager::loadSettings(const QSettings &settings)
     }
 }
 
-void WeighScaleManager::saveSettings(QSettings *settings) const
+void AudiometerManager::saveSettings(QSettings *settings) const
 {
     if(!m_deviceName.isEmpty())
     {
@@ -62,7 +67,7 @@ void WeighScaleManager::saveSettings(QSettings *settings) const
     }
 }
 
-void WeighScaleManager::clearData()
+void AudiometerManager::clearData()
 {
     m_deviceData.reset();
     m_test.reset();
@@ -70,7 +75,7 @@ void WeighScaleManager::clearData()
     emit dataChanged();
 }
 
-void WeighScaleManager::scanDevices()
+void AudiometerManager::scanDevices()
 {
     m_deviceList.clear();
     emit scanningDevices();
@@ -114,6 +119,7 @@ void WeighScaleManager::scanDevices()
         {
             m_deviceList.insert(label,info);
             emit deviceDiscovered(label);
+            qDebug() << "found device " << label;
         }
     }
     if(m_verbose)
@@ -123,14 +129,12 @@ void WeighScaleManager::scanDevices()
     //
     bool found = false;
     QSerialPortInfo info;
-    QString label;
     if(!m_deviceName.isEmpty())
     {
         QMap<QString,QSerialPortInfo>::const_iterator it = m_deviceList.constBegin();
         while(it != m_deviceList.constEnd() && !found)
         {
-          label = it.key();
-          found = label == m_deviceName;
+          found = it.key() == m_deviceName;
           if(found) info = it.value();
           ++it;
         }
@@ -140,7 +144,6 @@ void WeighScaleManager::scanDevices()
       if(m_verbose)
         qDebug() << "found the ini stored port  " << m_deviceName;
 
-      emit deviceSelected(label);
       setDevice(info);
     }
     else
@@ -151,7 +154,7 @@ void WeighScaleManager::scanDevices()
     }
 }
 
-void WeighScaleManager::selectDevice(const QString &label)
+void AudiometerManager::selectDevice(const QString &label)
 {
     if(m_deviceList.contains(label))
     {
@@ -163,7 +166,7 @@ void WeighScaleManager::selectDevice(const QString &label)
     }
 }
 
-void WeighScaleManager::setDevice(const QSerialPortInfo &info)
+void AudiometerManager::setDevice(const QSerialPortInfo &info)
 {
     if("simulate" == m_mode)
     {
@@ -209,20 +212,25 @@ void WeighScaleManager::setDevice(const QSerialPortInfo &info)
     m_port.setPort(info);
     if(m_port.open(QSerialPort::ReadWrite))
     {
+      qDebug() << "ok, can open port for readwrite";
+
       // signal the GUI that the port is connectable so that
       // the connect button can be clicked
       //
       emit canConnectDevice();
     }
+    else
+    {
+      qDebug() << "error: failed to open serial port: " << m_port.errorString();
+    }
     m_port.close();
 }
 
-void WeighScaleManager::connectDevice()
+void AudiometerManager::connectDevice()
 {
     if("simulate" == m_mode)
     {
-        m_request = QByteArray("i");
-        writeDevice();
+        emit canMeasure();
         return;
     }
 
@@ -234,7 +242,7 @@ void WeighScaleManager::connectDevice()
       m_port.setBaudRate(QSerialPort::Baud9600);
 
       connect(&m_port, &QSerialPort::readyRead,
-               this, &WeighScaleManager::readDevice);
+               this, &AudiometerManager::readDevice);
 
       connect(&m_port, &QSerialPort::errorOccurred,
               this,[this](QSerialPort::SerialPortError error){
@@ -252,33 +260,13 @@ void WeighScaleManager::connectDevice()
           qDebug() << "request to send RTS changed to " << (set?"high":"low");
       });
 
-      // try and read the scale ID, if we can do that then emit the
-      // canMeasure signal
-      // the canMeasure signal is emitted from readDevice slot on successful read
+      // signal the GUI that the measure button can be clicked
       //
-      m_request = QByteArray("i");
-      writeDevice();
+      emit canMeasure();
     }
 }
 
-void WeighScaleManager::writeDevice()
-{
-    // prepare to receive data
-    //
-    m_buffer.clear();
-
-    if("simulate" == m_mode)
-    {
-        if(m_verbose)
-          qDebug() << "in simulate mode writeDevice with request " << QString(m_request);
-        readDevice();
-        return;
-    }
-
-    m_port.write(m_request);
-}
-
-void WeighScaleManager::disconnectDevice()
+void AudiometerManager::disconnectDevice()
 {
     clearData();
     emit canConnectDevice();
@@ -291,51 +279,24 @@ void WeighScaleManager::disconnectDevice()
         m_port.close();
 }
 
-bool WeighScaleManager::isDefined(const QString &label) const
+bool AudiometerManager::hasEndCode(const QByteArray &arr)
 {
-    if("simulate" == m_mode)
-    {
-       return true;
-    }
-    bool defined = false;
-    if(m_deviceList.contains(label))
-    {
-        QSerialPortInfo info = m_deviceList.value(label);
-        defined = !info.isNull();
-    }
-    return defined;
+    if( arr.size() < 6 ) return false;
+    // try and interpret the last 6 bytes
+    int size = arr.size();
+    return (
+       0x0d == arr.at(size-1) &&
+       0x17 == arr.at(size-4) &&
+        'p' == arr.at(size-5) &&
+        '~' == arr.at(size-6));
 }
 
-void WeighScaleManager::zeroDevice()
+void AudiometerManager::readDevice()
 {
-    m_request = QByteArray("z");
-    writeDevice();
-}
-
-void WeighScaleManager::measure()
-{
-    m_request = QByteArray("p");
-    writeDevice();
-}
-
-void WeighScaleManager::readDevice()
-{
-    if("simulate" == m_mode)
+   if("simulate" == m_mode)
     {
-        QString simdata;
-        if("i" == QString(m_request))
-         {
-           simdata = "12345";
-         }
-         else if("z" == QString(m_request))
-         {
-           simdata = "0.0 C body";
-         }
-         else if("p" == QString(m_request))
-         {
-            simdata = "36.1 C body";
-         }
-         m_buffer = QByteArray(simdata.toUtf8());
+        QString simdata("\u00010\u0002012340000      0005580101112443111/01/2108:55:0004/01/20000000000       35  10  E2  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA       ~p\u0017;(\r");
+        m_buffer = QByteArray(simdata.toLatin1());
     }
     else
     {
@@ -345,35 +306,40 @@ void WeighScaleManager::readDevice()
     if(m_verbose)
       qDebug() << "read device received buffer " << QString(m_buffer);
 
-    if(!m_buffer.isEmpty())
+    if(hasEndCode(m_buffer))
     {
-      if("i" == QString(m_request))
-      {
-        m_deviceData.setCharacteristic("software ID", QString(m_buffer.simplified()));
-        emit canMeasure();
-      }
-      else if("p" == QString(m_request))
-      {
-         m_test.fromArray(m_buffer);
-         if(m_test.isValid())
-         {
-             // emit the can write signal
-             emit canWrite();
-         }
-      }
-      else if("z" == QString(m_request))
-      {
-          WeightMeasurement m;
-          m.fromArray(m_buffer);
-          if(m.isZero())
-            emit canMeasure();
-      }
+        m_test.fromArray(m_buffer);
+        if(m_test.isValid())
+        {
+            // emit the can write signal
+            emit canWrite();
+        }
 
-      emit dataChanged();
+        emit dataChanged();
     }
 }
 
-QJsonObject WeighScaleManager::toJsonObject() const
+void AudiometerManager::writeDevice()
+{
+    // prepare to receive data
+    //
+    m_buffer.clear();
+    m_buffer.reserve(1024);
+
+    if("simulate" == m_mode)
+    {
+        readDevice();
+        return;
+    }
+    // send the request to the device and then read the data
+    // in readData()
+    //
+    const char cmd[] = {0x05,'4',0x0d};
+    QByteArray req = QByteArray::fromRawData(cmd,3);
+    m_port.write(req);
+}
+
+QJsonObject AudiometerManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());

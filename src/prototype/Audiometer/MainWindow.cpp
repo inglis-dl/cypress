@@ -10,6 +10,7 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QSettings>
+#include <QSizePolicy>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -19,14 +20,18 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // allocate 1 column x 2 rows of weight measurement items
+    // allocate 2 columns x 8 rows of hearing measurement items
     //
-    for(int row=0;row<2;row++)
+    for(int col=0;col<2;col++)
     {
-      QStandardItem* item = new QStandardItem();
-      m_model.setItem(row,0,item);
+      for(int row=0;row<8;row++)
+      {
+        QStandardItem* item = new QStandardItem();
+        m_model.setItem(row,col,item);
+      }
     }
-    m_model.setHeaderData(0,Qt::Horizontal,"Weight Tests",Qt::DisplayRole);
+    m_model.setHeaderData(0,Qt::Horizontal,"Left",Qt::DisplayRole);
+    m_model.setHeaderData(1,Qt::Horizontal,"Right",Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
 
     ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -40,6 +45,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+// set up signal slot connections between GUI front end
+// and device management back end
+//
 void MainWindow::initialize()
 {
   m_manager.setVerbose(m_verbose);
@@ -51,26 +59,22 @@ void MainWindow::initialize()
 
   // Populate barcode display
   //
-  if(m_inputData.contains("Barcode") && m_inputData["Barcode"].isValid())
-     ui->barcodeLineEdit->setText(m_inputData["Barcode"].toString());
+  if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
+     ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
   else
      ui->barcodeLineEdit->setText("00000000"); // dummy
 
-  // Read the .ini file for cached local and peripheral device addresses
+  // Read the .ini file for cached device data
   //
   QDir dir = QCoreApplication::applicationDirPath();
-  QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
+  QSettings settings(dir.filePath("audiometer.ini"), QSettings::IniFormat);
   m_manager.loadSettings(settings);
 
   // Save button to store measurement and device info to .json
   //
   ui->saveButton->setEnabled(false);
 
-  // Zero the scale
-  //
-  ui->zeroButton->setEnabled(false);
-
-  // Read the weight measurement off the scale
+  // Read the measurement off the device
   //
   ui->measureButton->setEnabled(false);
 
@@ -84,7 +88,7 @@ void MainWindow::initialize()
 
   // Scan for devices
   //
-  connect(&m_manager, &WeighScaleManager::scanningDevices,
+  connect(&m_manager, &AudiometerManager::scanningDevices,
           this,[this]()
     {
       ui->deviceComboBox->clear();
@@ -94,21 +98,13 @@ void MainWindow::initialize()
 
   // Update the drop down list as devices are discovered during scanning
   //
-  connect(&m_manager, &WeighScaleManager::deviceDiscovered,
+  connect(&m_manager, &AudiometerManager::deviceDiscovered,
           this, &MainWindow::updateDeviceList);
-
-  connect(&m_manager, &WeighScaleManager::deviceSelected,
-          this,[this](const QString &label){
-      if(label!=ui->deviceComboBox->currentText())
-      {
-          ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findText(label));
-      }
-  });
 
   // Prompt user to select a device from the drop down list when previously
   // cached device information in the ini file is unavailable or invalid
   //
-  connect(&m_manager, &WeighScaleManager::canSelectDevice,
+  connect(&m_manager, &AudiometerManager::canSelectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to select...");
       QMessageBox msgBox;
@@ -135,11 +131,10 @@ void MainWindow::initialize()
 
   // Ready to connect device
   //
-  connect(&m_manager, &WeighScaleManager::canConnectDevice,
+  connect(&m_manager, &AudiometerManager::canConnectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to connect...");
       ui->connectButton->setEnabled(true);
-      ui->zeroButton->setEnabled(false);
       ui->disconnectButton->setEnabled(false);
       ui->measureButton->setEnabled(false);
       ui->saveButton->setEnabled(false);
@@ -148,47 +143,43 @@ void MainWindow::initialize()
   // Connect to device
   //
   connect(ui->connectButton, &QPushButton::clicked,
-          &m_manager, &WeighScaleManager::connectDevice);
+          &m_manager, &AudiometerManager::connectDevice);
 
   // Connection is established: enable measurement requests
   //
-  connect(&m_manager, &WeighScaleManager::canMeasure,
+  connect(&m_manager, &AudiometerManager::canMeasure,
           this,[this](){
       ui->statusBar->showMessage("Ready to measure...");
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
-      ui->zeroButton->setEnabled(true);
       ui->measureButton->setEnabled(true);
-      ui->saveButton->setEnabled(false);
   });
 
   // Disconnect from device
   //
   connect(ui->disconnectButton, &QPushButton::clicked,
-          &m_manager, &WeighScaleManager::disconnectDevice);
-
-  // Zero the scale
-  //
-  connect(ui->zeroButton, &QPushButton::clicked,
-        &m_manager, &WeighScaleManager::zeroDevice);
+          &m_manager, &AudiometerManager::disconnectDevice);
 
   // Request a measurement from the device
   //
   connect(ui->measureButton, &QPushButton::clicked,
-        &m_manager, &WeighScaleManager::measure);
+        &m_manager, &AudiometerManager::writeDevice);
 
   // Update the UI with any data
   //
-  connect(&m_manager, &WeighScaleManager::dataChanged,
+  connect(&m_manager, &AudiometerManager::dataChanged,
           this,[this](){
       m_manager.buildModel(&m_model);
 
+      QHeaderView *h = ui->testdataTableView->horizontalHeader();
       QSize ts_pre = ui->testdataTableView->size();
-      ui->testdataTableView->setColumnWidth(0,ui->testdataTableView->size().width()-2);
+      h->resizeSections(QHeaderView::ResizeToContents);
+      ui->testdataTableView->setColumnWidth(0,h->sectionSize(0));
+      ui->testdataTableView->setColumnWidth(1,h->sectionSize(1));
       ui->testdataTableView->resize(
-                  ui->testdataTableView->width(),
-                  2*(ui->testdataTableView->rowHeight(0)+1)+
-                  ui->testdataTableView->horizontalHeader()->height());
+                  h->sectionSize(0)+h->sectionSize(1)+2,
+                  8*(ui->testdataTableView->rowHeight(0)+1)+
+                  h->height());
       QSize ts_post = ui->testdataTableView->size();
       int dx = ts_post.width()-ts_pre.width();
       int dy = ts_post.height()-ts_pre.height();
@@ -197,9 +188,9 @@ void MainWindow::initialize()
 
   // All measurements received: enable write test results
   //
-  connect(&m_manager, &WeighScaleManager::canWrite,
+  connect(&m_manager, &AudiometerManager::canWrite,
           this,[this](){
-      ui->statusBar->showMessage("Ready to save results...");
+      ui->statusBar->showMessage("Ready to write...");
       ui->saveButton->setEnabled(true);
   });
 
@@ -221,12 +212,10 @@ void MainWindow::updateDeviceList(const QString &label)
     // Add the device to the list
     //
     int index = ui->deviceComboBox->findText(label);
-    bool oldState = ui->deviceComboBox->blockSignals(true);
     if(-1 == index)
     {
         ui->deviceComboBox->addItem(label);
     }
-    ui->deviceComboBox->blockSignals(oldState);
 }
 
 void MainWindow::run()
@@ -239,7 +228,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if(m_verbose)
         qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath("audiometer.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
     m_manager.disconnectDevice();
     event->accept();
@@ -327,7 +316,7 @@ void MainWindow::writeOutput()
          QStringList list;
          list << barcode;
          list << QDate().currentDate().toString("yyyyMMdd");
-         list << "weighscale.json";
+         list << "audiometer.json";
          fileName = dir.filePath( list.join("_") );
        }
        else
@@ -341,5 +330,5 @@ void MainWindow::writeOutput()
    if(m_verbose)
        qDebug() << "wrote to file " << fileName;
 
-   ui->statusBar->showMessage("Weigh scale data recorded.  Close when ready.");
+   ui->statusBar->showMessage("Audiometer data recorded.  Close when ready.");
 }

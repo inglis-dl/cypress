@@ -1,5 +1,5 @@
-#ifndef WEIGHSCALEMANAGER_H
-#define WEIGHSCALEMANAGER_H
+#ifndef AUDIOMETERMANAGER_H
+#define AUDIOMETERMANAGER_H
 
 #include <QObject>
 #include <QMap>
@@ -8,25 +8,24 @@
 #include <QStandardItemModel>
 #include <QVariant>
 
-#include "../../data/WeighScaleTest.h"
+#include "../../data/AudiometerTest.h"
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
 
-class WeighScaleManager : public QObject
+class AudiometerManager : public QObject
 {
     Q_OBJECT
+
     Q_PROPERTY(QString deviceName MEMBER m_deviceName NOTIFY deviceNameChanged)
     Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
     Q_PROPERTY(QString mode READ mode WRITE setMode)
 
 public:
-    explicit WeighScaleManager(QObject *parent = nullptr);
+    explicit AudiometerManager(QObject *parent = nullptr);
 
     // check if any devices (serial ports) are available
     //
     bool devicesAvailable() const;
-
-    bool isDefined(const QString &) const;
 
     // scan for available devices (serial ports)
     // emits scanning signal at start
@@ -71,23 +70,14 @@ public slots:
     //
     void disconnectDevice();
 
-    // zero the weigh scale
+    // send write request over RS232 to retrieve data from the audiometer
     //
-    void zeroDevice();
-
-    // send write request over RS232 to retrieve data from the scale
-    // TODO: preset the code that is being written to
     void writeDevice();
-
-    // retrieve a measurement from the device
-    //
-    void measure();
 
 private slots:
 
-    // retrieve data from the scale over RS232
+    // retrieve data from the audiometer over RS232
     // emits canWrite signal if the test data is valid
-    // Read is based on the last written code
     //
     void readDevice();
 
@@ -111,14 +101,14 @@ signals:
     //
     void deviceDiscovered(const QString &);
 
-    // a list of scanned serial port devices is avaiable for selection
+    // a list of scanned port devices is avaiable for selection
     // (update GUI to prompt for user to select a port)
     //
     void canSelectDevice();
 
     // a port was selected from the list of discovered ports
     //
-    void deviceSelected(const QString &);
+    void deviceSelected();
 
     // port ready to connect
     // (update GUI enable connect button)
@@ -139,11 +129,13 @@ signals:
 
 private:
 
+    bool hasEndCode(const QByteArray &);
+
     // keep device data separate from test data
     //
     MeasurementBase m_deviceData;
 
-    WeighScaleTest m_test;
+    AudiometerTest m_test;
 
     QMap<QString,QSerialPortInfo> m_deviceList;
     QSerialPort m_port;
@@ -160,9 +152,8 @@ private:
     QString m_mode;
 
     QByteArray m_buffer;
-    QByteArray m_request;
 
     void clearData();
 };
 
-#endif // WEIGHSCALEMANAGER_H
+#endif // AUDIOMETERMANAGER_H

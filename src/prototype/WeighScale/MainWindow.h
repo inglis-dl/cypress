@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QMap>
+#include <QStandardItemModel>
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
@@ -16,17 +17,12 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString inputFileName READ inputFileName WRITE setInputFileName)
-    Q_PROPERTY(QString outputFileName READ outputFileName WRITE setOutputFileName)
-    Q_PROPERTY(QString mode READ mode WRITE setMode)
-    Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
-
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    // Call after setting the input and output keys
     // This method internally calls readInput
+    //
     void initialize();
 
     // Call after initialize, launch the application and run
@@ -36,23 +32,25 @@ public:
 
     void setInputFileName(const QString& name) { m_inputFileName = name; }
     QString inputFileName() { return m_inputFileName; }
+
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
     QString outputFileName() { return m_outputFileName; }
+
     void setMode(const QString& mode) { m_mode = mode.toLower(); }
     QString mode() { return m_mode; }
+
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose(){ return m_verbose; }
 
 public slots:
     void updateDeviceList(const QString &);
-    void updateMeasurementList(const QString &);
+    void writeOutput();
 
 protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
     void readInput();
-    void writeOutput();
 
     Ui::MainWindow *ui;
     QString m_inputFileName;
@@ -64,5 +62,8 @@ private:
     QMap<QString,QVariant> m_outputData;
 
     WeighScaleManager m_manager;
+
+    QStandardItemModel m_model;
 };
+
 #endif // MAINWINDOW_H

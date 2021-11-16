@@ -8,15 +8,20 @@
  * \class MeasurementBase
  * \brief A Base Measurement class
  *
- * Measurements of are composed of atomic elements or "characteristics".
+ * Measurements are composed of atomic elements or "characteristics".
  * This class facilitates parsing measurement data from different
  * instruments into component characteristics, such as value, units etc.
  * and stores them labeled by QString keys as QVariant object values in a QMap.
  * The measurement can be retrieved as a QString for UI purposes.
  *
- * \note  This class stores one measurement only.  A manager
- * class should be used to store multiple measurements.  Child classes
- * must implement toString and isValid methods.
+ * \note  This class stores one or more characteristics which taken as whole
+ * can represent a single measurement.  A Test class inherited from TestBase
+ * should be used to store multiple measurements.
+ *
+ * Child classes should override toString and isValid methods as appropriate.
+ *
+ * This class can also be used to store instrument characteristics such as
+ * serial number, model number etc.
  *
  * \sa QVariant, QString, QMap
  *
@@ -27,11 +32,25 @@ class MeasurementBase
 public:
     MeasurementBase() = default;
     ~MeasurementBase() = default;
-    MeasurementBase(const MeasurementBase &);
-    MeasurementBase &operator=(const MeasurementBase &);
+    MeasurementBase(const MeasurementBase &other)
+    {
+        m_characteristicValues = other.m_characteristicValues;
+    }
+    MeasurementBase operator=(const MeasurementBase &other)
+    {
+        m_characteristicValues = other.m_characteristicValues;
+        return *this;
+    }
 
+    // String representation for debug and GUI display purposes
+    //
     virtual QString toString() const;
+
     virtual bool isValid() const;
+
+    // String keys are converted to snake_case
+    //
+    virtual QJsonObject toJsonObject() const;
 
     void reset();
 
@@ -40,7 +59,7 @@ public:
       m_characteristicValues[key]=value;
     }
 
-    QVariant getCharacteristic(const QString &key) const
+    inline QVariant getCharacteristic(const QString &key) const
     {
         return m_characteristicValues.contains(key) ?
                m_characteristicValues[key] : QVariant();
@@ -51,8 +70,14 @@ public:
         return m_characteristicValues;
     }
 
-protected:
+    inline bool hasCharacteristic(const QString &key) const
+    {
+        return m_characteristicValues.contains(key) &&
+               !m_characteristicValues[key].isNull() &&
+                m_characteristicValues[key].isValid();
+    }
 
+protected:
     QMap<QString,QVariant> m_characteristicValues;
 };
 
@@ -62,10 +87,12 @@ inline bool operator==(const MeasurementBase &lhs, const MeasurementBase &rhs)
 {
     return  lhs.getCharacteristicValues()==rhs.getCharacteristicValues();
 }
+
 inline bool operator!=(const MeasurementBase &lhs, const MeasurementBase &rhs)
 {
     return !(lhs == rhs);
 }
-QDebug operator<<(QDebug dbg, const MeasurementBase &measurement);
+
+QDebug operator<<(QDebug dbg, const MeasurementBase &);
 
 #endif // MEASUREMENTBASE_H

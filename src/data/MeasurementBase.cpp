@@ -1,28 +1,18 @@
 #include "MeasurementBase.h"
 
 #include <QDebug>
-
-MeasurementBase::MeasurementBase(const MeasurementBase &other)
-{
-    m_characteristicValues = other.m_characteristicValues;
-}
-
-MeasurementBase& MeasurementBase::operator=(const MeasurementBase &other)
-{
-    m_characteristicValues = other.m_characteristicValues;
-    return *this;
-}
+#include <QJsonObject>
 
 bool MeasurementBase::isValid() const
 {
     bool ok = true;
-    for( auto it = m_characteristicValues.constBegin(),
-         end = m_characteristicValues.constEnd(); it != end; ++it)
+    for(auto&& x : m_characteristicValues)
     {
-        if(it.value().toString().isEmpty())
-        {
-            ok = false;
-        }
+      if(x.isNull())
+      {
+        ok = false;
+        break;
+      }
     }
     return ok;
 }
@@ -34,22 +24,30 @@ void MeasurementBase::reset()
 
 QString MeasurementBase::toString() const
 {
-    QStringList list;
-    for( auto it = m_characteristicValues.constBegin(),
-         end = m_characteristicValues.constEnd(); it != end; ++it)
+    QStringList l;
+    for(auto&& x :  m_characteristicValues)
     {
-        list << it.value().toString();
+      l << x.toString();
     }
-    return list.join(" ");
+    return l.join(" ");
 }
 
-QDebug operator<<(QDebug dbg, const MeasurementBase &measurement)
+QJsonObject MeasurementBase::toJsonObject() const
 {
-    const QString output = measurement.toString();
-    if (output.isEmpty())
-        dbg.nospace() << "Measurement()";
+    QJsonObject json;
+    for(auto&& x : m_characteristicValues.toStdMap())
+    {
+        json.insert(QString(x.first).toLower().replace(QRegExp("[\\s]+"),"_"), QJsonValue::fromVariant(x.second));
+    }
+    return json;
+}
+
+QDebug operator<<(QDebug dbg, const MeasurementBase &item)
+{
+    const QString s = item.toString();
+    if (s.isEmpty())
+      dbg.nospace() << "Measurement()";
     else
-        dbg.nospace() << "Measurement(" << output << " ...)";
+      dbg.nospace() << "Measurement(" << s << " ...)";
     return dbg.maybeSpace();
 }
-

@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../data/WeighScaleTest.cpp \
     ../../data/WeightMeasurement.cpp \
     ../../data/MeasurementBase.cpp \
     WeighScaleManager.cpp \
@@ -18,7 +19,9 @@ SOURCES += \
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../data/WeighScaleTest.h \
     ../../data/WeightMeasurement.h \
+    ../../data/TestBase.h \
     MainWindow.h \
     ../../data/MeasurementBase.h \
     WeighScaleManager.h

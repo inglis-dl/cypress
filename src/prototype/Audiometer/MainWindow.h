@@ -2,9 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QStandardItemModel>
 
-#include "BluetoothLEManager.h"
+QT_FORWARD_DECLARE_CLASS(QCloseEvent)
+
+#include "AudiometerManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -40,7 +41,7 @@ public:
     bool isVerbose(){ return m_verbose; }
 
 public slots:
-    void updateDeviceList(const QString &label);
+    void updateDeviceList(const QString &);
     void writeOutput();
 
 protected:
@@ -58,8 +59,9 @@ private:
     QMap<QString,QVariant> m_inputData;
     QMap<QString,QVariant> m_outputData;
 
-    BluetoothLEManager m_manager;
+    AudiometerManager m_manager;
 
     QStandardItemModel m_model;
 };
+
 #endif // MAINWINDOW_H

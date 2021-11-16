@@ -1,6 +1,6 @@
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets bluetooth
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport
 
 CONFIG += c++11
 
@@ -10,26 +10,30 @@ CONFIG += c++11
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-    ../../auxiliary/BluetoothUtil.cpp \
+    ../../data/AudiometerTest.cpp \
+    ../../data/HearingMeasurement.cpp \
     ../../data/MeasurementBase.cpp \
-    ../../data/TemperatureMeasurement.cpp \
-    ../../data/TemperatureTest.cpp \
-    BluetoothLEManager.cpp \
-    MainWindow.cpp \
-    main.cpp
+    AudiometerManager.cpp \
+    main.cpp \
+    MainWindow.cpp
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
-    ../../auxiliary/BluetoothUtil.h \
-    ../../data/MeasurementBase.h \
-    ../../data/TemperatureMeasurement.h \
-    ../../data/TemperatureTest.h \
+    ../../data/AudiometerTest.h \
+    ../../data/HearingMeasurement.h \
     ../../data/TestBase.h \
-    BluetoothLEManager.h \
-    MainWindow.h
+    MainWindow.h \
+    ../../data/MeasurementBase.h \
+    AudiometerManager.h
 
 FORMS += \
     MainWindow.ui
+
+TRANSLATIONS += \
+    Audiometer_ec_CA.ts
+
+CONFIG += lrelease
+CONFIG += embed_translations
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

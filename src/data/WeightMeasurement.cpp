@@ -1,6 +1,7 @@
 #include "WeightMeasurement.h"
 
 #include <QDateTime>
+#include <QDebug>
 
 void WeightMeasurement::fromArray(const QByteArray &arr)
 {
@@ -10,40 +11,59 @@ void WeightMeasurement::fromArray(const QByteArray &arr)
       QList<QByteArray> parts = bytes.split(' ');
       if(3 <= parts.size())
       {
-        m_characteristicValues["weight"] = QString::number(parts[0].toFloat(),'f',1);
-        m_characteristicValues["units"] = QString(parts[1]);
-        m_characteristicValues["mode"] = QString(parts[2]);
-        m_characteristicValues["timestamp"] = QDateTime::currentDateTime();
+        setCharacteristic("weight", QString::number(parts[0].toFloat(),'f',1));
+        setCharacteristic("units", QString(parts[1]));
+        setCharacteristic("mode", QString(parts[2]));
+        setCharacteristic("timestamp", QDateTime::currentDateTime());
       }
     }
 }
 
 bool WeightMeasurement::isValid() const
 {
-    bool ok;
-    float fval = m_characteristicValues["weight"].toFloat(&ok);
-    return ok
-      && !m_characteristicValues["units"].toString().isEmpty()
-      && !m_characteristicValues["mode"].toString().isEmpty()
-      && m_characteristicValues["timestamp"].toDateTime().isValid()
-      && 0.0f <= fval;
+    bool ok = false;
+    if(hasCharacteristic("weight"))
+    {
+      float fval = getCharacteristic("weight").toFloat(&ok);
+      ok = ok
+        && hasCharacteristic("units")
+        && hasCharacteristic("mode")
+        && hasCharacteristic("timestamp")
+        && 0.0f <= fval;
+    }
+    return ok;
 }
 
 bool WeightMeasurement::isZero() const
 {
-    return isValid() && 0.0f == m_characteristicValues["weight"].toFloat();
+    return isValid() && 0.0f == getCharacteristic("weight").toFloat();
 }
 
 QString WeightMeasurement::toString() const
 {
-    QString w = m_characteristicValues["weight"].toString();
-    QString u = m_characteristicValues["units"].toString();
-    QString m = m_characteristicValues["mode"].toString();
-    QDateTime dt = m_characteristicValues["timestamp"].toDateTime();
+  QString s;
+  if(isValid())
+  {
+    QString w = getCharacteristic("weight").toString();
+    QString u = getCharacteristic("units").toString();
+    QString m = getCharacteristic("mode").toString();
+    QDateTime dt = getCharacteristic("timestamp").toDateTime();
     QString d = dt.date().toString("yyyy-MM-dd");
     QString t = dt.time().toString("hh:mm:ss");
 
-    QStringList list;
-    list << w << u << m << d << t;
-    return list.join(" ");
+    QStringList l;
+    l << w << u << m << d << t;
+    s = l.join(" ");
+  }
+  return s;
+}
+
+QDebug operator<<(QDebug dbg, const WeightMeasurement &item)
+{
+    const QString s = item.toString();
+    if (s.isEmpty())
+        dbg.nospace() << "Weight Measurement()";
+    else
+        dbg.nospace() << "Weight Measurement(" << s << " ...)";
+    return dbg.maybeSpace();
 }
