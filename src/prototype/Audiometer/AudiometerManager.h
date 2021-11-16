@@ -1,18 +1,8 @@
 #ifndef AUDIOMETERMANAGER_H
 #define AUDIOMETERMANAGER_H
 
-//#include <QObject>
-#include <QMap>
-#include <QSerialPort>
-#include <QSerialPortInfo>
-//#include <QStandardItemModel>
-#include <QVariant>
-
-
 #include "../../managers/SerialPortManager.h"
 #include "../../data/AudiometerTest.h"
-
-QT_FORWARD_DECLARE_CLASS(QSettings)
 
 class AudiometerManager : public SerialPortManager
 {
@@ -21,7 +11,9 @@ class AudiometerManager : public SerialPortManager
 public:
     explicit AudiometerManager(QObject *parent = nullptr);
 
-    void buildModel(QStandardItemModel *) override;
+    QJsonObject toJsonObject() const override;
+
+    void buildModel(QStandardItemModel *) const override;
 
 public slots:
 

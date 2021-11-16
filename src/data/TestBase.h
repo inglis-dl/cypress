@@ -76,7 +76,7 @@ public:
 
     void addMeasurement(const T &);
 
-    T getMeasurement(const quint32 &);
+    T getMeasurement(const quint32 &) const;
 
     T* find_first(const QString& key, const QVariant& value);
 
@@ -120,7 +120,7 @@ void TestBase<T>::addMeasurement(const T &item)
 }
 
 template <class T>
-T TestBase<T>::getMeasurement(const quint32 &i)
+T TestBase<T>::getMeasurement(const quint32 &i) const
 {
     T m;
     if((int)i < m_measurementList.size())

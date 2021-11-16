@@ -1,8 +1,8 @@
 #include "TemperatureTest.h"
 
 #include <QDebug>
-#include <QJsonObject>
 #include <QJsonArray>
+#include <QJsonObject>
 
 bool TemperatureTest::isValid() const
 {

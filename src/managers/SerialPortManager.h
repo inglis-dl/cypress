@@ -44,7 +44,7 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel *) override {};
+    void buildModel(QStandardItemModel *) const override {};
 
 public slots:
 

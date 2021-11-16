@@ -148,7 +148,7 @@ QList<HearingMeasurement> AudiometerTest::readHearingThresholdLevels(const QStri
   return htl;
 }
 
-HearingMeasurement AudiometerTest::getMeasurement(const QString& side, const int& index)
+HearingMeasurement AudiometerTest::getMeasurement(const QString& side, const int& index) const
 {
     HearingMeasurement m;
     for(auto&& x : m_measurementList)

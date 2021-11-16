@@ -38,7 +38,7 @@ public:
 
     bool isPartial() const;
 
-    HearingMeasurement getMeasurement(const QString&, const int&);
+    HearingMeasurement getMeasurement(const QString &, const int &) const;
 
     // String keys are converted to snake_case
     //

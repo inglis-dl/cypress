@@ -24,14 +24,13 @@ public:
 
     virtual QJsonObject toJsonObject() const = 0;
 
-    virtual void buildModel(QStandardItemModel *) = 0;
+    virtual void buildModel(QStandardItemModel *) const = 0;
 
 signals:
 
     // the underlying test data has changed
     //
     void dataChanged();
-
 
 protected:
     bool m_verbose;
@@ -44,8 +43,7 @@ protected:
     //
     QString m_mode;
 
-
-    virtual void clearData() {emit dataChanged();};
+    virtual void clearData() = 0;
 
 };
 

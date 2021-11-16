@@ -15,14 +15,12 @@
  *
 */
 
-BluetoothLEManager::BluetoothLEManager(QObject *parent) : QObject(parent),
-    m_verbose(false),
-    m_mode("default")
+BluetoothLEManager::BluetoothLEManager(QObject *parent) : ManagerBase(parent)
 {
       m_test.setMaximumNumberOfMeasurements(2);
 }
 
-void BluetoothLEManager::buildModel(QStandardItemModel *model)
+void BluetoothLEManager::buildModel(QStandardItemModel *model) const
 {
     for(int row = 0; row < m_test.getMaximumNumberOfMeasurements(); row++)
     {
@@ -102,7 +100,7 @@ void BluetoothLEManager::loadSettings(const QSettings &settings)
     }
 }
 
-void BluetoothLEManager::saveSettings(QSettings *settings)
+void BluetoothLEManager::saveSettings(QSettings *settings) const
 {
     if(!m_localDevice.isNull() && m_localDevice->isValid())
     {
