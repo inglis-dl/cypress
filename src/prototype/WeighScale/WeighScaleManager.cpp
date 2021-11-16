@@ -15,7 +15,7 @@ WeighScaleManager::WeighScaleManager(QObject *parent) : SerialPortManager(parent
   m_test.setMaximumNumberOfMeasurements(2);
 }
 
-void WeighScaleManager::buildModel(QStandardItemModel* model)
+void WeighScaleManager::buildModel(QStandardItemModel* model) const
 {
     for(int row = 0; row < m_test.getMaximumNumberOfMeasurements(); row++)
     {
@@ -145,4 +145,11 @@ void WeighScaleManager::readDevice()
 
       emit dataChanged();
     }
+}
+
+QJsonObject WeighScaleManager::toJsonObject() const
+{
+    QJsonObject json = m_test.toJsonObject();
+    json.insert("device",m_deviceData.toJsonObject());
+    return json;
 }

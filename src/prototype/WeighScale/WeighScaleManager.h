@@ -1,27 +1,19 @@
 #ifndef WEIGHSCALEMANAGER_H
 #define WEIGHSCALEMANAGER_H
 
-#include <QObject>
-#include <QMap>
-#include <QSerialPort>
-#include <QSerialPortInfo>
-#include <QStandardItemModel>
-#include <QVariant>
-
 #include "../../data/WeighScaleTest.h"
 #include "../../managers/SerialPortManager.h"
-
-QT_FORWARD_DECLARE_CLASS(QSettings)
 
 class WeighScaleManager : public SerialPortManager
 {
     Q_OBJECT
 
-
 public:
     explicit WeighScaleManager(QObject *parent = nullptr);
 
-    void buildModel(QStandardItemModel *) override;
+    QJsonObject toJsonObject() const override;
+
+    void buildModel(QStandardItemModel *) const override;
 
 public slots:
 

@@ -1,28 +1,21 @@
 #ifndef BLUETOOTHLEMANAGER_H
 #define BLUETOOTHLEMANAGER_H
 
-#include <QObject>
-#include <QStandardItemModel>
 #include <QtBluetooth/QBluetoothDeviceDiscoveryAgent>
 #include <QtBluetooth/QLowEnergyController>
 #include <QtBluetooth/QBluetoothLocalDevice>
 
+#include "../../managers/ManagerBase.h"
 #include "../../data/TemperatureTest.h"
 
 QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceInfo)
-QT_FORWARD_DECLARE_CLASS(QSettings)
 QT_FORWARD_DECLARE_CLASS(QBluetoothUuid)
 QT_FORWARD_DECLARE_CLASS(QLowEnergyService)
 
-class BluetoothLEManager : public QObject
+class BluetoothLEManager : public ManagerBase
 {
     Q_OBJECT
-
-    // deviceName is the name of the peripheral Bluetooth LE device, not the internal
-    // BTLE adapter
     Q_PROPERTY(QString deviceName MEMBER m_deviceName NOTIFY deviceNameChanged)
-    Q_PROPERTY(bool verbose READ isVerbose WRITE setVerbose)
-    Q_PROPERTY(QString mode READ mode WRITE setMode)
 
 public:
     explicit BluetoothLEManager(QObject *parent = nullptr);
@@ -45,24 +38,14 @@ public:
     //
     bool isPairedTo(const QString &) const;
 
-    void loadSettings(const QSettings &);
-    void saveSettings(QSettings*);
+    void loadSettings(const QSettings &) override;
+    void saveSettings(QSettings*) const override;
 
-    void setVerbose(const bool& verbose) { m_verbose = verbose; }
-    bool isVerbose(){ return m_verbose; }
+    void buildModel(QStandardItemModel *) const override;
 
-    void setMode(const QString& mode) { m_mode = mode; }
-    QString mode() { return m_mode; }
-
-    QJsonObject toJsonObject() const;
-
-    void buildModel(QStandardItemModel *);
+    QJsonObject toJsonObject() const override;
 
 signals:
-
-    // The underlying test data has changed
-    //
-    void dataChanged();
 
     // Scanning started
     // (update GUI status)
@@ -178,26 +161,16 @@ private slots:
     void connectToController(const QBluetoothDeviceInfo &info);
 
     void setLocalDevice(const QString &);
-    bool m_verbose;
 
-    // mode of operation
-    // - "simulate" - no devices are connected and the manager
-    // responds to the UI signals and slots as though in live mode with valid
-    // device and test data
-    // - "live" - production mode
-    //
-    QString m_mode;
-
-    // keep device data separate from test data
-    //
     MeasurementBase m_deviceData;
 
     TemperatureTest m_test;
 
     QMap<QString,QBluetoothDeviceInfo> m_deviceList;
+
     QString m_deviceName;
 
-    void clearData();
+    void clearData() override;
 };
 
 #endif // BLUETOOTHLEMANAGER_H

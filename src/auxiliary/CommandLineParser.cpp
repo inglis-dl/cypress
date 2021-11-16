@@ -2,8 +2,8 @@
 
 #include <QCommandLineOption>
 #include <QDebug>
-#include <QFileInfo>
 #include <QDir>
+#include <QFileInfo>
 
 CommandLineParser::CommandLineParser(QObject* parent) : QObject(parent),
     m_mode("default"),

@@ -1,7 +1,7 @@
 #include "TemperatureMeasurement.h"
 
-#include <QDateTime>
 #include <QBitArray>
+#include <QDateTime>
 #include <QDebug>
 
 void TemperatureMeasurement::fromArray(const QByteArray &arr)

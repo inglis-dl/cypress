@@ -37,6 +37,8 @@ QJsonObject MeasurementBase::toJsonObject() const
     QJsonObject json;
     for(auto&& x : m_characteristicValues.toStdMap())
     {
+        // convert to space delimited phrases to snake_case
+        //
         json.insert(QString(x.first).toLower().replace(QRegExp("[\\s]+"),"_"), QJsonValue::fromVariant(x.second));
     }
     return json;

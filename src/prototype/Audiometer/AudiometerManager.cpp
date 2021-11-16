@@ -14,7 +14,7 @@ AudiometerManager::AudiometerManager(QObject *parent) : SerialPortManager(parent
 {
 }
 
-void AudiometerManager::buildModel(QStandardItemModel* model)
+void AudiometerManager::buildModel(QStandardItemModel* model) const
 {
     QVector<QString> v_side({"left","right"});
     for(auto&& side : v_side)
@@ -102,3 +102,9 @@ void AudiometerManager::measure()
     writeDevice();
 }
 
+QJsonObject AudiometerManager::toJsonObject() const
+{
+    QJsonObject json = m_test.toJsonObject();
+    json.insert("device",m_deviceData.toJsonObject());
+    return json;
+}
