@@ -47,7 +47,7 @@ public:
     //
     virtual QJsonObject toJsonObject() const = 0;
 
-    void reset();
+    virtual void reset();
 
     void setMetataData(const MeasurementBase &other)
     {
