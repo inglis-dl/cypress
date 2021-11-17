@@ -51,8 +51,8 @@ void MainWindow::initialize()
 
   // Populate barcode display
   //
-  if(m_inputData.contains("Barcode") && m_inputData["Barcode"].isValid())
-     ui->barcodeLineEdit->setText(m_inputData["Barcode"].toString());
+  if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
+     ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
   else
      ui->barcodeLineEdit->setText("00000000"); // dummy
 
