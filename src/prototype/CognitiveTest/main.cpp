@@ -41,15 +41,15 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // Start App
-    CognitiveTest w;
-    w.setInputFileName(parser.getInputFilename());
-    w.setOutputFileName(parser.getOutputFilename());
-    w.setMode(parser.getMode());
-    w.setVerbose(parser.getVerbose());
+    MainWindow window;
+    window.setInputFileName(parser.getInputFilename());
+    window.setOutputFileName(parser.getOutputFilename());
+    window.setMode(parser.getMode());
+    window.setVerbose(parser.getVerbose());
 
-    w.initialize();
-    w.show();
-    w.run();
+    window.initialize();
+    window.show();
+    window.run();
+
     return app.exec();
 }

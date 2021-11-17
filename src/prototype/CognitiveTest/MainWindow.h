@@ -1,30 +1,23 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtWidgets/QMainWindow>
-#include "ui_MainWindow.h"
+#include <QMainWindow>
+
+QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
 #include "CognitiveTestManager.h"
 
-#include <QString>
-#include <QStandardPaths>
-#include <QDebug>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QDir>
-#include <QCoreApplication>
-
 QT_BEGIN_NAMESPACE
-namespace Ui { class CognitiveTest; }
+namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class CognitiveTest : public QMainWindow
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    CognitiveTest(QWidget* parent = nullptr);
-    ~CognitiveTest();
+    MainWindow(QWidget* parent = nullptr);
+    ~MainWindow();
 
     // This method internally calls readInput
     //
@@ -47,16 +40,23 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() { return m_verbose; }
 
+public slots:
+    void writeOutput();
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 private:
     void readInput();
 
-    Ui::CognitiveTestClass *ui;
+    Ui::MainWindow *ui;
     QString m_inputFileName;
     QString m_outputFileName;
     QString m_mode;
     bool m_verbose;
 
-    QMap<QString, QVariant> m_inputData;
+    QMap<QString,QVariant> m_inputData;
+    QMap<QString,QVariant> m_outputData;
 
     CognitiveTestManager m_manager;
 };

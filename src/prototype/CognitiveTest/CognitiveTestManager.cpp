@@ -1,18 +1,29 @@
 #include "CognitiveTestManager.h"
 
-bool CognitiveTestManager::LaunchTest(QString userId, QString language)
+#include <QDebug>
+#include <QDir>
+#include <QJsonObject>
+#include <QProcess>
+#include <QSettings>
+
+CognitiveTestManager::CognitiveTestManager(QObject *parent) :
+    ManagerBase(parent)
+{
+}
+
+bool CognitiveTestManager::launch(const QString &userId, const QString &language)
 {
 	if (m_mode != "live") return true;
 
 	try {
-		QString command = QString("%1/%2").arg(ccbFolderPath, executable);
+        QString command = QString("%1/%2").arg(m_ccbFolderPath, m_executable);
 		QProcess process;
 		QStringList arguments;
 		arguments << "/u" + userId
 			/*<< "/c" + dcsSiteName
 			<< "/i" + interviewerId*/
 			<< "/l" + language;
-		process.setWorkingDirectory(ccbFolderPath);
+        process.setWorkingDirectory(m_ccbFolderPath);
 		process.start(command, arguments);
 		process.waitForFinished(100000000);
 		process.close();
@@ -25,17 +36,19 @@ bool CognitiveTestManager::LaunchTest(QString userId, QString language)
 	return true;
 }
 
-bool CognitiveTestManager::MoveResultsFile(QString outputFolderPath)
+bool CognitiveTestManager::moveResultsFile(const QString &outputFolderPath)
 {
 	if (m_mode != "live") return true;
 
-	QString resultsDirPath = QString("%1/%2").arg(ccbFolderPath, resultsFolderName);
+    QString resultsDirPath = QString("%1/%2").arg(m_ccbFolderPath, m_resultsFolderName);
 	QDir myDir(resultsDirPath);
 	QStringList fileNames = myDir.entryList();
 	bool fileFound = false;
-	for (int i = 0; i < fileNames.count(); i++) {
+    for (int i = 0; i < fileNames.count(); i++)
+    {
 		QString fileName = fileNames[i];
-		if (fileName.endsWith(".csv")) {
+        if (fileName.endsWith(".csv"))
+        {
 			QString fullResultsFilePath = QString("%1/%2").arg(resultsDirPath, fileName);
 			QFile file(fullResultsFilePath);
 
@@ -50,20 +63,43 @@ bool CognitiveTestManager::MoveResultsFile(QString outputFolderPath)
 	return fileFound;
 }
 
+void CognitiveTestManager::clearData()
+{
+    // TODO: use if this has context in a manager that launches and exe
+    // consider implementing a different manager parent class
+    //
+}
+
 void CognitiveTestManager::loadSettings(const QSettings &settings)
 {
-	ccbFolderPath = settings.value("client/ccbFolderPath").toString();
-	executable = settings.value("client/executable").toString();
-	resultsFolderName = settings.value("client/resultsFolderName").toString();
+    m_ccbFolderPath = settings.value("client/ccbFolderPath").toString();
+    m_executable = settings.value("client/executable").toString();
+    m_resultsFolderName = settings.value("client/resultsFolderName").toString();
 	
 	// TODO: Should probably do something more regardles of verbose or not
 	if (isVerbose()) {
-		if (ccbFolderPath.isEmpty()) qDebug() << "No ccb folder path found in settings";
-		if (executable.isEmpty()) qDebug() << "No executable name found in settings";
-		if (resultsFolderName.isEmpty()) qDebug() << "No results folder name found in settings";
+        if (m_ccbFolderPath.isEmpty())
+            qDebug() << "ERROR: No ccb folder path found in settings";
+        if (m_executable.isEmpty())
+            qDebug() << "ERROR: No executable name found in settings";
+        if (m_resultsFolderName.isEmpty())
+            qDebug() << "ERROR: No results folder name found in settings";
 	}
 }
 
-void CognitiveTestManager::saveSettings(QSettings*) const
+void CognitiveTestManager::saveSettings(QSettings *settings) const
 {
+    if (!m_ccbFolderPath.isEmpty())
+        settings->setValue("client/ccbFolderPath",m_ccbFolderPath);
+    if (!m_executable.isEmpty())
+        settings->setValue("client/executable",m_executable);
+    if (!m_resultsFolderName.isEmpty())
+        settings->setValue("client/resultsFolderName",m_resultsFolderName);
+}
+
+QJsonObject CognitiveTestManager::toJsonObject() const
+{
+    QJsonObject json;
+//    json.insert("device",m_deviceData.toJsonObject());
+    return json;
 }

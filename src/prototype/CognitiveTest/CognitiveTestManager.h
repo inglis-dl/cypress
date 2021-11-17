@@ -1,52 +1,40 @@
-#pragma once
+#ifndef COGNITIVETESTMANAGER_H
+#define COGNITIVETESTMANAGER_H
 
-#include <QObject>
-#include <QProcess>
-#include <QString>
-#include <QDebug>
-#include <QDir>
-#include <QFile>
-#include <QSettings>
+#include "../../managers/ManagerBase.h"
 
-class CognitiveTestManager: public QObject
+class CognitiveTestManager: public ManagerBase
 {
-public:
-	
-	//void Run(InputsModel* inputs);
+    Q_OBJECT
 
-	/// <summary>
+public:
+    explicit CognitiveTestManager(QObject *parent = nullptr);
+
+    /// <summary>
 	/// Launch the cognitive test
 	/// </summary>
-	bool LaunchTest(QString userId, QString language);
+    bool launch(const QString &, const QString &);
 	
 	/// <summary>
 	/// Move the results file to the proper output path
 	/// </summary>
 	/// <param name="path"></param>
-	bool MoveResultsFile(QString outputPath);
+    bool moveResultsFile(const QString &);
 
+    void loadSettings(const QSettings&) override;
+    void saveSettings(QSettings*) const override;
 
-	void setVerbose(const bool& verbose) { m_verbose = verbose; }
-	bool isVerbose() const { return m_verbose; }
+    QJsonObject toJsonObject() const override;
 
-	void setMode(const QString& mode) { m_mode = mode; }
-
-	void loadSettings(const QSettings&);
-	void saveSettings(QSettings*) const;
+    void buildModel(QStandardItemModel *) const override {};
 
 private:
-	bool m_verbose;
+    QString m_executable;
+    QString m_ccbFolderPath;
+    QString m_resultsFolderName;
 
-	// mode of operation
-	// - "simulate" - no devices are connected and the manager
-	// responds to the UI signals and slots as though in live mode with valid
-	// device and test data
-	// - "live" - production mode
-	//
-	QString m_mode;
+    void clearData() override;
 
-	QString executable;
-	QString ccbFolderPath;
-	QString resultsFolderName;
 };
 
+#endif // COGNITIVETESTMANAGER_H
