@@ -44,32 +44,53 @@ void MainWindow::initialize()
     qDebug() << "Dir: " << dir;
     QSettings settings(dir.filePath("cognitive.ini"), QSettings::IniFormat);
 
-    // TODO: Add necessary UI elements
+    // read the path to C:\Program Files (x86)\Cardiff_University\CCB\CCB.exe
+    //
+    m_manager.loadSettings(settings);
+
+    //TODO: check if the exe is available and popup a filedialog to locate
+    // it if not found
+    ui->openButton->setEnabled(false);
+
+    ui->measureButton->setEnabled(false);
+    ui->saveButton->setEnabled(false);
+    ui->closeButton->setEnabled(false);
+
+    connect(&m_manager, &CognitiveTestManager::canMeasure,
+            this,[this](){
+        ui->statusBar->showMessage("Ready to measure...");
+        ui->measureButton->setEnabled(true);
+        ui->saveButton->setEnabled(false);
+    });
+
+    // Request a measurement from the device
+    //
+    connect(ui->measureButton, &QPushButton::clicked,
+          &m_manager, &CognitiveTestManager::measure);
+
+
+    // All measurements received: enable write test results
+    //
+    connect(&m_manager, &CognitiveTestManager::canWrite,
+            this,[this](){
+        ui->statusBar->showMessage("Ready to save results...");
+        ui->saveButton->setEnabled(true);
+    });
+
+    // Write test data to output
+    //
+    connect(ui->saveButton, &QPushButton::clicked,
+      this, &MainWindow::writeOutput);
+
+    // Close the application
+    //
+    connect(ui->closeButton, &QPushButton::clicked,
+            this, &MainWindow::close);
 }
 
 void MainWindow::run()
 {
-    QString userId;
-    QString language;
-
-    if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
-      userId = m_inputData["barcode"].toString();
-    if(m_inputData.contains("language") && m_inputData["language"].isValid())
-      language = m_inputData["language"].toString();
-
-    // TODO: Should probably do something more regardles of verbose or not
-    if (isVerbose())
-    {
-        if (userId.isEmpty())
-            qDebug() << "ERROR: No barcode found in json input file";
-        if (language.isEmpty())
-            qDebug() << "ERROR: No language found in json input file";
-
-        close();
-    }
-
-    m_manager.launch(userId, language);
-    m_manager.moveResultsFile(m_outputFileName);
+    // TODO: create the logic and code for bypassing the UI here
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -77,7 +98,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if(m_verbose)
         qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath("cognitivetest.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
     event->accept();
 }

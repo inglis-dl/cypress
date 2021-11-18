@@ -2,6 +2,8 @@
 #define COGNITIVETESTMANAGER_H
 
 #include "../../managers/ManagerBase.h"
+#include "../../data/ChoiceReactionTest.h"
+#include <QProcess>
 
 class CognitiveTestManager: public ManagerBase
 {
@@ -10,17 +12,6 @@ class CognitiveTestManager: public ManagerBase
 public:
     explicit CognitiveTestManager(QObject *parent = nullptr);
 
-    /// <summary>
-	/// Launch the cognitive test
-	/// </summary>
-    bool launch(const QString &, const QString &);
-	
-	/// <summary>
-	/// Move the results file to the proper output path
-	/// </summary>
-	/// <param name="path"></param>
-    bool moveResultsFile(const QString &);
-
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
 
@@ -28,13 +19,31 @@ public:
 
     void buildModel(QStandardItemModel *) const override {};
 
+public slots:
+    void measure();
+
+    void setInputs(const QMap<QString,QVariant> &);
+
+    void readOutput();
+
+signals:
+    void canMeasure();
+
+    void canWrite();
+
 private:
-    QString m_executable;
-    QString m_ccbFolderPath;
-    QString m_resultsFolderName;
+    QString m_executableName;
+    QString m_executablePath;
+    QString m_outputPath;
+    QProcess m_process;
+
+    ChoiceReactionTest m_test;
 
     void clearData() override;
 
+    QMap<QString,QVariant> m_inputData;
+
+    void configureProcess();
 };
 
 #endif // COGNITIVETESTMANAGER_H

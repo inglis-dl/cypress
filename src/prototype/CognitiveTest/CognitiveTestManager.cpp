@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QFileInfo>
 #include <QJsonObject>
 #include <QProcess>
 #include <QSettings>
@@ -11,95 +12,141 @@ CognitiveTestManager::CognitiveTestManager(QObject *parent) :
 {
 }
 
-bool CognitiveTestManager::launch(const QString &userId, const QString &language)
-{
-	if (m_mode != "live") return true;
-
-	try {
-        QString command = QString("%1/%2").arg(m_ccbFolderPath, m_executable);
-		QProcess process;
-		QStringList arguments;
-		arguments << "/u" + userId
-			/*<< "/c" + dcsSiteName
-			<< "/i" + interviewerId*/
-			<< "/l" + language;
-        process.setWorkingDirectory(m_ccbFolderPath);
-		process.start(command, arguments);
-		process.waitForFinished(100000000);
-		process.close();
-	}
-	catch(...){
-		// TODO: Determine better way of figuring out if the process failed or not
-		return false;
-	}
-	
-	return true;
-}
-
-bool CognitiveTestManager::moveResultsFile(const QString &outputFolderPath)
-{
-	if (m_mode != "live") return true;
-
-    QString resultsDirPath = QString("%1/%2").arg(m_ccbFolderPath, m_resultsFolderName);
-	QDir myDir(resultsDirPath);
-	QStringList fileNames = myDir.entryList();
-	bool fileFound = false;
-    for (int i = 0; i < fileNames.count(); i++)
-    {
-		QString fileName = fileNames[i];
-        if (fileName.endsWith(".csv"))
-        {
-			QString fullResultsFilePath = QString("%1/%2").arg(resultsDirPath, fileName);
-			QFile file(fullResultsFilePath);
-
-			// TODO: Determine if this should keep the filename or will a file name be provided from Cypress or above???
-			QString movedResultsPath = QString("%1/%2").arg(outputFolderPath, fileName);
-			file.rename(movedResultsPath);
-			// TODO: Make logic smarter so that true is only set if the correct file is found 
-			fileFound = true;
-			//qDebug() << "Moved from " + fullResultsFilePath + " to " + movedResultsPath << endl;
-		}
-	}
-	return fileFound;
-}
-
-void CognitiveTestManager::clearData()
-{
-    // TODO: use if this has context in a manager that launches and exe
-    // consider implementing a different manager parent class
-    //
-}
-
 void CognitiveTestManager::loadSettings(const QSettings &settings)
 {
-    m_ccbFolderPath = settings.value("client/ccbFolderPath").toString();
-    m_executable = settings.value("client/executable").toString();
-    m_resultsFolderName = settings.value("client/resultsFolderName").toString();
-	
-	// TODO: Should probably do something more regardles of verbose or not
-	if (isVerbose()) {
-        if (m_ccbFolderPath.isEmpty())
-            qDebug() << "ERROR: No ccb folder path found in settings";
-        if (m_executable.isEmpty())
-            qDebug() << "ERROR: No executable name found in settings";
-        if (m_resultsFolderName.isEmpty())
-            qDebug() << "ERROR: No results folder name found in settings";
-	}
+    // the full spec path name including exe name
+    // eg., C:\Program Files (x86)\CCB\CCB.exe
+    //
+    QString s = settings.value("client/exe").toString();
+    if(!s.isEmpty())
+    {
+        QFileInfo info(s);
+        if(info.exists() && info.isExecutable())
+        {
+            m_executableName = info.fileName();
+            m_executablePath = info.filePath();
+            QDir dir = QDir::cleanPath(m_executablePath + QDir::separator() + "results");
+            if(dir.exists())
+            {
+                m_outputPath = dir.path();
+            }
+            else
+            {
+                m_executableName.clear();
+                m_executablePath.clear();
+                m_outputPath.clear();
+            }
+        }
+    }
 }
 
 void CognitiveTestManager::saveSettings(QSettings *settings) const
 {
-    if (!m_ccbFolderPath.isEmpty())
-        settings->setValue("client/ccbFolderPath",m_ccbFolderPath);
-    if (!m_executable.isEmpty())
-        settings->setValue("client/executable",m_executable);
-    if (!m_resultsFolderName.isEmpty())
-        settings->setValue("client/resultsFolderName",m_resultsFolderName);
+    if(!m_executableName.isEmpty())
+    {
+      settings->setValue("client/exe",m_executableName);
+      if(m_verbose)
+          qDebug() << "wrote exe fullspec path to settings file";
+    }
+}
+
+void CognitiveTestManager::clearData()
+{
+    m_test.reset();
+    emit dataChanged();
+}
+
+void CognitiveTestManager::configureProcess()
+{
+    // the exe is present
+    QFileInfo info(m_executableName);
+    QDir working(m_executablePath);
+    QDir out(m_outputPath);
+    if((info.exists() && (info.isExecutable() || info.isFile())) &&
+        working.exists() && out.exists())
+    {
+      // the inputs for command line args are present
+      QStringList command;
+      command << m_executableName;
+
+      if(m_inputData.contains("barcode"))
+         command << "/i" + m_inputData["barcode"].toString();
+
+      if(m_inputData.contains("site"))
+         command << "/c" + m_inputData["site"].toString();
+
+      if(m_inputData.contains("user"))
+         command << "/u" + m_inputData["site"].toString();
+
+      if(m_inputData.contains("language"))
+         command << "/l" + m_inputData["language"].toString();
+
+      m_process.setArguments(command);
+      m_process.setWorkingDirectory(m_executablePath);
+
+      connect(&m_process,&QProcess::started,
+              this,[this](){
+          qDebug() << "process started: " << m_process.arguments().join(" ");
+      });
+
+      connect(&m_process,QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+              this, &CognitiveTestManager::readOutput);
+
+      connect(&m_process,&QProcess::errorOccurred,
+              this, [](QProcess::ProcessError error)
+      {
+          QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"),QString::SkipEmptyParts);
+          qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
+      });
+
+      emit canMeasure();
+    }
+}
+
+void CognitiveTestManager::readOutput()
+{
+    if(QProcess::NormalExit != m_process.exitStatus())
+    {
+        qDebug() << "ERROR: process failed to finish correctly: cannot read output";
+        return;
+    }
+    QDir dir(m_outputPath);
+    bool found = false;
+    QString fileName;
+    for(auto&& x : dir.entryList())
+    {
+        if (x.endsWith(".csv"))
+        {
+            fileName = x;
+            found = true;
+            break;
+        }
+    }
+    if(found)
+    {
+        m_test.fromFile(fileName);
+        if(m_test.isValid())
+        {
+            emit dataChanged();
+            emit canWrite();
+        }
+    }
+}
+
+void CognitiveTestManager::setInputs(const QMap<QString,QVariant> &inputs)
+{
+    m_inputData = inputs;
+    configureProcess();
+}
+
+void  CognitiveTestManager::measure()
+{
+   // launch the process
+    m_process.start();
 }
 
 QJsonObject CognitiveTestManager::toJsonObject() const
 {
-    QJsonObject json;
-//    json.insert("device",m_deviceData.toJsonObject());
+    QJsonObject json = m_test.toJsonObject();
     return json;
 }

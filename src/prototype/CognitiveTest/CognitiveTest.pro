@@ -11,18 +11,22 @@ CONFIG += c++11
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../data/MeasurementBase.cpp \
+    ../../data/ChoiceReactionMeasurement.cpp \
+    ../../data/ChoiceReactionTest.cpp \
     ../../managers/ManagerBase.cpp \
     CognitiveTestManager.cpp \
-    main.cpp \
-    MainWindow.cpp
+    MainWindow.cpp \
+    main.cpp
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
-    ../../data/TestBase.h \
     ../../data/MeasurementBase.h \
+    ../../data/ChoiceReactionMeasurement.h \
+    ../../data/ChoiceReactionTest.h \
+    ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
-    MainWindow.h \
-    CognitiveTestManager.h
+    CognitiveTestManager.h \
+    MainWindow.h
 
 FORMS += \
     MainWindow.ui
