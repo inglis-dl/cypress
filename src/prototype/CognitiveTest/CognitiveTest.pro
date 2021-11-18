@@ -10,8 +10,8 @@ CONFIG += c++11
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-    ../../data/MeasurementBase.cpp \
     ../../data/ChoiceReactionMeasurement.cpp \
+    ../../data/MeasurementBase.cpp \
     ../../data/ChoiceReactionTest.cpp \
     ../../managers/ManagerBase.cpp \
     CognitiveTestManager.cpp \
@@ -20,8 +20,8 @@ SOURCES += \
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
-    ../../data/MeasurementBase.h \
     ../../data/ChoiceReactionMeasurement.h \
+    ../../data/MeasurementBase.h \
     ../../data/ChoiceReactionTest.h \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \

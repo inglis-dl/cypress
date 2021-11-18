@@ -47,6 +47,16 @@ bool ChoiceReactionMeasurement::isValid() const
     return ok;
 }
 
+QString ChoiceReactionMeasurement::toString() const
+{
+  QString s;
+  if(isValid())
+  {
+    s = MeasurementBase::toString();
+  }
+  return s;
+}
+
 QDebug operator<<(QDebug dbg, const ChoiceReactionMeasurement &item)
 {
     const QString s = item.toString();
@@ -56,3 +66,7 @@ QDebug operator<<(QDebug dbg, const ChoiceReactionMeasurement &item)
         dbg.nospace() << "Choice Reaction Measurement(" << s << " ...)";
     return dbg.maybeSpace();
 }
+
+
+
+

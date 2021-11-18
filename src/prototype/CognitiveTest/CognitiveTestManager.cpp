@@ -76,10 +76,14 @@ void CognitiveTestManager::configureProcess()
          command << "/c" + m_inputData["site"].toString();
 
       if(m_inputData.contains("user"))
-         command << "/u" + m_inputData["site"].toString();
+         command << "/u" + m_inputData["user"].toString();
 
       if(m_inputData.contains("language"))
-         command << "/l" + m_inputData["language"].toString();
+      {
+         QString s = m_inputData["language"].toString().toLower();
+         s = s.at(0).toUpper() + s.mid(1);
+         command << "/l" + s;
+      }
 
       m_process.setArguments(command);
       m_process.setWorkingDirectory(m_executablePath);

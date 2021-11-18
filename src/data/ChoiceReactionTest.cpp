@@ -91,6 +91,15 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
 QString ChoiceReactionTest::toString() const
 {
     QString s;
+    if(isValid())
+    {
+        QStringList l;
+        for(auto&& x : m_measurementList)
+        {
+            l << x.toString();
+        }
+        s = l.join("\n");
+    }
     return s;
 }
 
@@ -100,7 +109,7 @@ bool ChoiceReactionTest::isValid() const
       hasMetaDataCharacteristic("user id") &&
       hasMetaDataCharacteristic("start datetime") &&
       hasMetaDataCharacteristic("end datetime") &&
-      hasMetaDataCharacteristic("interviewer id") &&
+      hasMetaDataCharacteristic("interview id") &&
       hasMetaDataCharacteristic("number of measurements") &&
       hasMetaDataCharacteristic("version");
 

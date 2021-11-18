@@ -18,21 +18,17 @@
 class ChoiceReactionMeasurement : public MeasurementBase
 {
 public:
-    //ChoiceReactionMeasurement() = default;
-    //~ChoiceReactionMeasurement() = default;
+    ChoiceReactionMeasurement() = default;
+    ~ChoiceReactionMeasurement() = default;
 
     void fromString(const QString &);
 
-    // String representation for debug and GUI display purposes
-    //
-    QString toString() const override;
-
     bool isValid() const override;
 
-    // the test code for the choice reaction test within
-    // the cardiff cognitive battery executable is 11
-    //
+    QString toString() const override;
+
     static const int TEST_CODE;
+
 };
 
 Q_DECLARE_METATYPE(ChoiceReactionMeasurement);
