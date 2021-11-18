@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>561</width>
-    <height>541</height>
+    <height>553</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -116,6 +116,131 @@
      </widget>
     </item>
     <item>
+     <widget class="QGroupBox" name="inputsGroupBox">
+      <property name="title">
+       <string>inputs</string>
+      </property>
+      <widget class="QWidget" name="">
+       <property name="geometry">
+        <rect>
+         <x>12</x>
+         <y>32</y>
+         <width>142</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QRadioButton" name="maleRadioButton">
+          <property name="text">
+           <string>Male</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="femaleRadioButton">
+          <property name="text">
+           <string>Female</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="">
+       <property name="geometry">
+        <rect>
+         <x>12</x>
+         <y>63</y>
+         <width>181</width>
+         <height>27</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Age:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="ageLineEdit"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="">
+       <property name="geometry">
+        <rect>
+         <x>12</x>
+         <y>96</y>
+         <width>174</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <widget class="QRadioButton" name="standardBodyTypeRadioButton">
+          <property name="text">
+           <string>Standard</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="athleticBodyTypeRadioButton">
+          <property name="text">
+           <string>Athletic</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="">
+       <property name="geometry">
+        <rect>
+         <x>240</x>
+         <y>90</y>
+         <width>264</width>
+         <height>27</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Clothing Weight:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="clothingWeightLineEdit"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="">
+       <property name="geometry">
+        <rect>
+         <x>240</x>
+         <y>60</y>
+         <width>200</width>
+         <height>27</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Height:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="heightLineEdit"/>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
      <widget class="QGroupBox" name="measureGroupBox">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -130,9 +255,16 @@
        <item>
         <layout class="QHBoxLayout" name="measurmentControlHhorizontalLayout">
          <item>
-          <widget class="QPushButton" name="zeroButton">
+          <widget class="QPushButton" name="resetButton">
            <property name="text">
-            <string>Zero</string>
+            <string>Reset</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="confirmButton">
+           <property name="text">
+            <string>Confirm</string>
            </property>
           </widget>
          </item>
@@ -162,19 +294,6 @@
             <string>Close</string>
            </property>
           </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
          </item>
         </layout>
        </item>

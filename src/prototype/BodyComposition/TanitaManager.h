@@ -4,6 +4,8 @@
 #include "../../managers/SerialPortManager.h"
 #include "../../data/BodyCompositionAnalyzerTest.h"
 
+#include <QQueue>
+
 class TanitaManager : public SerialPortManager
 {
     Q_OBJECT
@@ -15,6 +17,12 @@ public:
 
     void buildModel(QStandardItemModel *) const override;
 
+    static QMap<QString,QByteArray> initCommandLookup();
+    static QMap<QByteArray,QString> initResponseLookup();
+
+signals:
+   void canConfirm();
+
 public slots:
 
     // connect to the serial port
@@ -24,10 +32,15 @@ public slots:
     //
     void connectDevice() override;
 
-    // zero the weigh scale
+    // reset all device settings
     //
-    void zeroDevice();
+    void resetDevice();
 
+    void confirmSettings();
+
+    void setInputs(const QMap<QString,QVariant> &);
+
+    void writeDevice() override;
     // retrieve a measurement from the device
     //
     void measure() override;
@@ -41,12 +54,17 @@ private slots:
     void readDevice() override;
 
 private:
+    static QMap<QString,QByteArray> commandLookup;
+    static QMap<QByteArray,QString> responseLookup;
 
     bool hasEndCode(const QByteArray &);
 
     BodyCompositionAnalyzerTest m_test;
 
     void clearData() override;
+
+    QVector<QByteArray> m_cache;
+    QQueue<QByteArray> m_queue;
 };
 
 #endif // TANITAMANAGER_H

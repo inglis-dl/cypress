@@ -51,9 +51,13 @@ void MainWindow::initialize()
   //
   ui->saveButton->setEnabled(false);
 
-  // Zero the scale
+  // reset the body composition analyzer
   //
-  ui->zeroButton->setEnabled(false);
+  ui->resetButton->setEnabled(false);
+
+  // Confirm device settings
+  //
+  ui->confirmButton->setEnabled(false);
 
   // Read the weight measurement off the scale
   //
@@ -97,7 +101,7 @@ void MainWindow::initialize()
           this,[this](){
       ui->statusBar->showMessage("Ready to select...");
       QMessageBox msgBox;
-      msgBox.setText(tr("Select the port from the list.  If the device "
+      msgBox.setText(tr("Select the port from the list or connect to the currently visible port in the list.  If the device "
         "is not in the list, quit the application and check that the port is "
         "working and connect the audiometer to it before running this application."));
       msgBox.setIcon(QMessageBox::Warning);
@@ -105,6 +109,7 @@ void MainWindow::initialize()
       msgBox.setButtonText(QMessageBox::Abort,tr("Quit"));
       connect(msgBox.button(QMessageBox::Abort),&QPushButton::clicked,this,&MainWindow::close);
       msgBox.exec();
+      ui->connectButton->setEnabled(true);
   });
 
   // Select a device (serial port) from drop down list
@@ -124,7 +129,8 @@ void MainWindow::initialize()
           this,[this](){
       ui->statusBar->showMessage("Ready to connect...");
       ui->connectButton->setEnabled(true);
-      ui->zeroButton->setEnabled(false);
+      ui->resetButton->setEnabled(false);
+      ui->confirmButton->setEnabled(false);
       ui->disconnectButton->setEnabled(false);
       ui->measureButton->setEnabled(false);
       ui->saveButton->setEnabled(false);
@@ -132,8 +138,15 @@ void MainWindow::initialize()
 
   // Connect to device
   //
+ // connect(ui->connectButton, &QPushButton::clicked,
+ //         &m_manager, &TanitaManager::connectDevice);
+
   connect(ui->connectButton, &QPushButton::clicked,
-          &m_manager, &TanitaManager::connectDevice);
+          this, [this](){
+      m_manager.selectDevice(ui->deviceComboBox->currentText());
+      m_manager.connectDevice();
+  });
+
 
   // Connection is established: enable measurement requests
   //
@@ -142,11 +155,24 @@ void MainWindow::initialize()
       ui->statusBar->showMessage("Ready to measure...");
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
-      ui->zeroButton->setEnabled(true);
+      ui->resetButton->setEnabled(true);
+      ui->confirmButton->setEnabled(true);
       ui->measureButton->setEnabled(true);
       ui->saveButton->setEnabled(false);
   });
 
+  // Connection is established: enable measurement requests
+  //
+  connect(&m_manager, &TanitaManager::canConfirm,
+          this,[this](){
+      ui->statusBar->showMessage("Ready to accept inputs...");
+      ui->connectButton->setEnabled(false);
+      ui->disconnectButton->setEnabled(true);
+      ui->resetButton->setEnabled(true);
+      ui->confirmButton->setEnabled(true);
+      ui->measureButton->setEnabled(false);
+      ui->saveButton->setEnabled(false);
+  });
   // Disconnect from device
   //
   connect(ui->disconnectButton, &QPushButton::clicked,
@@ -154,8 +180,25 @@ void MainWindow::initialize()
 
   // Zero the scale
   //
-  connect(ui->zeroButton, &QPushButton::clicked,
-        &m_manager, &TanitaManager::zeroDevice);
+  connect(ui->resetButton, &QPushButton::clicked,
+        &m_manager, &TanitaManager::resetDevice);
+
+  // Request a measurement from the device
+  //
+  connect(ui->confirmButton, &QPushButton::clicked,
+           this,[this](){
+
+      QMap<QString,QVariant> inputs;
+      inputs["equation"] = "westerner";
+      inputs["mode"] = "metric";
+      inputs["gender"] = "male";
+      inputs["age"] = 56;
+      inputs["body type"] = "standard";
+      inputs["height"] = 170;
+      inputs["clothing weight"] = 1.5;
+      m_manager.setDeviceInputs(inputs);
+      m_manager.confirmSettings();
+  });
 
   // Request a measurement from the device
   //
