@@ -157,6 +157,10 @@ void SerialPortManager::selectDevice(const QString &label)
 
 void SerialPortManager::setDevice(const QSerialPortInfo &info)
 {
+    if(m_port.portName() == info.portName())
+    {
+        return;
+    }
     if("simulate" == m_mode)
     {
        clearData();

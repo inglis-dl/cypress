@@ -31,9 +31,9 @@ public:
     friend class AudiometerTest;
 
 private:
-    static QMap<QString,QString> codeLookup;
-    static QMap<QString,QString> outcomeLookup;
-    static QMap<int,QString> frequencyLookup;
+    static const QMap<QString,QString> codeLookup;
+    static const QMap<QString,QString> outcomeLookup;
+    static const QMap<int,QString> frequencyLookup;
 };
 
 Q_DECLARE_METATYPE(HearingMeasurement);

@@ -5,9 +5,9 @@
 #include <QRegExp>
 #include <QStringBuilder>
 
-QMap<QString,QString> HearingMeasurement::codeLookup = HearingMeasurement::initCodeLookup();
-QMap<QString,QString> HearingMeasurement::outcomeLookup = HearingMeasurement::initOutcomeLookup();
-QMap<int,QString> HearingMeasurement::frequencyLookup = HearingMeasurement::initFrequencyLookup();
+const QMap<QString,QString> HearingMeasurement::codeLookup = HearingMeasurement::initCodeLookup();
+const QMap<QString,QString> HearingMeasurement::outcomeLookup = HearingMeasurement::initOutcomeLookup();
+const QMap<int,QString> HearingMeasurement::frequencyLookup = HearingMeasurement::initFrequencyLookup();
 
  /*
   *    opal expects

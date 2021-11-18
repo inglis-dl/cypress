@@ -52,8 +52,8 @@ QString AudiometerTest::toString() const
     if(isValid())
     {
         QStringList l;
-        l << QString("patient ID: ") % getMetaDataCharacteristic("patient ID").toString();
-        l << QString("test ID: ") % getMetaDataCharacteristic("test ID").toString();
+        l << QString("patient id: ") % getMetaDataCharacteristic("patient id").toString();
+        l << QString("test id: ") % getMetaDataCharacteristic("test id").toString();
         l << QString("test datetime: ") % getMetaDataCharacteristic("test datetime").toDateTime().toString("yyyy-MM-dd hh:mm:ss");
         l << QString("last calibration date: ") % getMetaDataCharacteristic("last calibration date").toDate().toString("yyyy-MM-dd");
         for(auto&& x : m_measurementList)
@@ -81,8 +81,8 @@ void AudiometerTest::fromArray(const QByteArray &arr)
         reset();
         m_array = arr;
 
-        addMetaDataCharacteristic("patient ID",readPatientID());
-        addMetaDataCharacteristic("test ID",readTestID());
+        addMetaDataCharacteristic("patient id",readPatientID());
+        addMetaDataCharacteristic("test id",readTestID());
         addMetaDataCharacteristic("test datetime",readTestDateTime());
         addMetaDataCharacteristic("last calibration date",readCalibrationDate());
 

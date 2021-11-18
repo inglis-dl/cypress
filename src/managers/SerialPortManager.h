@@ -61,7 +61,7 @@ public slots:
 
     // send write request over RS232 to retrieve data from the audiometer
     //
-    void writeDevice();
+    virtual void writeDevice();
 
     virtual void measure() = 0;
 
