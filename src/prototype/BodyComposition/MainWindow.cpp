@@ -71,6 +71,10 @@ void MainWindow::initialize()
   //
   ui->disconnectButton->setEnabled(false);
 
+  // Close the application
+  //
+  ui->closeButton->setEnabled(true);
+
   // Scan for devices
   //
   connect(&m_manager, &TanitaManager::scanningDevices,
@@ -100,15 +104,12 @@ void MainWindow::initialize()
   connect(&m_manager, &TanitaManager::canSelectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to select...");
-      QMessageBox msgBox;
-      msgBox.setText(tr("Select the port from the list or connect to the currently visible port in the list.  If the device "
+      QMessageBox::warning(
+        this, QApplication::applicationName(),
+        tr("Select the port from the list or connect to the currently visible port in the list.  If the device "
         "is not in the list, quit the application and check that the port is "
         "working and connect the audiometer to it before running this application."));
-      msgBox.setIcon(QMessageBox::Warning);
-      msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Abort);
-      msgBox.setButtonText(QMessageBox::Abort,tr("Quit"));
-      connect(msgBox.button(QMessageBox::Abort),&QPushButton::clicked,this,&MainWindow::close);
-      msgBox.exec();
+
       ui->connectButton->setEnabled(true);
   });
 
@@ -187,7 +188,6 @@ void MainWindow::initialize()
   //
   connect(ui->confirmButton, &QPushButton::clicked,
            this,[this](){
-
       QMap<QString,QVariant> inputs;
       inputs["equation"] = "westerner";
       inputs["mode"] = "metric";
@@ -196,7 +196,7 @@ void MainWindow::initialize()
       inputs["body type"] = "standard";
       inputs["height"] = 170;
       inputs["clothing weight"] = 1.5;
-      m_manager.setDeviceInputs(inputs);
+      m_manager.setInputs(inputs);
       m_manager.confirmSettings();
   });
 

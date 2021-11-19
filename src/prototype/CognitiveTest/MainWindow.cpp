@@ -49,14 +49,24 @@ void MainWindow::initialize()
     //
     m_manager.loadSettings(settings);
 
+    // Select the location of CCB.exe
+    //
     ui->openButton->setEnabled(false);
 
+    // Launch CCB.exe
+    //
     ui->measureButton->setEnabled(false);
 
+    // Save button to store measurement and device info to .json
+    //
     ui->saveButton->setEnabled(false);
 
+    // Close the application
+    //
     ui->closeButton->setEnabled(true);
 
+    // CCB.exe was found or set up successfully
+    //
     connect(&m_manager, &CognitiveTestManager::canMeasure,
             this,[this](){
         ui->statusBar->showMessage("Ready to measure...");
@@ -64,7 +74,7 @@ void MainWindow::initialize()
         ui->saveButton->setEnabled(false);
     });
 
-    // Request a measurement from the device
+    // Request a measurement from the device (run CCB.exe)
     //
     connect(ui->measureButton, &QPushButton::clicked,
           &m_manager, &CognitiveTestManager::measure);
@@ -94,13 +104,11 @@ void MainWindow::initialize()
     if(!m_manager.isDefined(exeName))
     {
         ui->openButton->setEnabled(true);
-        QMessageBox msgBox;
-        msgBox.setText(tr("Select the exe by clicking Open and browsing to the "
+        QMessageBox::warning(
+          this, QApplication::applicationName(),
+          tr("Select the exe by clicking Open and browsing to the "
           "required executable (CCB.exe) and selecting the file.  If the executable "
           "is valid click the Run button to start the test otherwise check the installation."));
-        msgBox.setIcon(QMessageBox::Warning);
-        msgBox.setStandardButtons(QMessageBox::Ok);
-        msgBox.exec();
     }
 
     connect(ui->openButton, &QPushButton::clicked,
