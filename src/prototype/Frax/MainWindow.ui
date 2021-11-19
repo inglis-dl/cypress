@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>FraxClass</class>
- <widget class="QMainWindow" name="FraxClass">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -283,14 +283,12 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources>
-  <include location="Frax.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>Calculate</sender>
    <signal>clicked()</signal>
-   <receiver>FraxClass</receiver>
+   <receiver>MainWindow</receiver>
    <slot>CalculateClicked()</slot>
    <hints>
     <hint type="sourcelabel">
