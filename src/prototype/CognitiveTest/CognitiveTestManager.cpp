@@ -12,32 +12,44 @@ CognitiveTestManager::CognitiveTestManager(QObject *parent) :
 {
 }
 
+bool CognitiveTestManager::isDefined(const QString &exeName) const
+{
+    bool ok = false;
+    if(!exeName.isEmpty())
+    {
+        QFileInfo info(exeName);
+        if(info.exists() && info.isExecutable())
+        {
+            QString path = info.filePath();
+            QDir dir = QDir::cleanPath(path + QDir::separator() + "results");
+            if(dir.exists())
+            {
+                ok = true;
+            }
+        }
+    }
+    return ok;
+}
+
+void CognitiveTestManager::setExecutableName(const QString &exeName)
+{
+    if(isDefined(exeName))
+    {
+       QFileInfo info(exeName);
+       m_executableName = info.fileName();
+       m_executablePath = info.filePath();
+       QDir dir = QDir::cleanPath(m_executablePath + QDir::separator() + "results");
+       m_outputPath = dir.path();
+    }
+}
+
 void CognitiveTestManager::loadSettings(const QSettings &settings)
 {
     // the full spec path name including exe name
     // eg., C:\Program Files (x86)\CCB\CCB.exe
     //
-    QString s = settings.value("client/exe").toString();
-    if(!s.isEmpty())
-    {
-        QFileInfo info(s);
-        if(info.exists() && info.isExecutable())
-        {
-            m_executableName = info.fileName();
-            m_executablePath = info.filePath();
-            QDir dir = QDir::cleanPath(m_executablePath + QDir::separator() + "results");
-            if(dir.exists())
-            {
-                m_outputPath = dir.path();
-            }
-            else
-            {
-                m_executableName.clear();
-                m_executablePath.clear();
-                m_outputPath.clear();
-            }
-        }
-    }
+    QString exeName = settings.value("client/exe").toString();
+    setExecutableName(exeName);
 }
 
 void CognitiveTestManager::saveSettings(QSettings *settings) const

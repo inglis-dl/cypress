@@ -5,6 +5,7 @@
 #include <QDate>
 #include <QDebug>
 #include <QDir>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QJsonObject>
 #include <QJsonDocument>
@@ -48,13 +49,13 @@ void MainWindow::initialize()
     //
     m_manager.loadSettings(settings);
 
-    //TODO: check if the exe is available and popup a filedialog to locate
-    // it if not found
     ui->openButton->setEnabled(false);
 
     ui->measureButton->setEnabled(false);
+
     ui->saveButton->setEnabled(false);
-    ui->closeButton->setEnabled(false);
+
+    ui->closeButton->setEnabled(true);
 
     connect(&m_manager, &CognitiveTestManager::canMeasure,
             this,[this](){
@@ -67,7 +68,6 @@ void MainWindow::initialize()
     //
     connect(ui->measureButton, &QPushButton::clicked,
           &m_manager, &CognitiveTestManager::measure);
-
 
     // All measurements received: enable write test results
     //
@@ -86,6 +86,37 @@ void MainWindow::initialize()
     //
     connect(ui->closeButton, &QPushButton::clicked,
             this, &MainWindow::close);
+
+    // validate the presence of CCB.exe and enable
+    // file selection as required
+    //
+    QString exeName = m_manager.getExecutableName();
+    if(!m_manager.isDefined(exeName))
+    {
+        ui->openButton->setEnabled(true);
+        QMessageBox msgBox;
+        msgBox.setText(tr("Select the exe by clicking Open and browsing to the "
+          "required executable (CCB.exe) and selecting the file.  If the executable "
+          "is valid click the Run button to start the test otherwise check the installation."));
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+    }
+
+    connect(ui->openButton, &QPushButton::clicked,
+            this,[this](){
+        QString fileName =
+          QFileDialog::getOpenFileName(
+            this, tr("Open File"),
+                    QCoreApplication::applicationDirPath(),
+                    tr("Applications (*.exe)"));
+        if(m_manager.isDefined(fileName))
+        {
+            m_manager.setExecutableName(fileName);
+            ui->measureButton->setEnabled(true);
+            ui->saveButton->setEnabled(false);
+        }
+    });
 }
 
 void MainWindow::run()
