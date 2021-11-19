@@ -52,7 +52,12 @@ QString ChoiceReactionMeasurement::toString() const
   QString s;
   if(isValid())
   {
-    s = MeasurementBase::toString();
+    s = getCharacteristic("correct position").toString() +
+        (getCharacteristic("response correct").toBool() ? " correct, time: " : " incorrect, time: ") +
+         QString::number(getCharacteristic("elapsed time").toUInt()) +
+        "(" + getCharacteristic("units").toString() + "), interval: " +
+         QString::number(getCharacteristic("elapsed time").toUInt()) +
+        "(" + getCharacteristic("units").toString() + ")";
   }
   return s;
 }

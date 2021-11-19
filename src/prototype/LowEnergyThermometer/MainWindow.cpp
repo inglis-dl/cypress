@@ -113,6 +113,8 @@ void MainWindow::initialize()
     //
     ui->scanButton->setEnabled(true);
 
+    ui->closeButton->setEnabled(true);
+
     connect(ui->scanButton, &QPushButton::clicked,
             &m_manager, &BluetoothLEManager::scanDevices);
 
@@ -140,15 +142,11 @@ void MainWindow::initialize()
     connect(&m_manager, &BluetoothLEManager::canSelectDevice,
             this,[this](){
         ui->statusBar->showMessage("Ready to select1...");
-        QMessageBox msgBox;
-        msgBox.setText(tr("Double click the bluetooth thermometer from the list.  If the device "
+        QMessageBox::warning(
+          this, QApplication::applicationName(),
+          tr("Double click the bluetooth thermometer from the list.  If the device "
           "is not in the list, turn on the device and click Scan or quit the application and check that the bluetooth adapeter is "
           "working and pair the thermometer to it before running this application."));
-        msgBox.setIcon(QMessageBox::Warning);
-        msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Abort);
-        msgBox.setButtonText(QMessageBox::Abort,tr("Quit"));
-        connect(msgBox.button(QMessageBox::Abort),&QPushButton::clicked,this,&MainWindow::close);
-        msgBox.exec();
     });
 
     // Select a bluetooth low energy device from the drop down list

@@ -82,6 +82,10 @@ void MainWindow::initialize()
   //
   ui->disconnectButton->setEnabled(false);
 
+  // Close the application
+  //
+  ui->closeButton->setEnabled(true);
+
   // Scan for devices
   //
   connect(&m_manager, &WeighScaleManager::scanningDevices,
@@ -111,15 +115,11 @@ void MainWindow::initialize()
   connect(&m_manager, &WeighScaleManager::canSelectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to select...");
-      QMessageBox msgBox;
-      msgBox.setText(tr("Select the port from the list.  If the device "
+      QMessageBox::warning(
+        this, QApplication::applicationName(),
+        tr("Select the port from the list.  If the device "
         "is not in the list, quit the application and check that the port is "
         "working and connect the audiometer to it before running this application."));
-      msgBox.setIcon(QMessageBox::Warning);
-      msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Abort);
-      msgBox.setButtonText(QMessageBox::Abort,tr("Quit"));
-      connect(msgBox.button(QMessageBox::Abort),&QPushButton::clicked,this,&MainWindow::close);
-      msgBox.exec();
   });
 
   // Select a device (serial port) from drop down list
