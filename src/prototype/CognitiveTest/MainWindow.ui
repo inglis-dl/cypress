@@ -158,7 +158,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QColumnView" name="testdataColumnView"/>
+        <widget class="QTableView" name="testdataTableView"/>
        </item>
       </layout>
      </widget>

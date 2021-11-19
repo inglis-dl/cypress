@@ -59,6 +59,8 @@ private:
     QMap<QString,QVariant> m_outputData;
 
     CognitiveTestManager m_manager;
+
+    QStandardItemModel m_model;
 };
 
 #endif // MAINWINDOW_H

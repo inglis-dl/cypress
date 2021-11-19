@@ -12,6 +12,38 @@ CognitiveTestManager::CognitiveTestManager(QObject *parent) :
 {
 }
 
+void CognitiveTestManager::buildModel(QStandardItemModel *model) const
+{
+    // add measurements one row of two columns at a time
+    //
+    int n_total = m_test.getNumberOfMeasurements();
+    int n_row = qMax(1, n_total/2);
+    int n_used = 0;
+    int rowCount = model->rowCount();
+    if(rowCount!=n_row)
+    {
+       model->setRowCount(n_row);
+    }
+
+    for(int row = 0; row < n_row; row++)
+    {
+        for(int col = 0; col < 2; col++)
+        {
+          QString s = "NA";
+          ChoiceReactionMeasurement m = m_test.getMeasurement(n_used++);
+          if(m.isValid())
+             s = m.toString();
+           QStandardItem* item = model->item(row,col);
+           if(nullptr == item)
+           {
+             item = new QStandardItem();
+             model->setItem(row,col,item);
+           }
+           item->setData(s, Qt::DisplayRole);
+         }
+    }
+}
+
 bool CognitiveTestManager::isDefined(const QString &exeName) const
 {
     bool ok = false;
@@ -20,14 +52,23 @@ bool CognitiveTestManager::isDefined(const QString &exeName) const
         QFileInfo info(exeName);
         if(info.exists() && info.isExecutable())
         {
-            QString path = info.filePath();
+            QString path = info.absolutePath();
+
+            qDebug() << "path to " << exeName << " is " << path;
             QDir dir = QDir::cleanPath(path + QDir::separator() + "results");
             if(dir.exists())
             {
                 ok = true;
+                qDebug() << "OK: results directory exists " << dir.absolutePath();
             }
+            else
+                qDebug() << "ERROR: results directory not found " << dir.path();
         }
+        else
+            qDebug() << "ERROR: info does not exist for file " << exeName;
     }
+    else
+        qDebug() << "ERROR: isDefined check on empty string";
     return ok;
 }
 
@@ -36,10 +77,17 @@ void CognitiveTestManager::setExecutableName(const QString &exeName)
     if(isDefined(exeName))
     {
        QFileInfo info(exeName);
-       m_executableName = info.fileName();
-       m_executablePath = info.filePath();
+       m_executableName = exeName;
+       m_executablePath = info.absolutePath();
        QDir dir = QDir::cleanPath(m_executablePath + QDir::separator() + "results");
        m_outputPath = dir.path();
+
+       QMap<QString,QVariant> inputs;
+       inputs["barcode"] = 12345678;
+       inputs["language"] = "english";
+       inputs["user"] = "simulate_interviewer";
+       inputs["site"] = "simulate_dcs";
+       setInputs(inputs);
     }
 }
 
@@ -49,6 +97,7 @@ void CognitiveTestManager::loadSettings(const QSettings &settings)
     // eg., C:\Program Files (x86)\CCB\CCB.exe
     //
     QString exeName = settings.value("client/exe").toString();
+    qDebug() << "loading settings with exe " << exeName;
     setExecutableName(exeName);
 }
 
@@ -74,9 +123,11 @@ void CognitiveTestManager::configureProcess()
     QFileInfo info(m_executableName);
     QDir working(m_executablePath);
     QDir out(m_outputPath);
-    if((info.exists() && (info.isExecutable() || info.isFile())) &&
-        working.exists() && out.exists())
+    if(info.exists() && info.isExecutable() &&
+       working.exists() && out.exists())
     {
+      qDebug() << "OK: configuring command";
+
       // the inputs for command line args are present
       QStringList command;
       command << m_executableName;
@@ -96,9 +147,13 @@ void CognitiveTestManager::configureProcess()
          s = s.at(0).toUpper() + s.mid(1);
          command << "/l" + s;
       }
-
+      m_process.setProcessChannelMode(QProcess::ForwardedChannels);
+      m_process.setProgram(m_executableName);
       m_process.setArguments(command);
       m_process.setWorkingDirectory(m_executablePath);
+
+      qDebug() << "process config args: " << m_process.arguments().join(" ");
+      qDebug() << "process working dir: " << m_executablePath;
 
       connect(&m_process,&QProcess::started,
               this,[this](){
@@ -115,8 +170,17 @@ void CognitiveTestManager::configureProcess()
           qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
       });
 
+      connect(&m_process,&QProcess::stateChanged,
+              this,[](QProcess::ProcessState state){
+          QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"),QString::SkipEmptyParts);
+          qDebug() << "process state: " << s.join(" ").toLower();
+
+      });
+
       emit canMeasure();
     }
+    else
+        qDebug() << "failed to configure process";
 }
 
 void CognitiveTestManager::readOutput()
@@ -126,6 +190,9 @@ void CognitiveTestManager::readOutput()
         qDebug() << "ERROR: process failed to finish correctly: cannot read output";
         return;
     }
+    else
+        qDebug() <<"process finished successfully";
+
     QDir dir(m_outputPath);
     bool found = false;
     QString fileName;
@@ -140,17 +207,28 @@ void CognitiveTestManager::readOutput()
     }
     if(found)
     {
+        qDebug() << "found output csv file " << fileName;
+        fileName = m_outputPath + QDir::separator() + fileName;
+        qDebug() << "found output csv file " << fileName;
         m_test.fromFile(fileName);
         if(m_test.isValid())
         {
-            emit dataChanged();
             emit canWrite();
         }
+        else
+            qDebug() << "ERROR: input from file produced invalid test results";
+
+        emit dataChanged();
+
     }
+    else
+        qDebug() << "ERROR: no output csv file found";
 }
 
 void CognitiveTestManager::setInputs(const QMap<QString,QVariant> &inputs)
 {
+    // TODO: check minimum inputs required
+    //
     m_inputData = inputs;
     configureProcess();
 }
@@ -158,7 +236,9 @@ void CognitiveTestManager::setInputs(const QMap<QString,QVariant> &inputs)
 void  CognitiveTestManager::measure()
 {
    // launch the process
+    qDebug() << "starting process from measure";
     m_process.start();
+    //m_process.waitForFinished();
 }
 
 QJsonObject CognitiveTestManager::toJsonObject() const

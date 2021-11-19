@@ -10,17 +10,24 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
     QFile ifile(fileName);
     if(ifile.open(QIODevice::ReadOnly))
     {
+        qDebug() << "OK, reading input file " << fileName;
+
         QTextStream stream(&ifile);
         int version_pos = -1;
         int userid_pos = -1; // the interviewer's id
         int interviewid_pos = -1;  // should be the same as the barcode
+
         reset();
 
+        qDebug() << "begin reading text stream";
+        int n_line = 0;
         while(!stream.atEnd())
         {
+
             QString s = stream.readLine();
             QStringList l = s.split(",");
-            if(0<l.size())
+            qDebug() << "reading line "<< QString::number(++n_line) <<" with number of items = " << QString::number(l.size());
+            if(!l.empty())
             {
                 int code = l.at(0).toInt();
                 if((ChoiceReactionMeasurement::TEST_CODE-1) == code)
@@ -31,46 +38,61 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                     version_pos = l.indexOf(QLatin1String("Version"));
                     userid_pos = l.indexOf(QLatin1String("UserId"));
                     interviewid_pos = l.indexOf(QLatin1String("InterviewerId"));
+
+                    qDebug() << "found header item positions at line " << QString::number(n_line);
                 }
                 else if(ChoiceReactionMeasurement::TEST_CODE == code)
                 {
                     ChoiceReactionMeasurement m;
                     m.fromString(s);
                     addMeasurement(m);
+                    qDebug() << "found "<<(m.isValid()?"VALID":"INVALID")<<"measurement item positions at line " << QString::number(n_line);
+                    qDebug() << m.toString();
                 }
                 else if((ChoiceReactionMeasurement::TEST_CODE+1) == code)
                 {
+                    qDebug() << "found last line " << QString::number(n_line);
+
                     if(-1 != version_pos)
                     {
                       addMetaDataCharacteristic("version",l.at(version_pos));
+                      qDebug() << "adding version meta info";
                     }
                     if(-1 != userid_pos)
                     {
                       addMetaDataCharacteristic("user id",l.at(userid_pos));
+                      qDebug() << "adding user id meta info";
                     }
                     if(-1 != interviewid_pos)
                     {
                       addMetaDataCharacteristic("interview id",l.at(interviewid_pos));
+                      qDebug() << "adding interview id meta info";
                     }
                     // get the position of the following meta data keys
                     // that are within the last line of the file with the correct code:
                     // EndDateTime, StartDateTimes
                     //
-                    int pos = l.indexOf(QLatin1String("EndDateTime"))+1;
-                    if(0 != pos)
+                    int pos = l.indexOf(QLatin1String("EndDateTime"));
+                    if(-1 != pos)
                     {
                         QString s = l.at(pos+1);
                         s = s.remove(QRegExp("\\s(AM|PM)$")).trimmed();
-                        QDateTime d = QDateTime::fromString(s, "MM/dd/YYYY HH:mm:ss");
+                        qDebug() << "end datetime string " << s;
+                        QDateTime d = QDateTime::fromString(s, "MM/dd/yyyy HH:mm:ss");
                         addMetaDataCharacteristic("end datetime",d);
+                        qDebug() << "adding end datetime meta info";
                     }
-                    pos = l.indexOf(QLatin1String("StartDateTimes"))+1;
-                    if(0 != pos)
+                    pos = l.indexOf(QLatin1String("StartDateTimes"));
+                    if(-1 != pos)
                     {
                         QString s = l.at(pos+1);
                         s = s.remove(QRegExp("\\s(AM|PM)$")).trimmed();
-                        QDateTime d = QDateTime::fromString(s, "MM/dd/YYYY HH:mm:ss");
+                        qDebug() << "start datetime string " << s;
+
+                        QDateTime d = QDateTime::fromString(s, "MM/dd/yyyy HH:mm:ss");
                         addMetaDataCharacteristic("start datetime",d);
+                        qDebug() << "adding start datetime meta info";
+
                     }
                 }
                 else
@@ -82,6 +104,7 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
             int n = getNumberOfMeasurements();
             addMetaDataCharacteristic("number of measurements",n);
         }
+        qDebug() << "closed stream";
         ifile.close();
     }
 }
@@ -125,6 +148,18 @@ bool ChoiceReactionTest::isValid() const
         }
       }
     }
+    qDebug() << "test results " << (okTest?"OK":"ERROR");
+    qDebug() << "test meta info " << (okMeta?"OK":"ERROR");
+    if(!okMeta)
+    {
+        qDebug() << (hasMetaDataCharacteristic("user id") ? getMetaDataCharacteristic("user id").toString() : "ERROR: user id missing");
+        qDebug() << (hasMetaDataCharacteristic("start datetime") ? getMetaDataCharacteristic("start datetime").toString() : "ERROR: start datetime missing");
+        qDebug() << (hasMetaDataCharacteristic("end datetime") ? getMetaDataCharacteristic("end datetime").toString() : "ERROR: end datetime missing");
+        qDebug() << (hasMetaDataCharacteristic("interview id") ? getMetaDataCharacteristic("interview id").toString() : "ERROR: interview id missing");
+        qDebug() << (hasMetaDataCharacteristic("number of measurements") ? getMetaDataCharacteristic("number of measurements").toString() : "ERROR: number of measurements missing");
+        qDebug() << (hasMetaDataCharacteristic("version") ? getMetaDataCharacteristic("version").toString() : "ERROR: version missing");
+    }
+
     return okMeta && okTest;
 }
 

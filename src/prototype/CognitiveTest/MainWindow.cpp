@@ -18,6 +18,25 @@ MainWindow::MainWindow(QWidget *parent)
     , m_verbose(false)
 {
     ui->setupUi(this);
+
+    // allocate 2 columns x 8 rows of hearing measurement items
+    //
+    for(int col=0;col<2;col++)
+    {
+      for(int row=0;row<8;row++)
+      {
+        QStandardItem* item = new QStandardItem();
+        m_model.setItem(row,col,item);
+      }
+    }
+    m_model.setHeaderData(0,Qt::Horizontal,"Test Results",Qt::DisplayRole);
+    m_model.setHeaderData(1,Qt::Horizontal,"Test Results",Qt::DisplayRole);
+    ui->testdataTableView->setModel(&m_model);
+
+    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->verticalHeader()->hide();
 }
 
 MainWindow::~MainWindow()
@@ -43,11 +62,7 @@ void MainWindow::initialize()
 
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
-    QSettings settings(dir.filePath("cognitive.ini"), QSettings::IniFormat);
-
-    // read the path to C:\Program Files (x86)\Cardiff_University\CCB\CCB.exe
-    //
-    m_manager.loadSettings(settings);
+    QSettings settings(dir.filePath("cognitivetest.ini"), QSettings::IniFormat);
 
     // Select the location of CCB.exe
     //
@@ -79,6 +94,27 @@ void MainWindow::initialize()
     connect(ui->measureButton, &QPushButton::clicked,
           &m_manager, &CognitiveTestManager::measure);
 
+    // Update the UI with any data
+    //
+    connect(&m_manager, &CognitiveTestManager::dataChanged,
+            this,[this](){
+        m_manager.buildModel(&m_model);
+
+        QHeaderView *h = ui->testdataTableView->horizontalHeader();
+        QSize ts_pre = ui->testdataTableView->size();
+        h->resizeSections(QHeaderView::ResizeToContents);
+        ui->testdataTableView->setColumnWidth(0,h->sectionSize(0));
+        ui->testdataTableView->setColumnWidth(1,h->sectionSize(1));
+        ui->testdataTableView->resize(
+                    h->sectionSize(0)+h->sectionSize(1)+2,
+                    8*(ui->testdataTableView->rowHeight(0)+1)+
+                    h->height());
+        QSize ts_post = ui->testdataTableView->size();
+        int dx = ts_post.width()-ts_pre.width();
+        int dy = ts_post.height()-ts_pre.height();
+        this->resize(this->width()+dx,this->height()+dy);
+    });
+
     // All measurements received: enable write test results
     //
     connect(&m_manager, &CognitiveTestManager::canWrite,
@@ -96,6 +132,10 @@ void MainWindow::initialize()
     //
     connect(ui->closeButton, &QPushButton::clicked,
             this, &MainWindow::close);
+
+    // read the path to C:\Program Files (x86)\Cardiff_University\CCB\CCB.exe
+    //
+    m_manager.loadSettings(settings);
 
     // validate the presence of CCB.exe and enable
     // file selection as required
@@ -117,19 +157,25 @@ void MainWindow::initialize()
           QFileDialog::getOpenFileName(
             this, tr("Open File"),
                     QCoreApplication::applicationDirPath(),
-                    tr("Applications (*.exe)"));
+                    tr("Applications (*.exe, *)"));
         if(m_manager.isDefined(fileName))
         {
             m_manager.setExecutableName(fileName);
             ui->measureButton->setEnabled(true);
             ui->saveButton->setEnabled(false);
         }
+        else
+             qDebug() << fileName << " not a valid executable";
     });
+
+
 }
 
 void MainWindow::run()
 {
     // TODO: create the logic and code for bypassing the UI here
+    // create some dummy inputs
+
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -224,7 +270,7 @@ void MainWindow::writeOutput()
          QStringList list;
          list << barcode;
          list << QDate().currentDate().toString("yyyyMMdd");
-         list << "weighscale.json";
+         list << "cognitivetest.json";
          fileName = dir.filePath( list.join("_") );
        }
        else
