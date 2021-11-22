@@ -2,10 +2,6 @@
 #define MAINWINDOW_H
 
 #include "ui_MainWindow.h"
-
-#include "InputsModel.h"
-#include "OutputsModel.h"
-#include "FraxIO.h"
 #include "FraxManager.h"
 
 #include <QString>
@@ -50,10 +46,8 @@ public:
 
 private:
     void readInput();
-
     void SetUiInputs();
-
-    void SetOutputs();
+    void SetUiOutputs();
 
     Ui::MainWindow *ui;
 
@@ -62,19 +56,7 @@ private:
     QString m_mode;
     bool m_verbose;
 
-    QMap<QString, QVariant> m_inputData;
-    QMap<QString, QVariant> m_outputData;
-
     FraxManager m_manager;
-
-
-    // ################# OLD ##############################
-    InputsModel inputs;
-    OutputsModel outputs;
-
-    // FilePaths
-    QString jsonInputsPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/FraxTestinput.json";
-    // ######################################################
 private slots:
     void CalculateClicked();
 };

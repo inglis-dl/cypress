@@ -17,10 +17,6 @@ MainWindow::MainWindow(QWidget *parent)
     , m_verbose(false)
 {
     ui->setupUi(this);
-
-    // Read inputs from json and display
-    inputs = FraxIO::ReadInputs(jsonInputsPath);
-    //FraxUI::SetInputs(ui, &inputs);
 }
 
 MainWindow::~MainWindow()
@@ -34,7 +30,7 @@ void MainWindow::CalculateClicked()
     QFile::rename(m_manager.getInputFullPath(), m_manager.getOldInputFullPath());
 
     // Create new input.txt from our inputs
-    FraxIO::CreateInputTxt(&inputs);
+    m_manager.createInputsTxt();
 
     // Run blackbox.exe
     QProcess process;
@@ -43,8 +39,8 @@ void MainWindow::CalculateClicked()
     process.close();
 
     // read output.txt into outputs and display
-    outputs = FraxIO::ReadOutputs(m_manager.getOutputFullPath());
-    SetOutputs();
+    m_manager.readOutputs();
+    SetUiOutputs();
 
     // restore files to original state
     QFile::remove(m_manager.getInputFullPath());
@@ -96,7 +92,7 @@ void MainWindow::readInput()
 
         QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
         QJsonObject jsonObj = jsonDoc.object();
-        QMapIterator<QString, QVariant> it(m_inputData);
+        QMapIterator<QString, QVariant> it(m_manager.m_inputData);
         QList<QString> keys = jsonObj.keys();
         for (int i = 0; i < keys.size(); i++)
         {
@@ -105,7 +101,7 @@ void MainWindow::readInput()
             //
             if (!v.isUndefined())
             {
-                m_inputData[keys[i]] = v.toVariant();
+                m_manager.m_inputData[keys[i]] = v.toVariant();
                 qDebug() << keys[i] << v.toVariant();
             }
         }
@@ -116,29 +112,40 @@ void MainWindow::readInput()
 
 void MainWindow::SetUiInputs()
 {
-    ui->val1->setText(m_inputData["val1"].toString());
-    ui->val2->setText(m_inputData["val2"].toString());
-    ui->val3->setText(m_inputData["val3"].toString());
-    ui->val4->setText(m_inputData["val4"].toString());
-    ui->val5->setText(m_inputData["val5"].toString());
-    ui->val6->setText(m_inputData["val6"].toString());
-    ui->val7->setText(m_inputData["val7"].toString());
-    ui->val8->setText(m_inputData["val8"].toString());
-    ui->val9->setText(m_inputData["val9"].toString());
-    ui->val10->setText(m_inputData["val10"].toString());
-    ui->val11->setText(m_inputData["val11"].toString());
-    ui->val12->setText(m_inputData["val12"].toString());
-    ui->dxaHipTScore->setText(m_inputData["dxaHipTScore"].toString());
+    QMap<QString, QVariant> inMap = m_manager.m_inputData;
+    ui->val1->setText(inMap["val1"].toString());
+    ui->val2->setText(inMap["val2"].toString());
+    ui->val3->setText(inMap["val3"].toString());
+    ui->val4->setText(inMap["val4"].toString());
+    ui->val5->setText(inMap["val5"].toString());
+    ui->val6->setText(inMap["val6"].toString());
+    ui->val7->setText(inMap["val7"].toString());
+    ui->val8->setText(inMap["val8"].toString());
+    ui->val9->setText(inMap["val9"].toString());
+    ui->val10->setText(inMap["val10"].toString());
+    ui->val11->setText(inMap["val11"].toString());
+    ui->val12->setText(inMap["val12"].toString());
+    ui->dxaHipTScore->setText(inMap["dxaHipTScore"].toString());
 }
 
-void MainWindow::SetOutputs()
+void MainWindow::SetUiOutputs()
 {
-    // TODO: Probably should double check none have changed
-    SetUiInputs();
-
-    // Load outputs on UI
-    ui->fracRisk1->setText(QString::number(outputs.fracRisk1));
-    ui->fracRisk2->setText(QString::number(outputs.fracRisk2));
-    ui->fracRisk3->setText(QString::number(outputs.fracRisk3));
-    ui->fracRisk4->setText(QString::number(outputs.fracRisk4));
+    QMap<QString, QVariant> outMap = m_manager.m_outputData;
+    ui->val1->setText(outMap["val1"].toString());
+    ui->val2->setText(outMap["val2"].toString());
+    ui->val3->setText(outMap["val3"].toString());
+    ui->val4->setText(outMap["val4"].toString());
+    ui->val5->setText(outMap["val5"].toString());
+    ui->val6->setText(outMap["val6"].toString());
+    ui->val7->setText(outMap["val7"].toString());
+    ui->val8->setText(outMap["val8"].toString());
+    ui->val9->setText(outMap["val9"].toString());
+    ui->val10->setText(outMap["val10"].toString());
+    ui->val11->setText(outMap["val11"].toString());
+    ui->val12->setText(outMap["val12"].toString());
+    ui->dxaHipTScore->setText(outMap["dxaHipTScore"].toString());
+    ui->fracRisk1->setText(outMap["fracRisk1"].toString());
+    ui->fracRisk2->setText(outMap["fracRisk2"].toString());
+    ui->fracRisk3->setText(outMap["fracRisk3"].toString());
+    ui->fracRisk4->setText(outMap["fracRisk4"].toString());
 }

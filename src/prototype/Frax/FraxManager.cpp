@@ -63,6 +63,68 @@ void FraxManager::setExecutableName(const QString&exeName)
     }
 }
 
+bool FraxManager::createInputsTxt()
+{
+    QString filePath = getInputFullPath();
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QTextStream stream(&file);
+
+        stream << m_inputData["val1"].toString() + ","
+            << m_inputData["val2"].toString() << ","
+            << m_inputData["val3"].toString() << ","
+            << m_inputData["val4"].toString() << ","
+            << m_inputData["val5"].toString() << ","
+            << m_inputData["val6"].toString() << ","
+            << m_inputData["val7"].toString() << ","
+            << m_inputData["val8"].toString() << ","
+            << m_inputData["val9"].toString() << ","
+            << m_inputData["val10"].toString() << ","
+            << m_inputData["val11"].toString() << ","
+            << m_inputData["val12"].toString() << ","
+            << m_inputData["dxaHipTScore"].toString();
+
+        file.close();
+        qDebug() << "Wrote input.txt to " + filePath;
+        return true;
+    }
+    return false;
+}
+
+void FraxManager::readOutputs()
+{
+    QFile file(getOutputFullPath());
+
+    if (file.open(QIODevice::ReadOnly))
+    {
+        QTextStream instream(&file);
+        QString line = instream.readLine();
+        file.close();
+
+        QStringList lineSplit = line.split(",");
+        if (lineSplit.length() >= 17) {
+            m_outputData["val1"] = lineSplit[0];
+            m_outputData["val2"] = QString(lineSplit[1]).toDouble();
+            m_outputData["val3"] = QString(lineSplit[2]).toDouble();
+            m_outputData["val4"] = QString(lineSplit[3]).toDouble();
+            m_outputData["val5"] = QString(lineSplit[4]).toDouble();
+            m_outputData["val6"] = QString(lineSplit[5]).toDouble();
+            m_outputData["val7"] = QString(lineSplit[6]).toDouble();
+            m_outputData["val8"] = QString(lineSplit[7]).toDouble();
+            m_outputData["val9"] = QString(lineSplit[8]).toDouble();
+            m_outputData["val10"] = QString(lineSplit[9]).toDouble();
+            m_outputData["val11"] = QString(lineSplit[10]).toDouble();
+            m_outputData["val12"] = QString(lineSplit[11]).toDouble();
+            m_outputData["dxaHipTScore"] = QString(lineSplit[12]).toDouble();
+            m_outputData["fracRisk1"] = QString(lineSplit[13]).toDouble();
+            m_outputData["fracRisk2"] = QString(lineSplit[14]).toDouble();
+            m_outputData["fracRisk3"] = QString(lineSplit[15]).toDouble();
+            m_outputData["fracRisk4"] = QString(lineSplit[16]).toDouble();
+        }
+    }
+}
+
 void FraxManager::clearData()
 {
     //m_test.reset();

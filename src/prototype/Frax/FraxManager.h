@@ -30,6 +30,9 @@ public:
     //
     void setExecutableName(const QString&);
 
+    bool createInputsTxt();
+    void readOutputs();
+
     QString getExecutableName() const
     {
         return m_executableName;
@@ -55,6 +58,9 @@ public:
         return m_outputPath;
     }
 
+    QMap<QString, QVariant> m_inputData;
+    QMap<QString, QVariant> m_outputData;
+
 private:
     QString m_executableName;
     QString m_executablePath;
@@ -67,7 +73,7 @@ private:
 
     void clearData() override;
 
-    QMap<QString, QVariant> m_inputData;
+    
 };
 
 #endif // FRAXMANAGER_H
