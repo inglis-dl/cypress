@@ -114,6 +114,7 @@ void CognitiveTestManager::saveSettings(QSettings *settings) const
 void CognitiveTestManager::clearData()
 {
     m_test.reset();
+    m_outputFile.clear();
     emit dataChanged();
 }
 
@@ -211,9 +212,11 @@ void CognitiveTestManager::readOutput()
         fileName = m_outputPath + QDir::separator() + fileName;
         qDebug() << "found output csv file " << fileName;
         m_test.fromFile(fileName);
+        m_outputFile.clear();
         if(m_test.isValid())
         {
             emit canWrite();
+            m_outputFile = fileName;
         }
         else
             qDebug() << "ERROR: input from file produced invalid test results";
@@ -241,8 +244,21 @@ void  CognitiveTestManager::measure()
     //m_process.waitForFinished();
 }
 
+void  CognitiveTestManager::clean()
+{
+    if(!m_outputFile.isEmpty())
+    {
+        QFile ofile(m_outputFile);
+        ofile.remove();
+    }
+}
+
 QJsonObject CognitiveTestManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
+    QFile ofile(m_outputFile);
+    ofile.open(QIODevice::ReadOnly);
+    QByteArray buffer = ofile.readAll();
+    json.insert("test_csv_file",QString(buffer.toBase64()));
     return json;
 }

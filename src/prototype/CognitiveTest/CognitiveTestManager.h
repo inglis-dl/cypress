@@ -29,6 +29,11 @@ public:
     //
     void setExecutableName(const QString &);
 
+    // call just before closing the application to
+    // remove the csv file from the test if it exists
+    //
+    void clean();
+
     QString getExecutableName() const
     {
         return m_executableName;
@@ -50,6 +55,7 @@ private:
     QString m_executableName;
     QString m_executablePath;
     QString m_outputPath;
+    QString m_outputFile;
     QProcess m_process;
 
     ChoiceReactionTest m_test;

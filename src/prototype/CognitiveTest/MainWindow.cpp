@@ -167,8 +167,6 @@ void MainWindow::initialize()
         else
              qDebug() << fileName << " not a valid executable";
     });
-
-
 }
 
 void MainWindow::run()
@@ -182,6 +180,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     if(m_verbose)
         qDebug() << "close event called";
+
+    // remove all csv files from the results folder
+    m_manager.clean();
+
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath("cognitivetest.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
