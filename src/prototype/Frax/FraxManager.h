@@ -30,8 +30,7 @@ public:
     //
     void setExecutableName(const QString&);
 
-    bool createInputsTxt();
-    void readOutputs();
+    void calculateOutputs();
 
     QString getExecutableName() const
     {
@@ -67,13 +66,13 @@ private:
     QString m_outputPath;
     QString m_inputPath;
     QString m_oldInputPath;
-    QProcess m_process;
 
     //FraxTest m_test;
 
     void clearData() override;
-
-    
+    bool createInputsTxt();
+    void runBlackBoxExe();
+    void readOutputs();
 };
 
 #endif // FRAXMANAGER_H

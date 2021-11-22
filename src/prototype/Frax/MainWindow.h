@@ -45,10 +45,6 @@ public:
     bool isVerbose() { return m_verbose; }
 
 private:
-    void readInput();
-    void SetUiInputs();
-    void SetUiOutputs();
-
     Ui::MainWindow *ui;
 
     QString m_inputFileName;
@@ -57,6 +53,10 @@ private:
     bool m_verbose;
 
     FraxManager m_manager;
+
+    void readInput();
+    void SetUiInputs();
+    void SetUiOutputs();
 private slots:
     void CalculateClicked();
 };

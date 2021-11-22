@@ -26,26 +26,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::CalculateClicked()
 {
-    // Save example input.txt to be put back later
-    QFile::rename(m_manager.getInputFullPath(), m_manager.getOldInputFullPath());
-
-    // Create new input.txt from our inputs
-    m_manager.createInputsTxt();
-
-    // Run blackbox.exe
-    QProcess process;
-    process.start(m_manager.getExecutableFullPath());
-    process.waitForFinished(2000);
-    process.close();
-
-    // read output.txt into outputs and display
-    m_manager.readOutputs();
+    m_manager.calculateOutputs();
     SetUiOutputs();
-
-    // restore files to original state
-    QFile::remove(m_manager.getInputFullPath());
-    QFile::remove(m_manager.getOutputFullPath());
-    QFile::rename(m_manager.getOldInputFullPath(), m_manager.getInputFullPath());
 }
 
 void MainWindow::initialize()
@@ -130,20 +112,11 @@ void MainWindow::SetUiInputs()
 
 void MainWindow::SetUiOutputs()
 {
+    // Update displayed inputs in case they changed
+    SetUiInputs();
+
+    // Display outputs
     QMap<QString, QVariant> outMap = m_manager.m_outputData;
-    ui->val1->setText(outMap["val1"].toString());
-    ui->val2->setText(outMap["val2"].toString());
-    ui->val3->setText(outMap["val3"].toString());
-    ui->val4->setText(outMap["val4"].toString());
-    ui->val5->setText(outMap["val5"].toString());
-    ui->val6->setText(outMap["val6"].toString());
-    ui->val7->setText(outMap["val7"].toString());
-    ui->val8->setText(outMap["val8"].toString());
-    ui->val9->setText(outMap["val9"].toString());
-    ui->val10->setText(outMap["val10"].toString());
-    ui->val11->setText(outMap["val11"].toString());
-    ui->val12->setText(outMap["val12"].toString());
-    ui->dxaHipTScore->setText(outMap["dxaHipTScore"].toString());
     ui->fracRisk1->setText(outMap["fracRisk1"].toString());
     ui->fracRisk2->setText(outMap["fracRisk2"].toString());
     ui->fracRisk3->setText(outMap["fracRisk3"].toString());

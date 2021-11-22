@@ -104,19 +104,19 @@ void FraxManager::readOutputs()
 
         QStringList lineSplit = line.split(",");
         if (lineSplit.length() >= 17) {
-            m_outputData["val1"] = lineSplit[0];
-            m_outputData["val2"] = QString(lineSplit[1]).toDouble();
-            m_outputData["val3"] = QString(lineSplit[2]).toDouble();
-            m_outputData["val4"] = QString(lineSplit[3]).toDouble();
-            m_outputData["val5"] = QString(lineSplit[4]).toDouble();
-            m_outputData["val6"] = QString(lineSplit[5]).toDouble();
-            m_outputData["val7"] = QString(lineSplit[6]).toDouble();
-            m_outputData["val8"] = QString(lineSplit[7]).toDouble();
-            m_outputData["val9"] = QString(lineSplit[8]).toDouble();
-            m_outputData["val10"] = QString(lineSplit[9]).toDouble();
-            m_outputData["val11"] = QString(lineSplit[10]).toDouble();
-            m_outputData["val12"] = QString(lineSplit[11]).toDouble();
-            m_outputData["dxaHipTScore"] = QString(lineSplit[12]).toDouble();
+            m_inputData["val1"] = lineSplit[0];
+            m_inputData["val2"] = QString(lineSplit[1]).toDouble();
+            m_inputData["val3"] = QString(lineSplit[2]).toDouble();
+            m_inputData["val4"] = QString(lineSplit[3]).toDouble();
+            m_inputData["val5"] = QString(lineSplit[4]).toDouble();
+            m_inputData["val6"] = QString(lineSplit[5]).toDouble();
+            m_inputData["val7"] = QString(lineSplit[6]).toDouble();
+            m_inputData["val8"] = QString(lineSplit[7]).toDouble();
+            m_inputData["val9"] = QString(lineSplit[8]).toDouble();
+            m_inputData["val10"] = QString(lineSplit[9]).toDouble();
+            m_inputData["val11"] = QString(lineSplit[10]).toDouble();
+            m_inputData["val12"] = QString(lineSplit[11]).toDouble();
+            m_inputData["dxaHipTScore"] = QString(lineSplit[12]).toDouble();
             m_outputData["fracRisk1"] = QString(lineSplit[13]).toDouble();
             m_outputData["fracRisk2"] = QString(lineSplit[14]).toDouble();
             m_outputData["fracRisk3"] = QString(lineSplit[15]).toDouble();
@@ -125,8 +125,37 @@ void FraxManager::readOutputs()
     }
 }
 
+void FraxManager::calculateOutputs()
+{
+    // Save example input.txt to be put back later
+    QFile::rename(getInputFullPath(), getOldInputFullPath());
+
+    // Create new input.txt
+    createInputsTxt();
+
+    // Run blackbox.exe
+    runBlackBoxExe();
+
+    // read output.txt
+    readOutputs();
+
+    // restore files to original state
+    QFile::remove(getInputFullPath());
+    QFile::remove(getOutputFullPath());
+    QFile::rename(getOldInputFullPath(), getInputFullPath());
+}
+
 void FraxManager::clearData()
 {
     //m_test.reset();
     emit dataChanged();
+}
+
+void FraxManager::runBlackBoxExe()
+{
+    // Run blackbox.exe
+    QProcess process;
+    process.start(getExecutableFullPath());
+    process.waitForFinished(2000);
+    process.close();
 }
