@@ -25,7 +25,7 @@ void FraxManager::saveSettings(QSettings* settings) const
 {
     if (!m_executableName.isEmpty())
     {
-        settings->setValue("client/exe", m_executableName);
+        settings->setValue("client/exe", m_executablePath);
         if (m_verbose)
             qDebug() << "wrote exe fullspec path to settings file";
     }
@@ -125,29 +125,35 @@ void FraxManager::readOutputs()
     }
 }
 
-void FraxManager::calculateOutputs()
+void FraxManager::clean()
 {
-    // Save example input.txt to be put back later
-    QFile::rename(getInputFullPath(), getOldInputFullPath());
+    if (!m_outputPath.isEmpty())
+    {
+        QFile ofile(m_outputPath);
+        ofile.remove();
+    }
+}
 
-    // Create new input.txt
-    createInputsTxt();
+void  FraxManager::measure()
+{
+    // launch the process
+    qDebug() << "starting process from measure";
+    m_process.start();
+    //m_process.waitForFinished();
+}
 
-    // Run blackbox.exe
-    runBlackBoxExe();
+void FraxManager::setInputs(const QMap<QString, QVariant>&)
+{
+}
 
-    // read output.txt
-    readOutputs();
-
-    // restore files to original state
-    QFile::remove(getInputFullPath());
-    QFile::remove(getOutputFullPath());
-    QFile::rename(getOldInputFullPath(), getInputFullPath());
+void FraxManager::readOutput()
+{
 }
 
 void FraxManager::clearData()
 {
-    //m_test.reset();
+    m_test.reset();
+    m_outputPath.clear();
     emit dataChanged();
 }
 

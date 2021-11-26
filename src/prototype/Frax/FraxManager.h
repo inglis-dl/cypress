@@ -2,7 +2,7 @@
 #define FRAXMANAGER_H
 
 #include "../../managers/ManagerBase.h"
-//#include "../../data/FraxTest.h"
+#include "../../data/FraxTest.h"
 
 #include <QProcess>
 #include <QDir>
@@ -30,11 +30,14 @@ public:
     //
     void setExecutableName(const QString&);
 
-    void calculateOutputs();
+    // call just before closing the application to
+    // remove the output txt file from the test if it exists
+    //
+    void clean();
 
     QString getExecutableName() const
     {
-        return m_executableName;
+        return m_executablePath;
     }
 
     QString getExecutableFullPath() const
@@ -59,15 +62,26 @@ public:
 
     QMap<QString, QVariant> m_inputData;
     QMap<QString, QVariant> m_outputData;
+public slots:
+    void measure();
 
+    void setInputs(const QMap<QString, QVariant>&);
+
+    void readOutput();
+
+signals:
+    void canMeasure();
+
+    void canWrite();
 private:
     QString m_executableName;
     QString m_executablePath;
     QString m_outputPath;
     QString m_inputPath;
     QString m_oldInputPath;
+    QProcess m_process;
 
-    //FraxTest m_test;
+    FraxTest m_test;
 
     void clearData() override;
     bool createInputsTxt();

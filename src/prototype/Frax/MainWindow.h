@@ -44,7 +44,11 @@ public:
 
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() { return m_verbose; }
+public slots:
+    void writeOutput();
 
+protected:
+    void closeEvent(QCloseEvent*) override;
 private:
     void readInput();
 
@@ -57,9 +61,6 @@ private:
     FraxManager m_manager;
 
     QStandardItemModel m_model;
-
-private slots:
-    void CalculateClicked();
 };
 
 #endif // MAINWINDOW_H

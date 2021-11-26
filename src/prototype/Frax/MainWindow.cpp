@@ -38,11 +38,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::CalculateClicked()
-{
-    m_manager.calculateOutputs();
-}
-
 void MainWindow::initialize()
 {
     m_manager.setVerbose(m_verbose);
@@ -52,17 +47,137 @@ void MainWindow::initialize()
     //
     readInput();
 
+    // Populate barcode display
+    //
+    if (m_manager.m_inputData.contains("barcode") && m_manager.m_inputData["barcode"].isValid())
+        ui->barcodeLineEdit->setText(m_manager.m_inputData["barcode"].toString());
+    else
+        ui->barcodeLineEdit->setText("00000000"); // dummy
+
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
     QSettings settings(dir.filePath("frax.ini"), QSettings::IniFormat);
 
-    // read the path to C:\Program Files (x86)\Cardiff_University\CCB\CCB.exe
+    // Select the location of CCB.exe
+    //
+    ui->openButton->setEnabled(false);
+
+    // Launch CCB.exe
+    //
+    ui->measureButton->setEnabled(false);
+
+    // Save button to store measurement and device info to .json
+    //
+    ui->saveButton->setEnabled(false);
+
+    // Close the application
+    //
+    ui->closeButton->setEnabled(true);
+
+    // blackbox.exe was found or set up successfully
+    //
+    connect(&m_manager, &FraxManager::canMeasure,
+        this, [this]() {
+            ui->statusBar->showMessage("Ready to measure...");
+            ui->measureButton->setEnabled(true);
+            ui->saveButton->setEnabled(false);
+        });
+
+    // Request a measurement from the device (run blackbox.exe)
+    //
+    connect(ui->measureButton, &QPushButton::clicked,
+        &m_manager, &FraxManager::measure);
+
+    // Update the UI with any data
+    //
+    connect(&m_manager, &FraxManager::dataChanged,
+        this, [this]() {
+            m_manager.buildModel(&m_model);
+
+            QHeaderView* h = ui->testdataTableView->horizontalHeader();
+            QSize ts_pre = ui->testdataTableView->size();
+            h->resizeSections(QHeaderView::ResizeToContents);
+            ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
+            ui->testdataTableView->resize(
+                h->sectionSize(0) + h->sectionSize(1) + 2,
+                8 * (ui->testdataTableView->rowHeight(0) + 1) +
+                h->height());
+            QSize ts_post = ui->testdataTableView->size();
+            int dx = ts_post.width() - ts_pre.width();
+            int dy = ts_post.height() - ts_pre.height();
+            this->resize(this->width() + dx, this->height() + dy);
+        });
+
+    // All measurements received: enable write test results
+    //
+    connect(&m_manager, &FraxManager::canWrite,
+        this, [this]() {
+            ui->statusBar->showMessage("Ready to save results...");
+            ui->saveButton->setEnabled(true);
+        });
+
+    // Write test data to output
+    //
+    connect(ui->saveButton, &QPushButton::clicked,
+        this, &MainWindow::writeOutput);
+
+    // Close the application
+    //
+    connect(ui->closeButton, &QPushButton::clicked,
+        this, &MainWindow::close);
+
+    // read the path to blackbox.exe
     //
     m_manager.loadSettings(settings);
+
+    // validate the presence of blackbox.exe and enable
+    // file selection as required
+    //
+    QString exeName = m_manager.getExecutableFullPath();
+    if (!m_manager.isDefined(exeName))
+    {
+        ui->openButton->setEnabled(true);
+        QMessageBox::warning(
+            this, QApplication::applicationName(),
+            tr("Select the exe by clicking Open and browsing to the "
+                "required executable (CCB.exe) and selecting the file.  If the executable "
+                "is valid click the Run button to start the test otherwise check the installation."));
+    }
+
+    connect(ui->openButton, &QPushButton::clicked,
+        this, [this]() {
+            QString fileName =
+                QFileDialog::getOpenFileName(
+                    this, tr("Open File"),
+                    QCoreApplication::applicationDirPath(),
+                    tr("Applications (*.exe, *)"));
+            if (m_manager.isDefined(fileName))
+            {
+                m_manager.setExecutableName(fileName);
+                ui->measureButton->setEnabled(true);
+                ui->saveButton->setEnabled(false);
+            }
+            else
+                qDebug() << fileName << " not a valid executable";
+        });
 }
 
 void MainWindow::run()
 {
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (m_verbose)
+        qDebug() << "close event called";
+
+    // remove all csv files from the results folder
+    m_manager.clean();
+
+    QDir dir = QCoreApplication::applicationDirPath();
+    QSettings settings(dir.filePath("frax.ini"), QSettings::IniFormat);
+    m_manager.saveSettings(&settings);
+    event->accept();
 }
 
 void MainWindow::readInput()
@@ -102,4 +217,64 @@ void MainWindow::readInput()
     }
     else
         qDebug() << m_inputFileName << " file does not exist";
+}
+
+void MainWindow::writeOutput()
+{
+    if (m_verbose)
+        qDebug() << "begin write process ... ";
+
+    QJsonObject jsonObj = m_manager.toJsonObject();
+
+    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
+    jsonObj.insert("barcode", QJsonValue(barcode));
+
+    if (m_verbose)
+        qDebug() << "determine file output name ... ";
+
+    QString fileName;
+
+    // Use the output filename if it has a valid path
+    // If the path is invalid, use the directory where the application exe resides
+    // If the output filename is empty default output .json file is of the form
+    // <participant ID>_<now>_<devicename>.json
+    //
+    bool constructDefault = false;
+
+    // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
+    //
+    if (m_outputFileName.isEmpty())
+        constructDefault = true;
+    else
+    {
+        QFileInfo info(m_outputFileName);
+        QDir dir = info.absoluteDir();
+        if (dir.exists())
+            fileName = m_outputFileName;
+        else
+            constructDefault = true;
+    }
+    if (constructDefault)
+    {
+        QDir dir = QCoreApplication::applicationDirPath();
+        if (m_outputFileName.isEmpty())
+        {
+            QStringList list;
+            list << barcode;
+            list << QDate().currentDate().toString("yyyyMMdd");
+            list << "cognitivetest.json";
+            fileName = dir.filePath(list.join("_"));
+        }
+        else
+            fileName = dir.filePath(m_outputFileName);
+    }
+
+    QFile saveFile(fileName);
+    saveFile.open(QIODevice::WriteOnly);
+    saveFile.write(QJsonDocument(jsonObj).toJson());
+
+    if (m_verbose)
+        qDebug() << "wrote to file " << fileName;
+
+    ui->statusBar->showMessage("Frax data recorded.  Close when ready.");
 }
