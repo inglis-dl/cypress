@@ -11,3 +11,7 @@
 /out/build/x64-Debug/.cmake/api/v1
 /out/build/x64-Debug/Testing/Temporary
 /out/build/x64-Debug
+/src/prototype/CognitiveTest/debug/qmake
+/src/prototype/CognitiveTest/debug
+/src/prototype/CognitiveTest/release
+/src/prototype/CognitiveTest/.qmake.stash
