@@ -6,303 +6,167 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>271</width>
-    <height>334</height>
+    <width>600</width>
+    <height>389</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Frax</string>
   </property>
-  <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="5" column="0">
-     <widget class="QLabel" name="label_5">
-      <property name="text">
-       <string>Val 5:</string>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QGroupBox" name="idGroupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
+      <property name="title">
+       <string>barcode</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="iDlabel">
+         <property name="text">
+          <string>Participant ID:</string>
+         </property>
+         <property name="buddy">
+          <cstring>barcodeLineEdit</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="barcodeLineEdit">
+         <property name="inputMask">
+          <string>0 0 0 0 0 0 0 0;_</string>
+         </property>
+         <property name="text">
+          <string>       </string>
+         </property>
+         <property name="maxLength">
+          <number>15</number>
+         </property>
+         <property name="cursorPosition">
+          <number>15</number>
+         </property>
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>80</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
     </item>
-    <item row="6" column="0">
-     <widget class="QLabel" name="label_6">
-      <property name="text">
-       <string>Val 6:</string>
+    <item>
+     <widget class="QGroupBox" name="pathGgroupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
+      <property name="title">
+       <string>executable</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QPushButton" name="openButton">
+         <property name="text">
+          <string>Open</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>469</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
     </item>
-    <item row="8" column="0">
-     <widget class="QLabel" name="label_8">
-      <property name="text">
-       <string>Val 8:</string>
+    <item>
+     <widget class="QGroupBox" name="measureGroupBox">
+      <property name="title">
+       <string>measure</string>
       </property>
-     </widget>
-    </item>
-    <item row="10" column="0">
-     <widget class="QLabel" name="label_10">
-      <property name="text">
-       <string>Val 10:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="13" column="0">
-     <widget class="QLabel" name="label_13">
-      <property name="text">
-       <string>Val 13:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="2">
-     <widget class="QLabel" name="label_15">
-      <property name="text">
-       <string>Fracture Risk 1:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="label_2">
-      <property name="text">
-       <string>Val 2:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QLabel" name="val1">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="0">
-     <widget class="QLabel" name="label_7">
-      <property name="text">
-       <string>Val 7:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>Val 1:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="label_4">
-      <property name="text">
-       <string>Val 4:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
-     <widget class="QLabel" name="label_3">
-      <property name="text">
-       <string>Val 3:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="9" column="0">
-     <widget class="QLabel" name="label_9">
-      <property name="text">
-       <string>Val 9:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="12" column="0">
-     <widget class="QLabel" name="label_12">
-      <property name="text">
-       <string>Val 12:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="11" column="0">
-     <widget class="QLabel" name="label_11">
-      <property name="text">
-       <string>Val 11:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="3">
-     <widget class="QLabel" name="fracRisk1">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QLabel" name="val2">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
-     <widget class="QLabel" name="label_18">
-      <property name="text">
-       <string>Fracture Risk 2:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="3">
-     <widget class="QLabel" name="fracRisk2">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1">
-     <widget class="QLabel" name="val3">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="1">
-     <widget class="QLabel" name="val4">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="2">
-     <widget class="QLabel" name="label_22">
-      <property name="text">
-       <string>Fracture Risk 3:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="2">
-     <widget class="QLabel" name="label_23">
-      <property name="text">
-       <string>Fracture Risk 4:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="3">
-     <widget class="QLabel" name="fracRisk3">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="3">
-     <widget class="QLabel" name="fracRisk4">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="1">
-     <widget class="QLabel" name="val5">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="1">
-     <widget class="QLabel" name="val6">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="1">
-     <widget class="QLabel" name="val7">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="8" column="1">
-     <widget class="QLabel" name="val8">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="9" column="1">
-     <widget class="QLabel" name="val9">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="10" column="1">
-     <widget class="QLabel" name="val10">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="11" column="1">
-     <widget class="QLabel" name="val11">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="12" column="1">
-     <widget class="QLabel" name="val12">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="13" column="1">
-     <widget class="QLabel" name="dxaHipTScore">
-      <property name="text">
-       <string>NA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="2" colspan="2">
-     <widget class="QPushButton" name="Calculate">
-      <property name="text">
-       <string>Calculate</string>
-      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QPushButton" name="measureButton">
+           <property name="text">
+            <string>Run</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="saveButton">
+           <property name="text">
+            <string>Save</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="closeButton">
+           <property name="text">
+            <string>Close</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QTableView" name="testdataTableView"/>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>271</width>
-     <height>21</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QToolBar" name="mainToolBar">
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-  </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+ <widget class="QStatusBar" name="statusBar"/>
  </widget>
- <layoutdefault spacing="6" margin="11"/>
  <resources/>
- <connections>
-  <connection>
-   <sender>Calculate</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>CalculateClicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>154</x>
-     <y>139</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>153</x>
-     <y>-12</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
- <slots>
-  <slot>CalculateClicked()</slot>
- </slots>
+ <connections/>
 </ui>

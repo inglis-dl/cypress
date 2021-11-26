@@ -8,6 +8,7 @@
 #include <QProcess>
 #include <QStandardPaths>
 #include <QMainWindow>
+#include <QStandardItemModel>
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
@@ -45,8 +46,9 @@ public:
     bool isVerbose() { return m_verbose; }
 
 private:
-    Ui::MainWindow *ui;
+    void readInput();
 
+    Ui::MainWindow *ui;
     QString m_inputFileName;
     QString m_outputFileName;
     QString m_mode;
@@ -54,9 +56,8 @@ private:
 
     FraxManager m_manager;
 
-    void readInput();
-    void SetUiInputs();
-    void SetUiOutputs();
+    QStandardItemModel m_model;
+
 private slots:
     void CalculateClicked();
 };

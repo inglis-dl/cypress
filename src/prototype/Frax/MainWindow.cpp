@@ -17,6 +17,20 @@ MainWindow::MainWindow(QWidget *parent)
     , m_verbose(false)
 {
     ui->setupUi(this);
+
+    // allocate 1 columns x 1 rows of frax measurement items
+    //
+
+    QStandardItem* item = new QStandardItem();
+    m_model.setItem(0, 0, item);
+
+    m_model.setHeaderData(0, Qt::Horizontal, "Test Results", Qt::DisplayRole);
+    ui->testdataTableView->setModel(&m_model);
+
+    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->verticalHeader()->hide();
 }
 
 MainWindow::~MainWindow()
@@ -27,7 +41,6 @@ MainWindow::~MainWindow()
 void MainWindow::CalculateClicked()
 {
     m_manager.calculateOutputs();
-    SetUiOutputs();
 }
 
 void MainWindow::initialize()
@@ -38,7 +51,6 @@ void MainWindow::initialize()
     // Read inputs required to launch frax test
     //
     readInput();
-    SetUiInputs();
 
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
@@ -90,35 +102,4 @@ void MainWindow::readInput()
     }
     else
         qDebug() << m_inputFileName << " file does not exist";
-}
-
-void MainWindow::SetUiInputs()
-{
-    QMap<QString, QVariant> inMap = m_manager.m_inputData;
-    ui->val1->setText(inMap["val1"].toString());
-    ui->val2->setText(inMap["val2"].toString());
-    ui->val3->setText(inMap["val3"].toString());
-    ui->val4->setText(inMap["val4"].toString());
-    ui->val5->setText(inMap["val5"].toString());
-    ui->val6->setText(inMap["val6"].toString());
-    ui->val7->setText(inMap["val7"].toString());
-    ui->val8->setText(inMap["val8"].toString());
-    ui->val9->setText(inMap["val9"].toString());
-    ui->val10->setText(inMap["val10"].toString());
-    ui->val11->setText(inMap["val11"].toString());
-    ui->val12->setText(inMap["val12"].toString());
-    ui->dxaHipTScore->setText(inMap["dxaHipTScore"].toString());
-}
-
-void MainWindow::SetUiOutputs()
-{
-    // Update displayed inputs in case they changed
-    SetUiInputs();
-
-    // Display outputs
-    QMap<QString, QVariant> outMap = m_manager.m_outputData;
-    ui->fracRisk1->setText(outMap["fracRisk1"].toString());
-    ui->fracRisk2->setText(outMap["fracRisk2"].toString());
-    ui->fracRisk3->setText(outMap["fracRisk3"].toString());
-    ui->fracRisk4->setText(outMap["fracRisk4"].toString());
 }
