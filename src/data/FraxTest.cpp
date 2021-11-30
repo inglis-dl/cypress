@@ -6,12 +6,12 @@
 #include <QJsonArray>
 #include <QFile>
 
-void FraxTest::fromFile(const QString &fileName)
+void FraxTest::fromFile(const QString &filePath)
 {
-    QFile ifile(fileName);
+    QFile ifile(filePath);
     if (ifile.open(QIODevice::ReadOnly))
     {
-        qDebug() << "OK, reading input file " << fileName;
+        qDebug() << "OK, reading input file " << filePath;
 
         QTextStream instream(&ifile);
         QString fraxContent = instream.readLine();

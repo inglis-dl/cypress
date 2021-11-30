@@ -99,7 +99,7 @@ void MainWindow::initialize()
             h->resizeSections(QHeaderView::ResizeToContents);
             ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
             ui->testdataTableView->resize(
-                h->sectionSize(0) + h->sectionSize(1) + 2,
+                h->sectionSize(0) + 2,
                 8 * (ui->testdataTableView->rowHeight(0) + 1) +
                 h->height());
             QSize ts_post = ui->testdataTableView->size();

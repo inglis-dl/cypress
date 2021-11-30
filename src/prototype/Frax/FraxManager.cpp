@@ -12,6 +12,25 @@ FraxManager::FraxManager(QObject* parent):
 {
 }
 
+void FraxManager::buildModel(QStandardItemModel* model) const
+{
+    // add measurement
+    //
+    int n_total = m_test.getNumberOfMeasurements();
+    model->setRowCount(1);
+    QString measurementStr = "NA";
+    FraxMeasurement measurement = m_test.getMeasurement(0);
+    if (measurement.isValid())
+        measurementStr = measurement.toString();
+    QStandardItem* item = model->item(0, 0);
+    if (nullptr == item)
+    {
+        item = new QStandardItem();
+        model->setItem(0, 0, item);
+    }
+    item->setData(measurementStr, Qt::DisplayRole);
+}
+
 void FraxManager::loadSettings(const QSettings& settings)
 {
     // the full spec path name including exe name
@@ -23,9 +42,9 @@ void FraxManager::loadSettings(const QSettings& settings)
 
 void FraxManager::saveSettings(QSettings* settings) const
 {
-    if (!m_executableName.isEmpty())
+    if (!m_executableExePath.isEmpty())
     {
-        settings->setValue("client/exe", m_executablePath);
+        settings->setValue("client/exe", m_executableExePath);
         if (m_verbose)
             qDebug() << "wrote exe fullspec path to settings file";
     }
@@ -33,7 +52,12 @@ void FraxManager::saveSettings(QSettings* settings) const
 
 QJsonObject FraxManager::toJsonObject() const
 {
-	return QJsonObject();
+    QJsonObject json = m_test.toJsonObject();
+    QFile ofile(m_outputFilePath);
+    ofile.open(QIODevice::ReadOnly);
+    QByteArray buffer = ofile.readAll();
+    json.insert("test_txt_file", QString(buffer.toBase64()));
+    return json;
 }
 
 bool FraxManager::isDefined(const QString& exeName) const
@@ -55,11 +79,15 @@ void FraxManager::setExecutableName(const QString&exeName)
     if (isDefined(exeName))
     {
         QFileInfo info(exeName);
-        m_executableName = info.fileName();
-        m_executablePath = info.filePath();
-        m_inputPath = QDir(m_executablePath).filePath("../input.txt");
-        m_oldInputPath = QDir(m_executablePath).filePath("../oldInput.txt");
-        m_outputPath = QDir(m_executablePath).filePath("../output.txt");
+        m_executableExePath = exeName;
+        m_executableFolderPath = info.dir().absolutePath();
+        m_inputFilePath = QDir(m_executableFolderPath).filePath("input.txt");
+        m_oldInputFilePath = QDir(m_executableFolderPath).filePath("oldInput.txt");
+        m_outputFilePath = QDir(m_executableFolderPath).filePath("output.txt");
+
+        //setInputs(inputs);
+        createInputsTxt();
+        configureProcess();
     }
 }
 
@@ -67,6 +95,11 @@ bool FraxManager::createInputsTxt()
 {
     QString filePath = getInputFullPath();
     QFile file(filePath);
+    if (file.exists()) {
+        file.rename(m_oldInputFilePath);
+        file.setFileName(getInputFullPath());
+    }
+
     if (file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
         QTextStream stream(&file);
@@ -127,10 +160,21 @@ void FraxManager::readOutputs()
 
 void FraxManager::clean()
 {
-    if (!m_outputPath.isEmpty())
+    if (!m_outputFilePath.isEmpty())
     {
-        QFile ofile(m_outputPath);
+        QFile ofile(m_outputFilePath);
         ofile.remove();
+    }
+
+    if (!m_inputFilePath.isEmpty()) {
+        QFile curInFile(m_inputFilePath);
+        QFile oldInFile(m_oldInputFilePath);
+        if (oldInFile.exists()) {
+            if (curInFile.exists()) {
+                curInFile.remove();
+            }
+            oldInFile.rename(m_inputFilePath);
+        }
     }
 }
 
@@ -142,26 +186,91 @@ void  FraxManager::measure()
     //m_process.waitForFinished();
 }
 
-void FraxManager::setInputs(const QMap<QString, QVariant>&)
+void FraxManager::setInputs(const QMap<QString, QVariant> &inputs)
 {
+    // TODO: check minimum inputs required
+    //
+    m_inputData = inputs;
+    createInputsTxt();
+    configureProcess();
 }
 
 void FraxManager::readOutput()
 {
+    if (QProcess::NormalExit != m_process.exitStatus())
+    {
+        qDebug() << "ERROR: process failed to finish correctly: cannot read output";
+        return;
+    }
+    else
+        qDebug() << "process finished successfully";
+
+    QFileInfo outFile(m_outputFilePath);
+    if (outFile.exists())
+    {
+        qDebug() << "found output txt file " << m_outputFilePath;
+        m_test.fromFile(m_outputFilePath);
+        if (m_test.isValid())
+        {
+            emit canWrite();
+        }
+        else
+            qDebug() << "ERROR: input from file produced invalid test results";
+
+        emit dataChanged();
+
+    }
+    else
+        qDebug() << "ERROR: no output csv file found";
+}
+
+void FraxManager::configureProcess()
+{
+    // the exe is present
+    QFileInfo info(m_executableExePath);
+    QDir working(m_executableFolderPath);
+    if (info.exists() && info.isExecutable() &&
+        working.exists())
+    {
+        qDebug() << "OK: configuring command";
+
+        m_process.setProcessChannelMode(QProcess::ForwardedChannels);
+        m_process.setProgram(m_executableExePath);
+        m_process.setWorkingDirectory(m_executableFolderPath);
+
+        qDebug() << "process working dir: " << m_executableFolderPath;
+
+        connect(&m_process, &QProcess::started,
+            this, [this]() {
+                qDebug() << "process started: " << m_process.arguments().join(" ");
+            });
+
+        connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, &FraxManager::readOutput);
+
+        connect(&m_process, &QProcess::errorOccurred,
+            this, [](QProcess::ProcessError error)
+            {
+                QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), QString::SkipEmptyParts);
+                qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
+            });
+
+        connect(&m_process, &QProcess::stateChanged,
+            this, [](QProcess::ProcessState state) {
+                QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), QString::SkipEmptyParts);
+                qDebug() << "process state: " << s.join(" ").toLower();
+
+            });
+
+        emit canMeasure();
+    }
+    else
+        qDebug() << "failed to configure process";
 }
 
 void FraxManager::clearData()
 {
     m_test.reset();
-    m_outputPath.clear();
+    m_outputFilePath.clear();
     emit dataChanged();
-}
-
-void FraxManager::runBlackBoxExe()
-{
-    // Run blackbox.exe
-    QProcess process;
-    process.start(getExecutableFullPath());
-    process.waitForFinished(2000);
-    process.close();
 }

@@ -9,22 +9,22 @@ void FraxMeasurement::fromString(const QString &inputStr)
     if (17 == commaSplit.size())
     {
         setCharacteristic("val1", commaSplit.at(0));
-        setCharacteristic("val2", commaSplit.at(1).toUInt());
-        setCharacteristic("val3", commaSplit.at(2).toUInt());
-        setCharacteristic("val4", commaSplit.at(3).toUInt());
-        setCharacteristic("val5", commaSplit.at(4).toUInt());
-        setCharacteristic("val6", commaSplit.at(5).toUInt());
-        setCharacteristic("val7", commaSplit.at(6).toUInt());
-        setCharacteristic("val8", commaSplit.at(7).toUInt());
-        setCharacteristic("val9", commaSplit.at(8).toUInt());
-        setCharacteristic("val10", commaSplit.at(9).toUInt());
-        setCharacteristic("val11", commaSplit.at(10).toUInt());
-        setCharacteristic("val12", commaSplit.at(11).toUInt());
-        setCharacteristic("dxaHipTScore", commaSplit.at(12).toUInt());
-        setCharacteristic("output1", commaSplit.at(13).toUInt());
-        setCharacteristic("output2", commaSplit.at(14).toUInt());
-        setCharacteristic("output3", commaSplit.at(15).toUInt());
-        setCharacteristic("output4", commaSplit.at(16).toUInt());
+        setCharacteristic("val2", commaSplit.at(1).toDouble());
+        setCharacteristic("val3", commaSplit.at(2).toDouble());
+        setCharacteristic("val4", commaSplit.at(3).toDouble());
+        setCharacteristic("val5", commaSplit.at(4).toDouble());
+        setCharacteristic("val6", commaSplit.at(5).toDouble());
+        setCharacteristic("val7", commaSplit.at(6).toDouble());
+        setCharacteristic("val8", commaSplit.at(7).toDouble());
+        setCharacteristic("val9", commaSplit.at(8).toDouble());
+        setCharacteristic("val10", commaSplit.at(9).toDouble());
+        setCharacteristic("val11", commaSplit.at(10).toDouble());
+        setCharacteristic("val12", commaSplit.at(11).toDouble());
+        setCharacteristic("dxaHipTScore", commaSplit.at(12).toDouble());
+        setCharacteristic("output1", commaSplit.at(13).toDouble());
+        setCharacteristic("output2", commaSplit.at(14).toDouble());
+        setCharacteristic("output3", commaSplit.at(15).toDouble());
+        setCharacteristic("output4", commaSplit.at(16).toDouble());
     }
 }
 
@@ -55,7 +55,7 @@ QString FraxMeasurement::toString() const
 {
     QString displayString;
     if (isValid()) {
-        displayString = QString("Out 1: %1\nOut 2: %2\nOut 3: %3\nOut 4: %4\n")
+        displayString = QString("Out1 (%1), Out2 (%2), Out3 (%3), Out4 (%4)")
             .arg(
                 getCharacteristic("output1").toString(),
                 getCharacteristic("output2").toString(),

@@ -18,7 +18,7 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel*) const override {};
+    void buildModel(QStandardItemModel*) const override;
 
     // is the passed string an executable file
     // with the correct path elements ?
@@ -37,27 +37,27 @@ public:
 
     QString getExecutableName() const
     {
-        return m_executablePath;
+        return m_executableFolderPath;
     }
 
     QString getExecutableFullPath() const
     {
-        return m_executablePath;
+        return m_executableFolderPath;
     }
 
     QString getInputFullPath() const
     {
-        return m_inputPath;
+        return m_inputFilePath;
     }
 
     QString getOldInputFullPath() const
     {
-        return m_oldInputPath;
+        return m_oldInputFilePath;
     }
 
     QString getOutputFullPath() const
     {
-        return m_outputPath;
+        return m_outputFilePath;
     }
 
     QMap<QString, QVariant> m_inputData;
@@ -74,18 +74,19 @@ signals:
 
     void canWrite();
 private:
-    QString m_executableName;
-    QString m_executablePath;
-    QString m_outputPath;
-    QString m_inputPath;
-    QString m_oldInputPath;
+    QString m_executableExePath;
+    QString m_executableFolderPath;
+    QString m_outputFilePath;
+    QString m_inputFilePath;
+    QString m_oldInputFilePath;
     QProcess m_process;
 
     FraxTest m_test;
 
+    void configureProcess();
+
     void clearData() override;
     bool createInputsTxt();
-    void runBlackBoxExe();
     void readOutputs();
 };
 
