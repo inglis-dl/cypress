@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QFile>
 
 void ChoiceReactionTest::fromFile(const QString &fileName)
 {

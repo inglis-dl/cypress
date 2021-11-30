@@ -4,7 +4,7 @@
 
 TEMPLATE = app
 TARGET = Frax
-DESTDIR = ../x64/Debug
+DESTDIR = ../../../../CypressBuilds/Frax/x64/Debug
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .
@@ -12,13 +12,20 @@ MOC_DIR += .
 OBJECTS_DIR += debug
 UI_DIR += .
 RCC_DIR += GeneratedFiles
-HEADERS += ./FraxUI.h \
-    ./InputsModel.h \
-    ./OutputsModel.h \
-    ./MainWindow.h \
-    ./FraxIO.h
-SOURCES += ./FraxIO.cpp \
-    ./FraxUI.cpp \
+HEADERS += ./MainWindow.h \
+    ./FraxManager.h \
+    ../../data/FraxMeasurement.h \
+    ../../data/FraxTest.h \
+    ../../data/MeasurementBase.h \
+    ../../data/TestBase.h \
+    ../../auxiliary/CommandLineParser.h \
+    ../../managers/ManagerBase.h
+SOURCES += ./FraxManager.cpp \
     ./MainWindow.cpp \
-    ./main.cpp
+    ./main.cpp \
+    ../../auxiliary/CommandLineParser.cpp \
+    ../../data/FraxMeasurement.cpp \
+    ../../data/FraxTest.cpp \
+    ../../data/MeasurementBase.cpp \
+    ../../managers/ManagerBase.cpp
 FORMS += ./MainWindow.ui
