@@ -35,7 +35,6 @@ void AudiometerManager::clearData()
 {
     m_deviceData.reset();
     m_test.reset();
-
     emit dataChanged();
 }
 

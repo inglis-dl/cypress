@@ -177,8 +177,8 @@ void MainWindow::initialize()
       ui->testdataTableView->setColumnWidth(0,h->sectionSize(0));
       ui->testdataTableView->setColumnWidth(1,h->sectionSize(1));
       ui->testdataTableView->resize(
-                  h->sectionSize(0)+h->sectionSize(1)+2,
-                  8*(ui->testdataTableView->rowHeight(0)+1)+
+                  h->sectionSize(0)+h->sectionSize(1)+1,
+                  8*ui->testdataTableView->rowHeight(0)+1+
                   h->height());
       QSize ts_post = ui->testdataTableView->size();
       int dx = ts_post.width()-ts_pre.width();
