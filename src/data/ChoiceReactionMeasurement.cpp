@@ -1,7 +1,7 @@
 #include "ChoiceReactionMeasurement.h"
 
 #include <QDebug>
-
+#include <QRandomGenerator>
 /**
  * sample input
  * lines start with and initial code
@@ -60,6 +60,32 @@ QString ChoiceReactionMeasurement::toString() const
         "(" + getCharacteristic("units").toString() + ")";
   }
   return s;
+}
+
+ChoiceReactionMeasurement ChoiceReactionMeasurement::simulate()
+{
+    ChoiceReactionMeasurement m;
+    static int id = 1;
+
+    // the response stimuluw is always a multiple of 50 ms
+    int stimulus_interval = QRandomGenerator::global()->bounded(1,15)*50;
+
+    // create a simulated time reaction based on the interval
+    int low = qMax(stimulus_interval - 50, 40);
+    int high = stimulus_interval + 200;
+    int time = QRandomGenerator::global()->bounded(low,high);
+
+    m.setCharacteristic("screen id",
+      "RT" + QStringLiteral("%1").arg(id+7,2,10,QLatin1Char('0')));
+    m.setCharacteristic("response correct", 1);
+    m.setCharacteristic("elapsed time",time);
+    m.setCharacteristic("units","ms");
+    m.setCharacteristic("correct position",(0 == (id % 2) ? "left" : "right"));
+    m.setCharacteristic("response stimulus interval",stimulus_interval);
+
+    if(60 < id++) id = 1;
+
+    return m;
 }
 
 QDebug operator<<(QDebug dbg, const ChoiceReactionMeasurement &item)

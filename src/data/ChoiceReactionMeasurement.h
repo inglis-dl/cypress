@@ -29,6 +29,7 @@ public:
 
     static const int TEST_CODE;
 
+    static ChoiceReactionMeasurement simulate();
 };
 
 Q_DECLARE_METATYPE(ChoiceReactionMeasurement);

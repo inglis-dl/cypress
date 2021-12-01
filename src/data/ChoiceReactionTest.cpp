@@ -24,7 +24,6 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
         int n_line = 0;
         while(!stream.atEnd())
         {
-
             QString s = stream.readLine();
             QStringList l = s.split(",");
             qDebug() << "reading line "<< QString::number(++n_line) <<" with number of items = " << QString::number(l.size());
@@ -93,7 +92,6 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                         QDateTime d = QDateTime::fromString(s, "MM/dd/yyyy HH:mm:ss");
                         addMetaDataCharacteristic("start datetime",d);
                         qDebug() << "adding start datetime meta info";
-
                     }
                 }
                 else

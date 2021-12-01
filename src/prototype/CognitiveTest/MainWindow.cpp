@@ -29,11 +29,11 @@ MainWindow::MainWindow(QWidget *parent)
         m_model.setItem(row,col,item);
       }
     }
-    m_model.setHeaderData(0,Qt::Horizontal,"Test Results",Qt::DisplayRole);
-    m_model.setHeaderData(1,Qt::Horizontal,"Test Results",Qt::DisplayRole);
+    m_model.setHeaderData(0,Qt::Horizontal,"Left Test Results",Qt::DisplayRole);
+    m_model.setHeaderData(1,Qt::Horizontal,"Right Test Results",Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
 
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->verticalHeader()->hide();
@@ -98,16 +98,19 @@ void MainWindow::initialize()
     //
     connect(&m_manager, &CognitiveTestManager::dataChanged,
             this,[this](){
+        QHeaderView *h = ui->testdataTableView->horizontalHeader();
+        h->setSectionResizeMode(QHeaderView::Fixed);
+
         m_manager.buildModel(&m_model);
 
-        QHeaderView *h = ui->testdataTableView->horizontalHeader();
         QSize ts_pre = ui->testdataTableView->size();
         h->resizeSections(QHeaderView::ResizeToContents);
         ui->testdataTableView->setColumnWidth(0,h->sectionSize(0));
         ui->testdataTableView->setColumnWidth(1,h->sectionSize(1));
         ui->testdataTableView->resize(
-                    h->sectionSize(0)+h->sectionSize(1)+2,
-                    8*(ui->testdataTableView->rowHeight(0)+1)+
+                    h->sectionSize(0)+h->sectionSize(1)+
+                    ui->testdataTableView->autoScrollMargin(),
+                    8*ui->testdataTableView->rowHeight(0)+1+
                     h->height());
         QSize ts_post = ui->testdataTableView->size();
         int dx = ts_post.width()-ts_pre.width();
@@ -171,9 +174,10 @@ void MainWindow::initialize()
 
 void MainWindow::run()
 {
-    // TODO: create the logic and code for bypassing the UI here
-    // create some dummy inputs
-
+    // TODO:
+    // create logic and code for bypassing UI interaction
+    // create simulated inputs
+    //
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

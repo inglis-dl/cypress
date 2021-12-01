@@ -1,5 +1,6 @@
 #include "CognitiveTestManager.h"
 
+#include <QDateTime>
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
@@ -18,29 +19,28 @@ void CognitiveTestManager::buildModel(QStandardItemModel *model) const
     //
     int n_total = m_test.getNumberOfMeasurements();
     int n_row = qMax(1, n_total/2);
-    int n_used = 0;
-    int rowCount = model->rowCount();
-    if(rowCount!=n_row)
+    if(n_row != model->rowCount())
     {
        model->setRowCount(n_row);
     }
-
-    for(int row = 0; row < n_row; row++)
+    int row_left = 0;
+    int row_right = 0;
+    for(int i=0; i < n_total; i++)
     {
-        for(int col = 0; col < 2; col++)
+        QString s = "NA";
+        ChoiceReactionMeasurement m = m_test.getMeasurement(i);
+        if(m.isValid())
+           s = "[" + QString::number(i+1) +"] " + m.toString();
+        int col = "left" == m.getCharacteristic("correct position") ? 0 : 1;
+        int *row = 0 == col ? &row_left : &row_right;
+        QStandardItem* item = model->item(*row,col);
+        if(nullptr == item)
         {
-          QString s = "NA";
-          ChoiceReactionMeasurement m = m_test.getMeasurement(n_used++);
-          if(m.isValid())
-             s = m.toString();
-           QStandardItem* item = model->item(row,col);
-           if(nullptr == item)
-           {
-             item = new QStandardItem();
-             model->setItem(row,col,item);
-           }
-           item->setData(s, Qt::DisplayRole);
-         }
+          item = new QStandardItem();
+          model->setItem(*row,col,item);
+        }
+        item->setData(s, Qt::DisplayRole);
+        (*row)++;
     }
 }
 
@@ -120,6 +120,11 @@ void CognitiveTestManager::clearData()
 
 void CognitiveTestManager::configureProcess()
 {
+    if("simulate" == m_mode)
+    {
+        emit canMeasure();
+        return;
+    }
     // the exe is present
     QFileInfo info(m_executableName);
     QDir working(m_executablePath);
@@ -186,6 +191,27 @@ void CognitiveTestManager::configureProcess()
 
 void CognitiveTestManager::readOutput()
 {
+    if("simulate" == m_mode)
+    {
+        // TODO:
+        // create simulate test results either by injecting to a file
+        // or by constructing programmatically
+        //
+        qDebug() << "simulating read out";
+        m_test.addMetaDataCharacteristic("start datetime",QDateTime::currentDateTime());
+        m_test.reset();
+        for(int i = 0; i < 60; i++)
+        {
+            m_test.addMeasurement(ChoiceReactionMeasurement::simulate());
+        }
+        m_test.addMetaDataCharacteristic("version","simulated");
+        m_test.addMetaDataCharacteristic("user id","simulated");
+        m_test.addMetaDataCharacteristic("interview id","simulated");
+        m_test.addMetaDataCharacteristic("end datetime",QDateTime::currentDateTime());
+        emit canWrite();
+        emit dataChanged();
+        return;
+    }
     if(QProcess::NormalExit != m_process.exitStatus())
     {
         qDebug() << "ERROR: process failed to finish correctly: cannot read output";
@@ -199,6 +225,9 @@ void CognitiveTestManager::readOutput()
     QString fileName;
     for(auto&& x : dir.entryList())
     {
+        // TODO: verify the file contains the data for the
+        // prescribed participant ID
+        //
         if (x.endsWith(".csv"))
         {
             fileName = x;
@@ -222,7 +251,6 @@ void CognitiveTestManager::readOutput()
             qDebug() << "ERROR: input from file produced invalid test results";
 
         emit dataChanged();
-
     }
     else
         qDebug() << "ERROR: no output csv file found";
@@ -238,10 +266,15 @@ void CognitiveTestManager::setInputs(const QMap<QString,QVariant> &inputs)
 
 void  CognitiveTestManager::measure()
 {
+    if("simulate" == m_mode)
+    {
+        readOutput();
+        return;
+    }
+
    // launch the process
     qDebug() << "starting process from measure";
     m_process.start();
-    //m_process.waitForFinished();
 }
 
 void  CognitiveTestManager::clean()
@@ -256,9 +289,12 @@ void  CognitiveTestManager::clean()
 QJsonObject CognitiveTestManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    QFile ofile(m_outputFile);
-    ofile.open(QIODevice::ReadOnly);
-    QByteArray buffer = ofile.readAll();
-    json.insert("test_csv_file",QString(buffer.toBase64()));
+    if("simulate" != m_mode)
+    {
+      QFile ofile(m_outputFile);
+      ofile.open(QIODevice::ReadOnly);
+      QByteArray buffer = ofile.readAll();
+      json.insert("test_csv_file",QString(buffer.toBase64()));
+    }
     return json;
 }
