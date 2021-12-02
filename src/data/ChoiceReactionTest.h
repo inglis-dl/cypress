@@ -7,7 +7,7 @@
 class ChoiceReactionTest : public TestBase<ChoiceReactionMeasurement>
 {
 public:
-    ChoiceReactionTest() = default;
+    ChoiceReactionTest();
     ~ChoiceReactionTest() = default;
 
     void fromFile(const QString &);
@@ -21,6 +21,10 @@ public:
     // String keys are converted to snake_case
     //
     QJsonObject toJsonObject() const override;
+
+private:
+
+    QList<QString> m_outputKeyList;
 
 };
 

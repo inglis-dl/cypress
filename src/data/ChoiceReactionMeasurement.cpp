@@ -13,6 +13,7 @@
  * 11,Reaction,vC1.3.3t,Default,None,12345678,11/17/2021 12:26:54 PM,RT08,1,370,Right,350,,,9
  *  0         1       2       3    4         5                      6   7 8   9     10  11 12 13 14
  * 12,Reaction,vC1.3.3t,Default,None,12345678,11/17/2021 12:26:54 PM,Level,1,EndDateTime,11/17/2021 12:28:02 PM,StartDateTimes,11/17/2021 12:26:54 PM,11/17/2021 12:27:10 PM,69
+ *
  */
 
 const int ChoiceReactionMeasurement::TEST_CODE = 11;

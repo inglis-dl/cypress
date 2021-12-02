@@ -53,6 +53,8 @@ void MainWindow::initialize()
     //
     readInput();
 
+    m_manager.setInputData(m_inputData);
+
     // Populate barcode display
     //
     if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
@@ -290,5 +292,5 @@ void MainWindow::writeOutput()
    if(m_verbose)
        qDebug() << "wrote to file " << fileName;
 
-   ui->statusBar->showMessage("Weigh scale data recorded.  Close when ready.");
+   ui->statusBar->showMessage("Cognitive Test data recorded.  Close when ready.");
 }

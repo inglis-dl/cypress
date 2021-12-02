@@ -39,10 +39,17 @@ public:
         return m_executableName;
     }
 
+    // Set the input data.
+    // The input data is read from the input
+    // json file to the main application.  This method should be
+    // used to filter the minimum inputs needed to run
+    // a test.  Filtering keys are stored in member
+    // m_inputKeyList.
+    //
+    void setInputData(const QMap<QString,QVariant> &);
+
 public slots:
     void measure();
-
-    void setInputs(const QMap<QString,QVariant> &);
 
     void readOutput();
 
@@ -63,6 +70,7 @@ private:
     void clearData() override;
 
     QMap<QString,QVariant> m_inputData;
+    QList<QString> m_inputKeyList;
 
     void configureProcess();
 };

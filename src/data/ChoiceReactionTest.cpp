@@ -6,6 +6,18 @@
 #include <QJsonArray>
 #include <QFile>
 
+// the minimum output data keys required from a successful a test
+//
+ChoiceReactionTest::ChoiceReactionTest()
+{
+    m_outputKeyList << "user id";
+    m_outputKeyList << "start datetime";
+    m_outputKeyList << "end datetime";
+    m_outputKeyList << "interview id";
+    m_outputKeyList << "number of measurements";
+    m_outputKeyList << "version";
+}
+
 void ChoiceReactionTest::fromFile(const QString &fileName)
 {
     QFile ifile(fileName);
@@ -44,7 +56,7 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                 else if(ChoiceReactionMeasurement::TEST_CODE == code)
                 {
                     ChoiceReactionMeasurement m;
-                    m.fromString(s);
+                    m.fromString(s);                    
                     addMeasurement(m);
                     qDebug() << "found "<<(m.isValid()?"VALID":"INVALID")<<"measurement item positions at line " << QString::number(n_line);
                     qDebug() << m.toString();
@@ -127,14 +139,16 @@ QString ChoiceReactionTest::toString() const
 
 bool ChoiceReactionTest::isValid() const
 {
-    bool okMeta =
-      hasMetaDataCharacteristic("user id") &&
-      hasMetaDataCharacteristic("start datetime") &&
-      hasMetaDataCharacteristic("end datetime") &&
-      hasMetaDataCharacteristic("interview id") &&
-      hasMetaDataCharacteristic("number of measurements") &&
-      hasMetaDataCharacteristic("version");
-
+    bool okMeta = true;
+    for(auto&& x : m_outputKeyList)
+    {
+      if(!hasMetaDataCharacteristic(x))
+      {
+         okMeta = false;
+         qDebug() << "ERROR: missing test meta data " << x;
+         break;
+       }
+    }
     bool okTest = 0 < getNumberOfMeasurements();
     if(okTest)
     {
@@ -143,20 +157,10 @@ bool ChoiceReactionTest::isValid() const
         if(!x.isValid())
         {
           okTest = false;
+          qDebug() << "ERROR: invalid test measurement";
           break;
         }
       }
-    }
-    qDebug() << "test results " << (okTest?"OK":"ERROR");
-    qDebug() << "test meta info " << (okMeta?"OK":"ERROR");
-    if(!okMeta)
-    {
-        qDebug() << (hasMetaDataCharacteristic("user id") ? getMetaDataCharacteristic("user id").toString() : "ERROR: user id missing");
-        qDebug() << (hasMetaDataCharacteristic("start datetime") ? getMetaDataCharacteristic("start datetime").toString() : "ERROR: start datetime missing");
-        qDebug() << (hasMetaDataCharacteristic("end datetime") ? getMetaDataCharacteristic("end datetime").toString() : "ERROR: end datetime missing");
-        qDebug() << (hasMetaDataCharacteristic("interview id") ? getMetaDataCharacteristic("interview id").toString() : "ERROR: interview id missing");
-        qDebug() << (hasMetaDataCharacteristic("number of measurements") ? getMetaDataCharacteristic("number of measurements").toString() : "ERROR: number of measurements missing");
-        qDebug() << (hasMetaDataCharacteristic("version") ? getMetaDataCharacteristic("version").toString() : "ERROR: version missing");
     }
 
     return okMeta && okTest;

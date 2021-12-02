@@ -11,6 +11,8 @@
 CognitiveTestManager::CognitiveTestManager(QObject *parent) :
     ManagerBase(parent)
 {
+    m_inputKeyList << "barcode";
+    m_inputKeyList << "language";
 }
 
 void CognitiveTestManager::buildModel(QStandardItemModel *model) const
@@ -82,13 +84,35 @@ void CognitiveTestManager::setExecutableName(const QString &exeName)
        QDir dir = QDir::cleanPath(m_executablePath + QDir::separator() + "results");
        m_outputPath = dir.path();
 
-       QMap<QString,QVariant> inputs;
-       inputs["barcode"] = 12345678;
-       inputs["language"] = "english";
-       inputs["user"] = "simulate_interviewer";
-       inputs["site"] = "simulate_dcs";
-       setInputs(inputs);
+       configureProcess();
     }
+}
+
+void CognitiveTestManager::setInputData(const QMap<QString, QVariant> &input)
+{
+    if("simulate" == m_mode)
+    {
+        m_inputData["barcode"] = 12345678;
+        m_inputData["language"] = "english";
+        m_inputData["user"] = "sim_user";
+        m_inputData["site"] = "sim_site";
+        return;
+    }
+    bool ok = true;
+    for(auto&& x : m_inputKeyList)
+    {
+        if(!input.contains(x))
+        {
+            ok = false;
+            break;
+        }
+        else
+            m_inputData[x] = input[x];
+    }
+    if(!ok)
+        m_inputData.clear();
+    else
+        configureProcess();
 }
 
 void CognitiveTestManager::loadSettings(const QSettings &settings)
@@ -193,10 +217,6 @@ void CognitiveTestManager::readOutput()
 {
     if("simulate" == m_mode)
     {
-        // TODO:
-        // create simulate test results either by injecting to a file
-        // or by constructing programmatically
-        //
         qDebug() << "simulating read out";
         m_test.addMetaDataCharacteristic("start datetime",QDateTime::currentDateTime());
         m_test.reset();
@@ -208,10 +228,12 @@ void CognitiveTestManager::readOutput()
         m_test.addMetaDataCharacteristic("user id","simulated");
         m_test.addMetaDataCharacteristic("interview id","simulated");
         m_test.addMetaDataCharacteristic("end datetime",QDateTime::currentDateTime());
+        m_test.addMetaDataCharacteristic("number of measurements",60);
         emit canWrite();
         emit dataChanged();
         return;
     }
+
     if(QProcess::NormalExit != m_process.exitStatus())
     {
         qDebug() << "ERROR: process failed to finish correctly: cannot read output";
@@ -254,14 +276,6 @@ void CognitiveTestManager::readOutput()
     }
     else
         qDebug() << "ERROR: no output csv file found";
-}
-
-void CognitiveTestManager::setInputs(const QMap<QString,QVariant> &inputs)
-{
-    // TODO: check minimum inputs required
-    //
-    m_inputData = inputs;
-    configureProcess();
 }
 
 void  CognitiveTestManager::measure()
