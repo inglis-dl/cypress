@@ -39,7 +39,7 @@ public:
     bool isPairedTo(const QString &) const;
 
     void loadSettings(const QSettings &) override;
-    void saveSettings(QSettings*) const override;
+    void saveSettings(QSettings *) const override;
 
     void buildModel(QStandardItemModel *) const override;
 
@@ -71,16 +71,6 @@ signals:
     //
     void canConnectDevice();
 
-    // Valid test completed (with 2 readings) and ready to write to output
-    // (update GUI enable write button and update the results display)
-    //
-    void canWrite();
-
-    // Ready to measure and receive data
-    // (update GUI enable measure button)
-    //
-    void canMeasure();
-
     void deviceNameChanged(const QString &);
 
 public slots:
@@ -106,7 +96,7 @@ public slots:
 
     // Retrieve a measurement from the device
     //
-    void measure();
+    void measure() override;
 
 private slots:
 
@@ -116,7 +106,7 @@ private slots:
     // If the thermometer (peripheral) was previously paired to the client
     // create and activate a QLowEnergyController to negotiate communication.
     //
-    void deviceDiscoveredInternal(const QBluetoothDeviceInfo &info);
+    void deviceDiscoveredInternal(const QBluetoothDeviceInfo &);
 
     // Discovery agent finished or cancelled device discovery.
     //
@@ -124,7 +114,7 @@ private slots:
 
     // Set the bluetooth low energy peripheral
     //
-    void setDevice(const QBluetoothDeviceInfo &info);
+    void setDevice(const QBluetoothDeviceInfo &);
 
     // QLowEnergyController signal receptors
     //
@@ -133,7 +123,7 @@ private slots:
     // creates a QLowEnergyService to write the Indicate property
     // of the client characteristic and then receive temperature data changes
     //
-    void serviceDiscovered(const QBluetoothUuid &uuid);
+    void serviceDiscovered(const QBluetoothUuid &);
     void serviceDiscoveryComplete();
 
     // QLowEnergyService signal receptors
@@ -147,8 +137,8 @@ private slots:
 
     // Respond to read requests and indications
     //
-    void updateTemperatureData(const QLowEnergyCharacteristic &c, const QByteArray &a);
-    void updateInfoData(const QLowEnergyCharacteristic &c, const QByteArray &a);
+    void updateTemperatureData(const QLowEnergyCharacteristic &, const QByteArray &);
+    void updateInfoData(const QLowEnergyCharacteristic &, const QByteArray &);
 
  private:
     QScopedPointer<QBluetoothDeviceInfo> m_peripheral;
@@ -158,7 +148,7 @@ private slots:
     QScopedPointer<QLowEnergyService> m_thermo_service;
     QScopedPointer<QLowEnergyService> m_info_service;
 
-    void connectToController(const QBluetoothDeviceInfo &info);
+    void connectToController(const QBluetoothDeviceInfo &);
 
     void setLocalDevice(const QString &);
 

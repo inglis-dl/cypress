@@ -10,25 +10,35 @@
 FraxManager::FraxManager(QObject* parent):
 	ManagerBase(parent)
 {
+    m_inputKeyList << "type";
+    m_inputKeyList << "country code";
+    m_inputKeyList << "age";
+    m_inputKeyList << "sex";
+    m_inputKeyList << "bmi";
+    m_inputKeyList << "previous fracture";
+    m_inputKeyList << "parent hip fracture";
+    m_inputKeyList << "current smoker";
+    m_inputKeyList << "gluccocorticoid";
+    m_inputKeyList << "rheumatoid arthritis";
+    m_inputKeyList << "secondary osteoporosis";
+    m_inputKeyList << "alcohol";
+    m_inputKeyList << "femoral neck bmd";
 }
 
-void FraxManager::buildModel(QStandardItemModel* model) const
+void FraxManager::buildModel(QStandardItemModel *model) const
 {
-    // add measurement
+    // add the four probability measurements
     //
-    int n_total = m_test.getNumberOfMeasurements();
-    model->setRowCount(1);
-    QString measurementStr = "NA";
-    FraxMeasurement measurement = m_test.getMeasurement(0);
-    if (measurement.isValid())
-        measurementStr = measurement.toString();
-    QStandardItem* item = model->item(0, 0);
-    if (nullptr == item)
+    for(int i = 0; i < m_test.getNumberOfMeasurements(); i++)
     {
-        item = new QStandardItem();
-        model->setItem(0, 0, item);
+        QStandardItem* item = model->item(i, 0);
+        if (nullptr == item)
+        {
+            item = new QStandardItem();
+            model->setItem(i, 0, item);
+        }
+        item->setData(m_test.getMeasurement(i).toString(), Qt::DisplayRole);
     }
-    item->setData(measurementStr, Qt::DisplayRole);
 }
 
 void FraxManager::loadSettings(const QSettings& settings)
@@ -42,9 +52,9 @@ void FraxManager::loadSettings(const QSettings& settings)
 
 void FraxManager::saveSettings(QSettings* settings) const
 {
-    if (!m_executableExePath.isEmpty())
+    if (!m_executableName.isEmpty())
     {
-        settings->setValue("client/exe", m_executableExePath);
+        settings->setValue("client/exe", m_executableName);
         if (m_verbose)
             qDebug() << "wrote exe fullspec path to settings file";
     }
@@ -53,20 +63,28 @@ void FraxManager::saveSettings(QSettings* settings) const
 QJsonObject FraxManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    QFile ofile(m_outputFilePath);
-    ofile.open(QIODevice::ReadOnly);
-    QByteArray buffer = ofile.readAll();
-    json.insert("test_txt_file", QString(buffer.toBase64()));
+    if("simulate" != m_mode)
+    {
+      QFile ofile(m_outputFile);
+      ofile.open(QIODevice::ReadOnly);
+      QByteArray buffer = ofile.readAll();
+      json.insert("test_output_file",QString(buffer.toBase64()));
+      json.insert("test_output_file_mime_type","txt");
+    }
     return json;
 }
 
-bool FraxManager::isDefined(const QString& exeName) const
+bool FraxManager::isDefined(const QString &exeName) const
 {
+    if("simulate" == m_mode)
+    {
+       return true;
+    }
     bool ok = false;
-    if (!exeName.isEmpty())
+    if(!exeName.isEmpty())
     {
         QFileInfo info(exeName);
-        if (info.exists() && info.isExecutable())
+        if(info.exists() && info.isExecutable())
         {
             ok = true;
         }
@@ -74,129 +92,124 @@ bool FraxManager::isDefined(const QString& exeName) const
     return ok;
 }
 
-void FraxManager::setExecutableName(const QString&exeName)
+void FraxManager::setExecutableName(const QString &exeName)
 {
-    if (isDefined(exeName))
+    if(isDefined(exeName))
     {
         QFileInfo info(exeName);
-        m_executableExePath = exeName;
-        m_executableFolderPath = info.dir().absolutePath();
-        m_inputFilePath = QDir(m_executableFolderPath).filePath("input.txt");
-        m_oldInputFilePath = QDir(m_executableFolderPath).filePath("oldInput.txt");
-        m_outputFilePath = QDir(m_executableFolderPath).filePath("output.txt");
+        m_executableName = exeName;
+        m_executablePath = info.absolutePath();
+        m_outputFile = QDir(m_executablePath).filePath("output.txt");
+        m_inputFile =  QDir(m_executablePath).filePath("input.txt");
+        m_temporaryFile = QDir(m_executablePath).filePath("input_ORIG.txt");
 
-        //setInputs(inputs);
-        createInputsTxt();
-        configureProcess();
-    }
-}
-
-bool FraxManager::createInputsTxt()
-{
-    QString filePath = getInputFullPath();
-    QFile file(filePath);
-    if (file.exists()) {
-        file.rename(m_oldInputFilePath);
-        file.setFileName(getInputFullPath());
-    }
-
-    if (file.open(QIODevice::WriteOnly | QIODevice::Text))
-    {
-        QTextStream stream(&file);
-
-        stream << m_inputData["val1"].toString() + ","
-            << m_inputData["val2"].toString() << ","
-            << m_inputData["val3"].toString() << ","
-            << m_inputData["val4"].toString() << ","
-            << m_inputData["val5"].toString() << ","
-            << m_inputData["val6"].toString() << ","
-            << m_inputData["val7"].toString() << ","
-            << m_inputData["val8"].toString() << ","
-            << m_inputData["val9"].toString() << ","
-            << m_inputData["val10"].toString() << ","
-            << m_inputData["val11"].toString() << ","
-            << m_inputData["val12"].toString() << ","
-            << m_inputData["dxaHipTScore"].toString();
-
-        file.close();
-        qDebug() << "Wrote input.txt to " + filePath;
-        return true;
-    }
-    return false;
-}
-
-void FraxManager::readOutputs()
-{
-    QFile file(getOutputFullPath());
-
-    if (file.open(QIODevice::ReadOnly))
-    {
-        QTextStream instream(&file);
-        QString line = instream.readLine();
-        file.close();
-
-        QStringList lineSplit = line.split(",");
-        if (lineSplit.length() >= 17) {
-            m_inputData["val1"] = lineSplit[0];
-            m_inputData["val2"] = QString(lineSplit[1]).toDouble();
-            m_inputData["val3"] = QString(lineSplit[2]).toDouble();
-            m_inputData["val4"] = QString(lineSplit[3]).toDouble();
-            m_inputData["val5"] = QString(lineSplit[4]).toDouble();
-            m_inputData["val6"] = QString(lineSplit[5]).toDouble();
-            m_inputData["val7"] = QString(lineSplit[6]).toDouble();
-            m_inputData["val8"] = QString(lineSplit[7]).toDouble();
-            m_inputData["val9"] = QString(lineSplit[8]).toDouble();
-            m_inputData["val10"] = QString(lineSplit[9]).toDouble();
-            m_inputData["val11"] = QString(lineSplit[10]).toDouble();
-            m_inputData["val12"] = QString(lineSplit[11]).toDouble();
-            m_inputData["dxaHipTScore"] = QString(lineSplit[12]).toDouble();
-            m_outputData["fracRisk1"] = QString(lineSplit[13]).toDouble();
-            m_outputData["fracRisk2"] = QString(lineSplit[14]).toDouble();
-            m_outputData["fracRisk3"] = QString(lineSplit[15]).toDouble();
-            m_outputData["fracRisk4"] = QString(lineSplit[16]).toDouble();
-        }
+        if(QFileInfo::exists(m_inputFile))
+          configureProcess();
+        else
+          qDebug() << "ERROR: expected default input.txt does not exist";
     }
 }
 
 void FraxManager::clean()
 {
-    if (!m_outputFilePath.isEmpty())
+    if(!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
     {
-        QFile ofile(m_outputFilePath);
+        qDebug() << "removing output file " << m_outputFile;
+        QFile ofile(m_outputFile);
         ofile.remove();
+        m_outputFile.clear();
     }
 
-    if (!m_inputFilePath.isEmpty()) {
-        QFile curInFile(m_inputFilePath);
-        QFile oldInFile(m_oldInputFilePath);
-        if (oldInFile.exists()) {
-            if (curInFile.exists()) {
-                curInFile.remove();
-            }
-            oldInFile.rename(m_inputFilePath);
-        }
+    if(!m_temporaryFile.isEmpty() && QFileInfo::exists(m_temporaryFile))
+    {
+        // remove the inputfile first
+        QFile ifile(m_inputFile);
+        ifile.remove();
+        QFile::copy(m_temporaryFile, m_inputFile);
+        qDebug() << "restored backup from " << m_temporaryFile;
+        QFile tempFile(m_temporaryFile);
+        tempFile.remove();
+        m_temporaryFile.clear();
     }
 }
 
-void  FraxManager::measure()
+void FraxManager::measure()
 {
+    if("simulate" == m_mode)
+    {
+        readOutput();
+        return;
+    }
     // launch the process
+    clearData();
     qDebug() << "starting process from measure";
     m_process.start();
-    //m_process.waitForFinished();
 }
 
-void FraxManager::setInputs(const QMap<QString, QVariant> &inputs)
+void FraxManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    // TODO: check minimum inputs required
-    //
-    m_inputData = inputs;
-    createInputsTxt();
-    configureProcess();
+    if("simulate" == m_mode)
+    {
+        m_inputData["type"] = "t";
+        m_inputData["country code"] = 19;
+        m_inputData["age"] = 84.19;
+        m_inputData["sex"] = 0;
+        m_inputData["bmi"] = 24.07;
+        m_inputData["previous fracture"] = 0;
+        m_inputData["parent hip fracture"] = 0;
+        m_inputData["current smoker"] = 0;
+        m_inputData["gluccocorticoid"] = 0;
+        m_inputData["rheumatoid arthritis"] = 0;
+        m_inputData["secondary osteoporosis"] = 0;
+        m_inputData["alcohol"] = 0;
+        m_inputData["femoral_neck_bmd"] = -1.1;
+        return;
+    }
+    bool ok = true;
+    for(auto&& x : m_inputKeyList)
+    {
+        if(!input.contains(x))
+        {
+            ok = false;
+            qDebug() << "ERROR: missing expected input " << x;
+            break;
+        }
+        else
+            m_inputData[x] = input[x];
+    }
+    if(!ok)
+        m_inputData.clear();
+    else
+        configureProcess();
 }
 
 void FraxManager::readOutput()
 {
+    if("simulate" == m_mode)
+    {
+        qDebug() << "simulating read out";
+
+        FraxMeasurement m;
+        m.setCharacteristic("type","osteoporotic fracture");
+        m.setCharacteristic("probability", 1.0);
+        m.setCharacteristic("units","%");
+        m_test.addMeasurement(m);
+        m.setCharacteristic("type","hip fracture");
+        m_test.addMeasurement(m);
+        m.setCharacteristic("type","osteoporotic fracture bmd");
+        m_test.addMeasurement(m);
+        m.setCharacteristic("type","hip fracture bmd");
+        m_test.addMeasurement(m);
+
+        for(auto&& x : m_inputData.toStdMap())
+        {
+          m_test.addMetaDataCharacteristic(x.first,x.second);
+        }
+        emit canWrite();
+        emit dataChanged();
+        return;
+    }
+
     if (QProcess::NormalExit != m_process.exitStatus())
     {
         qDebug() << "ERROR: process failed to finish correctly: cannot read output";
@@ -205,12 +218,11 @@ void FraxManager::readOutput()
     else
         qDebug() << "process finished successfully";
 
-    QFileInfo outFile(m_outputFilePath);
-    if (outFile.exists())
+    if(QFileInfo::exists(m_outputFile))
     {
-        qDebug() << "found output txt file " << m_outputFilePath;
-        m_test.fromFile(m_outputFilePath);
-        if (m_test.isValid())
+        qDebug() << "found output txt file " << m_outputFile;
+        m_test.fromFile(m_outputFile);
+        if(m_test.isValid())
         {
             emit canWrite();
         }
@@ -218,27 +230,69 @@ void FraxManager::readOutput()
             qDebug() << "ERROR: input from file produced invalid test results";
 
         emit dataChanged();
-
     }
     else
-        qDebug() << "ERROR: no output csv file found";
+        qDebug() << "ERROR: no output.txt file found";
 }
 
 void FraxManager::configureProcess()
 {
-    // the exe is present
-    QFileInfo info(m_executableExePath);
-    QDir working(m_executableFolderPath);
+    if("simulate" == m_mode)
+    {
+        emit canMeasure();
+        return;
+    }
+
+    // The exe and input file are present
+    //
+    QFileInfo info(m_executableName);
+    QDir working(m_executablePath);
     if (info.exists() && info.isExecutable() &&
-        working.exists())
+        working.exists() && QFileInfo::exists(m_inputFile))
     {
         qDebug() << "OK: configuring command";
 
         m_process.setProcessChannelMode(QProcess::ForwardedChannels);
-        m_process.setProgram(m_executableExePath);
-        m_process.setWorkingDirectory(m_executableFolderPath);
+        m_process.setProgram(m_executableName);
+        m_process.setWorkingDirectory(m_executablePath);
 
-        qDebug() << "process working dir: " << m_executableFolderPath;
+        qDebug() << "process working dir: " << m_executablePath;
+
+        // backup the original intput.txt
+        if(QFileInfo::exists(m_temporaryFile))
+        {
+            QFile tfile(m_temporaryFile);
+            tfile.remove();
+        }
+        QFile::copy(m_inputFile, m_temporaryFile);
+        qDebug() << "wrote backup to " << m_temporaryFile;
+
+        // generate the input.txt file content
+        if(m_inputData.isEmpty())
+        {
+            qDebug() << "ERROR: no input data to write to input.txt";
+            return;
+        }
+        QStringList list;
+        for(auto&& x : m_inputData.values())
+        {
+            list << x.toString();
+        }
+        QString line = list.join(",");
+        QFile ofile(m_inputFile);
+        if(ofile.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QTextStream stream(&ofile);
+            stream << line;
+            ofile.close();
+            qDebug() << "populated the input.txt file " << m_inputFile;
+            qDebug() << "content should be " << line;
+        }
+        else
+        {
+            qDebug() << "ERROR: failed writing to " << m_inputFile;
+            return;
+        }
 
         connect(&m_process, &QProcess::started,
             this, [this]() {
@@ -271,6 +325,5 @@ void FraxManager::configureProcess()
 void FraxManager::clearData()
 {
     m_test.reset();
-    m_outputFilePath.clear();
     emit dataChanged();
 }

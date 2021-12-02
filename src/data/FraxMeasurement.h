@@ -5,10 +5,9 @@
 
 /*!
 * \class FraxMeasurement
-* \brief A FraxMeasurement class
+* \brief A Frax Measurement class
 *
-* Measurements of Frax are derived from inputs
-* passed in from juniper.
+* Frax measurements are derived from output.txt file produced by Frax blackbox.exe
 * This class facilitates converting the given inputs to output.
 *
 * \sa MeasurementBase
@@ -20,7 +19,7 @@ public:
     FraxMeasurement() = default;
     ~FraxMeasurement() = default;
 
-    void fromString(const QString&);
+    void fromString(const QString &);
 
     bool isValid() const override;
 

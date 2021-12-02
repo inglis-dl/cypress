@@ -30,14 +30,14 @@ void WeighScaleManager::buildModel(QStandardItemModel* model) const
 
 void WeighScaleManager::clearData()
 {
-    m_deviceData.reset();
     m_test.reset();
-
     emit dataChanged();
 }
 
 void WeighScaleManager::connectDevice()
 {
+    clearData();
+
     if("simulate" == m_mode)
     {
         m_request = QByteArray("i");

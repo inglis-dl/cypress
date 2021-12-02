@@ -44,8 +44,6 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel *) const override {};
-
 public slots:
 
     // connect to the serial port
@@ -63,7 +61,7 @@ public slots:
     //
     virtual void writeDevice();
 
-    virtual void measure() = 0;
+    //virtual void measure() = 0;
 
 private slots:
 
@@ -102,16 +100,6 @@ signals:
     //
     void canConnectDevice();
 
-    // valid test completed and ready to write to output
-    // (update GUI enable write button and update the results display)
-    //
-    void canWrite();
-
-    // ready to measure and receive data
-    // (update GUI enable measure button)
-    //
-    void canMeasure();
-
     void deviceNameChanged(const QString &);
 
 protected:
@@ -124,8 +112,6 @@ protected:
 
     QByteArray m_buffer;
     QByteArray m_request;
-
-    virtual void clearData() override;
 };
 
 #endif // SERIALPORTMANAGER_H

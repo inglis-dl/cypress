@@ -6,7 +6,6 @@
 
 SerialPortManager::SerialPortManager(QObject *parent) : ManagerBase(parent)
 {
-
 }
 
 bool SerialPortManager::isDefined(const QString &label) const
@@ -31,8 +30,7 @@ bool SerialPortManager::devicesAvailable() const
         return true;
     }
     QList<QSerialPortInfo> list = QSerialPortInfo::availablePorts();
-    bool ok = !list.empty();
-    return ok;
+    return !list.empty();
 }
 
 void SerialPortManager::loadSettings(const QSettings &settings)
@@ -54,12 +52,6 @@ void SerialPortManager::saveSettings(QSettings *settings) const
       if(m_verbose)
           qDebug() << "wrote serial port to settings file";
     }
-}
-
-void SerialPortManager::clearData()
-{
-    m_deviceData.reset();
-    emit dataChanged();
 }
 
 void SerialPortManager::scanDevices()
@@ -161,17 +153,19 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
     {
         return;
     }
+
+    m_deviceData.reset();
+
     if("simulate" == m_mode)
     {
-       clearData();
        // get the device data
-       m_deviceData.setCharacteristic("port product ID", "simulated produce ID");
-       m_deviceData.setCharacteristic("port vendor ID", "simulated vendor ID");
-       m_deviceData.setCharacteristic("port manufacturer", "simulated manufacturer");
-       m_deviceData.setCharacteristic("port name", (m_deviceName.isEmpty() ? "simulated_device" : m_deviceName));
-       m_deviceData.setCharacteristic("port serial number", "simulated serial number");
-       m_deviceData.setCharacteristic("port system location", "simulated system location");
-       m_deviceData.setCharacteristic("port description", "simulated description");
+       m_deviceData.setCharacteristic("port product ID", "simulated");
+       m_deviceData.setCharacteristic("port vendor ID", "simulated");
+       m_deviceData.setCharacteristic("port manufacturer", "simulated");
+       m_deviceData.setCharacteristic("port name", (m_deviceName.isEmpty() ? "simulated" : m_deviceName));
+       m_deviceData.setCharacteristic("port serial number", "simulated");
+       m_deviceData.setCharacteristic("port system location", "simulated");
+       m_deviceData.setCharacteristic("port description", "simulated");
        emit canConnectDevice();
        return;
     }
@@ -180,11 +174,10 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
     {
         if(m_verbose)
             qDebug() << "ERROR: no port available";
+        return;
     }
     if(m_verbose)
         qDebug() << "ready to connect to " << info.portName();
-
-    clearData();
 
     // get the device data
     if(info.hasProductIdentifier())
@@ -255,7 +248,6 @@ void SerialPortManager::connectDevice()
 
 void SerialPortManager::disconnectDevice()
 {
-    clearData();
     emit canConnectDevice();
     if("simulate" == m_mode)
     {

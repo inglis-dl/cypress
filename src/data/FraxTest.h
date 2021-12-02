@@ -7,7 +7,7 @@
 class FraxTest : public TestBase<FraxMeasurement>
 {
 public:
-    FraxTest() = default;
+    FraxTest();
     ~FraxTest() = default;
 
     void fromFile(const QString&);
@@ -21,6 +21,9 @@ public:
     // String keys are converted to snake_case
     //
     QJsonObject toJsonObject() const override;
+
+private:
+    QList<QString> m_outputKeyList;
 
 };
 

@@ -278,7 +278,7 @@ void CognitiveTestManager::readOutput()
         qDebug() << "ERROR: no output csv file found";
 }
 
-void  CognitiveTestManager::measure()
+void CognitiveTestManager::measure()
 {
     if("simulate" == m_mode)
     {
@@ -286,17 +286,18 @@ void  CognitiveTestManager::measure()
         return;
     }
 
+   clearData();
    // launch the process
     qDebug() << "starting process from measure";
     m_process.start();
 }
 
-void  CognitiveTestManager::clean()
+void CognitiveTestManager::clean()
 {
-    if(!m_outputFile.isEmpty())
+    if(!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
     {
-        QFile ofile(m_outputFile);
-        ofile.remove();
+      QFile ofile(m_outputFile);
+      ofile.remove();
     }
 }
 
@@ -308,7 +309,8 @@ QJsonObject CognitiveTestManager::toJsonObject() const
       QFile ofile(m_outputFile);
       ofile.open(QIODevice::ReadOnly);
       QByteArray buffer = ofile.readAll();
-      json.insert("test_csv_file",QString(buffer.toBase64()));
+      json.insert("test_output_file",QString(buffer.toBase64()));
+      json.insert("test_output_file_mime_type","csv");
     }
     return json;
 }

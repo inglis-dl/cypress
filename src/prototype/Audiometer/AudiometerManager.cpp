@@ -33,7 +33,6 @@ void AudiometerManager::buildModel(QStandardItemModel* model) const
 
 void AudiometerManager::clearData()
 {
-    m_deviceData.reset();
     m_test.reset();
     emit dataChanged();
 }
@@ -94,6 +93,7 @@ void AudiometerManager::readDevice()
 
 void AudiometerManager::measure()
 {
+    clearData();
     const char cmd[] = {0x05,'4',0x0d};
     m_request = QByteArray::fromRawData(cmd,3);
     writeDevice();

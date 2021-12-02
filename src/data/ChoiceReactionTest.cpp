@@ -173,8 +173,7 @@ QJsonObject ChoiceReactionTest::toJsonObject() const
     QJsonArray jsonArr;
     for(auto&& x : m_measurementList)
     {
-        QJsonObject test = x.toJsonObject();
-        jsonArr.append(test);
+        jsonArr.append(x.toJsonObject());
     }
     QJsonObject json;
     json.insert("test_meta_data",m_metaData.toJsonObject());

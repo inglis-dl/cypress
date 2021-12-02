@@ -357,15 +357,15 @@ void BluetoothLEManager::clearData()
 {
     m_deviceData.reset();
     m_test.reset();
-
     emit dataChanged();
 }
 
 void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
 {
+    clearData();
+
     if("simulate" == m_mode)
     {
-       clearData();
        // get the device data
        m_deviceData.setCharacteristic("device name", info.name());
        m_deviceData.setCharacteristic("device mac address", info.address().toString());
@@ -386,8 +386,6 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
     }
     if(m_verbose)
         qDebug() << "ready to connect to " << info.address().toString() << " and discover services";
-
-    clearData();
 
     if(!m_controller.isNull())
     {
@@ -689,6 +687,6 @@ void BluetoothLEManager::updateTemperatureData(const QLowEnergyCharacteristic &c
 QJsonObject BluetoothLEManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    json.insert("device",m_deviceData.toJsonObject());
+    json.insert("device", m_deviceData.toJsonObject());
     return json;
 }

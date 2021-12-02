@@ -18,76 +18,59 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel*) const override;
+    void buildModel(QStandardItemModel *) const override;
 
     // is the passed string an executable file
     // with the correct path elements ?
     //
-    bool isDefined(const QString&) const;
+    bool isDefined(const QString &) const;
 
     // set the cognitive test executable full path and name
     // calls isDefined to validate the passed arg
     //
-    void setExecutableName(const QString&);
+    void setExecutableName(const QString &);
+
+    QString getExecutableName() const
+    {
+        return m_executableName;
+    }
 
     // call just before closing the application to
     // remove the output txt file from the test if it exists
     //
     void clean();
 
-    QString getExecutableName() const
-    {
-        return m_executableFolderPath;
-    }
+    // Set the input data.
+    // The input data is read from the input
+    // json file to the main application.  This method should be
+    // used to filter the minimum inputs needed to run
+    // a test.  Filtering keys are stored in member
+    // m_inputKeyList.
+    //
+    void setInputData(const QMap<QString,QVariant> &);
 
-    QString getExecutableFullPath() const
-    {
-        return m_executableFolderPath;
-    }
-
-    QString getInputFullPath() const
-    {
-        return m_inputFilePath;
-    }
-
-    QString getOldInputFullPath() const
-    {
-        return m_oldInputFilePath;
-    }
-
-    QString getOutputFullPath() const
-    {
-        return m_outputFilePath;
-    }
-
-    QMap<QString, QVariant> m_inputData;
-    QMap<QString, QVariant> m_outputData;
 public slots:
-    void measure();
 
-    void setInputs(const QMap<QString, QVariant>&);
+    void measure() override;
 
     void readOutput();
 
-signals:
-    void canMeasure();
-
-    void canWrite();
 private:
-    QString m_executableExePath;
-    QString m_executableFolderPath;
-    QString m_outputFilePath;
-    QString m_inputFilePath;
-    QString m_oldInputFilePath;
+    QString m_executableName;// full pathspec to blackbox.exe
+    QString m_executablePath;// path to blackbox.exe
+    QString m_outputFile;    // full pathspec to working output.txt
+    QString m_inputFile;     // full pathspec to working input.txt
+    QString m_temporaryFile; // store a copy of the default input.txt
     QProcess m_process;
 
     FraxTest m_test;
 
-    void configureProcess();
-
     void clearData() override;
-    bool createInputsTxt();
-    void readOutputs();
+
+    QMap<QString,QVariant> m_inputData;
+    QList<QString> m_inputKeyList;
+
+    void configureProcess();
 };
 
 #endif // FRAXMANAGER_H

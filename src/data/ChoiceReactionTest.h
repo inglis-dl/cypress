@@ -23,7 +23,6 @@ public:
     QJsonObject toJsonObject() const override;
 
 private:
-
     QList<QString> m_outputKeyList;
 
 };

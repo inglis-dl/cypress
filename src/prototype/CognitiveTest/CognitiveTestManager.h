@@ -29,15 +29,15 @@ public:
     //
     void setExecutableName(const QString &);
 
-    // call just before closing the application to
-    // remove the csv file from the test if it exists
-    //
-    void clean();
-
     QString getExecutableName() const
     {
         return m_executableName;
     }
+
+    // call just before closing the application to
+    // remove the csv file from the test if it exists
+    //
+    void clean();
 
     // Set the input data.
     // The input data is read from the input
@@ -49,20 +49,16 @@ public:
     void setInputData(const QMap<QString,QVariant> &);
 
 public slots:
-    void measure();
+
+    void measure() override;
 
     void readOutput();
 
-signals:
-    void canMeasure();
-
-    void canWrite();
-
 private:
-    QString m_executableName;
-    QString m_executablePath;
-    QString m_outputPath;
-    QString m_outputFile;
+    QString m_executableName; // full pathspec to CCB.exe
+    QString m_executablePath; // path to CCB.exe
+    QString m_outputPath;     // path to output .csv files
+    QString m_outputFile;     // full pathspec to working output .csv file
     QProcess m_process;
 
     ChoiceReactionTest m_test;

@@ -18,17 +18,20 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // allocate 1 columns x 1 rows of frax measurement items
+    // allocate 1 columns x 4 rows of frax measurement items
     //
 
-    QStandardItem* item = new QStandardItem();
-    m_model.setItem(0, 0, item);
+    for(int i = 0; i < 4; i++)
+    {
+      QStandardItem* item = new QStandardItem();
+      m_model.setItem(i, 0, item);
+    }
 
-    m_model.setHeaderData(0, Qt::Horizontal, "Test Results", Qt::DisplayRole);
+    m_model.setHeaderData(0, Qt::Horizontal, "Frax 10 Year Fracture Risk Probabilities", Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
 
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->verticalHeader()->hide();
 }
@@ -49,20 +52,23 @@ void MainWindow::initialize()
 
     // Populate barcode display
     //
-    if (m_manager.m_inputData.contains("barcode") && m_manager.m_inputData["barcode"].isValid())
-        ui->barcodeLineEdit->setText(m_manager.m_inputData["barcode"].toString());
+    if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
+       ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
     else
-        ui->barcodeLineEdit->setText("00000000"); // dummy
+       ui->barcodeLineEdit->setText("00000000"); // dummy
 
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
     QSettings settings(dir.filePath("frax.ini"), QSettings::IniFormat);
 
-    // Select the location of CCB.exe
+    // have the manager build the inputs from the input json file
+    m_manager.setInputData(m_inputData);
+
+    // Select the location of blackbox.exe
     //
     ui->openButton->setEnabled(false);
 
-    // Launch CCB.exe
+    // Launch blackbox.exe
     //
     ui->measureButton->setEnabled(false);
 
@@ -92,21 +98,22 @@ void MainWindow::initialize()
     //
     connect(&m_manager, &FraxManager::dataChanged,
         this, [this]() {
-            m_manager.buildModel(&m_model);
+      QHeaderView *h = ui->testdataTableView->horizontalHeader();
+      h->setSectionResizeMode(QHeaderView::Fixed);
+      m_manager.buildModel(&m_model);
 
-            QHeaderView* h = ui->testdataTableView->horizontalHeader();
-            QSize ts_pre = ui->testdataTableView->size();
-            h->resizeSections(QHeaderView::ResizeToContents);
-            ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
-            ui->testdataTableView->resize(
-                h->sectionSize(0) + 2,
-                8 * (ui->testdataTableView->rowHeight(0) + 1) +
-                h->height());
-            QSize ts_post = ui->testdataTableView->size();
-            int dx = ts_post.width() - ts_pre.width();
-            int dy = ts_post.height() - ts_pre.height();
-            this->resize(this->width() + dx, this->height() + dy);
-        });
+      QSize ts_pre = ui->testdataTableView->size();
+      h->resizeSections(QHeaderView::ResizeToContents);
+      ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
+      ui->testdataTableView->resize(
+        h->sectionSize(0) + 1,
+        4*(ui->testdataTableView->rowHeight(0)) + 1 +
+        h->height());
+      QSize ts_post = ui->testdataTableView->size();
+      int dx = ts_post.width() - ts_pre.width();
+      int dy = ts_post.height() - ts_pre.height();
+      this->resize(this->width() + dx, this->height() + dy);
+    });
 
     // All measurements received: enable write test results
     //
@@ -133,14 +140,14 @@ void MainWindow::initialize()
     // validate the presence of blackbox.exe and enable
     // file selection as required
     //
-    QString exeName = m_manager.getExecutableFullPath();
+    QString exeName = m_manager.getExecutableName();
     if (!m_manager.isDefined(exeName))
     {
         ui->openButton->setEnabled(true);
         QMessageBox::warning(
             this, QApplication::applicationName(),
             tr("Select the exe by clicking Open and browsing to the "
-                "required executable (CCB.exe) and selecting the file.  If the executable "
+                "required executable (blackbox.exe) and selecting the file.  If the executable "
                 "is valid click the Run button to start the test otherwise check the installation."));
     }
 
@@ -184,40 +191,41 @@ void MainWindow::readInput()
 {
     // TODO: if the run mode is not debug, an input file name is mandatory, throw an error
     //
-    if (m_inputFileName.isEmpty())
+    if(m_inputFileName.isEmpty())
     {
         qDebug() << "no input file";
         return;
     }
     QFileInfo info(m_inputFileName);
-    if (info.exists())
+    if(info.exists())
     {
-        QFile file;
-        file.setFileName(m_inputFileName);
-        file.open(QIODevice::ReadOnly | QIODevice::Text);
-        QString val = file.readAll();
-        file.close();
-        qDebug() << val;
+      QFile file;
+      file.setFileName(m_inputFileName);
+      file.open(QIODevice::ReadOnly | QIODevice::Text);
+      QString val = file.readAll();
+      file.close();
+      qDebug() << val;
 
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
-        QJsonObject jsonObj = jsonDoc.object();
-        QMapIterator<QString, QVariant> it(m_manager.m_inputData);
-        QList<QString> keys = jsonObj.keys();
-        for (int i = 0; i < keys.size(); i++)
-        {
-            QJsonValue v = jsonObj.value(keys[i]);
-            // TODO: error report all missing expected key values
-            //
-            if (!v.isUndefined())
-            {
-                m_manager.m_inputData[keys[i]] = v.toVariant();
-                qDebug() << keys[i] << v.toVariant();
-            }
-        }
+      QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
+      QJsonObject jsonObj = jsonDoc.object();
+      QMapIterator<QString,QVariant> it(m_inputData);
+      QList<QString> keys = jsonObj.keys();
+      for(int i=0;i<keys.size();i++)
+      {
+          QJsonValue v = jsonObj.value(keys[i]);
+          // TODO: error report all missing expected key values
+          //
+          if(!v.isUndefined())
+          {
+              m_inputData[keys[i]] = v.toVariant();
+              qDebug() << keys[i] << v.toVariant();
+          }
+      }
     }
     else
         qDebug() << m_inputFileName << " file does not exist";
 }
+
 
 void MainWindow::writeOutput()
 {
@@ -262,7 +270,7 @@ void MainWindow::writeOutput()
             QStringList list;
             list << barcode;
             list << QDate().currentDate().toString("yyyyMMdd");
-            list << "cognitivetest.json";
+            list << "fraxtest.json";
             fileName = dir.filePath(list.join("_"));
         }
         else

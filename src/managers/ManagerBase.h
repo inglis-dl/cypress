@@ -26,11 +26,25 @@ public:
 
     virtual void buildModel(QStandardItemModel *) const = 0;
 
+public slots:
+
+    virtual void measure() = 0;
+
 signals:
 
     // the underlying test data has changed
     //
     void dataChanged();
+
+    // ready to measure and receive data
+    // (update GUI enable measure button)
+    //
+    void canMeasure();
+
+    // valid test completed and ready to write to output
+    // (update GUI enable write button and update the results display)
+    //
+    void canWrite();
 
 protected:
     bool m_verbose;
@@ -43,6 +57,12 @@ protected:
     //
     QString m_mode;
 
+    // Context dependent clear test data and possibly device data (eg., serial port info)
+    // SerialPortManager class clears device data during setDevice() while
+    // test data is cleared depending on derived class implementation requirements.
+    // Derived classes may also clear test data depending on the nature of the test,
+    // such as when multiple measurements are seaprately acquired.
+    //
     virtual void clearData() = 0;
 
 };

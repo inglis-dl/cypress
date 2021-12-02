@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QRandomGenerator>
+
 /**
  * sample input
  * lines start with and initial code
@@ -16,6 +17,10 @@
  *
  */
 
+// Different tests that are part of the Cardiff Cognitive Battery
+// are identified in the output by integer code.  The choice
+// reaction test has code = 11
+//
 const int ChoiceReactionMeasurement::TEST_CODE = 11;
 
 void ChoiceReactionMeasurement::fromString(const QString &s)
@@ -98,7 +103,3 @@ QDebug operator<<(QDebug dbg, const ChoiceReactionMeasurement &item)
         dbg.nospace() << "Choice Reaction Measurement(" << s << " ...)";
     return dbg.maybeSpace();
 }
-
-
-
-
