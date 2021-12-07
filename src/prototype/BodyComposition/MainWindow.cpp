@@ -44,7 +44,7 @@ void MainWindow::initialize()
   // Read the .ini file for cached local and peripheral device addresses
   //
   QDir dir = QCoreApplication::applicationDirPath();
-  QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
+  QSettings settings(dir.filePath("bodycompanalyzer.ini"), QSettings::IniFormat);
   m_manager.loadSettings(settings);
 
   // Save button to store measurement and device info to .json
@@ -55,13 +55,17 @@ void MainWindow::initialize()
   //
   ui->resetButton->setEnabled(false);
 
-  // Confirm device settings
+  // set the inputs to the analyzer
   //
-  ui->confirmButton->setEnabled(false);
+  ui->setButton->setEnabled(false);
 
-  // Read the weight measurement off the scale
+  // Read the weight measurement off the analyzer
   //
   ui->measureButton->setEnabled(false);
+
+  // Clear all input fields
+  //
+  ui->clearButton->setEnabled(true);
 
   // Connect to the device
   //
@@ -131,7 +135,7 @@ void MainWindow::initialize()
       ui->statusBar->showMessage("Ready to connect...");
       ui->connectButton->setEnabled(true);
       ui->resetButton->setEnabled(false);
-      ui->confirmButton->setEnabled(false);
+      ui->setButton->setEnabled(false);
       ui->disconnectButton->setEnabled(false);
       ui->measureButton->setEnabled(false);
       ui->saveButton->setEnabled(false);
@@ -157,47 +161,75 @@ void MainWindow::initialize()
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
       ui->resetButton->setEnabled(true);
-      ui->confirmButton->setEnabled(true);
+      ui->setButton->setEnabled(false);
       ui->measureButton->setEnabled(true);
       ui->saveButton->setEnabled(false);
   });
 
   // Connection is established: enable measurement requests
   //
-  connect(&m_manager, &TanitaManager::canConfirm,
-          this,[this](){
+  connect(&m_manager, &TanitaManager::canInput,
+          this,[this](const bool &state){
       ui->statusBar->showMessage("Ready to accept inputs...");
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
       ui->resetButton->setEnabled(true);
-      ui->confirmButton->setEnabled(true);
+      ui->setButton->setEnabled(state);
       ui->measureButton->setEnabled(false);
       ui->saveButton->setEnabled(false);
   });
+
   // Disconnect from device
   //
   connect(ui->disconnectButton, &QPushButton::clicked,
           &m_manager, &TanitaManager::disconnectDevice);
 
-  // Zero the scale
+  // Reset the device (clear all input settings)
   //
   connect(ui->resetButton, &QPushButton::clicked,
         &m_manager, &TanitaManager::resetDevice);
 
   // Request a measurement from the device
   //
-  connect(ui->confirmButton, &QPushButton::clicked,
+  connect(ui->setButton, &QPushButton::clicked,
            this,[this](){
       QMap<QString,QVariant> inputs;
       inputs["equation"] = "westerner";
-      inputs["mode"] = "metric";
-      inputs["gender"] = "male";
-      inputs["age"] = 56;
-      inputs["body type"] = "standard";
-      inputs["height"] = 170;
-      inputs["clothing weight"] = 1.5;
+
+      inputs["mode"] =
+        "metricRadio" == ui->unitsGroup->checkedButton()->objectName() ?
+          "metric" : "imperial";
+
+      inputs["gender"] =
+        "maleRadio" == ui->genderGroup->checkedButton()->objectName() ?
+          "male" : "female";
+
+      QString s = ui->ageLineEdit->text().simplified();
+      s = s.replace(" ","");
+      inputs["age"] = s.toUInt();
+
+      inputs["body type"] =
+        "standardRadio" == ui->bodyTypeGroup->checkedButton()->objectName() ?
+          "standard" : "athlete";
+
+      s = ui->heightLineEdit->text().simplified();
+      s = s.replace(" ","");
+      inputs["height"] = s.toUInt();
+
+      s = ui->clothingWeightLineEdit->text().simplified();
+      s = s.replace(" ","");
+      inputs["clothing weight"] = s.toDouble();
+
+      qDebug() << inputs;
+
       m_manager.setInputs(inputs);
-      m_manager.confirmSettings();
+  });
+
+  connect(ui->clearButton, &QPushButton::clicked,
+          this, [this](){
+    ui->ageLineEdit->clear();
+    ui->heightLineEdit->clear();
+    ui->clothingWeightLineEdit->clear();
   });
 
   // Request a measurement from the device
@@ -267,7 +299,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if(m_verbose)
         qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath("bodycompanalyzer.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
     m_manager.disconnectDevice();
     event->accept();

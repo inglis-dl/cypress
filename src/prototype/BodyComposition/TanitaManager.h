@@ -17,11 +17,17 @@ public:
 
     void buildModel(QStandardItemModel *) const override;
 
-    static QMap<QString,QByteArray> initCommandLookup();
-    static QMap<QByteArray,QString> initResponseLookup();
+    static QMap<QString,QByteArray> initDefaultLUT();
+    static QMap<QByteArray,QString> initCommandLUT();
+    static QMap<QByteArray,QString> initIncorrectResponseLUT();
+    static QMap<QByteArray,QString> initConfirmationLUT();
 
 signals:
-   void canConfirm();
+   // ready to recive the input map
+   //
+   void canInput(const bool &);
+
+   void error(const QString &);
 
 public slots:
 
@@ -54,14 +60,17 @@ private slots:
     void readDevice() override;
 
 private:
-    static QMap<QString,QByteArray> commandLookup;
-    static QMap<QByteArray,QString> responseLookup;
+    static QMap<QString,QByteArray> defaultLUT;
+    static QMap<QByteArray,QString> commandLUT;
+    static QMap<QByteArray,QString> incorrectLUT;
+    static QMap<QByteArray,QString> confirmLUT;
 
-    bool hasEndCode(const QByteArray &);
+    bool hasEndCode(const QByteArray &) const;
 
     BodyCompositionAnalyzerTest m_test;
 
     void clearData() override;
+    void clearQueue();
 
     QVector<QByteArray> m_cache;
     QQueue<QByteArray> m_queue;

@@ -267,6 +267,7 @@ QJsonObject SerialPortManager::toJsonObject() const
 
 void SerialPortManager::writeDevice()
 {
+    qDebug() << "SerialPortManager writeDevice called, clearing buffer and writing " << QString(m_request);
     // prepare to receive data
     //
     m_buffer.clear();
