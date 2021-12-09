@@ -22,8 +22,6 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
-    static bool hasEndCode(const QByteArray &);
-
 private:
     QByteArray m_array;
     QString readArray(const quint8 &, const quint8 &) const;

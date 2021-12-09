@@ -39,7 +39,7 @@ void AudiometerManager::clearData()
 
 bool AudiometerManager::hasEndCode(const QByteArray &arr)
 {
-    // try and interpret the last 6 bytes
+    // interpret the last 6 bytes
     int size = arr.isEmpty() ? 0 : arr.size();
     if( 6 > size ) return false;
     return (

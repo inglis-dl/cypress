@@ -60,19 +60,25 @@ void BodyCompositionAnalyzerTest::fromArray(const QByteArray &arr)
       reset();
       m_array = arr;
 
+      // NOTE: input body type can be overridden by the analyzer
+      // depending on age and gender.  The body type used by
+      // analyzer is recovered from the test output data here.
+      //
       addMetaDataCharacteristic("body type", readBodyType());
       addMetaDataCharacteristic("gender", readGender());
       addMetaDataCharacteristic("test datetime", QDateTime::currentDateTime());
       addMetaDataCharacteristic("age", readAge());
       addMetaDataCharacteristic("height", readHeight());
 
+      QString sys = getMeasurementSystem();
+
       BodyCompositionMeasurement m;
       m.setCharacteristic("weight", readWeight());
-      m.setCharacteristic("units","kg");
+      m.setCharacteristic("units",("metric" == sys ? "kg" : "lb"));
       addMeasurement(m);
 
       m.reset();
-      m.setCharacteristic("impedence", readImpedence());
+      m.setCharacteristic("impedance", readImpedence());
       m.setCharacteristic("units","ohm");
       addMeasurement(m);
 
@@ -83,26 +89,31 @@ void BodyCompositionAnalyzerTest::fromArray(const QByteArray &arr)
 
       m.reset();
       m.setCharacteristic("fat mass", readFatMass());
-      m.setCharacteristic("units","kg");
+      m.setCharacteristic("units",("metric" == sys ? "kg" : "lb"));
       addMeasurement(m);
 
       m.reset();
       m.setCharacteristic("fat free mass", readFatFreeMass());
-      m.setCharacteristic("units","kg");
+      m.setCharacteristic("units",("metric" == sys ? "kg" : "lb"));
       addMeasurement(m);
 
       m.reset();
       m.setCharacteristic("total body water", readTotalBodyWater());
-      m.setCharacteristic("units","kg");
+      m.setCharacteristic("units",("metric" == sys ? "kg" : "lb"));
       addMeasurement(m);
 
       m.reset();
       m.setCharacteristic("body mass index", readBMI());
-      m.setCharacteristic("units","kg/cm2");
+      m.setCharacteristic("units",("metric" == sys ? "kg/cm2" : "lb/in2"));
       addMeasurement(m);
 
+      // TODO: check if bmr is always givin in kJ
+      // conversions:
+      // 1 kcal = 4.187 kJ
+      // 1 kJ = 0.2388 kcal
+      //
       m.reset();
-      m.setCharacteristic("bmr", readBMR());
+      m.setCharacteristic("basal metabolic rate", readBMR());
       m.setCharacteristic("units","kJ");
       addMeasurement(m);
     }

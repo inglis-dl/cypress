@@ -149,10 +149,12 @@ void SerialPortManager::selectDevice(const QString &label)
 
 void SerialPortManager::setDevice(const QSerialPortInfo &info)
 {
+    /*
     if(m_port.portName() == info.portName())
     {
         return;
     }
+    */
 
     m_deviceData.reset();
 
@@ -226,8 +228,9 @@ void SerialPortManager::connectDevice()
 
       connect(&m_port, &QSerialPort::errorOccurred,
               this,[this](QSerialPort::SerialPortError error){
-                  Q_UNUSED(error)
-                  qDebug() << "AN ERROR OCCURED: " << m_port.errorString();
+              if(error == QSerialPort::NoError)
+                return;
+                  qDebug() << "ERROR: serial port " << m_port.errorString();
               });
 
       connect(&m_port, &QSerialPort::dataTerminalReadyChanged,
@@ -263,22 +266,4 @@ QJsonObject SerialPortManager::toJsonObject() const
     QJsonObject json;
     json.insert("device",m_deviceData.toJsonObject());
     return json;
-}
-
-void SerialPortManager::writeDevice()
-{
-    qDebug() << "SerialPortManager writeDevice called, clearing buffer and writing " << QString(m_request);
-    // prepare to receive data
-    //
-    m_buffer.clear();
-
-    if("simulate" == m_mode)
-    {
-        if(m_verbose)
-          qDebug() << "in simulate mode writeDevice with request " << QString(m_request);
-        readDevice();
-        return;
-    }
-
-    m_port.write(m_request);
 }

@@ -29,6 +29,7 @@ public:
     TestBase()
     {
         m_maximumNumberOfMeasurements = 1000;
+        m_measurementSystem = "metric";
     }
     virtual ~TestBase() = default;
 
@@ -49,29 +50,39 @@ public:
 
     virtual void reset();
 
+    void setMeasurementSystem(const QString &s)
+    {
+      m_measurementSystem = "imperial" == s ? s : "metric";
+    }
+
+    QString getMeasurementSystem() const
+    {
+      return m_measurementSystem;
+    }
+
     void setMetataData(const MeasurementBase &other)
     {
-        m_metaData = other;
+      m_metaData = other;
     }
 
     MeasurementBase getMetaData() const
     {
-        return m_metaData;
+      return m_metaData;
     }
 
     void addMetaDataCharacteristic(const QString &key, const QVariant &value)
     {
-        m_metaData.setCharacteristic(key,value);
+      m_metaData.setCharacteristic(key,value);
     }
 
     QVariant getMetaDataCharacteristic(const QString &key) const
     {
-        return m_metaData.getCharacteristic(key);
+      return m_metaData.getCharacteristic(key);
     }
 
     bool hasMetaDataCharacteristic(const QString &key) const
     {
-        return m_metaData.hasCharacteristic(key);
+      return m_metaData.hasCharacteristic(key);
     }
 
     void addMeasurement(const T &);
@@ -82,23 +93,24 @@ public:
 
     int getNumberOfMeasurements() const
     {
-        return m_measurementList.size();
+      return m_measurementList.size();
     }
 
     void setMaximumNumberOfMeasurements(const int& max)
     {
-        m_maximumNumberOfMeasurements = 0 < max ? max : 1;
+      m_maximumNumberOfMeasurements = 0 < max ? max : 1;
     }
 
     int getMaximumNumberOfMeasurements() const
     {
-        return m_maximumNumberOfMeasurements;
+      return m_maximumNumberOfMeasurements;
     }
 
 protected:
     QVector<T> m_measurementList;
     MeasurementBase m_metaData;
     int m_maximumNumberOfMeasurements;
+    QString m_measurementSystem;
 };
 
 template <class T>

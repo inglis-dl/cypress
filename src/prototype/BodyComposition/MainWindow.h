@@ -16,6 +16,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
     // This method internally calls readInput
     //
     void initialize();
@@ -38,6 +39,7 @@ public:
     bool isVerbose(){ return m_verbose; }
 
 public slots:
+
     void updateDeviceList(const QString &);
     void writeOutput();
 

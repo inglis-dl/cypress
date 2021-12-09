@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>561</width>
+    <width>587</width>
     <height>649</height>
    </rect>
   </property>
@@ -40,16 +40,16 @@
        <item>
         <widget class="QLineEdit" name="barcodeLineEdit">
          <property name="inputMask">
-          <string>0 0 0 0 0 0 0 0;_</string>
+          <string/>
          </property>
          <property name="text">
-          <string>       </string>
+          <string/>
          </property>
          <property name="maxLength">
-          <number>15</number>
+          <number>32767</number>
          </property>
          <property name="cursorPosition">
-          <number>15</number>
+          <number>0</number>
          </property>
          <property name="clearButtonEnabled">
           <bool>true</bool>
@@ -117,6 +117,12 @@
     </item>
     <item>
      <widget class="QGroupBox" name="inputsGroupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="title">
        <string>inputs</string>
       </property>
@@ -174,6 +180,33 @@
         </layout>
        </item>
        <item row="0" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Age:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="ageLineEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_8">
          <item>
           <widget class="QLabel" name="label_6">
@@ -213,7 +246,7 @@
          </item>
         </layout>
        </item>
-       <item row="1" column="0">
+       <item row="1" column="1">
         <layout class="QHBoxLayout" name="horizontalLayout_7">
          <item>
           <widget class="QLabel" name="label_3">
@@ -225,13 +258,49 @@
          <item>
           <widget class="QLineEdit" name="heightLineEdit">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
            <property name="inputMask">
-            <string>D 9 9 9 9;0</string>
+            <string/>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Tare:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="tareWeightLineEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="maxLength">
+            <number>32767</number>
            </property>
            <property name="clearButtonEnabled">
             <bool>true</bool>
@@ -241,54 +310,6 @@
         </layout>
        </item>
        <item row="2" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Age:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="ageLineEdit">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="inputMask">
-            <string>D 9;0</string>
-           </property>
-           <property name="clearButtonEnabled">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="3" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayout_6">
-         <item>
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Clothing Weight:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="clothingWeightLineEdit">
-           <property name="inputMask">
-            <string>D 9 9 . 0;0</string>
-           </property>
-           <property name="clearButtonEnabled">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="4" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
           <widget class="QLabel" name="label_4">
@@ -340,7 +361,7 @@
          </item>
         </layout>
        </item>
-       <item row="5" column="0">
+       <item row="3" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_9">
          <item>
           <widget class="QPushButton" name="setButton">
@@ -350,9 +371,16 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="clearButton">
+          <widget class="QPushButton" name="resetButton">
            <property name="text">
-            <string>Clear</string>
+            <string>Reset</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="confirmButton">
+           <property name="text">
+            <string>Confirm</string>
            </property>
           </widget>
          </item>
@@ -375,13 +403,6 @@
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
         <layout class="QHBoxLayout" name="measurmentControlHhorizontalLayout">
-         <item>
-          <widget class="QPushButton" name="resetButton">
-           <property name="text">
-            <string>Reset</string>
-           </property>
-          </widget>
-         </item>
          <item>
           <widget class="QPushButton" name="measureButton">
            <property name="text">

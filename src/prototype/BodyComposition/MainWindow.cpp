@@ -30,6 +30,10 @@ void MainWindow::initialize()
   m_manager.setVerbose(m_verbose);
   m_manager.setMode(m_mode);
 
+  QIntValidator *v_barcode = new QIntValidator(this);
+  v_barcode->setRange(0,99999999);
+  ui->ageLineEdit->setValidator(v_barcode);
+
   // Read inputs, such as interview barcode
   //
   readInput();
@@ -51,21 +55,21 @@ void MainWindow::initialize()
   //
   ui->saveButton->setEnabled(false);
 
-  // reset the body composition analyzer
+  // Reset / clear the analyzer inputs
   //
   ui->resetButton->setEnabled(false);
 
-  // set the inputs to the analyzer
+  // Set the inputs to the analyzer
   //
   ui->setButton->setEnabled(false);
 
-  // Read the weight measurement off the analyzer
+  // Read the measurements off the analyzer
   //
   ui->measureButton->setEnabled(false);
 
-  // Clear all input fields
+  // Confirm the inputs and enable measurement if confirmed
   //
-  ui->clearButton->setEnabled(true);
+  ui->confirmButton->setEnabled(false);
 
   // Connect to the device
   //
@@ -96,7 +100,7 @@ void MainWindow::initialize()
 
   connect(&m_manager, &TanitaManager::deviceSelected,
           this,[this](const QString &label){
-      if(label!=ui->deviceComboBox->currentText())
+      if(label != ui->deviceComboBox->currentText())
       {
           ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findText(label));
       }
@@ -112,12 +116,10 @@ void MainWindow::initialize()
         this, QApplication::applicationName(),
         tr("Select the port from the list or connect to the currently visible port in the list.  If the device "
         "is not in the list, quit the application and check that the port is "
-        "working and connect the audiometer to it before running this application."));
-
-      ui->connectButton->setEnabled(true);
+        "working and connect the analyzer to it before running this application."));
   });
 
-  // Select a device (serial port) from drop down list
+  // Select a device (serial port) from the drop down list
   //
   connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
           this,[this]()
@@ -134,48 +136,56 @@ void MainWindow::initialize()
           this,[this](){
       ui->statusBar->showMessage("Ready to connect...");
       ui->connectButton->setEnabled(true);
+      ui->disconnectButton->setEnabled(false);
       ui->resetButton->setEnabled(false);
       ui->setButton->setEnabled(false);
-      ui->disconnectButton->setEnabled(false);
+      ui->confirmButton->setEnabled(false);
       ui->measureButton->setEnabled(false);
       ui->saveButton->setEnabled(false);
   });
 
   // Connect to device
   //
- // connect(ui->connectButton, &QPushButton::clicked,
- //         &m_manager, &TanitaManager::connectDevice);
-
   connect(ui->connectButton, &QPushButton::clicked,
-          this, [this](){
-      m_manager.selectDevice(ui->deviceComboBox->currentText());
-      m_manager.connectDevice();
-  });
+          &m_manager, &TanitaManager::connectDevice);
 
-
-  // Connection is established: enable measurement requests
+  // Connection is established, inputs are set and confirmed: enable measurement requests
   //
   connect(&m_manager, &TanitaManager::canMeasure,
           this,[this](){
       ui->statusBar->showMessage("Ready to measure...");
-      ui->connectButton->setEnabled(false);
-      ui->disconnectButton->setEnabled(true);
       ui->resetButton->setEnabled(true);
       ui->setButton->setEnabled(false);
       ui->measureButton->setEnabled(true);
+      ui->confirmButton->setEnabled(true);
       ui->saveButton->setEnabled(false);
   });
 
-  // Connection is established: enable measurement requests
+  // Connection is established and a successful reset was done
   //
   connect(&m_manager, &TanitaManager::canInput,
-          this,[this](const bool &state){
+          this,[this](){
       ui->statusBar->showMessage("Ready to accept inputs...");
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
       ui->resetButton->setEnabled(true);
-      ui->setButton->setEnabled(state);
+      ui->setButton->setEnabled(true);
       ui->measureButton->setEnabled(false);
+      ui->confirmButton->setEnabled(false);
+      ui->saveButton->setEnabled(false);
+  });
+
+  // A successful confirmation of all inputs was done
+  //
+  connect(&m_manager, &TanitaManager::canConfirm,
+          this,[this](){
+      ui->statusBar->showMessage("Ready to confirm inputs ...");
+      ui->connectButton->setEnabled(false);
+      ui->disconnectButton->setEnabled(true);
+      ui->resetButton->setEnabled(true);
+      ui->setButton->setEnabled(true);
+      ui->measureButton->setEnabled(false);
+      ui->confirmButton->setEnabled(true);
       ui->saveButton->setEnabled(false);
   });
 
@@ -189,16 +199,18 @@ void MainWindow::initialize()
   connect(ui->resetButton, &QPushButton::clicked,
         &m_manager, &TanitaManager::resetDevice);
 
-  // Request a measurement from the device
+  // Set the inputs to the analyzer
   //
   connect(ui->setButton, &QPushButton::clicked,
            this,[this](){
       QMap<QString,QVariant> inputs;
       inputs["equation"] = "westerner";
 
-      inputs["mode"] =
+      inputs["measurement system"] =
         "metricRadio" == ui->unitsGroup->checkedButton()->objectName() ?
           "metric" : "imperial";
+
+      QString units = inputs["measurement system"].toString();
 
       inputs["gender"] =
         "maleRadio" == ui->genderGroup->checkedButton()->objectName() ?
@@ -214,23 +226,21 @@ void MainWindow::initialize()
 
       s = ui->heightLineEdit->text().simplified();
       s = s.replace(" ","");
-      inputs["height"] = s.toUInt();
+      inputs["height"] = "metric" == units ? s.toUInt() :  s.toDouble();
 
-      s = ui->clothingWeightLineEdit->text().simplified();
+      s = ui->tareWeightLineEdit->text().simplified();
       s = s.replace(" ","");
-      inputs["clothing weight"] = s.toDouble();
+      inputs["tare weight"] = s.toDouble();
 
       qDebug() << inputs;
 
       m_manager.setInputs(inputs);
   });
 
-  connect(ui->clearButton, &QPushButton::clicked,
-          this, [this](){
-    ui->ageLineEdit->clear();
-    ui->heightLineEdit->clear();
-    ui->clothingWeightLineEdit->clear();
-  });
+  // Confirm inputs and check if measurement can proceed
+  //
+  connect(ui->confirmButton, &QPushButton::clicked,
+        &m_manager, &TanitaManager::confirmSettings);
 
   // Request a measurement from the device
   //
@@ -242,12 +252,12 @@ void MainWindow::initialize()
   connect(&m_manager, &TanitaManager::dataChanged,
           this,[this](){
       m_manager.buildModel(&m_model);
-
+      int nrow = m_model.rowCount();
       QSize ts_pre = ui->testdataTableView->size();
       ui->testdataTableView->setColumnWidth(0,ui->testdataTableView->size().width()-2);
       ui->testdataTableView->resize(
                   ui->testdataTableView->width(),
-                  2*(ui->testdataTableView->rowHeight(0)+1)+
+                  nrow*(ui->testdataTableView->rowHeight(0)+1)+
                   ui->testdataTableView->horizontalHeader()->height());
       QSize ts_post = ui->testdataTableView->size();
       int dx = ts_post.width()-ts_pre.width();
@@ -261,6 +271,31 @@ void MainWindow::initialize()
           this,[this](){
       ui->statusBar->showMessage("Ready to save results...");
       ui->saveButton->setEnabled(true);
+  });
+
+  QIntValidator *v_age = new QIntValidator(this);
+  v_age->setRange(7,99);
+  ui->ageLineEdit->setValidator(v_age);
+
+  // When the units are changed to imperial, the input field for
+  // height input must change to accomodate 0.5" increments
+  //
+  connect(ui->unitsGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),
+          this,[this](QAbstractButton *button){
+     ui->heightLineEdit->setText("");
+     if("metricRadio" == button->objectName())
+     {
+         QIntValidator *v_ht = new QIntValidator(this);
+         v_ht->setRange(90,249);
+         ui->heightLineEdit->setValidator(v_ht);
+     }
+     else
+     {
+         QDoubleValidator *v_ht = new QDoubleValidator(this);
+         v_ht->setRange(36.0,7*12 + 11.5);
+         v_ht->setDecimals(1);
+         ui->heightLineEdit->setValidator(v_ht);
+     }
   });
 
   // Write test data to output
@@ -387,7 +422,7 @@ void MainWindow::writeOutput()
          QStringList list;
          list << barcode;
          list << QDate().currentDate().toString("yyyyMMdd");
-         list << "weighscale.json";
+         list << "bodycomp.json";
          fileName = dir.filePath( list.join("_") );
        }
        else
@@ -401,5 +436,5 @@ void MainWindow::writeOutput()
    if(m_verbose)
        qDebug() << "wrote to file " << fileName;
 
-   ui->statusBar->showMessage("Weigh scale data recorded.  Close when ready.");
+   ui->statusBar->showMessage("Body composition data recorded.  Close when ready.");
 }

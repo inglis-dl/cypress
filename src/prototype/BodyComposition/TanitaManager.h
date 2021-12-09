@@ -23,9 +23,11 @@ public:
     static QMap<QByteArray,QString> initConfirmationLUT();
 
 signals:
-   // ready to recive the input map
+   // ready to receive the input map
    //
-   void canInput(const bool &);
+   void canInput();
+
+   void canConfirm();
 
    void error(const QString &);
 
@@ -38,15 +40,16 @@ public slots:
     //
     void connectDevice() override;
 
-    // reset all device settings
+    // reset all device settings (removed inputs)
     //
     void resetDevice();
 
+    // confirm the input after setInputs
+    //
     void confirmSettings();
 
     void setInputs(const QMap<QString,QVariant> &);
 
-    void writeDevice() override;
     // retrieve a measurement from the device
     //
     void measure() override;
@@ -59,6 +62,8 @@ private slots:
     //
     void readDevice() override;
 
+    void writeDevice() override;
+
 private:
     static QMap<QString,QByteArray> defaultLUT;
     static QMap<QByteArray,QString> commandLUT;
@@ -66,6 +71,8 @@ private:
     static QMap<QByteArray,QString> confirmLUT;
 
     bool hasEndCode(const QByteArray &) const;
+
+    void processResponse(const QByteArray &, const QByteArray &);
 
     BodyCompositionAnalyzerTest m_test;
 

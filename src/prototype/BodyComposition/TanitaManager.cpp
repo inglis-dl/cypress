@@ -1,7 +1,5 @@
 #include "TanitaManager.h"
 
-//#include "../../data/BodyCompositionAnalyzerTest.h"
-
 #include <QByteArray>
 #include <QDateTime>
 #include <QDebug>
@@ -15,11 +13,13 @@
 //
 QMap<QString,QByteArray> TanitaManager::defaultLUT = TanitaManager::initDefaultLUT();
 
-// lookup table of first two bytes of a request to get the command
+// lookup table of the unique first two bytes of a request to get the command
 //
 QMap<QByteArray,QString> TanitaManager::commandLUT = TanitaManager::initCommandLUT();
 
 // lookup table of byte array responses for incorrect inputs
+// NOTE: if any of the set input commands are unclear, the response
+// from the unit can also be the reset command error
 //
 QMap<QByteArray,QString> TanitaManager::incorrectLUT= TanitaManager::initIncorrectResponseLUT();
 
@@ -52,7 +52,7 @@ QMap<QString,QByteArray> TanitaManager::initDefaultLUT()
 
     atom = QByteArray("D0000.0");
     atom.append(end);
-    commands["set_clothing_weight"] = atom;
+    commands["set_tare_weight"] = atom;
     atom[1] = '3';
     atom[5] = '0';
     commands["set_height"] = atom;
@@ -107,7 +107,7 @@ QMap<QByteArray,QString> TanitaManager::initCommandLUT()
     commands[atom] = "set_equation_oriental";
 
     atom = QByteArray("D0");
-    commands[atom] = "set_clothing_weight";
+    commands[atom] = "set_tare_weight";
     atom[1] = '1';
     commands[atom] = "set_gender";
     atom[1] = '2';
@@ -137,25 +137,19 @@ QMap<QByteArray,QString> TanitaManager::initConfirmationLUT()
 {
     QMap<QByteArray,QString> responses;
     QByteArray atom;
-    QByteArray end;
-    end.append(0x0d);
-    end.append(0x0a);
 
     atom = QByteArray("U0");
-    atom.append(end);
     responses[atom] = "correct metric units setting";
     atom[1]='1';
     responses[atom] = "correct imperial units setting";
 
     atom = QByteArray("R0");
-    atom.append(end);
     responses[atom] = "correct equation for Westerners setting";
     atom[1]='1';
     responses[atom] = "correct equation for Orientals setting";
 
     atom = QByteArray("D0");
-    atom.append(end);
-    responses[atom] = "correct clothing weight setting";
+    responses[atom] = "correct tare weight setting";
     atom[1]='1';
     responses[atom] = "correct gender setting";
     atom[1]='2';
@@ -166,14 +160,13 @@ QMap<QByteArray,QString> TanitaManager::initConfirmationLUT()
     responses[atom] = "correct age setting";
 
     atom = QByteArray("G1");
-    atom.append(end);
     responses[atom] = "received body fat measurement request";
     atom[1]='2';
     responses[atom] = "received weight measurement request";
 
     atom.clear();
     atom.append(0x1f);
-    atom.append(end);
+    atom.append(0x0d);
     responses[atom] = "received reset request";
 
     return responses;
@@ -195,7 +188,7 @@ QMap<QByteArray,QString> TanitaManager::initIncorrectResponseLUT()
     responses[atom] = "incorrect equation setting";
 
     atom[0] = 'D';
-    responses[atom] = "incorrect clothing (tare) weight setting";
+    responses[atom] = "incorrect tare (tare) weight setting";
 
     atom = QByteArray("D1!");
     atom.append(end);
@@ -212,36 +205,49 @@ QMap<QByteArray,QString> TanitaManager::initIncorrectResponseLUT()
 
     atom = QByteArray("E00");
     atom.append(end);
-    responses[atom] = "attempted to start measuring without completing settings";
+    responses[atom] = "error: attempted to start measuring without completing settings";
 
     atom[2] = '1';
-    responses[atom] = "error in calculating body fat percentage";
+    responses[atom] = "error: impedance is abnormal compared with height and weight";
 
-    atom[1] = 'X';
-    atom[2] = 'X';
-    responses[atom] = "other error";
+    // E-11 - E14
+    //
+    atom[1] = '1';
+    for(int i=1;i<=4;i++)
+    {
+      atom[2] = QString::number(i).front().toLatin1();
+      responses[atom] = "error: internal malfunction, contact Tanita";
+    }
+
+    atom[2] = '6';
+    responses[atom] = "error: stepped off platform too early, wait for unit to emit short beep";
+
+    atom[2] = '7';
+    responses[atom] = "error: stepped on platform too early, wait for flashing arrow to appear";
 
     atom = QByteArray("!");
     atom.append(end);
-    responses[atom] = "reset command failed";
+    responses[atom] = "set input or reset command failed";
 
     return responses;
 }
 
-
 void TanitaManager::buildModel(QStandardItemModel *model) const
 {
-    /*
-    for(int row = 0; row < m_test.getMaximumNumberOfMeasurements(); row++)
+    for(int row = 0; row < m_test.getNumberOfMeasurements(); row++)
     {
         QString s = "NA";
-        WeightMeasurement m = m_test.getMeasurement(row);
+        BodyCompositionMeasurement m = m_test.getMeasurement(row);
         if(m.isValid())
            s = m.toString();
         QStandardItem* item = model->item(row,0);
+        if(nullptr == item)
+        {
+           item = new QStandardItem();
+           model->setItem(row,0,item);
+        }
         item->setData(s, Qt::DisplayRole);
     }
-    */
 }
 
 void TanitaManager::clearData()
@@ -265,8 +271,6 @@ void TanitaManager::connectDevice()
 {
     if("simulate" == m_mode)
     {
-        //m_request = QByteArray("i");
-        //writeDevice();
         return;
     }
 
@@ -282,8 +286,9 @@ void TanitaManager::connectDevice()
 
       connect(&m_port, &QSerialPort::errorOccurred,
               this,[this](QSerialPort::SerialPortError error){
-                  Q_UNUSED(error)
-                  qDebug() << "AN ERROR OCCURED: " << m_port.errorString();
+                  if(error == QSerialPort::NoError)
+                      return;
+                  qDebug() << "ERROR: serial port " << m_port.errorString();
               });
 
       connect(&m_port, &QSerialPort::dataTerminalReadyChanged,
@@ -296,7 +301,8 @@ void TanitaManager::connectDevice()
           qDebug() << "request to send RTS changed to " << (set?"high":"low");
       });
 
-      qDebug() << "tanita manager calling resetDevice from connectDevice";
+      // once connected we reset the device to confirm connection was made
+      //
       resetDevice();
     }
 }
@@ -305,7 +311,6 @@ void TanitaManager::resetDevice()
 {
     qDebug() << "reset device called, enqueing command";
     clearQueue();
-
     m_queue.enqueue(TanitaManager::defaultLUT["reset"]);
     writeDevice();
 }
@@ -313,6 +318,7 @@ void TanitaManager::resetDevice()
 void TanitaManager::confirmSettings()
 {
     qDebug() << "***************CONFIRM SETTINGS called *******************";
+    clearQueue();
     m_queue.enqueue(TanitaManager::defaultLUT["confirm_settings"]);
     writeDevice();
 }
@@ -320,105 +326,132 @@ void TanitaManager::confirmSettings()
 void TanitaManager::measure()
 {
     qDebug() << "measure called";
+    clearQueue();
     m_queue.enqueue(TanitaManager::defaultLUT["measure_body_fat"]);
     writeDevice();
 }
 
-// inputs should only be set AFTER a successfuly reset
+// inputs should only be set AFTER a successful reset
+// the order of inputs is important
 //
 void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
 {
     qDebug() << "********************* SETTING INPUTS ******************";
-    // first lets do a reset
 
-    // units have to be set before tare weight and height have been set
-    if(inputs.contains("mode"))
+    // for input limits we need the units of measurement
+    // default to metric
+    //
+    QString units = "metric";
+
+    // Units of measurement cannot be set if tare weight and height have been set
+    //
+    if(inputs.contains("measurement system"))
     {
-        qDebug() << "enqueue write device for mode " << inputs["mode"].toString();
-        QByteArray request = "metric"==inputs["mode"].toString() ?
-                    TanitaManager::defaultLUT["set_mode_metric"] :
-                    TanitaManager::defaultLUT["set_mode_imperial"];
+        units = inputs["measurement system"].toString();
+        QByteArray request =
+          "metric" == units ?
+          TanitaManager::defaultLUT["set_units_metric"] :
+          TanitaManager::defaultLUT["set_units_imperial"];
         m_queue.enqueue(request);
-        qDebug() << "enqueed " << request << QString(request);
+        qDebug() << "enqueued units input " << request;
     }
 
-    // set the equation
+    // Set the equation, Westerner or Oriental.  The default setting is the equation for Westerner.
+    //
     if(inputs.contains("equation"))
     {
-        qDebug() << "enqueue write device for equation " << inputs["equation"].toString();
-        QByteArray request = "westerner"==inputs["equation"].toString() ?
-                    TanitaManager::defaultLUT["set_equation_westerner"] :
-                    TanitaManager::defaultLUT["set_equation_oriental"];
+        QByteArray request =
+          "westerner" == inputs["equation"].toString() ?
+          TanitaManager::defaultLUT["set_equation_westerner"] :
+          TanitaManager::defaultLUT["set_equation_oriental"];
         m_queue.enqueue(request);
-        qDebug() << "enqueed " << request << QString(request);
+        qDebug() << "enqueued equation input " << request;
     }
 
-    // set the tare weight
-    if(inputs.contains("clothing weight"))
+    // Set the tare weight. The tare weight need not be set if not required: it will be treated as 0.
+    // Tanita BF-350 load cell limits total weight to 200kg or 440lb
+    //
+    if(inputs.contains("tare weight"))
     {
-        double value = inputs["clothing weight"].toDouble();
-        qDebug() << "input clothing weight " << QString::number(value);
-        if(0.0 < value && value <= 999.9)
+        double value = inputs["tare weight"].toDouble();
+        double tw_min = 0.0;    if(!hasEndCode(m_buffer)) return;
+        double tw_max = "metric" == units ? 200.0 : 440.0;
+        if(tw_min <= value && value <= tw_max)
         {
           char buffer[10];
           sprintf(buffer,"%05.1f",value);
           QString s = QString::fromLatin1(buffer);
           QByteArray a = QByteArray::fromStdString(s.toStdString());
-          if(5 != a.size())
+          if(5 == a.size())
           {
-              qDebug() << "clothing weight input error: " << s << QString(a);
-          }
-          else
-          {
-            qDebug() << "enqueue write device for clothing weight " << s;
-            QByteArray request = TanitaManager::defaultLUT["set_clothing_weight"];
+            QByteArray request = TanitaManager::defaultLUT["set_tare_weight"];
             request[2] = a[0];
             request[3] = a[1];
             request[4] = a[2];
             request[5] = a[3];
             request[6] = a[4];
             m_queue.enqueue(request);
-            qDebug() << "enqueed " << request << QString(request);
+            qDebug() << "enqueued tare weight input " << request;
           }
+          else
+            qDebug() << "ERROR: tare weight incorrect format " << s;
+
         }
+        else
+          qDebug() << "ERROR: tare weight input out of range " << inputs["tare weight"];
     }
 
-    // set gender
+    // Set gender
+    //
     if(inputs.contains("gender"))
     {
-        qDebug() << "enqueue write device for gender " << inputs["gender"].toString();
-        QByteArray request = "female"==inputs["gender"].toString() ?
-                    TanitaManager::defaultLUT["set_gender_female"] :
-                    TanitaManager::defaultLUT["set_gender_male"];
+        QByteArray request =
+          "female" == inputs["gender"].toString() ?
+          TanitaManager::defaultLUT["set_gender_female"] :
+          TanitaManager::defaultLUT["set_gender_male"];
         m_queue.enqueue(request);
-        qDebug() << "enqueed " << request << QString(request);
+        qDebug() << "enqueued gender input " << request;
     }
 
-    // set body type
+    // Set body type.  Once all the necessary items of data have been entered, the unit will
+    // determine on the basis of age and gender whether to switch to Athlete or Standard mode.
+    // Hence, even if you chose Athlete mode, the unit may switch to Standard mode.
+    //
     if(inputs.contains("body type"))
     {
-        qDebug() << "enqueue write device for body type " << inputs["body type"].toString();
-        QByteArray request = "athlete"==inputs["body type"].toString() ?
-                    TanitaManager::defaultLUT["set_body_type_athlete"] :
-                    TanitaManager::defaultLUT["set_body_type_standard"];
+        QByteArray request =
+          "athlete" == inputs["body type"].toString() ?
+          TanitaManager::defaultLUT["set_body_type_athlete"] :
+          TanitaManager::defaultLUT["set_body_type_standard"];
         m_queue.enqueue(request);
+        qDebug() << "enqueued body type input " << request;
     }
 
+    // Set height
+    // Tanita BF-350 height limits 90-249cm in 1cm increments
+    // or 3ft-7ft11.5in in 0.5in increments
+    //
     if(inputs.contains("height"))
     {
-        int value = inputs["height"].toUInt();
-        qDebug() << "input height " << QString::number(value);
-        if(0 < value && value <= 99999)
+        QVariant value = "metric" == units ? inputs["height"].toUInt() : inputs["height"].toDouble();
+        QVariant h_min = "metric" == units ? 90 : 36.0f;
+        QVariant h_max = "metric" == units ? 249 : 95.5f;
+        if(h_min <= value && value <= h_max)
         {
-          QString s = QStringLiteral("%1").arg(value,5,10,QLatin1Char('0'));
-          QByteArray a = QByteArray::fromStdString(s.toStdString());
-          if(5 != a.size())
+          QString s;
+          if("metric" == units)
           {
-              qDebug() << "height input error: " << s << QString(a);
+            s = QStringLiteral("%1").arg(value.toUInt(),5,10,QLatin1Char('0'));
           }
           else
           {
-            qDebug() << "enqueue write device for height " << s;
+              char buffer[10];
+              sprintf(buffer,"%05.1f",value.toDouble());
+              s = QString::fromLatin1(buffer);
+          }
+          QByteArray a = QByteArray::fromStdString(s.toStdString());
+          if(5 == a.size())
+          {
             QByteArray request = TanitaManager::defaultLUT["set_height"];
             request[2] = a[0];
             request[3] = a[1];
@@ -426,35 +459,40 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
             request[5] = a[3];
             request[6] = a[4];
             m_queue.enqueue(request);
-            qDebug() << "enqueed " << request << QString(request);
+            qDebug() << "enqueued height input " << request;
           }
+          else
+            qDebug() << "ERROR: incorrect height format " << s;
         }
+        else
+          qDebug() << "ERROR: height input out of range " <<  inputs["height"];
     }
 
+    // Set age
+    // Tanita BF-350 age limits 7-99 years in 1 year increments
+    //
     if(inputs.contains("age"))
     {
         int value = inputs["age"].toUInt();
-        qDebug() << "input age " << QString::number(value);
-        if(9 < value && value < 100)
+        int a_min = 7;
+        int a_max = 99;
+        if(a_min <= value && value <= a_max)
         {
-            QByteArray request = TanitaManager::defaultLUT["set_age"];
-            QString s = QString::number(value);
-            QByteArray a = QByteArray::fromStdString(s.toStdString());
-            if(2 != a.size())
-            {
-                qDebug() << "age input error: " << s;
-            }
-            else
-            {
-              qDebug() << "enqueue write device for age " << s;
-              request[2] = a[0];
-              request[3] = a[1];
-              m_queue.enqueue(request);
-              qDebug() << "enqueed " << request << QString(request);
-            }
+          QByteArray request = TanitaManager::defaultLUT["set_age"];
+          QString s = QString::number(value);
+          QByteArray a = QByteArray::fromStdString(s.toStdString());
+          if(2 == a.size())
+          {
+            request[2] = a[0];
+            request[3] = a[1];
+            m_queue.enqueue(request);
+            qDebug() << "enqueued age input " << request;
+          }
+          else
+            qDebug() << "ERROR: incorrect age format " << s;
         }
         else
-            qDebug() << "ERROR: age out of range " << inputs["age"];
+          qDebug() << "ERROR: age input out of range " << inputs["age"];
     }
 
     writeDevice();
@@ -469,121 +507,132 @@ void TanitaManager::clearQueue()
     }
 }
 
+void TanitaManager::processResponse(const QByteArray &request, const QByteArray &response)
+{
+    if(!hasEndCode(response)) return;
+
+    QByteArray commandKey = request.left(2);
+    if(!TanitaManager::commandLUT.contains(commandKey))
+    {
+        qDebug() << "ERROR: failed to process response, unknown command " << commandKey << request;
+        return;
+    }
+    QString requestName = TanitaManager::commandLUT[commandKey];
+    qDebug() << "processing response from request " << requestName;
+
+    QByteArray code = response.trimmed();
+    if(code.contains("!") || code.contains("E"))
+    {
+      QString info;
+      // see if we can lookup what the issue is
+      if(TanitaManager::incorrectLUT.contains(response))
+      {
+        info = TanitaManager::incorrectLUT[response];
+        qDebug() << "WARNING: the request produced an invalid response " << info;
+      }
+      else
+      {
+        qDebug() << "ERROR: unkown invalid response";
+      }
+      if(code.contains("!"))
+      {
+        // if this is a set_ type of command retry by pushing the request back onto the queue
+        if(requestName.startsWith("set_"))
+        {
+          m_queue.enqueue(request);
+        }
+        else if("reset" == requestName)
+        {
+          m_queue.enqueue(request);
+        }
+        else if(requestName.startsWith("confirm_"))
+        {
+          // continue reading the buffer
+          return;
+        }
+      }
+      else if(code.startsWith("E"))
+      {
+        // abort all further processing
+        clearQueue();
+
+        emit error(info);
+        // report the error and stop all processing
+        // most E cases will shut off the device requiring power up
+        // and reconnection
+        //
+        return;
+      }
+    }
+    else
+    {
+      // do we have a successful response
+      QString info;
+      if(TanitaManager::confirmLUT.contains(commandKey))
+      {
+        info = TanitaManager::confirmLUT[commandKey];
+        qDebug() << "CONFIRMED: the command was accepted " << info;
+      }
+      else
+      {
+        // if this is a G measure, then the response will not have a confirm
+        if(!request.startsWith("measure_"))
+           qDebug() << "ERROR: unkown accepted response";
+      }
+      if(requestName.startsWith("confirm_"))
+      {
+         m_cache.push_back(response);
+         // confirm inputs completed
+         if(5 == m_cache.size())
+         {
+             emit canMeasure();
+         }
+      }
+      else if(requestName.startsWith("set_"))
+      {
+          emit canConfirm();
+      }
+      else if(requestName.startsWith("measure_"))
+      {
+          if(30 < response.simplified().size())
+          {
+              m_test.fromArray(m_buffer);
+              if(m_test.isValid())
+              {
+                  emit canWrite();
+              }
+              emit dataChanged();
+          }
+      }
+      else if("reset" == requestName)
+      {
+          emit canInput();
+          emit dataChanged();
+      }
+    }
+}
+
 void TanitaManager::readDevice()
 {
     if("simulate" == m_mode)
     {
+        // parent SerialPortManager class calls
+        // readDevice for the current request
+        // simulate a successful test here
     }
     else
     {
       m_buffer += m_port.readAll();
     }
     //if(m_verbose)
-    qDebug() << "read device received buffer " << QString(m_buffer);
+    qDebug() << "read device received buffer " << m_buffer;
 
-    qDebug() << (m_port.atEnd() ? "port receiving data ..." : "port finished data receiving ") <<
-                " remaining bytes available: " << QString::number(m_port.bytesAvailable()) ;
-
-    QString req;
-    if(TanitaManager::commandLUT.contains(m_request.left(2)))
-    {
-        req = TanitaManager::commandLUT[m_request.left(2)];
-        qDebug() << "current request is " << req;
-    }
-    else
-    {
-        qDebug() << "unknown byte array request in command LUT " << m_request.left(2) << QString(m_request);
-    }
-
-    if(hasEndCode(m_buffer))
-    {
-      qDebug() << "current request " << req << " end-coded read = " << QString(m_buffer);
-
-      if(TanitaManager::incorrectLUT.contains(m_buffer))
-      {
-          QString err = TanitaManager::incorrectLUT[m_buffer];
-          qDebug() << "incorrect response found " << err;
-          emit error(err);
-          // if this is an input that failed, try to redo it
-          //
-          if(req.contains("set_"))
-          {
-             qDebug() << "*************** RE-ENQUEUE request for " << req;
-             m_queue.enqueue(m_request);
-          }
-          else if("reset" == req)
-          {
-             emit canInput(false);
-          }
-          //TODO: set the UI accordingly
-      }
-      else
-      {
-          //TODO: set the UI accordingly
-          //
-          // either we sent a request settings confirmation
-          // or
-          // we requested a measuremen0 . 0t
-          // or
-          // we requested a reset
-          // or
-          // we attempted to set an input
-          //
-          QString confirmation = TanitaManager::confirmLUT.contains(m_buffer) ?
-            TanitaManager::confirmLUT[m_buffer] : QString();
-
-          qDebug() << "confirmation " << confirmation;
-
-          if(req == "confirm_settings")
-          {
-            qDebug() << "confirming settings in progress ... " << QString::number(m_cache.size()) << " cached items";
-            m_cache.push_back(m_buffer);
-
-            // if we are in the middle of confirming, disable UI interaction until fully confirmed
-            //
-          }
-          else if(req == "measure_body_fat")
-          {
-            // if we have a confirmation, then we are in the middle of processing the measurement request
-            // otherwise, check if the buffer is the expected length
-            // if the current request is to measure body fat, the response will need to be
-            // parsed from 58 bytes in total
-            //
-            qDebug() << "measure body fat request successful";
-          }
-          else if(req == "measure_weight")
-          {
-            // if we have a confirmation, then we are in the middle of processing the measurement request
-            // otherwise, check if the buffer is the expected length
-            // if the current request is to measure weight, the response will need to be
-            // parsed from 6 bytes in total
-            //
-
-            qDebug() << "measure weight request successful";
-          }
-          else if(req == "reset" && !confirmation.isEmpty())
-          {
-            qDebug() << "reset request successful";
-            emit canInput(true);
-          }
-          else
-          {
-            qDebug() << "default other command successful " << m_request;
-
-          }
-      }
-
-      m_buffer.clear();
-
-      // process the next queued request
-      writeDevice();
-    }
+    processResponse(m_request, m_buffer);
+    writeDevice();
 }
 
 void TanitaManager::writeDevice()
 {
-  qDebug() << "writeDevice called with remaining bytes to write at " << QString::number(m_port.bytesToWrite());
-  // pop off the queue
   if(!m_queue.isEmpty())
   {
     qDebug() << "writeDevice queue size " << QString::number(m_queue.size());
@@ -594,15 +643,11 @@ void TanitaManager::writeDevice()
     }
     else
     {
-      qDebug() << "dequeued request " << TanitaManager::commandLUT[m_request.left(2)] << m_request << QString(m_request);
-      qDebug() << (m_port.clear() ? "OK cleared port buffers" : "ERROR: failed to clear port buffers");
-      SerialPortManager::writeDevice();
-      qDebug() << (m_port.flush() ? "OK flushed" : "ERROR: failed to flush");
+      qDebug() << "dequeued request " << TanitaManager::commandLUT[m_request.left(2)] << m_request;
+      m_buffer.clear();
+      m_cache.clear();
+      m_port.write(m_request);
     }
-  }
-  else
-  {
-      m_request.clear();
   }
 }
 

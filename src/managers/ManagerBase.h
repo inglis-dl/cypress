@@ -47,6 +47,7 @@ signals:
     void canWrite();
 
 protected:
+
     bool m_verbose;
 
     // mode of operation
