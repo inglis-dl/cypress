@@ -72,7 +72,7 @@ private:
 
     bool hasEndCode(const QByteArray &) const;
 
-    void processResponse(const QByteArray &, const QByteArray &);
+    void processResponse(const QByteArray &, QByteArray);
 
     BodyCompositionAnalyzerTest m_test;
 

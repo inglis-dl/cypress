@@ -46,6 +46,7 @@ QString BodyCompositionMeasurement::toString() const
         s = "body mass index: " %getCharacteristic("body mass index").toString() % QString(" ");
       else if(hasCharacteristic("basal metabolic rate"))
         s = "basal metabolic rate: " %getCharacteristic("basal metabolic rate").toString() % QString(" ");
+
      s = s % QString("(") % getCharacteristic("units").toString() % QString(")");
   }
   return s;

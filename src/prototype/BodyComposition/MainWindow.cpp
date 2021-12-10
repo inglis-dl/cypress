@@ -18,6 +18,21 @@ MainWindow::MainWindow(QWidget *parent)
     , m_manager(this)
 {
     ui->setupUi(this);
+    // allocate 1 columns x 8 rows of hearing measurement items
+    //
+    for(int row=0;row<8;row++)
+    {
+      QStandardItem* item = new QStandardItem();
+      m_model.setItem(row,0,item);
+
+    }
+    m_model.setHeaderData(0,Qt::Horizontal,"Body Composition Results",Qt::DisplayRole);
+    ui->testdataTableView->setModel(&m_model);
+
+    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->verticalHeader()->hide();
 }
 
 MainWindow::~MainWindow()
@@ -296,6 +311,16 @@ void MainWindow::initialize()
          v_ht->setDecimals(1);
          ui->heightLineEdit->setValidator(v_ht);
      }
+  });
+
+  connect(&m_manager, &TanitaManager::error,
+          this, [this](const QString &error){
+      ui->statusBar->showMessage(error);
+      QMessageBox::warning(
+        this, QApplication::applicationName(),
+        tr("A fatal error occured while attempting a measurement and the "
+           "device was disconnected. Turn the device on if it is off, re-connect, "
+           "re-input and confirm the inputs."));
   });
 
   // Write test data to output

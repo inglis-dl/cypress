@@ -148,9 +148,19 @@ QVariant BodyCompositionAnalyzerTest::readHeight() const
 QVariant BodyCompositionAnalyzerTest::readWeight() const
 {
     QString s = readArray(10,14).trimmed();
-    bool ok;
-    float result = s.toFloat(&ok);
-    return ok ? QVariant(result) : QVariant();
+    QVariant result;
+    if(!s.isEmpty())
+    {
+      bool ok;
+      float value = s.toFloat(&ok);
+      if(ok)
+      {
+        char buffer[10];
+        sprintf(buffer,"%5.1f",value);
+        result = QString::fromLatin1(buffer).toDouble();
+      }
+    }
+    return result;
 }
 
 QVariant BodyCompositionAnalyzerTest::readImpedence() const
@@ -164,57 +174,120 @@ QVariant BodyCompositionAnalyzerTest::readImpedence() const
 QVariant BodyCompositionAnalyzerTest::readFatPercent() const
 {
     QString s = readArray(20,23).trimmed();
-    bool ok;
-    float result = s.toFloat(&ok);
-    return ok ? QVariant(result) : QVariant();
+    QVariant result;
+    if(!s.isEmpty())
+    {
+      bool ok;
+      float value = s.toFloat(&ok);
+      if(ok)
+      {
+        char buffer[10];
+        sprintf(buffer,"%5.1f",value);
+        result = QString::fromLatin1(buffer).toDouble();
+      }
+    }
+    return result;
 }
 
 QVariant BodyCompositionAnalyzerTest::readFatMass() const
 {
     QString s = readArray(25,29).trimmed();
-    bool ok;
-    float result = s.toFloat(&ok);
-    return ok ? QVariant(result) : QVariant();
+    QVariant result;
+    if(!s.isEmpty())
+    {
+      bool ok;
+      float value = s.toFloat(&ok);
+      if(ok)
+      {
+        char buffer[10];
+        sprintf(buffer,"%5.1f",value);
+        result = QString::fromLatin1(buffer).toDouble();
+      }
+    }
+    return result;
 }
 
 QVariant BodyCompositionAnalyzerTest::readFatFreeMass() const
 {
     QString s = readArray(31,35).trimmed();
-    bool ok;
-    float result = s.toFloat(&ok);
-    return ok ? QVariant(result) : QVariant();
+    QVariant result;
+    if(!s.isEmpty())
+    {
+      bool ok;
+      float value = s.toFloat(&ok);
+      if(ok)
+      {
+        char buffer[10];
+        sprintf(buffer,"%5.1f",value);
+        result = QString::fromLatin1(buffer).toDouble();
+      }
+    }
+    return result;
 }
 
 QVariant BodyCompositionAnalyzerTest::readTotalBodyWater() const
 {
     QString s = readArray(37,41).trimmed();
-    bool ok;
-    float result = s.toFloat(&ok);
-    return ok ? QVariant(result) : QVariant();
+    QVariant result;
+    if(!s.isEmpty())
+    {
+      bool ok;
+      float value = s.toFloat(&ok);
+      if(ok)
+      {
+        char buffer[10];
+        sprintf(buffer,"%5.1f",value);
+        result = QString::fromLatin1(buffer).toDouble();
+      }
+    }
+    return result;
 }
 
 QVariant BodyCompositionAnalyzerTest::readAge() const
 {
     QString s = readArray(43,44).trimmed();
-    bool ok;
-    float result = s.toFloat(&ok);
-    return ok ? QVariant(result) : QVariant();
+    QVariant result;
+    if(!s.isEmpty())
+    {
+      result = s.toUInt();
+    }
+    return result;
 }
 
 QVariant BodyCompositionAnalyzerTest::readBMI() const
 {
     QString s = readArray(46,50).trimmed();
-    bool ok;
-    float result = s.toFloat(&ok);
-    return ok ? QVariant(result) : QVariant();
+    QVariant result;
+    if(!s.isEmpty())
+    {
+      bool ok;
+      float value = s.toFloat(&ok);
+      if(ok)
+      {
+        char buffer[10];
+        sprintf(buffer,"%5.1f",value);
+        result = QString::fromLatin1(buffer).toDouble();
+      }
+    }
+    return result;
 }
 
 QVariant BodyCompositionAnalyzerTest::readBMR() const
 {
     QString s = readArray(52,56).trimmed();
-    bool ok;
-    float result = s.toFloat(&ok);
-    return ok ? QVariant(result) : QVariant();
+    QVariant result;
+    if(!s.isEmpty())
+    {
+      bool ok;
+      float value = s.toFloat(&ok);
+      if(ok)
+      {
+        char buffer[10];
+        sprintf(buffer,"%5.1f",value);
+        result = QString::fromLatin1(buffer).toDouble();
+      }
+    }
+    return result;
 }
 
 QJsonObject BodyCompositionAnalyzerTest::toJsonObject() const

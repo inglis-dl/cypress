@@ -41,9 +41,9 @@ QMap<QString,QByteArray> TanitaManager::initDefaultLUT()
 
     atom = QByteArray("U0");
     atom.append(end);
-    commands["set_mode_metric"] = atom;
+    commands["set_measurement_system_metric"] = atom;
     atom[1] = '1';
-    commands["set_mode_imperial"] = atom;
+    commands["set_measurement_system_imperial"] = atom;
 
     atom[0] = 'R';
     commands["set_equation_oriental"] = atom;
@@ -97,9 +97,9 @@ QMap<QByteArray,QString> TanitaManager::initCommandLUT()
     QByteArray atom;
 
     atom = QByteArray("U0");
-    commands[atom] = "set_mode_metric";
+    commands[atom] = "set_measurement_system_metric";
     atom[1] = '1';
-    commands[atom] = "set_mode_imperial";
+    commands[atom] = "set_measurement_system_imperial";
 
     atom = QByteArray("R0");
     commands[atom] = "set_equation_westerner";
@@ -139,9 +139,9 @@ QMap<QByteArray,QString> TanitaManager::initConfirmationLUT()
     QByteArray atom;
 
     atom = QByteArray("U0");
-    responses[atom] = "correct metric units setting";
+    responses[atom] = "correct metric measurements setting";
     atom[1]='1';
-    responses[atom] = "correct imperial units setting";
+    responses[atom] = "correct imperial measurements setting";
 
     atom = QByteArray("R0");
     responses[atom] = "correct equation for Westerners setting";
@@ -182,7 +182,7 @@ QMap<QByteArray,QString> TanitaManager::initIncorrectResponseLUT()
 
     atom = QByteArray("U!");
     atom.append(end);
-    responses[atom] = "incorrect units setting";
+    responses[atom] = "incorrect measurement system setting";
 
     atom[0] = 'R';
     responses[atom] = "incorrect equation setting";
@@ -234,7 +234,10 @@ QMap<QByteArray,QString> TanitaManager::initIncorrectResponseLUT()
 
 void TanitaManager::buildModel(QStandardItemModel *model) const
 {
-    for(int row = 0; row < m_test.getNumberOfMeasurements(); row++)
+    qDebug() << "building model from " <<
+                QString::number(m_test.getNumberOfMeasurements()) <<
+                "measurements";
+    for(int row = 0; row < 8; row++)
     {
         QString s = "NA";
         BodyCompositionMeasurement m = m_test.getMeasurement(row);
@@ -247,6 +250,7 @@ void TanitaManager::buildModel(QStandardItemModel *model) const
            model->setItem(row,0,item);
         }
         item->setData(s, Qt::DisplayRole);
+        qDebug() << "model item receiving " << s;
     }
 }
 
@@ -319,6 +323,12 @@ void TanitaManager::confirmSettings()
 {
     qDebug() << "***************CONFIRM SETTINGS called *******************";
     clearQueue();
+    // the cache is strictly used for the confirm settings command
+    // to store successful responses only.  If the cache reaches
+    // 5 confirmed successful inputs, the state changes to ready
+    // to measure
+    //
+    m_cache.clear();
     m_queue.enqueue(TanitaManager::defaultLUT["confirm_settings"]);
     writeDevice();
 }
@@ -350,10 +360,10 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
         units = inputs["measurement system"].toString();
         QByteArray request =
           "metric" == units ?
-          TanitaManager::defaultLUT["set_units_metric"] :
-          TanitaManager::defaultLUT["set_units_imperial"];
+          TanitaManager::defaultLUT["set_measurement_system_metric"] :
+          TanitaManager::defaultLUT["set_measurement_system_imperial"];
         m_queue.enqueue(request);
-        qDebug() << "enqueued units input " << request;
+        qDebug() << "enqueued measurement system input " << request << "from " << units;
     }
 
     // Set the equation, Westerner or Oriental.  The default setting is the equation for Westerner.
@@ -365,7 +375,7 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
           TanitaManager::defaultLUT["set_equation_westerner"] :
           TanitaManager::defaultLUT["set_equation_oriental"];
         m_queue.enqueue(request);
-        qDebug() << "enqueued equation input " << request;
+        qDebug() << "enqueued equation input " << request << "from " << inputs["equation"].toString();
     }
 
     // Set the tare weight. The tare weight need not be set if not required: it will be treated as 0.
@@ -374,7 +384,7 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
     if(inputs.contains("tare weight"))
     {
         double value = inputs["tare weight"].toDouble();
-        double tw_min = 0.0;    if(!hasEndCode(m_buffer)) return;
+        double tw_min = 0.0;
         double tw_max = "metric" == units ? 200.0 : 440.0;
         if(tw_min <= value && value <= tw_max)
         {
@@ -391,7 +401,8 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
             request[5] = a[3];
             request[6] = a[4];
             m_queue.enqueue(request);
-            qDebug() << "enqueued tare weight input " << request;
+            qDebug() << "enqueued tare weight input " << request << "from " <<
+                        QString::number(value);
           }
           else
             qDebug() << "ERROR: tare weight incorrect format " << s;
@@ -410,7 +421,7 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
           TanitaManager::defaultLUT["set_gender_female"] :
           TanitaManager::defaultLUT["set_gender_male"];
         m_queue.enqueue(request);
-        qDebug() << "enqueued gender input " << request;
+        qDebug() << "enqueued gender input " << request << "from " << inputs["gender"].toString();
     }
 
     // Set body type.  Once all the necessary items of data have been entered, the unit will
@@ -424,7 +435,7 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
           TanitaManager::defaultLUT["set_body_type_athlete"] :
           TanitaManager::defaultLUT["set_body_type_standard"];
         m_queue.enqueue(request);
-        qDebug() << "enqueued body type input " << request;
+        qDebug() << "enqueued body type input " << request << "from " << inputs["body type"].toString();
     }
 
     // Set height
@@ -433,7 +444,7 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
     //
     if(inputs.contains("height"))
     {
-        QVariant value = "metric" == units ? inputs["height"].toUInt() : inputs["height"].toDouble();
+        QVariant value = inputs["height"];
         QVariant h_min = "metric" == units ? 90 : 36.0f;
         QVariant h_max = "metric" == units ? 249 : 95.5f;
         if(h_min <= value && value <= h_max)
@@ -459,7 +470,8 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
             request[5] = a[3];
             request[6] = a[4];
             m_queue.enqueue(request);
-            qDebug() << "enqueued height input " << request;
+            qDebug() << "enqueued height input " << request << "from " <<
+                        value.toString();
           }
           else
             qDebug() << "ERROR: incorrect height format " << s;
@@ -486,7 +498,8 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
             request[2] = a[0];
             request[3] = a[1];
             m_queue.enqueue(request);
-            qDebug() << "enqueued age input " << request;
+            qDebug() << "enqueued age input " << request << "from " <<
+                        QString::number(value);
           }
           else
             qDebug() << "ERROR: incorrect age format " << s;
@@ -507,9 +520,10 @@ void TanitaManager::clearQueue()
     }
 }
 
-void TanitaManager::processResponse(const QByteArray &request, const QByteArray &response)
+void TanitaManager::processResponse(const QByteArray &request, QByteArray response)
 {
     if(!hasEndCode(response)) return;
+    m_buffer.clear();
 
     QByteArray commandKey = request.left(2);
     if(!TanitaManager::commandLUT.contains(commandKey))
@@ -532,7 +546,7 @@ void TanitaManager::processResponse(const QByteArray &request, const QByteArray 
       }
       else
       {
-        qDebug() << "ERROR: unkown invalid response";
+        qDebug() << "WARNING: unknown invalid response";
       }
       if(code.contains("!"))
       {
@@ -556,29 +570,35 @@ void TanitaManager::processResponse(const QByteArray &request, const QByteArray 
         // abort all further processing
         clearQueue();
 
-        emit error(info);
         // report the error and stop all processing
         // most E cases will shut off the device requiring power up
         // and reconnection
         //
+
+        emit error(info);
+
+        disconnectDevice();
+
         return;
       }
     }
     else
     {
-      // do we have a successful response
+      // do we have a successful response?
       QString info;
       if(TanitaManager::confirmLUT.contains(commandKey))
       {
         info = TanitaManager::confirmLUT[commandKey];
         qDebug() << "CONFIRMED: the command was accepted " << info;
       }
+      /*
       else
       {
         // if this is a G measure, then the response will not have a confirm
-        if(!request.startsWith("measure_"))
+        if(!request.startsWith("measure_") ||)
            qDebug() << "ERROR: unkown accepted response";
       }
+      */
       if(requestName.startsWith("confirm_"))
       {
          m_cache.push_back(response);
@@ -590,26 +610,44 @@ void TanitaManager::processResponse(const QByteArray &request, const QByteArray 
       }
       else if(requestName.startsWith("set_"))
       {
+          // if we set the measurement system, set the system used by the test
+          //
+          if(requestName.startsWith("set_measurement_"))
+          {
+              QString units =
+                "set_measurement_system_metric" == requestName ? "metric" : "imperial";
+              m_test.setMeasurementSystem(units);
+          }
           emit canConfirm();
       }
       else if(requestName.startsWith("measure_"))
       {
-          if(30 < response.simplified().size())
+          // clear the buffer and wait for the buffer to fill with the measurement data
+          //
+          m_buffer.clear();
+          qDebug() << "received complete measurement request buffer, size = " << QString::number(response.size());
+          if(59 == response.size())
           {
-              m_test.fromArray(m_buffer);
+              qDebug() << "passing response to test for parsing ...";
+              m_test.fromArray(response);
               if(m_test.isValid())
               {
+                  qDebug() << "OK: valid test";
                   emit canWrite();
               }
+              else
+                  qDebug() << "ERROR: invalid test";
               emit dataChanged();
           }
       }
       else if("reset" == requestName)
       {
+          m_test.reset();
           emit canInput();
           emit dataChanged();
       }
     }
+    writeDevice();
 }
 
 void TanitaManager::readDevice()
@@ -628,7 +666,7 @@ void TanitaManager::readDevice()
     qDebug() << "read device received buffer " << m_buffer;
 
     processResponse(m_request, m_buffer);
-    writeDevice();
+
 }
 
 void TanitaManager::writeDevice()
@@ -645,7 +683,7 @@ void TanitaManager::writeDevice()
     {
       qDebug() << "dequeued request " << TanitaManager::commandLUT[m_request.left(2)] << m_request;
       m_buffer.clear();
-      m_cache.clear();
+      //m_cache.clear();
       m_port.write(m_request);
     }
   }
