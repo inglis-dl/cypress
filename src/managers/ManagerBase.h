@@ -13,6 +13,8 @@ class ManagerBase : public QObject
 public:
     explicit ManagerBase(QObject *parent = nullptr);
 
+    // load and save device, paths and other constant settings to .ini
+    //
     virtual void loadSettings(const QSettings &) = 0;
     virtual void saveSettings(QSettings*) const = 0;
 
@@ -22,8 +24,13 @@ public:
     void setMode(const QString& mode) { m_mode = mode; }
     QString mode() { return m_mode; }
 
+    // collate test results and device and other meta data
+    // for the main application to write to .json
+    //
     virtual QJsonObject toJsonObject() const = 0;
 
+    // build a model for UI display of the test results etc.
+    //
     virtual void buildModel(QStandardItemModel *) const = 0;
 
 public slots:
@@ -47,6 +54,7 @@ signals:
     void canWrite();
 
 protected:
+
     bool m_verbose;
 
     // mode of operation

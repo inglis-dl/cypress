@@ -12,7 +12,6 @@ public:
     QString toString() const override;
 
     bool isValid() const override;
-
 };
 
 Q_DECLARE_METATYPE(BodyCompositionMeasurement);

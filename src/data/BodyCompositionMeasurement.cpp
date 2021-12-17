@@ -12,13 +12,13 @@ bool BodyCompositionMeasurement::isValid() const
   bool ok =
     (
       hasCharacteristic("weight") ||
-      hasCharacteristic("impedence") ||
+      hasCharacteristic("impedance") ||
       hasCharacteristic("percent fat") ||
       hasCharacteristic("fat mass") ||
       hasCharacteristic("fat free mass") ||
       hasCharacteristic("total body water") ||
       hasCharacteristic("body mass index") ||
-      hasCharacteristic("bmr")
+      hasCharacteristic("basal metabolic rate")
     ) &&
     hasCharacteristic("units");
 
@@ -32,8 +32,8 @@ QString BodyCompositionMeasurement::toString() const
   {
       if(hasCharacteristic("weight"))
         s = "weight: " % getCharacteristic("weight").toString() % QString(" ");
-      else if(hasCharacteristic("impedence"))
-        s = "impedence: " %getCharacteristic("impedence").toString() % QString(" ");
+      else if(hasCharacteristic("impedance"))
+        s = "impedance: " %getCharacteristic("impedance").toString() % QString(" ");
       else if(hasCharacteristic("percent fat"))
         s = "percent fat: " %getCharacteristic("percent fat").toString() % QString(" ");
       else if(hasCharacteristic("fat mass"))
@@ -44,8 +44,9 @@ QString BodyCompositionMeasurement::toString() const
         s = "total body water: " %getCharacteristic("total body water").toString() % QString(" ");
       else if(hasCharacteristic("body mass index"))
         s = "body mass index: " %getCharacteristic("body mass index").toString() % QString(" ");
-      else if(hasCharacteristic("bmr"))
-        s = "bmr: " %getCharacteristic("bmr").toString() % QString(" ");
+      else if(hasCharacteristic("basal metabolic rate"))
+        s = "basal metabolic rate: " %getCharacteristic("basal metabolic rate").toString() % QString(" ");
+
      s = s % QString("(") % getCharacteristic("units").toString() % QString(")");
   }
   return s;
