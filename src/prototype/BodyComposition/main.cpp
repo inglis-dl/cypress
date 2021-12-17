@@ -60,8 +60,8 @@ int main(int argc, char *argv[])
     window.setMode(parser.getMode());
     window.setVerbose(true/*parser.getVerbose()*/);
 
-    window.initialize();
     window.show();
+    window.initialize();
     window.run();
 
     return app.exec();

@@ -17,11 +17,19 @@ public:
 
     void buildModel(QStandardItemModel *) const override;
 
-    static QMap<QString,QByteArray> initCommandLookup();
-    static QMap<QByteArray,QString> initResponseLookup();
+    static QMap<QString,QByteArray> initDefaultLUT();
+    static QMap<QByteArray,QString> initCommandLUT();
+    static QMap<QByteArray,QString> initIncorrectResponseLUT();
+    static QMap<QByteArray,QString> initConfirmationLUT();
 
 signals:
+   // ready to receive the input map
+   //
+   void canInput();
+
    void canConfirm();
+
+   void error(const QString &);
 
 public slots:
 
@@ -32,15 +40,16 @@ public slots:
     //
     void connectDevice() override;
 
-    // reset all device settings
+    // reset all device settings (removed inputs)
     //
     void resetDevice();
 
+    // confirm the input after setInputs
+    //
     void confirmSettings();
 
     void setInputs(const QMap<QString,QVariant> &);
 
-    void writeDevice() override;
     // retrieve a measurement from the device
     //
     void measure() override;
@@ -53,15 +62,22 @@ private slots:
     //
     void readDevice() override;
 
-private:
-    static QMap<QString,QByteArray> commandLookup;
-    static QMap<QByteArray,QString> responseLookup;
+    void writeDevice() override;
 
-    bool hasEndCode(const QByteArray &);
+private:
+    static QMap<QString,QByteArray> defaultLUT;
+    static QMap<QByteArray,QString> commandLUT;
+    static QMap<QByteArray,QString> incorrectLUT;
+    static QMap<QByteArray,QString> confirmLUT;
+
+    bool hasEndCode(const QByteArray &) const;
+
+    void processResponse(const QByteArray &, QByteArray);
 
     BodyCompositionAnalyzerTest m_test;
 
     void clearData() override;
+    void clearQueue();
 
     QVector<QByteArray> m_cache;
     QQueue<QByteArray> m_queue;

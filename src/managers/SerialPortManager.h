@@ -57,13 +57,11 @@ public slots:
     //
     void disconnectDevice();
 
+private slots:
+
     // send write request over RS232 to retrieve data from the audiometer
     //
-    virtual void writeDevice();
-
-    //virtual void measure() = 0;
-
-private slots:
+    virtual void writeDevice() = 0;
 
     // retrieve data from the audiometer over RS232
     // emits canWrite signal if the test data is valid
@@ -96,21 +94,28 @@ signals:
     void deviceSelected(const QString &);
 
     // port ready to connect
-    // (update GUI enable connect button)
+    // (update GUI enable connect button, disable disconnect button)
     //
     void canConnectDevice();
 
     void deviceNameChanged(const QString &);
 
 protected:
-    // keep device data separate from test data
-    //
+
+    // device data is separate from test data
     MeasurementBase m_deviceData;
+
+    // list of available serial ports
     QMap<QString,QSerialPortInfo> m_deviceList;
+
+    // the currently selected serial port
     QSerialPort m_port;
     QString m_deviceName;
 
+    // serial port output receive buffer
     QByteArray m_buffer;
+
+    // serial port input signal
     QByteArray m_request;
 };
 
