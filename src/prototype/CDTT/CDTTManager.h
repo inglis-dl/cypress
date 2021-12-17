@@ -2,7 +2,7 @@
 #define CDTTMANAGER_H
 
 #include "../../managers/ManagerBase.h"
-//#include "../../data/CDTTTest.h"
+#include "../../data/CDTTTest.h"
 
 #include <QProcess>
 #include <QDateTime>
@@ -68,7 +68,7 @@ private:
     QString m_outputFile;     // full pathspec to working output .csv file
     QProcess m_process;
 
-    //CDTTTest m_test;
+    CDTTTest m_test;
 
     void clearData() override;
 

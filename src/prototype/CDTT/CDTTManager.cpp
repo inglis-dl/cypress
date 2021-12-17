@@ -27,8 +27,8 @@ void CDTTManager::saveSettings(QSettings* settings) const
 
 QJsonObject CDTTManager::toJsonObject() const
 {
-    //QJsonObject json = m_test.toJsonObject();
-    QJsonObject json;
+    QJsonObject json = m_test.toJsonObject();
+    //QJsonObject json;
     if ("simulate" != m_mode)
     {
         QFile ofile(m_outputFile);
@@ -40,9 +40,34 @@ QJsonObject CDTTManager::toJsonObject() const
     return json;
 }
 
-void CDTTManager::buildModel(QStandardItemModel*) const
+void CDTTManager::buildModel(QStandardItemModel* model) const
 {
+    // add measurements one row of two columns at a time
+    //
+    int n_total = m_test.getNumberOfMeasurements();
+    int n_row = qMax(1, n_total / 2);
+    if (n_row != model->rowCount())
+    {
+        model->setRowCount(n_row);
+    }
+    int row_left = 0;
+    int row_right = 0;
+    for (int i = 0; i < n_total; i++)
+    {
+        CDTTMeasurement measurement = m_test.getMeasurement(i);
+        QString measurementStr = measurement.isValid() ? measurement.toString() : "NA";
 
+        int col = i%2;
+        int* row = col == 0 ? &row_left : &row_right;
+        QStandardItem* item = model->item(*row, col);
+        if (nullptr == item)
+        {
+            item = new QStandardItem();
+            model->setItem(*row, col, item);
+        }
+        item->setData(measurementStr, Qt::DisplayRole);
+        (*row)++;
+    }
 }
 
 bool CDTTManager::isDefined(const QString& jarFullPath) const
@@ -136,12 +161,55 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
 
 void CDTTManager::readOutput()
 {
+    if ("simulate" == m_mode) {
+        // TODO: Implement simulate mode
+        return;
+    }
 
+    if (QProcess::NormalExit != m_process.exitStatus()) {
+        qDebug() << "ERROR: process failed to finish correctly: cannot read output";
+        return;
+    }
+    else{
+        qDebug() << "process finished successfully";
+    }
+
+    QDir dir(m_outputPath);
+    bool found = false;
+    QString fileName = QString("Results-%0.xlsx").arg(m_inputData["barcode"].toString());
+    for (auto&& x : dir.entryList())
+    {
+        if (x == fileName)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    if (found)
+    {
+        qDebug() << "found output xlsx file " << fileName;
+        QString filePath = m_outputPath + QDir::separator() + fileName;
+        qDebug() << "found output xlsx file path " << filePath;
+        m_test.fromFile(filePath);
+        m_outputFile.clear();
+        if (m_test.isValid())
+        {
+            emit canWrite();
+            m_outputFile = filePath;
+        }
+        else
+            qDebug() << "ERROR: input from file produced invalid test results";
+
+        emit dataChanged();
+    }
+    else
+        qDebug() << "ERROR: no output csv file found";
 }
 
 void CDTTManager::clearData()
 {
-    //m_test.reset();
+    m_test.reset();
     m_outputFile.clear();
     emit dataChanged();
 }
