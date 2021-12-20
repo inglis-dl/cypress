@@ -78,7 +78,10 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      QByteArray t_arr = arr.mid(1,2);
      std::reverse(t_arr.begin(), t_arr.end());
      float t_value = t_arr.toHex().toInt(nullptr,16)*0.1;
-     setCharacteristic("temperature", t_value);
+     char buffer[10];
+     sprintf(buffer,"%5.1f",t_value);
+     QVariant t_var = QString::fromLatin1(buffer).toDouble();
+     setCharacteristic("temperature", t_var);
 
      // Datetime:
      //

@@ -429,6 +429,13 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
           qDebug() << "controller state changed to " << s.join(" ").toLower();
      });
 
+    connect(m_controller.data(), &QLowEnergyController::connected,
+            this,[this](){
+        if(m_verbose)
+            qDebug() <<  "controller finding " << m_controller->remoteName() << " services";
+        m_controller->discoverServices();
+    });
+
     emit canConnectDevice();
 }
 
@@ -459,7 +466,7 @@ void BluetoothLEManager::serviceDiscoveryComplete()
       qDebug()<< x.toString();
       quint16 uid = x.toUInt16();
       qDebug()<<QBluetoothUuid::serviceClassToString(static_cast<QBluetoothUuid::ServiceClassUuid>(uid));
-      }
+    }
   }
 
   m_thermo_service.reset(
