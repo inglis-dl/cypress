@@ -99,6 +99,23 @@ void AudiometerManager::measure()
     writeDevice();
 }
 
+void AudiometerManager::writeDevice()
+{
+    // prepare to receive data
+    //
+    m_buffer.clear();
+
+    if("simulate" == m_mode)
+    {
+        if(m_verbose)
+          qDebug() << "in simulate mode writeDevice with request " << QString(m_request);
+        readDevice();
+        return;
+    }
+
+    m_port.write(m_request);
+}
+
 QJsonObject AudiometerManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();

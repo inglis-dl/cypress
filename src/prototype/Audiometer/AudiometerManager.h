@@ -26,6 +26,8 @@ private slots:
     //
     void readDevice() override;
 
+    void writeDevice() override;
+
 private:
 
     bool hasEndCode(const QByteArray &);

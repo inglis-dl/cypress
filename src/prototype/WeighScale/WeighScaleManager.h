@@ -1,8 +1,8 @@
 #ifndef WEIGHSCALEMANAGER_H
 #define WEIGHSCALEMANAGER_H
 
-#include "../../data/WeighScaleTest.h"
 #include "../../managers/SerialPortManager.h"
+#include "../../data/WeighScaleTest.h"
 
 class WeighScaleManager : public SerialPortManager
 {
@@ -39,6 +39,8 @@ private slots:
     // Read is based on the last written code
     //
     void readDevice() override;
+
+    void writeDevice() override;
 
 private:
 

@@ -2,9 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-
-QT_FORWARD_DECLARE_CLASS(QCloseEvent)
-
 #include "WeighScaleManager.h"
 
 QT_BEGIN_NAMESPACE
