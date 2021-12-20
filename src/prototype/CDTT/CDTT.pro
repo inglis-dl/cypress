@@ -4,7 +4,7 @@
 
 TEMPLATE = app
 TARGET = CDTT
-DESTDIR = ../../x64/Debug
+DESTDIR = ../../../../CypressBuilds/CDTT/x64/Debug
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .
@@ -12,10 +12,20 @@ MOC_DIR += .
 OBJECTS_DIR += debug
 UI_DIR += .
 RCC_DIR += GeneratedFiles
-HEADERS += ./CDTTest.h \
-    ./InputsModel.h \
-    ./MainWindow.h
-SOURCES += ./CDTTest.cpp \
+HEADERS += ./CDTTManager.h \
+    ./MainWindow.h \
+    ../../data/CDTTMeasurement.h \
+    ../../data/CDTTTest.h \
+    ../../data/MeasurementBase.h \
+    ../../data/TestBase.h \
+    ../../auxiliary/CommandLineParser.h \
+    ../../managers/ManagerBase.h
+SOURCES += ./CDTTManager.cpp \
     ./MainWindow.cpp \
-    ./main.cpp
+    ./main.cpp \
+    ../../auxiliary/CommandLineParser.cpp \
+    ../../data/CDTTMeasurement.cpp \
+    ../../data/CDTTTest.cpp \
+    ../../data/MeasurementBase.cpp \
+    ../../managers/ManagerBase.cpp
 FORMS += ./MainWindow.ui
