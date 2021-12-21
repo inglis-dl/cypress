@@ -65,8 +65,8 @@ CypressApplication::CommandLineParseResult CypressApplication::parse(const QCore
     QCommandLineOption testOption(
       QStringList() << "t" << "test",
       QCoreApplication::translate(
-        "main", "Test type <weight,spirometry,thermometer...>"),"test","weight");
-    m_parser.addOption(outputOption);
+        "main", "Test <type>"),"test","type");
+    m_parser.addOption(testOption);
 
     QCommandLineOption modeOption(
       QStringList() << "m" << "mode",
@@ -157,13 +157,39 @@ CypressApplication::CommandLineParseResult CypressApplication::parse(const QCore
     // if command line parsing determined an error do not continue
     // and report on the next potential error
     //
+    if(m_parser.isSet(outputOption) && CommandLineOk==result)
+    {
+        QString s = m_parser.value(outputOption);
+        QFileInfo info(s);
+        if(info.dir().exists())
+        {
+            hasValidOutput = true;
+            m_outputFileName = s;
+            if(m_verbose)
+              qDebug() << "out file option set with " << m_outputFileName;
+        }
+        else
+        {
+            qDebug() << "ERROR: output file path does not exist: " <<  m_outputFileName;
+            result = CommandLineOutputPathError;
+            *errMessage = "Invalid output file path " + s;
+        }
+    }
+
     if(m_parser.isSet(testOption) && CommandLineOk==result)
     {
-        QString s = m_parser.value(testOption);
+        QString s = m_parser.value(testOption).toLower();
+        QStringList l;
+        l << "weigh_scale" << "body_composition" << "thermometer" << "audiometer" << "spirometer" << "cdtt"
+          << "cognitive_test" << "blood_pressure" << "frax";
         // determine which manager and dialog is needed based on test type
-        if(m_verbose)
-          qDebug() << "in test option set with " << s;
-        if(s.isEmpty())
+        if(l.contains(s))
+        {
+            m_testName = s;
+            if(m_verbose)
+              qDebug() << "in test option set with " << s;
+        }
+        else
         {
             qDebug() << "ERROR: input test does not exist: " <<  s;
             result = CommandLineTestError;

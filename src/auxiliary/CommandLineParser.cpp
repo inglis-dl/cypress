@@ -129,7 +129,9 @@ CommandLineParser::CommandLineParseResult CommandLineParser::parseCommandLine(
     // and report on the next potential error
     //
     if(m_parser.isSet(outputOption) && CommandLineOk==result)
-    {
+    {    // if command line parsing determined an error do not continue
+        // and report on the next potential error
+        //
         QString s = m_parser.value(outputOption);
         QFileInfo info(s);
         if(info.dir().exists())

@@ -70,6 +70,7 @@ private:
    QString m_outputFileName;
    QString m_mode;
    bool m_verbose;
+   QString m_testName;
 
    QMap<QString,QVariant> m_inputData;
    QMap<QString,QVariant> m_outputData;
