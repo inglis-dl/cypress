@@ -33,6 +33,7 @@ HEADERS += ./CDTTManager.h \
     ../../data/TestBase.h \
     ../../auxiliary/CommandLineParser.h \
     ../../managers/ManagerBase.h
+
 SOURCES += ./CDTTManager.cpp \
     ./MainWindow.cpp \
     ./main.cpp \
@@ -41,8 +42,8 @@ SOURCES += ./CDTTManager.cpp \
     ../../data/CDTTTest.cpp \
     ../../data/MeasurementBase.cpp \
     ../../managers/ManagerBase.cpp
-FORMS += ./MainWindow.ui
 
+FORMS += ./MainWindow.ui
 
 unix {
 # Default rules for deployment.

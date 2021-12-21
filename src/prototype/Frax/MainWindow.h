@@ -7,7 +7,7 @@
 #include <QString>
 #include <QProcess>
 #include <QStandardPaths>
-#include <QMainWindow>
+#include <QDialog>
 #include <QStandardItemModel>
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
+class MainWindow : public QDialog
 {
     Q_OBJECT
 

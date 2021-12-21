@@ -12,7 +12,7 @@
 #include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QDialog(parent)
     , ui(new Ui::MainWindow)
     , m_verbose(false)
     , m_manager(this)

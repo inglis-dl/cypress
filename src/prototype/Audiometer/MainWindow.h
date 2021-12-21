@@ -1,17 +1,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-
-QT_FORWARD_DECLARE_CLASS(QCloseEvent)
-
+#include <QDialog>
 #include "AudiometerManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
+class MainWindow : public QDialog
 {
     Q_OBJECT
 

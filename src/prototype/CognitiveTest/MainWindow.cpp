@@ -1,5 +1,4 @@
 #include "MainWindow.h"
-#include "ui_MainWindow.h"
 
 #include <QCloseEvent>
 #include <QDate>
@@ -13,7 +12,7 @@
 #include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QDialog(parent)
     , ui(new Ui::MainWindow)
     , m_verbose(false)
 {
