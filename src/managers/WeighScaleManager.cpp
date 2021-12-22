@@ -1,6 +1,6 @@
 #include "WeighScaleManager.h"
 
-#include "../../data/WeighScaleTest.h"
+#include "../data/WeighScaleTest.h"
 
 #include <QDateTime>
 #include <QDebug>

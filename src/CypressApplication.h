@@ -22,7 +22,7 @@ public:
         CommandLineError,
         CommandLineMissingArg,
         CommandLineModeError,
-        CommandLineTestError,
+        CommandLineTestTypeError,
         CommandLineInputFileError,
         CommandLineOutputPathError,
         CommandLineVersionRequested,
@@ -30,12 +30,28 @@ public:
     };
     Q_ENUM(CommandLineParseResult)
 
+    enum TestType {
+        None,
+        Spirometry,
+        Weight,
+        BodyComposition,
+        Frax,
+        CDTT,
+        BloodPressure,
+        Temperature,
+        Hearing,
+        ChoiceReaction
+    };
+    Q_ENUM(TestType)
+
+    static QMap<QString,TestType> initTestTypeLUT();
+
     CommandLineParseResult parse(const QCoreApplication &, QString *);
     QString helpText(){ return m_parser.helpText(); }
 
     // This method internally calls readInput
     //
-    void initialize(ManagerBase *ptr){};
+    void initialize();
 
     // Call after initialize, launch the application and run
     // the device
@@ -64,20 +80,23 @@ public slots:
 private:
     void readInput();
 
-   QCommandLineParser m_parser;
+    static QMap<QString,TestType> testTypeLUT;
 
-   QString m_inputFileName;
-   QString m_outputFileName;
-   QString m_mode;
-   bool m_verbose;
-   QString m_testName;
+    QCommandLineParser m_parser;
 
-   QMap<QString,QVariant> m_inputData;
-   QMap<QString,QVariant> m_outputData;
+    QString m_inputFileName;
+    QString m_outputFileName;
+    QString m_mode;
+    bool m_verbose;
+    TestType m_testType;
+    QString m_testTypeName;
 
-   ManagerBase *m_manager;
+    QMap<QString,QVariant> m_inputData;
+    QMap<QString,QVariant> m_outputData;
 
-   CypressDialog *m_dialog;
+    ManagerBase *m_manager;
+
+    CypressDialog *m_dialog;
 
    //QStandardItemModel m_model;
 };

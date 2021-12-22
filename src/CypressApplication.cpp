@@ -12,15 +12,30 @@
 
 #include "./dialogs/CypressDialog.h"
 #include "./managers/ManagerBase.h"
+#include "./managers/AudiometerManager.h"
+#include "./managers/BluetoothLEManager.h"
+#include "./managers/CDTTManager.h"
+#include "./managers/CognitiveTestManager.h"
+#include "./managers/FraxManager.h"
+#include "./managers/TanitaManager.h"
+#include "./managers/WeighScaleManager.h"
 
 #include "ui_CypressDialog.h"
+
+QMap<QString,CypressApplication::TestType> CypressApplication::testTypeLUT =
+        CypressApplication::initTestTypeLUT();
 
 CypressApplication::CypressApplication(QObject *parent) : QObject(parent),
     m_mode("default"),
     m_verbose(true),
+    m_testType(None),
     m_manager(nullptr)
 {
     m_dialog = new CypressDialog();
+
+    // TESTING ONLY
+    m_testType = TestType::Temperature;
+    m_testTypeName = "temperature";
 }
 
 CypressApplication::~CypressApplication()
@@ -28,6 +43,73 @@ CypressApplication::~CypressApplication()
     delete m_dialog;
     if(nullptr!=m_manager)
         delete m_manager;
+}
+
+QMap<QString,CypressApplication::TestType> CypressApplication::initTestTypeLUT()
+{
+    QMap<QString,CypressApplication::TestType> lut;
+    lut["weight"] = TestType::Weight;
+    lut["hearing"] = TestType::Hearing;
+    lut["spirometry"] = TestType::Spirometry;
+    lut["temperature"] = TestType::Temperature;
+    lut["frax"] = TestType::Frax;
+    lut["body_composition"] = TestType::BodyComposition;
+    lut["cdtt"] = TestType::CDTT;
+    lut["choice_reaction"] = TestType::ChoiceReaction;
+    lut["blood_pressure"] = TestType::BloodPressure;
+    return lut;
+}
+
+void CypressApplication::initialize()
+{
+    // select the appropriate manager based on test type
+    // if the test type was specified as a cli then it will not be None
+    // if it is, then it must be specified in the input data read from the input file
+    //
+    if(TestType::None==m_testType)
+    {
+        QString s;
+        if(m_inputData.contains("test_type"))
+        {
+            s = m_inputData["test_type"].toString();
+        }
+        if(CypressApplication::testTypeLUT.contains(s))
+        {
+            m_testType = CypressApplication::testTypeLUT[s];
+            m_testTypeName = s;
+            if(m_verbose)
+              qDebug() << "test option set from input file with " << s;
+        }
+        else
+        {
+            throw std::runtime_error("FATAL ERROR: no test type specified");
+        }
+    }
+    switch(m_testType)
+    {
+      case TestType::Weight:
+        m_manager = new WeighScaleManager;
+        break;
+      case TestType::BodyComposition:
+        m_manager = new TanitaManager;
+        break;
+      case TestType::Hearing:
+        m_manager = new AudiometerManager;
+        break;
+      case TestType::ChoiceReaction:
+        m_manager = new CognitiveTestManager;
+        break;
+      case TestType::Temperature:
+        m_manager = new BluetoothLEManager;
+        break;
+      case TestType::Frax:
+        m_manager = new FraxManager;
+        break;
+      case TestType::CDTT:
+        m_manager = new CDTTManager;
+        break;
+    }
+
 }
 
 void CypressApplication::show()
@@ -179,20 +261,18 @@ CypressApplication::CommandLineParseResult CypressApplication::parse(const QCore
     if(m_parser.isSet(testOption) && CommandLineOk==result)
     {
         QString s = m_parser.value(testOption).toLower();
-        QStringList l;
-        l << "weigh_scale" << "body_composition" << "thermometer" << "audiometer" << "spirometer" << "cdtt"
-          << "cognitive_test" << "blood_pressure" << "frax";
         // determine which manager and dialog is needed based on test type
-        if(l.contains(s))
+        if(CypressApplication::testTypeLUT.contains(s))
         {
-            m_testName = s;
+            m_testType = CypressApplication::testTypeLUT[s];
+            m_testTypeName = s;
             if(m_verbose)
               qDebug() << "in test option set with " << s;
         }
         else
         {
             qDebug() << "ERROR: input test does not exist: " <<  s;
-            result = CommandLineTestError;
+            result = CommandLineTestTypeError;
             *errMessage = "Invalid input test " + s;
         }
     }
@@ -297,7 +377,7 @@ void CypressApplication::writeOutput()
          QStringList list;
          list << barcode;
          list << QDate().currentDate().toString("yyyyMMdd");
-         list << "bodycomp.json";
+         list << m_testTypeName + ".json";
          fileName = dir.filePath( list.join("_") );
        }
        else
@@ -311,5 +391,5 @@ void CypressApplication::writeOutput()
    if(m_verbose)
        qDebug() << "wrote to file " << fileName;
 
-   m_dialog->ui->statusBar->showMessage("Body composition data recorded.  Close when ready.");
+   m_dialog->ui->statusBar->showMessage("Test data recorded.  Close when ready.");
 }

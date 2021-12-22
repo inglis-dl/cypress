@@ -4,6 +4,7 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QMessageBox>
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
@@ -46,7 +47,7 @@ int main(int argc, char *argv[])
       case CypressApplication::CommandLineInputFileError:
       case CypressApplication::CommandLineOutputPathError:
       case CypressApplication::CommandLineMissingArg:
-      case CypressApplication::CommandLineTestError:
+      case CypressApplication::CommandLineTestTypeError:
       case CypressApplication::CommandLineModeError:
         QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
                              "<html><head/><body><h2>" + errMessage + "</h2><pre>"
@@ -54,10 +55,19 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    try
+    {
+      cypress.initialize();
+    }
+    catch (std::exception& e)
+    {
+      qDebug() << e.what();
+      QMessageBox::critical(0, QGuiApplication::applicationDisplayName(),
+                           "<html><head/><body><h2>" + QString(e.what()) + "</h2></body></html>");
+      return 0;
+    }
     cypress.show();
-    cypress.initialize(nullptr);
     cypress.run();
 
     return app.exec();
-
 }
