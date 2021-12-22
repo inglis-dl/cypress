@@ -83,7 +83,7 @@ void BluetoothLEManager::setLocalDevice(const QString &address)
 void BluetoothLEManager::loadSettings(const QSettings &settings)
 {
 #ifdef Q_OS_LINUX
-    QString localAddress = settings.value("client/address").toString();
+    QString localAddress = settings.value("thermometer/client/address").toString();
     qDebug() << "setting local device from settings file";
     setLocalDevice(localAddress);
 #endif
@@ -91,7 +91,7 @@ void BluetoothLEManager::loadSettings(const QSettings &settings)
     // Get the thermometer MAC address.
     // If none exists perform device discovery process
     //
-    QString address = settings.value("peripheral/address").toString();
+    QString address = settings.value("thermometer/peripheral/address").toString();
     if(!address.isEmpty())
     {
       setProperty("deviceName", address);
@@ -104,16 +104,20 @@ void BluetoothLEManager::saveSettings(QSettings *settings) const
 {
     if(!m_localDevice.isNull() && m_localDevice->isValid())
     {
+      settings->beginGroup("thermometer");
       settings->setValue("client/name",m_localDevice->name());
       settings->setValue("client/address",m_localDevice->address().toString());
       settings->setValue("client/hostmode",m_localDevice->hostMode());
+      settings->endGroup();
       if(m_verbose)
           qDebug() << "wrote local adapter to settings file";
     }
     if(!m_peripheral.isNull() && m_peripheral->isValid())
     {
+      settings->beginGroup("thermometer");
       settings->setValue("peripheral/name",m_peripheral->name());
       settings->setValue("peripheral/address",m_peripheral->address().toString());
+      settings->endGroup();
       if(m_verbose)
           qDebug() << "wrote peripheral device to settings file";
     }

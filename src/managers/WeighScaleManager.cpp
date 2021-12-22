@@ -28,6 +28,29 @@ void WeighScaleManager::buildModel(QStandardItemModel* model) const
     }
 }
 
+void WeighScaleManager::loadSettings(const QSettings &settings)
+{
+    QString name = settings.value("weighscale/client/port").toString();
+    if(!name.isEmpty())
+    {
+      setProperty("deviceName", name);
+      if(m_verbose)
+          qDebug() << "using serial port " << m_deviceName << " from settings file";
+    }
+}
+
+void WeighScaleManager::saveSettings(QSettings *settings) const
+{
+    if(!m_deviceName.isEmpty())
+    {
+      settings->beginGroup("weighscale");
+      settings->setValue("client/port",m_deviceName);
+      settings->endGroup();
+      if(m_verbose)
+          qDebug() << "wrote serial port to settings file";
+    }
+}
+
 void WeighScaleManager::clearData()
 {
     m_test.reset();

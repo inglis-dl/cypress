@@ -39,9 +39,6 @@ public:
     //
     void selectDevice(const QString &);
 
-    void loadSettings(const QSettings &) override;
-    void saveSettings(QSettings*) const override;
-
     QJsonObject toJsonObject() const override;
 
 public slots:

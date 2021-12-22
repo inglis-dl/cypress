@@ -11,6 +11,9 @@ class AudiometerManager : public SerialPortManager
 public:
     explicit AudiometerManager(QObject *parent = nullptr);
 
+    void loadSettings(const QSettings &) override;
+    void saveSettings(QSettings*) const override;
+
     QJsonObject toJsonObject() const override;
 
     void buildModel(QStandardItemModel *) const override;

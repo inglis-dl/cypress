@@ -1,8 +1,7 @@
 #include "CDTTManager.h"
 
-CDTTManager::CDTTManager(QObject* parent)
+CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
 {
-    m_inputKeyList << "barcode";
 }
 
 void CDTTManager::loadSettings(const QSettings& settings)
@@ -10,7 +9,7 @@ void CDTTManager::loadSettings(const QSettings& settings)
     // the full spec path name including jar name
     // eg., C:\Users\clsa\Documents\CDTT-2018-07-22\CDTTstereo.jar
     //
-    QString jarFullPath = settings.value("client/jar").toString();
+    QString jarFullPath = settings.value("cdtt/client/jar").toString();
     qDebug() << "loading settings with jar " << jarFullPath;
     setJarFullPath(jarFullPath);
 }
@@ -19,7 +18,9 @@ void CDTTManager::saveSettings(QSettings* settings) const
 {
     if (!m_jarFullPath.isEmpty())
     {
-        settings->setValue("client/exe", m_jarFullPath);
+        settings->beginGroup("cdtt");
+        settings->setValue("client/jar", m_jarFullPath);
+        settings->endGroup();
         if (m_verbose)
             qDebug() << "wrote jar fullspec path to settings file";
     }
@@ -28,7 +29,6 @@ void CDTTManager::saveSettings(QSettings* settings) const
 QJsonObject CDTTManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    //QJsonObject json;
     if ("simulate" != m_mode)
     {
         QFile ofile(m_outputFile);
@@ -76,12 +76,12 @@ bool CDTTManager::isDefined(const QString& jarFullPath) const
     if (!jarFullPath.isEmpty())
     {
         QFileInfo info(jarFullPath);
-        if (info.exists() && info.completeSuffix() == "jar")
+        if (info.exists() && "jar" == info.completeSuffix())
         {
             QString path = info.absolutePath();
 
             qDebug() << "path to " << jarFullPath << " is " << path;
-            QDir dir = QDir::cleanPath(path + QDir::separator() + "applicationFiles" + QDir::separator() + "results");
+            QDir dir = QDir::cleanPath(path + QDir::separator() + "applicationFiles" + QDir::separator() + "Results");
             if (dir.exists())
             {
                 ok = true;
@@ -105,7 +105,7 @@ void CDTTManager::setJarFullPath(const QString& jarFullPath)
         QFileInfo info(jarFullPath);
         m_jarFullPath = jarFullPath;
         m_jarDirPath = info.absolutePath();
-        QDir dir = QDir::cleanPath(m_jarDirPath + QDir::separator() + "applicationFiles" + QDir::separator() + "results");
+        QDir dir = QDir::cleanPath(m_jarDirPath + QDir::separator() + "applicationFiles" + QDir::separator() + "Results");
         m_outputPath = dir.path();
 
         configureProcess();
@@ -225,7 +225,7 @@ void CDTTManager::configureProcess()
     QFileInfo info(m_jarFullPath);
     QDir working(m_jarDirPath);
     QDir out(m_outputPath);
-    if (info.exists() && info.completeSuffix() == "jar" &&
+    if (info.exists() && "jar" == info.completeSuffix() &&
         working.exists() && out.exists())
     {
         qDebug() << "OK: configuring command";

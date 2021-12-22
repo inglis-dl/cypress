@@ -61,9 +61,9 @@ void MainWindow::initialize()
      ui->barcodeLineEdit->setText("00000000"); // dummy
 
   // Read the .ini file for cached local and peripheral device addresses
-  //
+  //cd
   QDir dir = QCoreApplication::applicationDirPath();
-  QSettings settings(dir.filePath("bodycompanalyzer.ini"), QSettings::IniFormat);
+  QSettings settings(dir.filePath("tanita.ini"), QSettings::IniFormat);
   m_manager.loadSettings(settings);
 
   // Save button to store measurement and device info to .json
@@ -359,7 +359,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if(m_verbose)
         qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("bodycompanalyzer.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath("tanita.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
     m_manager.disconnectDevice();
     event->accept();

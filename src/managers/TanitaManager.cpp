@@ -232,6 +232,29 @@ QMap<QByteArray,QString> TanitaManager::initIncorrectResponseLUT()
     return responses;
 }
 
+void TanitaManager::loadSettings(const QSettings &settings)
+{
+    QString name = settings.value("tanita/client/port").toString();
+    if(!name.isEmpty())
+    {
+      setProperty("deviceName", name);
+      if(m_verbose)
+          qDebug() << "using serial port " << m_deviceName << " from settings file";
+    }
+}
+
+void TanitaManager::saveSettings(QSettings *settings) const
+{
+    if(!m_deviceName.isEmpty())
+    {
+      settings->beginGroup("tanita");
+      settings->setValue("client/port",m_deviceName);
+      settings->endGroup();
+      if(m_verbose)
+          qDebug() << "wrote serial port to settings file";
+    }
+}
+
 void TanitaManager::buildModel(QStandardItemModel *model) const
 {
     qDebug() << "building model from " <<

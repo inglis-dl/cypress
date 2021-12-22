@@ -120,7 +120,7 @@ void CognitiveTestManager::loadSettings(const QSettings &settings)
     // the full spec path name including exe name
     // eg., C:\Program Files (x86)\CCB\CCB.exe
     //
-    QString exeName = settings.value("client/exe").toString();
+    QString exeName = settings.value("choice_reaction/client/exe").toString();
     qDebug() << "loading settings with exe " << exeName;
     setExecutableName(exeName);
 }
@@ -129,7 +129,9 @@ void CognitiveTestManager::saveSettings(QSettings *settings) const
 {
     if(!m_executableName.isEmpty())
     {
+      settings->beginGroup("choice_reaction");
       settings->setValue("client/exe",m_executableName);
+      settings->endGroup();
       if(m_verbose)
           qDebug() << "wrote exe fullspec path to settings file";
     }

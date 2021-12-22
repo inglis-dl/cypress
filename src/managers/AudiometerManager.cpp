@@ -31,6 +31,29 @@ void AudiometerManager::buildModel(QStandardItemModel* model) const
     }
 }
 
+void AudiometerManager::loadSettings(const QSettings &settings)
+{
+    QString name = settings.value("audiometer/client/port").toString();
+    if(!name.isEmpty())
+    {
+      setProperty("deviceName", name);
+      if(m_verbose)
+          qDebug() << "using serial port " << m_deviceName << " from settings file";
+    }
+}
+
+void AudiometerManager::saveSettings(QSettings *settings) const
+{
+    if(!m_deviceName.isEmpty())
+    {
+      settings->beginGroup("audiometer");
+      settings->setValue("client/port",m_deviceName);
+      settings->endGroup();
+      if(m_verbose)
+          qDebug() << "wrote serial port to settings file";
+    }
+}
+
 void AudiometerManager::clearData()
 {
     m_test.reset();

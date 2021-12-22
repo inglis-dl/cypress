@@ -13,6 +13,9 @@ class TanitaManager : public SerialPortManager
 public:
     explicit TanitaManager(QObject *parent = nullptr);
 
+    void loadSettings(const QSettings &) override;
+    void saveSettings(QSettings*) const override;
+
     QJsonObject toJsonObject() const override;
 
     void buildModel(QStandardItemModel *) const override;

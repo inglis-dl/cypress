@@ -37,11 +37,9 @@ void MainWindow::initialize()
     m_manager.setVerbose(m_verbose);
     m_manager.setMode(m_mode);
 
-    // Read inputs required to launch cognitive test
+    // Read inputs required to launch cdtt test
     //
     readInput();
-
-    m_manager.setInputData(m_manager.m_inputData);
 
     // Populate barcode display
     //
@@ -52,7 +50,7 @@ void MainWindow::initialize()
 
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
-    QSettings settings(dir.filePath("CDTT.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath("cdtt.ini"), QSettings::IniFormat);
 
     // Select the location of CCB.exe
     //
@@ -150,7 +148,7 @@ void MainWindow::initialize()
                 QFileDialog::getOpenFileName(
                     this, tr("Open File"),
                     QCoreApplication::applicationDirPath(),
-                    tr("Applications (*.exe, *)"));
+                    tr("Applications (*.jar, *)"));
             if (m_manager.isDefined(fileName))
             {
                 m_manager.setJarFullPath(fileName);

@@ -33,27 +33,6 @@ bool SerialPortManager::devicesAvailable() const
     return !list.empty();
 }
 
-void SerialPortManager::loadSettings(const QSettings &settings)
-{
-    QString name = settings.value("client/port").toString();
-    if(!name.isEmpty())
-    {
-      setProperty("deviceName", name);
-      if(m_verbose)
-          qDebug() << "using serial port " << m_deviceName << " from settings file";
-    }
-}
-
-void SerialPortManager::saveSettings(QSettings *settings) const
-{
-    if(!m_deviceName.isEmpty())
-    {
-      settings->setValue("client/port",m_deviceName);
-      if(m_verbose)
-          qDebug() << "wrote serial port to settings file";
-    }
-}
-
 void SerialPortManager::scanDevices()
 {
     m_deviceList.clear();

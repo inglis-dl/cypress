@@ -109,7 +109,19 @@ void CypressApplication::initialize()
         m_manager = new CDTTManager;
         break;
     }
+    if(nullptr==m_manager)
+        throw std::runtime_error("FATAL ERROR: failed to initialize a manager");
 
+    m_manager->setVerbose(m_verbose);
+    m_manager->setMode(m_mode);
+
+    // Read the cypress.ini file
+    // Each manager class must create/read/write to its own unique group
+    // withing the cypress.ini file stored on the host
+    //
+    QDir dir = QCoreApplication::applicationDirPath();
+    QSettings settings(dir.filePath("cypress.ini"), QSettings::IniFormat);
+    m_manager->loadSettings(settings);
 }
 
 void CypressApplication::show()

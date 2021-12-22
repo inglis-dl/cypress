@@ -49,7 +49,7 @@ void MainWindow::initialize()
     // Read the .ini file for cached local and peripheral device addresses
     //
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("lowenergythermometer.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath("thermometer.ini"), QSettings::IniFormat);
     m_manager.loadSettings(settings);
 
     if(!m_manager.lowEnergyEnabled())
@@ -245,7 +245,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if(m_verbose)
         qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("lowenergythermometer.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath("thermometer.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
 
     event->accept();

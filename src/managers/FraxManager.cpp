@@ -11,18 +11,18 @@ FraxManager::FraxManager(QObject* parent):
 	ManagerBase(parent)
 {
     m_inputKeyList << "type";
-    m_inputKeyList << "country code";
+    m_inputKeyList << "country_code";
     m_inputKeyList << "age";
     m_inputKeyList << "sex";
     m_inputKeyList << "bmi";
-    m_inputKeyList << "previous fracture";
-    m_inputKeyList << "parent hip fracture";
-    m_inputKeyList << "current smoker";
+    m_inputKeyList << "previous_fracture";
+    m_inputKeyList << "parent_hip_fracture";
+    m_inputKeyList << "current_smoker";
     m_inputKeyList << "gluccocorticoid";
-    m_inputKeyList << "rheumatoid arthritis";
-    m_inputKeyList << "secondary osteoporosis";
+    m_inputKeyList << "rheumatoid_arthritis";
+    m_inputKeyList << "secondary_osteoporosis";
     m_inputKeyList << "alcohol";
-    m_inputKeyList << "femoral neck bmd";
+    m_inputKeyList << "femoral_neck_bmd";
 }
 
 void FraxManager::buildModel(QStandardItemModel *model) const
@@ -46,7 +46,7 @@ void FraxManager::loadSettings(const QSettings& settings)
     // the full spec path name including exe name
     // eg., ../frax_module/blackbox.exe
     //
-    QString exeName = settings.value("client/exe").toString();
+    QString exeName = settings.value("frax/client/exe").toString();
     setExecutableName(exeName);
 }
 
@@ -54,7 +54,9 @@ void FraxManager::saveSettings(QSettings* settings) const
 {
     if (!m_executableName.isEmpty())
     {
+        settings->beginGroup("frax");
         settings->setValue("client/exe", m_executableName);
+        settings->endGroup();
         if (m_verbose)
             qDebug() << "wrote exe fullspec path to settings file";
     }
@@ -151,15 +153,15 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
     if("simulate" == m_mode)
     {
         m_inputData["type"] = "t";
-        m_inputData["country code"] = 19;
+        m_inputData["country_code"] = 19;
         m_inputData["age"] = 84.19;
         m_inputData["sex"] = 0;
         m_inputData["bmi"] = 24.07;
-        m_inputData["previous fracture"] = 0;
-        m_inputData["parent hip fracture"] = 0;
-        m_inputData["current smoker"] = 0;
+        m_inputData["previous_fracture"] = 0;
+        m_inputData["parent_hip_fracture"] = 0;
+        m_inputData["current_smoker"] = 0;
         m_inputData["gluccocorticoid"] = 0;
-        m_inputData["rheumatoid arthritis"] = 0;
+        m_inputData["rheumatoid_arthritis"] = 0;
         m_inputData["secondary osteoporosis"] = 0;
         m_inputData["alcohol"] = 0;
         m_inputData["femoral_neck_bmd"] = -1.1;
@@ -237,12 +239,13 @@ void FraxManager::readOutput()
 
 void FraxManager::configureProcess()
 {
+    /*
     if("simulate" == m_mode)
     {
         emit canMeasure();
         return;
     }
-
+    */
     // The exe and input file are present
     //
     QFileInfo info(m_executableName);
@@ -274,9 +277,10 @@ void FraxManager::configureProcess()
             return;
         }
         QStringList list;
-        for(auto&& x : m_inputData.values())
+        for(auto&& x : m_inputKeyList)
         {
-            list << x.toString();
+            if(m_inputData.contains(x))
+              list << m_inputData[x].toString();
         }
         QString line = list.join(",");
         QFile ofile(m_inputFile);
@@ -294,28 +298,30 @@ void FraxManager::configureProcess()
             return;
         }
 
-        connect(&m_process, &QProcess::started,
+        if("simulate" != m_mode)
+        {
+          connect(&m_process, &QProcess::started,
             this, [this]() {
                 qDebug() << "process started: " << m_process.arguments().join(" ");
             });
 
-        connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+          connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, &FraxManager::readOutput);
 
-        connect(&m_process, &QProcess::errorOccurred,
+          connect(&m_process, &QProcess::errorOccurred,
             this, [](QProcess::ProcessError error)
             {
                 QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), QString::SkipEmptyParts);
                 qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
             });
 
-        connect(&m_process, &QProcess::stateChanged,
+          connect(&m_process, &QProcess::stateChanged,
             this, [](QProcess::ProcessState state) {
                 QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), QString::SkipEmptyParts);
                 qDebug() << "process state: " << s.join(" ").toLower();
 
             });
-
+        }
         emit canMeasure();
     }
     else
