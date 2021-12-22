@@ -29,25 +29,28 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 }
 
-HEADERS += ../../data/ChoiceReactionMeasurement.h \
+HEADERS += \
+    ../../auxiliary/CommandLineParser.h \
+    ../../data/ChoiceReactionMeasurement.h \
     ../../data/ChoiceReactionTest.h \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
-    ./CognitiveTestManager.h \
-    ../../auxiliary/CommandLineParser.h \
-    ./MainWindow.h \
-    ../../managers/ManagerBase.h
+    ../../managers/ManagerBase.h \
+    ../../managers/CognitiveTestManager.h \
+    MainWindow.h
 
-SOURCES += ../../data/ChoiceReactionMeasurement.cpp \
-    ../../data/ChoiceReactionTest.cpp \
-    ./CognitiveTestManager.cpp \
+SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-    ./MainWindow.cpp \
-    ../../managers/ManagerBase.cpp \
     ../../data/MeasurementBase.cpp \
-    ./main.cpp
+    ../../data/ChoiceReactionMeasurement.cpp \
+    ../../data/ChoiceReactionTest.cpp \
+    ../../managers/ManagerBase.cpp \
+    ../../managers/CognitiveTestManager.cpp \
+    MainWindow.cpp \
+    main.cpp
 
-FORMS += ./MainWindow.ui
+FORMS += \
+    MainWindow.ui
 
 unix {
 # Default rules for deployment.

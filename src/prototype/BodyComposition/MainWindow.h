@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QDialog>
-#include "TanitaManager.h"
+#include "../../managers/TanitaManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

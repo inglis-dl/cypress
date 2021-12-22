@@ -2,7 +2,6 @@
 #define TESTBASE_H
 
 #include "MeasurementBase.h"
-
 #include <QList>
 
 /*!

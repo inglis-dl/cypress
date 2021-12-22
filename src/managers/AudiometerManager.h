@@ -1,8 +1,8 @@
 #ifndef AUDIOMETERMANAGER_H
 #define AUDIOMETERMANAGER_H
 
-#include "../../managers/SerialPortManager.h"
-#include "../../data/AudiometerTest.h"
+#include "SerialPortManager.h"
+#include "../data/AudiometerTest.h"
 
 class AudiometerManager : public SerialPortManager
 {

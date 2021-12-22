@@ -1,8 +1,8 @@
 #ifndef TANITAMANAGER_H
 #define TANITAMANAGER_H
 
-#include "../../managers/SerialPortManager.h"
-#include "../../data/BodyCompositionAnalyzerTest.h"
+#include "SerialPortManager.h"
+#include "../data/BodyCompositionAnalyzerTest.h"
 
 #include <QQueue>
 

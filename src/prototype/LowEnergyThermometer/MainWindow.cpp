@@ -1,8 +1,6 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
-#include "BluetoothLEManager.h"
-
 #include <QBitArray>
 #include <QCloseEvent>
 #include <QDateTime>

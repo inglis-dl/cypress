@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include "ui_MainWindow.h"
-#include "FraxManager.h"
+#include "../../managers/FraxManager.h"
 
 #include <QString>
 #include <QProcess>

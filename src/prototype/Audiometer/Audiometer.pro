@@ -15,20 +15,20 @@ SOURCES += \
     ../../data/MeasurementBase.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
-    AudiometerManager.cpp \
+    ../../managers/AudiometerManager.cpp \
     main.cpp \
     MainWindow.cpp
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
     ../../data/AudiometerTest.h \
+    ../../data/MeasurementBase.h \
     ../../data/HearingMeasurement.h \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
     ../../managers/SerialPortManager.h \
-    MainWindow.h \
-    ../../data/MeasurementBase.h \
-    AudiometerManager.h
+    ../../managers/AudiometerManager.h \
+    MainWindow.h
 
 FORMS += \
     MainWindow.ui

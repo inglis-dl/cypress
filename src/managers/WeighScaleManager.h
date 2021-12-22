@@ -1,8 +1,8 @@
 #ifndef WEIGHSCALEMANAGER_H
 #define WEIGHSCALEMANAGER_H
 
-#include "../../managers/SerialPortManager.h"
-#include "../../data/WeighScaleTest.h"
+#include "SerialPortManager.h"
+#include "../data/WeighScaleTest.h"
 
 class WeighScaleManager : public SerialPortManager
 {

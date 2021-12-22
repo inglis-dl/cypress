@@ -3,7 +3,7 @@
 
 #include <QDialog>
 
-#include "BluetoothLEManager.h"
+#include "../../managers/BluetoothLEManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

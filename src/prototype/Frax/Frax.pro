@@ -25,25 +25,28 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 }
 
-HEADERS += ./MainWindow.h \
-    ./FraxManager.h \
+HEADERS += \
+    ../../auxiliary/CommandLineParser.h \
     ../../data/FraxMeasurement.h \
     ../../data/FraxTest.h \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
-    ../../auxiliary/CommandLineParser.h \
-    ../../managers/ManagerBase.h
+    ../../managers/ManagerBase.h \
+    ../../managers/FraxManager.h \
+    MainWindow.h
 
-SOURCES += ./FraxManager.cpp \
-    ./MainWindow.cpp \
-    ./main.cpp \
+SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../data/FraxMeasurement.cpp \
     ../../data/FraxTest.cpp \
     ../../data/MeasurementBase.cpp \
-    ../../managers/ManagerBase.cpp
+    ../../managers/ManagerBase.cpp \
+    ../../managers/FraxManager.cpp \
+    MainWindow.cpp \
+    main.cpp
 
-FORMS += ./MainWindow.ui
+FORMS += \
+    MainWindow.ui
 
 unix {
 # Default rules for deployment.

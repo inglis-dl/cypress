@@ -15,7 +15,7 @@ SOURCES += \
     ../../data/TemperatureMeasurement.cpp \
     ../../data/TemperatureTest.cpp \
     ../../managers/ManagerBase.cpp \
-    BluetoothLEManager.cpp \
+    ../../managers/BluetoothLEManager.cpp \
     MainWindow.cpp \
     main.cpp
 
@@ -27,7 +27,7 @@ HEADERS += \
     ../../data/TemperatureTest.h \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
-    BluetoothLEManager.h \
+    ../../managers/BluetoothLEManager.h \
     MainWindow.h
 
 FORMS += \

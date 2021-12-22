@@ -25,25 +25,28 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 }
 
-HEADERS += ./CDTTManager.h \
-    ./MainWindow.h \
+HEADERS += \
     ../../data/CDTTMeasurement.h \
     ../../data/CDTTTest.h \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
     ../../auxiliary/CommandLineParser.h \
-    ../../managers/ManagerBase.h
+    ../../managers/ManagerBase.h \
+    ../../managers/CDTTManager.h \
+    MainWindow.h
 
-SOURCES += ./CDTTManager.cpp \
-    ./MainWindow.cpp \
-    ./main.cpp \
+SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../data/CDTTMeasurement.cpp \
     ../../data/CDTTTest.cpp \
     ../../data/MeasurementBase.cpp \
-    ../../managers/ManagerBase.cpp
+    ../../managers/ManagerBase.cpp \
+    ../../managers/CDTTManager.cpp \
+    MainWindow.cpp \
+    main.cpp
 
-FORMS += ./MainWindow.ui
+FORMS += \
+    MainWindow.ui
 
 unix {
 # Default rules for deployment.

@@ -5,8 +5,8 @@
 #include <QtBluetooth/QLowEnergyController>
 #include <QtBluetooth/QBluetoothLocalDevice>
 
-#include "../../managers/ManagerBase.h"
-#include "../../data/TemperatureTest.h"
+#include "ManagerBase.h"
+#include "../data/TemperatureTest.h"
 
 QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceInfo)
 QT_FORWARD_DECLARE_CLASS(QBluetoothUuid)

@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QDialog>
-#include "AudiometerManager.h"
+#include "../../managers/AudiometerManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

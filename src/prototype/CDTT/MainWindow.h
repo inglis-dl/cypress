@@ -15,7 +15,7 @@
 #include <QSettings>
 
 #include "ui_MainWindow.h"
-#include "CDTTManager.h"
+#include "../../managers/CDTTManager.h"
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 

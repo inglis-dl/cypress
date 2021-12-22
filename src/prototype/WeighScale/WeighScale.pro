@@ -15,20 +15,20 @@ SOURCES += \
     ../../data/MeasurementBase.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
-    WeighScaleManager.cpp \
+    ../../managers/WeighScaleManager.cpp \
     main.cpp \
     MainWindow.cpp
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../data/MeasurementBase.h \
     ../../data/WeighScaleTest.h \
     ../../data/WeightMeasurement.h \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
     ../../managers/SerialPortManager.h \
-    MainWindow.h \
-    ../../data/MeasurementBase.h \
-    WeighScaleManager.h
+    ../../managers/WeighScaleManager.h \
+    MainWindow.h
 
 FORMS += \
     MainWindow.ui

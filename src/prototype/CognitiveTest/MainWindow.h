@@ -6,7 +6,7 @@
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
-#include "CognitiveTestManager.h"
+#include "../../managers/CognitiveTestManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

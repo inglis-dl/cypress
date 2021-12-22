@@ -1,17 +1,16 @@
-#ifndef FRAXMANAGER_H
-#define FRAXMANAGER_H
+#ifndef COGNITIVETESTMANAGER_H
+#define COGNITIVETESTMANAGER_H
 
-#include "../../managers/ManagerBase.h"
-#include "../../data/FraxTest.h"
-
+#include "ManagerBase.h"
+#include "../data/ChoiceReactionTest.h"
 #include <QProcess>
-#include <QDir>
 
-class FraxManager : public ManagerBase
+class CognitiveTestManager: public ManagerBase
 {
-	Q_OBJECT
+    Q_OBJECT
+
 public:
-    explicit FraxManager(QObject* parent = nullptr);
+    explicit CognitiveTestManager(QObject *parent = nullptr);
 
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
@@ -36,7 +35,7 @@ public:
     }
 
     // call just before closing the application to
-    // remove the output txt file from the test if it exists
+    // remove the csv file from the test if it exists
     //
     void clean();
 
@@ -56,14 +55,13 @@ public slots:
     void readOutput();
 
 private:
-    QString m_executableName;// full pathspec to blackbox.exe
-    QString m_executablePath;// path to blackbox.exe
-    QString m_outputFile;    // full pathspec to working output.txt
-    QString m_inputFile;     // full pathspec to working input.txt
-    QString m_temporaryFile; // store a copy of the default input.txt
+    QString m_executableName; // full pathspec to CCB.exe
+    QString m_executablePath; // path to CCB.exe
+    QString m_outputPath;     // path to output .csv files
+    QString m_outputFile;     // full pathspec to working output .csv file
     QProcess m_process;
 
-    FraxTest m_test;
+    ChoiceReactionTest m_test;
 
     void clearData() override;
 
@@ -73,4 +71,4 @@ private:
     void configureProcess();
 };
 
-#endif // FRAXMANAGER_H
+#endif // COGNITIVETESTMANAGER_H

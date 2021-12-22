@@ -1,8 +1,8 @@
 #ifndef CDTTMANAGER_H
 #define CDTTMANAGER_H
 
-#include "../../managers/ManagerBase.h"
-#include "../../data/CDTTTest.h"
+#include "ManagerBase.h"
+#include "../data/CDTTTest.h"
 
 #include <QProcess>
 #include <QDateTime>

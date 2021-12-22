@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QDialog>
-#include "WeighScaleManager.h"
+#include "../../managers/WeighScaleManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

@@ -15,7 +15,7 @@ SOURCES += \
     ../../data/MeasurementBase.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
-    TanitaManager.cpp \
+    ../../managers/TanitaManager.cpp \
     main.cpp \
     MainWindow.cpp
 
@@ -27,8 +27,8 @@ HEADERS += \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
     ../../managers/SerialPortManager.h \
-    MainWindow.h \
-    TanitaManager.h
+    ../../managers/TanitaManager.h \
+    MainWindow.h
 
 FORMS += \
     MainWindow.ui
