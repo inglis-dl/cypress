@@ -2,23 +2,23 @@
 #define CYPRESSDIALOG_H
 
 #include <QDialog>
-
-namespace Ui {
-class CypressDialog;
-}
+#include <QObject>
+#include <QStatusBar>
+#include "../widgets/BarcodeWidget.h"
 
 class CypressDialog : public QDialog
 {
     Q_OBJECT
-
 public:
-    explicit CypressDialog(QWidget *parent = nullptr);
+    CypressDialog();
     ~CypressDialog();
 
-private:
-    Ui::CypressDialog *ui;
+    QString getBarcode();
+    void setStatus(const QString &);
 
-    friend class CypressApplication;
+private:
+  BarcodeWidget *m_widget;
+  QStatusBar *m_status;
 };
 
 #endif // CYPRESSDIALOG_H

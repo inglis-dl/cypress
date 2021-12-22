@@ -20,8 +20,6 @@
 #include "./managers/TanitaManager.h"
 #include "./managers/WeighScaleManager.h"
 
-#include "ui_CypressDialog.h"
-
 QMap<QString,CypressApplication::TestType> CypressApplication::testTypeLUT =
         CypressApplication::initTestTypeLUT();
 
@@ -353,7 +351,7 @@ void CypressApplication::writeOutput()
    if(nullptr!=m_manager)
      jsonObj = m_manager->toJsonObject();
 
-   QString barcode = m_dialog->ui->barcodeEdit->text().simplified().remove(" ");
+   QString barcode = m_dialog->getBarcode().simplified().remove(" ");
    jsonObj.insert("barcode",QJsonValue(barcode));
 
    if(m_verbose)
@@ -403,5 +401,5 @@ void CypressApplication::writeOutput()
    if(m_verbose)
        qDebug() << "wrote to file " << fileName;
 
-   m_dialog->ui->statusBar->showMessage("Test data recorded.  Close when ready.");
+   m_dialog->setStatus("Test data recorded.  Close when ready.");
 }
