@@ -98,6 +98,8 @@ public slots:
     //
     void measure() override;
 
+    void finish() override;
+
 private slots:
 
     // QBluetoothDeviceDiscoveryAgent signal receptors

@@ -57,6 +57,15 @@ void WeighScaleManager::clearData()
     emit dataChanged();
 }
 
+void WeighScaleManager::finish()
+{
+    m_deviceData.reset();
+    m_deviceList.clear();
+    m_test.reset();
+    if(m_port.isOpen())
+        m_port.close();
+}
+
 void WeighScaleManager::connectDevice()
 {
     clearData();

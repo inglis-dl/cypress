@@ -76,6 +76,7 @@ signals:
 
 public slots:
     void writeOutput();
+    void finish();
 
 private:
     void readInput();

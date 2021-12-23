@@ -241,7 +241,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
-    m_manager.disconnectDevice();
+    m_manager.finish();
     event->accept();
 }
 

@@ -170,7 +170,7 @@ void CDTTManager::readOutput()
         qDebug() << "ERROR: process failed to finish correctly: cannot read output";
         return;
     }
-    else{
+    else {
         qDebug() << "process finished successfully";
     }
 
@@ -212,6 +212,15 @@ void CDTTManager::clearData()
     m_test.reset();
     m_outputFile.clear();
     emit dataChanged();
+}
+
+void CDTTManager::finish()
+{
+    m_test.reset();
+    if(QProcess::NotRunning != m_process.state())
+    {
+        m_process.close();
+    }
 }
 
 void CDTTManager::configureProcess()

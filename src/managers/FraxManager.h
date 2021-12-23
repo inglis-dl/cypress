@@ -35,11 +35,6 @@ public:
         return m_executableName;
     }
 
-    // call just before closing the application to
-    // remove the output txt file from the test if it exists
-    //
-    void clean();
-
     // Set the input data.
     // The input data is read from the input
     // json file to the main application.  This method should be
@@ -51,7 +46,14 @@ public:
 
 public slots:
 
+    // retrieve a measurement from the device
+    //
     void measure() override;
+
+    // implementation of final clean up of device after disconnecting and all
+    // data has been retrieved and processed by any upstream classes
+    //
+    void finish() override;
 
     void readOutput();
 

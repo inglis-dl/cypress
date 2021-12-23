@@ -364,6 +364,16 @@ void BluetoothLEManager::clearData()
     emit dataChanged();
 }
 
+void BluetoothLEManager::finish()
+{
+    if(!m_controller.isNull() && QLowEnergyController::UnconnectedState != m_controller->state())
+    {
+        m_controller->disconnectFromDevice();
+    }
+    m_deviceData.reset();
+    m_test.reset();
+}
+
 void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
 {
     clearData();

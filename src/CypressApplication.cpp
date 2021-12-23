@@ -9,6 +9,8 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QSettings>
+#include <QFormBuilder>
+#include <QVBoxLayout>
 
 #include "./dialogs/CypressDialog.h"
 #include "./managers/ManagerBase.h"
@@ -32,8 +34,8 @@ CypressApplication::CypressApplication(QObject *parent) : QObject(parent),
     m_dialog = new CypressDialog();
 
     // TESTING ONLY
-    m_testType = TestType::Temperature;
-    m_testTypeName = "temperature";
+    m_testType = TestType::Hearing;
+    m_testTypeName = "audiometer";
 }
 
 CypressApplication::~CypressApplication()
@@ -83,6 +85,7 @@ void CypressApplication::initialize()
             throw std::runtime_error("FATAL ERROR: no test type specified");
         }
     }
+
     switch(m_testType)
     {
       case TestType::Weight:
@@ -120,11 +123,26 @@ void CypressApplication::initialize()
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath("cypress.ini"), QSettings::IniFormat);
     m_manager->loadSettings(settings);
+
+    m_dialog->initialize(m_testType);
+
+    connect(m_dialog, &QDialog::accepted, this, &CypressApplication::finish);
+
+    m_dialog->setStatusMessage("Ready to roll!!!");
 }
 
 void CypressApplication::show()
 {
     m_dialog->show();
+}
+
+void CypressApplication::finish()
+{
+    qDebug() << "its closing time!!!";
+    QDir dir = QCoreApplication::applicationDirPath();
+    QSettings settings(dir.filePath("cypress.ini"), QSettings::IniFormat);
+    m_manager->saveSettings(&settings);
+    m_manager->finish();
 }
 
 CypressApplication::CommandLineParseResult CypressApplication::parse(const QCoreApplication &app,
@@ -401,5 +419,5 @@ void CypressApplication::writeOutput()
    if(m_verbose)
        qDebug() << "wrote to file " << fileName;
 
-   m_dialog->setStatus("Test data recorded.  Close when ready.");
+   m_dialog->setStatusMessage("Test data recorded.  Close when ready.");
 }

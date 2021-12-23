@@ -285,6 +285,19 @@ void TanitaManager::clearData()
     emit dataChanged();
 }
 
+void TanitaManager::finish()
+{
+    m_deviceData.reset();
+    m_deviceList.clear();
+    m_test.reset();
+
+    if(m_port.isOpen())
+        m_port.close();
+
+    m_queue.clear();
+    m_cache.clear();
+}
+
 bool TanitaManager::hasEndCode(const QByteArray &arr) const
 {
     int size = arr.isEmpty() ? 0 : arr.size();

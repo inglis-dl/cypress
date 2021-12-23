@@ -1,6 +1,6 @@
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport bluetooth sql
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport bluetooth sql designer
 
 CONFIG += c++11
 
@@ -35,8 +35,7 @@ SOURCES += \
     managers/CDTTManager.cpp \
     managers/WeighScaleManager.cpp \
     CypressApplication.cpp \
-    main.cpp \
-    widgets/BarcodeWidget.cpp
+    main.cpp 
 
 HEADERS += \
     data/MeasurementBase.h \
@@ -65,8 +64,7 @@ HEADERS += \
     managers/TanitaManager.h \
     managers/CDTTManager.h \
     managers/WeighScaleManager.h \
-    CypressApplication.h \
-    widgets/BarcodeWidget.h
+    CypressApplication.h
 
 TRANSLATIONS += \
     Cypress_en_CA.ts
@@ -79,3 +77,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 FORMS +=
+
+RESOURCES += \
+    dialogs/cypress.qrc

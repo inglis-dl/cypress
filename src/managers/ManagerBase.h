@@ -36,6 +36,7 @@ public:
 public slots:
 
     virtual void measure() = 0;
+    virtual void finish() = 0;
 
 signals:
 

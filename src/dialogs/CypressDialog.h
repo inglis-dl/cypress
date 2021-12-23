@@ -3,22 +3,25 @@
 
 #include <QDialog>
 #include <QObject>
+#include "../CypressApplication.h"
 #include <QStatusBar>
-#include "../widgets/BarcodeWidget.h"
+#include <QLineEdit>
 
 class CypressDialog : public QDialog
 {
     Q_OBJECT
 public:
-    CypressDialog();
+    explicit CypressDialog(QWidget *parent = nullptr);
     ~CypressDialog();
 
-    QString getBarcode();
-    void setStatus(const QString &);
+    void initialize(const CypressApplication::TestType &type);
+    void setStatusMessage(const QString &);
+    QString getBarcode() const;
 
 private:
-  BarcodeWidget *m_widget;
-  QStatusBar *m_status;
+    QSharedPointer<QStatusBar> m_status;
+    QSharedPointer<QLineEdit> m_barcodeEdit;
+
 };
 
 #endif // CYPRESSDIALOG_H

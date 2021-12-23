@@ -57,7 +57,10 @@ int main(int argc, char *argv[])
 
     try
     {
+      qDebug() << "initialize start";
       cypress.initialize();
+      qDebug() << "initialize end";
+
     }
     catch (std::exception& e)
     {

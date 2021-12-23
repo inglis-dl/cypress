@@ -60,6 +60,15 @@ void AudiometerManager::clearData()
     emit dataChanged();
 }
 
+void AudiometerManager::finish()
+{
+    m_deviceData.reset();
+    m_deviceList.clear();
+    m_test.reset();
+    if(m_port.isOpen())
+        m_port.close();
+}
+
 bool AudiometerManager::hasEndCode(const QByteArray &arr)
 {
     // interpret the last 6 bytes

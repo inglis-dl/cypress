@@ -294,13 +294,15 @@ void CognitiveTestManager::measure()
     m_process.start();
 }
 
-void CognitiveTestManager::clean()
+void CognitiveTestManager::finish()
 {
     if(!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
     {
       QFile ofile(m_outputFile);
       ofile.remove();
     }
+    m_test.reset();
+    m_outputFile.clear();
 }
 
 QJsonObject CognitiveTestManager::toJsonObject() const

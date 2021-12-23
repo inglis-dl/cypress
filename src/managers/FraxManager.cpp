@@ -112,29 +112,6 @@ void FraxManager::setExecutableName(const QString &exeName)
     }
 }
 
-void FraxManager::clean()
-{
-    if(!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
-    {
-        qDebug() << "removing output file " << m_outputFile;
-        QFile ofile(m_outputFile);
-        ofile.remove();
-        m_outputFile.clear();
-    }
-
-    if(!m_temporaryFile.isEmpty() && QFileInfo::exists(m_temporaryFile))
-    {
-        // remove the inputfile first
-        QFile ifile(m_inputFile);
-        ifile.remove();
-        QFile::copy(m_temporaryFile, m_inputFile);
-        qDebug() << "restored backup from " << m_temporaryFile;
-        QFile tempFile(m_temporaryFile);
-        tempFile.remove();
-        m_temporaryFile.clear();
-    }
-}
-
 void FraxManager::measure()
 {
     if("simulate" == m_mode)
@@ -332,4 +309,33 @@ void FraxManager::clearData()
 {
     m_test.reset();
     emit dataChanged();
+}
+
+void FraxManager::finish()
+{
+    m_test.reset();
+    if(QProcess::NotRunning != m_process.state())
+    {
+        m_process.close();
+    }
+
+    if(!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
+    {
+        qDebug() << "removing output file " << m_outputFile;
+        QFile ofile(m_outputFile);
+        ofile.remove();
+        m_outputFile.clear();
+    }
+
+    if(!m_temporaryFile.isEmpty() && QFileInfo::exists(m_temporaryFile))
+    {
+        // remove the inputfile first
+        QFile ifile(m_inputFile);
+        ifile.remove();
+        QFile::copy(m_temporaryFile, m_inputFile);
+        qDebug() << "restored backup from " << m_temporaryFile;
+        QFile tempFile(m_temporaryFile);
+        tempFile.remove();
+        m_temporaryFile.clear();
+    }
 }
