@@ -32,15 +32,17 @@ CypressApplication::CypressApplication(QObject *parent) : QObject(parent),
     m_manager(nullptr)
 {
     m_dialog = new CypressDialog();
+    m_model = new QStandardItemModel(this);
 
     // TESTING ONLY
     m_testType = TestType::Hearing;
-    m_testTypeName = "audiometer";
+    m_testTypeName = "hearing";
 }
 
 CypressApplication::~CypressApplication()
 {
     delete m_dialog;
+    delete m_model;
     if(nullptr!=m_manager)
         delete m_manager;
 }
@@ -85,29 +87,64 @@ void CypressApplication::initialize()
             throw std::runtime_error("FATAL ERROR: no test type specified");
         }
     }
-
+    int n_col = 1;
+    int n_row = 1;
+    QStringList titles;
     switch(m_testType)
     {
       case TestType::Weight:
+        qDebug() << "creating weigh scale manager";
         m_manager = new WeighScaleManager;
+        titles << "Weight Results";
+        n_row = 2;
         break;
       case TestType::BodyComposition:
+        qDebug() << "creating boyd composition manager";
         m_manager = new TanitaManager;
+        titles << "Body Composition Results";
+        n_row = 8;
         break;
       case TestType::Hearing:
+        qDebug() << "creating audiometer manager";
         m_manager = new AudiometerManager;
+        titles << "Left Test Results" << "Right Test Results";
+        n_col = 2;
+        n_row = 8;
         break;
       case TestType::ChoiceReaction:
+        qDebug() << "creating coginitive test manager";
         m_manager = new CognitiveTestManager;
+        titles << "Left Test Results" << "Right Test Results";
+        n_col = 2;
+        n_row = 8;
         break;
       case TestType::Temperature:
+        qDebug() << "creating BLE manager";
         m_manager = new BluetoothLEManager;
+        titles << "Temperature Results";
+        n_row = 2;
         break;
       case TestType::Frax:
+        qDebug() << "creating frax manager";
         m_manager = new FraxManager;
+        titles << "10 Year Fracture Risk Probabilities";
+        n_row = 4;
         break;
       case TestType::CDTT:
+        qDebug() << "creating CDTT manager";
         m_manager = new CDTTManager;
+        titles << "Left Test Results" << "Right Test Results";
+        n_col = 2;
+        n_row = 8;
+        break;
+      case TestType::Spirometry:
+        m_manager = nullptr;
+        break;
+      case TestType::BloodPressure:
+        m_manager = nullptr;
+        break;
+      case TestType::None:
+        m_manager = nullptr;
         break;
     }
     if(nullptr==m_manager)
@@ -124,9 +161,30 @@ void CypressApplication::initialize()
     QSettings settings(dir.filePath("cypress.ini"), QSettings::IniFormat);
     m_manager->loadSettings(settings);
 
-    m_dialog->initialize(m_testType);
+    qDebug() << "initializing the dialog to test type " << m_testType;
+    m_dialog->initialize(this);
 
     connect(m_dialog, &QDialog::accepted, this, &CypressApplication::finish);
+
+    // init the model
+    //
+    qDebug() << "initializing the model";
+    for(int col=0;col<n_col;col++)
+    {
+      for(int row=0;row<n_row;row++)
+      {
+        QStandardItem* item = new QStandardItem();
+        m_model->setItem(row,col,item);
+      }
+      if(!titles.empty())
+        m_model->setHeaderData(col,Qt::Horizontal,titles.at(col),Qt::DisplayRole);
+    }
+
+    connect(m_manager, &ManagerBase::dataChanged, this, [this](){
+        m_manager->buildModel(m_model);
+        m_dialog->updateTableView(m_model);
+    });
+
 
     m_dialog->setStatusMessage("Ready to roll!!!");
 }
@@ -289,13 +347,14 @@ CypressApplication::CommandLineParseResult CypressApplication::parse(const QCore
     if(m_parser.isSet(testOption) && CommandLineOk==result)
     {
         QString s = m_parser.value(testOption).toLower();
+        qDebug() << "test option parsing " << s;
         // determine which manager and dialog is needed based on test type
         if(CypressApplication::testTypeLUT.contains(s))
         {
             m_testType = CypressApplication::testTypeLUT[s];
             m_testTypeName = s;
             if(m_verbose)
-              qDebug() << "in test option set with " << s;
+              qDebug() << "in test option set with " << s << m_testType;
         }
         else
         {
@@ -304,6 +363,7 @@ CypressApplication::CommandLineParseResult CypressApplication::parse(const QCore
             *errMessage = "Invalid input test " + s;
         }
     }
+    else {qDebug() << "test option not set";}
 
     if(CommandLineOk == result)
     {
@@ -317,6 +377,7 @@ CypressApplication::CommandLineParseResult CypressApplication::parse(const QCore
         }
     }
 
+    qDebug() << "parser result: " << result;
     return result;
 }
 

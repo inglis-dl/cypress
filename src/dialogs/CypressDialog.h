@@ -6,6 +6,9 @@
 #include "../CypressApplication.h"
 #include <QStatusBar>
 #include <QLineEdit>
+#include <QTableView>
+
+QT_FORWARD_DECLARE_CLASS(QStandardItemModel)
 
 class CypressDialog : public QDialog
 {
@@ -14,14 +17,16 @@ public:
     explicit CypressDialog(QWidget *parent = nullptr);
     ~CypressDialog();
 
-    void initialize(const CypressApplication::TestType &type);
+    void initialize(CypressApplication*);
     void setStatusMessage(const QString &);
     QString getBarcode() const;
+
+    void updateTableView(QStandardItemModel*);
 
 private:
     QSharedPointer<QStatusBar> m_status;
     QSharedPointer<QLineEdit> m_barcodeEdit;
-
+    QSharedPointer<QTableView> m_tableView;
 };
 
 #endif // CYPRESSDIALOG_H

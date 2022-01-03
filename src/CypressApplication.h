@@ -7,8 +7,9 @@
 #include <QMap>
 #include <QVariant>
 
-QT_FORWARD_DECLARE_CLASS(ManagerBase);
-QT_FORWARD_DECLARE_CLASS(CypressDialog);
+QT_FORWARD_DECLARE_CLASS(ManagerBase)
+QT_FORWARD_DECLARE_CLASS(CypressDialog)
+QT_FORWARD_DECLARE_CLASS(QStandardItemModel)
 
 class CypressApplication : public QObject
 {
@@ -72,7 +73,9 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose(){ return m_verbose; }
 
-signals:
+    QStandardItemModel* getModel(){ return m_model; }
+
+    TestType getTestType() const { return m_testType; }
 
 public slots:
     void writeOutput();
@@ -96,10 +99,8 @@ private:
     QMap<QString,QVariant> m_outputData;
 
     ManagerBase *m_manager;
-
     CypressDialog *m_dialog;
-
-   //QStandardItemModel m_model;
+    QStandardItemModel *m_model;
 };
 
 #endif // CYPRESSAPPLICATION_H

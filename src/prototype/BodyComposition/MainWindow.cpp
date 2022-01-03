@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_manager(this)
 {
     ui->setupUi(this);
-    // allocate 1 columns x 8 rows of hearing measurement items
+    // allocate 1 columns x 8 rows of body composition measurement items
     //
     for(int row=0;row<8;row++)
     {
