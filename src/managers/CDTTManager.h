@@ -3,14 +3,7 @@
 
 #include "ManagerBase.h"
 #include "../data/CDTTTest.h"
-
 #include <QProcess>
-#include <QDateTime>
-#include <QDebug>
-#include <QDir>
-#include <QFileInfo>
-#include <QJsonObject>
-#include <QSettings>
 
 class CDTTManager : public ManagerBase
 {
@@ -29,20 +22,15 @@ public:
    //
     bool isDefined(const QString&) const;
 
-    // set the cognitive test executable full path and name
+    // set the executable (jar, exe etc.) full path and name
     // calls isDefined to validate the passed arg
     //
-    void setJarFullPath(const QString&);
+    void setRunnableName(const QString &);
 
-    QString getJarFullPath() const
+    QString getRunnableName() const
     {
-        return m_jarFullPath;
+        return m_runnableName;
     }
-
-    // call just before closing the application to
-    // remove the csv file from the test if it exists
-    //
-    void clean();
 
     // Set the input data.
     // The input data is read from the input
@@ -52,8 +40,6 @@ public:
     // m_inputKeyList.
     //
     void setInputData(const QMap<QString, QVariant>&);
-
-    QMap<QString, QVariant> m_inputData;
 
 public slots:
 
@@ -69,8 +55,9 @@ public slots:
     void readOutput();
 
 private:
-    QString m_jarFullPath; // full pathspec to CDTTstereo.jar
-    QString m_jarDirPath; // path to CDTTstereo.jar directory
+    QString m_runnableName;// full pathspec to CDTTstereo.jar
+    QString m_runnablePath;// path to CDTTstereo.jar
+
     QString m_outputPath;     // path to output .csv files
     QString m_outputFile;     // full pathspec to working output .csv file
     QProcess m_process;
@@ -79,6 +66,7 @@ private:
 
     void clearData() override;
 
+    QMap<QString, QVariant> m_inputData;
     QList<QString> m_inputKeyList;
 
     void configureProcess();

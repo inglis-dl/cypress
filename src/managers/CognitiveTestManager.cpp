@@ -74,14 +74,14 @@ bool CognitiveTestManager::isDefined(const QString &exeName) const
     return ok;
 }
 
-void CognitiveTestManager::setExecutableName(const QString &exeName)
+void CognitiveTestManager::setRunnableName(const QString &exeName)
 {
     if(isDefined(exeName))
     {
        QFileInfo info(exeName);
-       m_executableName = exeName;
-       m_executablePath = info.absolutePath();
-       QDir dir = QDir::cleanPath(m_executablePath + QDir::separator() + "results");
+       m_runnableName = exeName;
+       m_runnablePath = info.absolutePath();
+       QDir dir = QDir::cleanPath(m_runnablePath + QDir::separator() + "results");
        m_outputPath = dir.path();
 
        configureProcess();
@@ -122,15 +122,15 @@ void CognitiveTestManager::loadSettings(const QSettings &settings)
     //
     QString exeName = settings.value("choice_reaction/client/exe").toString();
     qDebug() << "loading settings with exe " << exeName;
-    setExecutableName(exeName);
+    setRunnableName(exeName);
 }
 
 void CognitiveTestManager::saveSettings(QSettings *settings) const
 {
-    if(!m_executableName.isEmpty())
+    if(!m_runnableName.isEmpty())
     {
       settings->beginGroup("choice_reaction");
-      settings->setValue("client/exe",m_executableName);
+      settings->setValue("client/exe",m_runnableName);
       settings->endGroup();
       if(m_verbose)
           qDebug() << "wrote exe fullspec path to settings file";
@@ -152,8 +152,8 @@ void CognitiveTestManager::configureProcess()
         return;
     }
     // the exe is present
-    QFileInfo info(m_executableName);
-    QDir working(m_executablePath);
+    QFileInfo info(m_runnableName);
+    QDir working(m_runnablePath);
     QDir out(m_outputPath);
     if(info.exists() && info.isExecutable() &&
        working.exists() && out.exists())
@@ -162,7 +162,7 @@ void CognitiveTestManager::configureProcess()
 
       // the inputs for command line args are present
       QStringList command;
-      command << m_executableName;
+      command << m_runnableName;
 
       if(m_inputData.contains("barcode"))
          command << "/i" + m_inputData["barcode"].toString();
@@ -180,12 +180,12 @@ void CognitiveTestManager::configureProcess()
          command << "/l" + s;
       }
       m_process.setProcessChannelMode(QProcess::ForwardedChannels);
-      m_process.setProgram(m_executableName);
+      m_process.setProgram(m_runnableName);
       m_process.setArguments(command);
-      m_process.setWorkingDirectory(m_executablePath);
+      m_process.setWorkingDirectory(m_runnablePath);
 
       qDebug() << "process config args: " << m_process.arguments().join(" ");
-      qDebug() << "process working dir: " << m_executablePath;
+      qDebug() << "process working dir: " << m_runnablePath;
 
       connect(&m_process,&QProcess::started,
               this,[this](){

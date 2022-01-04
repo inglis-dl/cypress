@@ -100,6 +100,7 @@ void MainWindow::initialize()
         this, [this]() {
       QHeaderView *h = ui->testdataTableView->horizontalHeader();
       h->setSectionResizeMode(QHeaderView::Fixed);
+
       m_manager.buildModel(&m_model);
 
       QSize ts_pre = ui->testdataTableView->size();
@@ -140,8 +141,8 @@ void MainWindow::initialize()
     // validate the presence of blackbox.exe and enable
     // file selection as required
     //
-    QString exeName = m_manager.getExecutableName();
-    if (!m_manager.isDefined(exeName))
+    QString runnableName = m_manager.getRunnableName();
+    if (!m_manager.isDefined(runnableName))
     {
         ui->openButton->setEnabled(true);
         QMessageBox::warning(
@@ -160,7 +161,7 @@ void MainWindow::initialize()
                     tr("Applications (*.exe, *)"));
             if (m_manager.isDefined(fileName))
             {
-                m_manager.setExecutableName(fileName);
+                m_manager.setRunnableName(fileName);
                 ui->measureButton->setEnabled(true);
                 ui->saveButton->setEnabled(false);
             }
@@ -223,7 +224,6 @@ void MainWindow::readInput()
     else
         qDebug() << m_inputFileName << " file does not exist";
 }
-
 
 void MainWindow::writeOutput()
 {

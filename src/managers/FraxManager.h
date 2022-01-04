@@ -3,13 +3,12 @@
 
 #include "ManagerBase.h"
 #include "../data/FraxTest.h"
-
 #include <QProcess>
-#include <QDir>
 
 class FraxManager : public ManagerBase
 {
 	Q_OBJECT
+
 public:
     explicit FraxManager(QObject* parent = nullptr);
 
@@ -25,14 +24,14 @@ public:
     //
     bool isDefined(const QString &) const;
 
-    // set the cognitive test executable full path and name
+    // set the executable full path and name
     // calls isDefined to validate the passed arg
     //
-    void setExecutableName(const QString &);
+    void setRunnableName(const QString &);
 
-    QString getExecutableName() const
+    QString getRunnableName() const
     {
-        return m_executableName;
+        return m_runnableName;
     }
 
     // Set the input data.
@@ -58,8 +57,9 @@ public slots:
     void readOutput();
 
 private:
-    QString m_executableName;// full pathspec to blackbox.exe
-    QString m_executablePath;// path to blackbox.exe
+    QString m_runnableName;// full pathspec to blackbox.exe
+    QString m_runnablePath;// path to blackbox.exe
+
     QString m_outputFile;    // full pathspec to working output.txt
     QString m_inputFile;     // full pathspec to working input.txt
     QString m_temporaryFile; // store a copy of the default input.txt

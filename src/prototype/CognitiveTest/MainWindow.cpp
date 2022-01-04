@@ -52,8 +52,6 @@ void MainWindow::initialize()
     //
     readInput();
 
-    m_manager.setInputData(m_inputData);
-
     // Populate barcode display
     //
     if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
@@ -64,6 +62,9 @@ void MainWindow::initialize()
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
     QSettings settings(dir.filePath("cognitivetest.ini"), QSettings::IniFormat);
+
+    // have the manager build the inputs from the input json file
+    m_manager.setInputData(m_inputData);
 
     // Select the location of CCB.exe
     //
@@ -144,8 +145,8 @@ void MainWindow::initialize()
     // validate the presence of CCB.exe and enable
     // file selection as required
     //
-    QString exeName = m_manager.getExecutableName();
-    if(!m_manager.isDefined(exeName))
+    QString runnableName = m_manager.getRunnableName();
+    if(!m_manager.isDefined(runnableName))
     {
         ui->openButton->setEnabled(true);
         QMessageBox::warning(
@@ -164,7 +165,7 @@ void MainWindow::initialize()
                     tr("Applications (*.exe, *)"));
         if(m_manager.isDefined(fileName))
         {
-            m_manager.setExecutableName(fileName);
+            m_manager.setRunnableName(fileName);
             ui->measureButton->setEnabled(true);
             ui->saveButton->setEnabled(false);
         }

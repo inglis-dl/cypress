@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+/*
 #include <QDialog>
 #include <QStandardItemModel>
 #include <QCloseEvent>
@@ -13,7 +14,7 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QSettings>
-
+*/
 #include "ui_MainWindow.h"
 #include "../../managers/CDTTManager.h"
 
@@ -67,6 +68,7 @@ private:
     QString m_mode;
     bool m_verbose;
 
+    QMap<QString,QVariant> m_inputData;
     QMap<QString, QVariant> m_outputData;
 
     CDTTManager m_manager;

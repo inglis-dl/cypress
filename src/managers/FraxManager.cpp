@@ -46,16 +46,16 @@ void FraxManager::loadSettings(const QSettings& settings)
     // the full spec path name including exe name
     // eg., ../frax_module/blackbox.exe
     //
-    QString exeName = settings.value("frax/client/exe").toString();
-    setExecutableName(exeName);
+    QString runnableName = settings.value("frax/client/exe").toString();
+    setRunnableName(runnableName);
 }
 
 void FraxManager::saveSettings(QSettings* settings) const
 {
-    if (!m_executableName.isEmpty())
+    if (!m_runnableName.isEmpty())
     {
         settings->beginGroup("frax");
-        settings->setValue("client/exe", m_executableName);
+        settings->setValue("client/exe", m_runnableName);
         settings->endGroup();
         if (m_verbose)
             qDebug() << "wrote exe fullspec path to settings file";
@@ -76,16 +76,16 @@ QJsonObject FraxManager::toJsonObject() const
     return json;
 }
 
-bool FraxManager::isDefined(const QString &exeName) const
+bool FraxManager::isDefined(const QString &runnableName) const
 {
     if("simulate" == m_mode)
     {
        return true;
     }
     bool ok = false;
-    if(!exeName.isEmpty())
+    if(!runnableName.isEmpty())
     {
-        QFileInfo info(exeName);
+        QFileInfo info(runnableName);
         if(info.exists() && info.isExecutable())
         {
             ok = true;
@@ -94,16 +94,16 @@ bool FraxManager::isDefined(const QString &exeName) const
     return ok;
 }
 
-void FraxManager::setExecutableName(const QString &exeName)
+void FraxManager::setRunnableName(const QString &runnableName)
 {
-    if(isDefined(exeName))
+    if(isDefined(runnableName))
     {
-        QFileInfo info(exeName);
-        m_executableName = exeName;
-        m_executablePath = info.absolutePath();
-        m_outputFile = QDir(m_executablePath).filePath("output.txt");
-        m_inputFile =  QDir(m_executablePath).filePath("input.txt");
-        m_temporaryFile = QDir(m_executablePath).filePath("input_ORIG.txt");
+        QFileInfo info(runnableName);
+        m_runnableName = runnableName;
+        m_runnablePath = info.absolutePath();
+        m_outputFile = QDir(m_runnablePath).filePath("output.txt");
+        m_inputFile =  QDir(m_runnablePath).filePath("input.txt");
+        m_temporaryFile = QDir(m_runnablePath).filePath("input_ORIG.txt");
 
         if(QFileInfo::exists(m_inputFile))
           configureProcess();
@@ -119,8 +119,8 @@ void FraxManager::measure()
         readOutput();
         return;
     }
-    // launch the process
     clearData();
+    // launch the process
     qDebug() << "starting process from measure";
     m_process.start();
 }
@@ -225,18 +225,18 @@ void FraxManager::configureProcess()
     */
     // The exe and input file are present
     //
-    QFileInfo info(m_executableName);
-    QDir working(m_executablePath);
+    QFileInfo info(m_runnableName);
+    QDir working(m_runnablePath);
     if (info.exists() && info.isExecutable() &&
         working.exists() && QFileInfo::exists(m_inputFile))
     {
         qDebug() << "OK: configuring command";
 
         m_process.setProcessChannelMode(QProcess::ForwardedChannels);
-        m_process.setProgram(m_executableName);
-        m_process.setWorkingDirectory(m_executablePath);
+        m_process.setProgram(m_runnableName);
+        m_process.setWorkingDirectory(m_runnablePath);
 
-        qDebug() << "process working dir: " << m_executablePath;
+        qDebug() << "process working dir: " << m_runnablePath;
 
         // backup the original intput.txt
         if(QFileInfo::exists(m_temporaryFile))

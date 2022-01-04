@@ -27,11 +27,11 @@ public:
     // set the cognitive test executable full path and name
     // calls isDefined to validate the passed arg
     //
-    void setExecutableName(const QString &);
+    void setRunnableName(const QString &);
 
-    QString getExecutableName() const
+    QString getRunnableName() const
     {
-        return m_executableName;
+        return m_runnableName;
     }
 
     // Set the input data.
@@ -57,8 +57,9 @@ public slots:
     void readOutput();
 
 private:
-    QString m_executableName; // full pathspec to CCB.exe
-    QString m_executablePath; // path to CCB.exe
+    QString m_runnableName; // full pathspec to CCB.exe
+    QString m_runnablePath; // path to CCB.exe
+
     QString m_outputPath;     // path to output .csv files
     QString m_outputFile;     // full pathspec to working output .csv file
     QProcess m_process;

@@ -4,12 +4,6 @@
 #include "ui_MainWindow.h"
 #include "../../managers/FraxManager.h"
 
-#include <QString>
-#include <QProcess>
-#include <QStandardPaths>
-#include <QDialog>
-#include <QStandardItemModel>
-
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
 QT_BEGIN_NAMESPACE

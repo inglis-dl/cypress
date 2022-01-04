@@ -1,5 +1,12 @@
 #include "CDTTManager.h"
 
+#include <QDebug>
+#include <QDir>
+#include <QFileInfo>
+#include <QJsonObject>
+#include <QProcess>
+#include <QSettings>
+
 CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
 {
 }
@@ -9,17 +16,16 @@ void CDTTManager::loadSettings(const QSettings& settings)
     // the full spec path name including jar name
     // eg., C:\Users\clsa\Documents\CDTT-2018-07-22\CDTTstereo.jar
     //
-    QString jarFullPath = settings.value("cdtt/client/jar").toString();
-    qDebug() << "loading settings with jar " << jarFullPath;
-    setJarFullPath(jarFullPath);
+    QString runnableName = settings.value("cdtt/client/jar").toString();
+    setRunnableName(runnableName);
 }
 
 void CDTTManager::saveSettings(QSettings* settings) const
 {
-    if (!m_jarFullPath.isEmpty())
+    if (!m_runnableName.isEmpty())
     {
         settings->beginGroup("cdtt");
-        settings->setValue("client/jar", m_jarFullPath);
+        settings->setValue("client/jar", m_runnableName);
         settings->endGroup();
         if (m_verbose)
             qDebug() << "wrote jar fullspec path to settings file";
@@ -70,17 +76,17 @@ void CDTTManager::buildModel(QStandardItemModel* model) const
     }
 }
 
-bool CDTTManager::isDefined(const QString& jarFullPath) const
+bool CDTTManager::isDefined(const QString& runnableName) const
 {
     bool ok = false;
-    if (!jarFullPath.isEmpty())
+    if (!runnableName.isEmpty())
     {
-        QFileInfo info(jarFullPath);
+        QFileInfo info(runnableName);
         if (info.exists() && "jar" == info.completeSuffix())
         {
             QString path = info.absolutePath();
 
-            qDebug() << "path to " << jarFullPath << " is " << path;
+            qDebug() << "path to " << runnableName << " is " << path;
             QDir dir = QDir::cleanPath(path + QDir::separator() + "applicationFiles" + QDir::separator() + "Results");
             if (dir.exists())
             {
@@ -91,21 +97,21 @@ bool CDTTManager::isDefined(const QString& jarFullPath) const
                 qDebug() << "ERROR: results directory not found " << dir.path();
         }
         else
-            qDebug() << "ERROR: info does not exist for file " << jarFullPath;
+            qDebug() << "ERROR: info does not exist for file " << runnableName;
     }
     else
         qDebug() << "ERROR: isDefined check on empty string";
     return ok;
 }
 
-void CDTTManager::setJarFullPath(const QString& jarFullPath)
+void CDTTManager::setRunnableName(const QString &runnableName)
 {
-    if (isDefined(jarFullPath))
+    if(isDefined(runnableName))
     {
-        QFileInfo info(jarFullPath);
-        m_jarFullPath = jarFullPath;
-        m_jarDirPath = info.absolutePath();
-        QDir dir = QDir::cleanPath(m_jarDirPath + QDir::separator() + "applicationFiles" + QDir::separator() + "Results");
+        QFileInfo info(runnableName);
+        m_runnableName = runnableName;
+        m_runnablePath = info.absolutePath();
+        QDir dir = QDir::cleanPath(m_runnablePath + QDir::separator() + "applicationFiles" + QDir::separator() + "Results");
         m_outputPath = dir.path();
 
         configureProcess();
@@ -124,15 +130,6 @@ void CDTTManager::measure()
     // launch the process
     qDebug() << "starting process from measure";
     m_process.start();
-}
-
-void CDTTManager::clean()
-{
-    if (!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
-    {
-        QFile ofile(m_outputFile);
-        ofile.remove();
-    }
 }
 
 void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
@@ -161,39 +158,40 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
 
 void CDTTManager::readOutput()
 {
-    if ("simulate" == m_mode) {
+    if("simulate" == m_mode)
+    {
         // TODO: Implement simulate mode
         return;
     }
 
-    if (QProcess::NormalExit != m_process.exitStatus()) {
+    if(QProcess::NormalExit != m_process.exitStatus())
+    {
         qDebug() << "ERROR: process failed to finish correctly: cannot read output";
         return;
     }
-    else {
+    else
         qDebug() << "process finished successfully";
-    }
 
     QDir dir(m_outputPath);
     bool found = false;
     QString fileName = QString("Results-%0.xlsx").arg(m_inputData["barcode"].toString());
-    for (auto&& x : dir.entryList())
+    for(auto&& x : dir.entryList())
     {
-        if (x == fileName)
+        if(x == fileName)
         {
             found = true;
             break;
         }
     }
 
-    if (found)
+    if(found)
     {
         qDebug() << "found output xlsx file " << fileName;
         QString filePath = m_outputPath + QDir::separator() + fileName;
         qDebug() << "found output xlsx file path " << filePath;
         m_test.fromFile(filePath);
         m_outputFile.clear();
-        if (m_test.isValid())
+        if(m_test.isValid())
         {
             emit canWrite();
             m_outputFile = filePath;
@@ -221,6 +219,12 @@ void CDTTManager::finish()
     {
         m_process.close();
     }
+    if(!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
+    {
+        QFile ofile(m_outputFile);
+        ofile.remove();
+        m_outputFile.clear();
+    }
 }
 
 void CDTTManager::configureProcess()
@@ -231,8 +235,8 @@ void CDTTManager::configureProcess()
         return;
     }
     // the exe is present
-    QFileInfo info(m_jarFullPath);
-    QDir working(m_jarDirPath);
+    QFileInfo info(m_runnableName);
+    QDir working(m_runnablePath);
     QDir out(m_outputPath);
     if (info.exists() && "jar" == info.completeSuffix() &&
         working.exists() && out.exists())
@@ -250,10 +254,10 @@ void CDTTManager::configureProcess()
         m_process.setProcessChannelMode(QProcess::ForwardedChannels);
         m_process.setProgram(command);
         m_process.setArguments(arguments);
-        m_process.setWorkingDirectory(m_jarDirPath);
+        m_process.setWorkingDirectory(working.absolutePath());
 
         qDebug() << "process config args: " << m_process.arguments().join(" ");
-        qDebug() << "process working dir: " << m_jarDirPath;
+        qDebug() << "process working dir: " << working.absolutePath();
 
         connect(&m_process, &QProcess::started,
             this, [this]() {

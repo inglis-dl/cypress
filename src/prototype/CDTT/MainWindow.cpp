@@ -1,5 +1,16 @@
 #include "MainWindow.h"
 
+#include <QCloseEvent>
+#include <QDate>
+#include <QDebug>
+#include <QDir>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QMessageBox>
+#include <QSettings>
+
 MainWindow::MainWindow(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::MainWindow)
@@ -43,14 +54,17 @@ void MainWindow::initialize()
 
     // Populate barcode display
     //
-    if (m_manager.m_inputData.contains("barcode") && m_manager.m_inputData["barcode"].isValid())
-        ui->barcodeLineEdit->setText(m_manager.m_inputData["barcode"].toString());
+    if (m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
+        ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
     else
         ui->barcodeLineEdit->setText("00000000"); // dummy
 
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
     QSettings settings(dir.filePath("cdtt.ini"), QSettings::IniFormat);
+
+    // have the manager build the inputs from the input json file
+    m_manager.setInputData(m_inputData);
 
     // Select the location of CCB.exe
     //
@@ -131,8 +145,8 @@ void MainWindow::initialize()
     // validate the presence of CCB.exe and enable
     // file selection as required
     //
-    QString jarFullPath = m_manager.getJarFullPath();
-    if (!m_manager.isDefined(jarFullPath))
+    QString runnableName = m_manager.getRunnableName();
+    if (!m_manager.isDefined(runnableName))
     {
         ui->openButton->setEnabled(true);
         QMessageBox::warning(
@@ -151,7 +165,7 @@ void MainWindow::initialize()
                     tr("Applications (*.jar, *)"));
             if (m_manager.isDefined(fileName))
             {
-                m_manager.setJarFullPath(fileName);
+                m_manager.setRunnableName(fileName);
                 ui->measureButton->setEnabled(true);
                 ui->saveButton->setEnabled(false);
             }
@@ -173,12 +187,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if (m_verbose)
         qDebug() << "close event called";
 
-    // clean up
-    m_manager.clean();
-
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath("cdtt.ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
+    m_manager.finish();
     event->accept();
 }
 
@@ -203,7 +215,7 @@ void MainWindow::readInput()
 
         QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
         QJsonObject jsonObj = jsonDoc.object();
-        QMapIterator<QString, QVariant> it(m_manager.m_inputData);
+        QMapIterator<QString, QVariant> it(m_inputData);
         QList<QString> keys = jsonObj.keys();
         for (int i = 0; i < keys.size(); i++)
         {
@@ -212,7 +224,7 @@ void MainWindow::readInput()
             //
             if (!v.isUndefined())
             {
-                m_manager.m_inputData[keys[i]] = v.toVariant();
+                m_inputData[keys[i]] = v.toVariant();
                 qDebug() << keys[i] << v.toVariant();
             }
         }
