@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "../../managers/WeighScaleManager.h"
+#include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

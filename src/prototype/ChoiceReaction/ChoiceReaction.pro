@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 win32 {
 TEMPLATE = app
-TARGET = CognitiveTest
+TARGET = ChoiceReaction
 DESTDIR = ../../../../CypressBuilds/CognitiveTest
 CONFIG += debug
 DEFINES += _WINDOWS _UNICODE _ENABLE_EXTENDED_ALIGNED_STORAGE WIN64
@@ -36,7 +36,7 @@ HEADERS += \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
-    ../../managers/CognitiveTestManager.h \
+    ../../managers/ChoiceReactionManager.h \
     MainWindow.h
 
 SOURCES += \
@@ -45,7 +45,7 @@ SOURCES += \
     ../../data/ChoiceReactionMeasurement.cpp \
     ../../data/ChoiceReactionTest.cpp \
     ../../managers/ManagerBase.cpp \
-    ../../managers/CognitiveTestManager.cpp \
+    ../../managers/ChoiceReactionManager.cpp \
     MainWindow.cpp \
     main.cpp
 

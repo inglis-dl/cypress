@@ -9,6 +9,7 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QSettings>
+#include <QStandardItemModel>
 #include <QFormBuilder>
 #include <QVBoxLayout>
 
@@ -17,9 +18,9 @@
 #include "./managers/AudiometerManager.h"
 #include "./managers/BluetoothLEManager.h"
 #include "./managers/CDTTManager.h"
-#include "./managers/CognitiveTestManager.h"
+#include "./managers/ChoiceReactionManager.h"
 #include "./managers/FraxManager.h"
-#include "./managers/TanitaManager.h"
+#include "./managers/BodyCompositionAnalyzerManager.h"
 #include "./managers/WeighScaleManager.h"
 
 QMap<QString,CypressApplication::TestType> CypressApplication::testTypeLUT =
@@ -100,7 +101,7 @@ void CypressApplication::initialize()
         break;
       case TestType::BodyComposition:
         qDebug() << "creating boyd composition manager";
-        m_manager = new TanitaManager;
+        m_manager = new BodyCompositionAnalyzerManager;
         titles << "Body Composition Results";
         n_row = 8;
         break;
@@ -113,7 +114,7 @@ void CypressApplication::initialize()
         break;
       case TestType::ChoiceReaction:
         qDebug() << "creating coginitive test manager";
-        m_manager = new CognitiveTestManager;
+        m_manager = new ChoiceReactionManager;
         titles << "Left Test Results" << "Right Test Results";
         n_col = 2;
         n_row = 8;

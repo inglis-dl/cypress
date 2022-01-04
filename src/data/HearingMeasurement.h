@@ -7,7 +7,7 @@
  * \class HearingMeasurement
  * \brief A HearingMeasurement class
  *
- * \sa MeasurementBase, AudiometerTest
+ * \sa MeasurementBase, HearingTest
  */
 
 class HearingMeasurement :  public MeasurementBase
@@ -28,7 +28,7 @@ public:
     static QMap<QString,QString> initOutcomeLookup();
     static QMap<int,QString> initFrequencyLookup();
 
-    friend class AudiometerTest;
+    friend class HearingTest;
 
 private:
     static const QMap<QString,QString> codeLookup;

@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName("CLSA");
     QCoreApplication::setOrganizationDomain("clsa-elcv.ca");
-    QCoreApplication::setApplicationName("Body Composition Analyzer");
+    QCoreApplication::setApplicationName("Body Composition");
     QCoreApplication::setApplicationVersion("1.0.0");
 
     QApplication app(argc, argv);

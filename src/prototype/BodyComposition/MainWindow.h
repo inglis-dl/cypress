@@ -1,8 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "../../managers/BodyCompositionAnalyzerManager.h"
 #include <QDialog>
-#include "../../managers/TanitaManager.h"
+#include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -58,7 +59,7 @@ private:
     QMap<QString,QVariant> m_inputData;
     QMap<QString,QVariant> m_outputData;
 
-    TanitaManager m_manager;
+    BodyCompositionAnalyzerManager m_manager;
 
     QStandardItemModel m_model;
 };

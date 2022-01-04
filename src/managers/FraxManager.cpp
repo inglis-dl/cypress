@@ -4,12 +4,14 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonObject>
-#include <QProcess>
 #include <QSettings>
+#include <QStandardItemModel>
 
 FraxManager::FraxManager(QObject* parent):
-	ManagerBase(parent)
+    ManagerBase(parent)
 {
+    setGroup("frax");
+
     m_inputKeyList << "type";
     m_inputKeyList << "country_code";
     m_inputKeyList << "age";
@@ -46,7 +48,7 @@ void FraxManager::loadSettings(const QSettings& settings)
     // the full spec path name including exe name
     // eg., ../frax_module/blackbox.exe
     //
-    QString runnableName = settings.value("frax/client/exe").toString();
+    QString runnableName = settings.value(getGroup() + "/client/exe").toString();
     setRunnableName(runnableName);
 }
 
@@ -54,7 +56,7 @@ void FraxManager::saveSettings(QSettings* settings) const
 {
     if (!m_runnableName.isEmpty())
     {
-        settings->beginGroup("frax");
+        settings->beginGroup(getGroup());
         settings->setValue("client/exe", m_runnableName);
         settings->endGroup();
         if (m_verbose)

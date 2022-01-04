@@ -2,7 +2,7 @@
 #define AUDIOMETERMANAGER_H
 
 #include "SerialPortManager.h"
-#include "../data/AudiometerTest.h"
+#include "../data/HearingTest.h"
 
 class AudiometerManager : public SerialPortManager
 {
@@ -42,7 +42,7 @@ private:
 
     bool hasEndCode(const QByteArray &);
 
-    AudiometerTest m_test;
+    HearingTest m_test;
 
     void clearData() override;
 };

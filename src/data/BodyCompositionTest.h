@@ -1,14 +1,14 @@
-#ifndef BODYCOMPOSITIONANALYZERTEST_H
-#define BODYCOMPOSITIONANALYZERTEST_H
+#ifndef BODYCOMPOSITIONTEST_H
+#define BODYCOMPOSITIONTEST_H
 
 #include "TestBase.h"
 #include "BodyCompositionMeasurement.h"
 
-class BodyCompositionAnalyzerTest : public TestBase<BodyCompositionMeasurement>
+class BodyCompositionTest : public TestBase<BodyCompositionMeasurement>
 {
 public:
-    BodyCompositionAnalyzerTest() = default;
-    ~BodyCompositionAnalyzerTest() = default;
+    BodyCompositionTest() = default;
+    ~BodyCompositionTest() = default;
 
     void fromArray(const QByteArray &);
 
@@ -40,6 +40,6 @@ private:
     QVariant readBMR() const;
 };
 
-Q_DECLARE_METATYPE(BodyCompositionAnalyzerTest);
+Q_DECLARE_METATYPE(BodyCompositionTest);
 
-#endif // BODYCOMPOSITIONANALYZERTEST_H
+#endif // BODYCOMPOSITIONTEST_H

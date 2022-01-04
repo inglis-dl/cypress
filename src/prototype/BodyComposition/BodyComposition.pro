@@ -10,24 +10,24 @@ CONFIG += c++11
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-    ../../data/BodyCompositionAnalyzerTest.cpp \
     ../../data/BodyCompositionMeasurement.cpp \
+    ../../data/BodyCompositionTest.cpp \
     ../../data/MeasurementBase.cpp \
+    ../../managers/BodyCompositionAnalyzerManager.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
-    ../../managers/TanitaManager.cpp \
     main.cpp \
     MainWindow.cpp
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
-    ../../data/BodyCompositionAnalyzerTest.h \
     ../../data/BodyCompositionMeasurement.h \
+    ../../data/BodyCompositionTest.h \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
+    ../../managers/BodyCompositionAnalyzerManager.h \
     ../../managers/ManagerBase.h \
     ../../managers/SerialPortManager.h \
-    ../../managers/TanitaManager.h \
     MainWindow.h
 
 FORMS += \

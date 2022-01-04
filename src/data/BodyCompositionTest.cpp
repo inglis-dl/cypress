@@ -1,4 +1,4 @@
-#include "BodyCompositionAnalyzerTest.h"
+#include "BodyCompositionTest.h"
 
 #include <QDateTime>
 #include <QDebug>
@@ -6,7 +6,7 @@
 #include <QJsonArray>
 #include <QStringBuilder>
 
-bool BodyCompositionAnalyzerTest::isValid() const
+bool BodyCompositionTest::isValid() const
 {
     bool okMeta =
       hasMetaDataCharacteristic("body type") &&
@@ -30,7 +30,7 @@ bool BodyCompositionAnalyzerTest::isValid() const
     return okMeta && okTest;
 }
 
-QString BodyCompositionAnalyzerTest::toString() const
+QString BodyCompositionTest::toString() const
 {
     QString s;
     if(isValid())
@@ -53,7 +53,7 @@ QString BodyCompositionAnalyzerTest::toString() const
 // The TanitaManager class provides the data after validating
 // it via hasEndCode(arr) before passing to this class
 //
-void BodyCompositionAnalyzerTest::fromArray(const QByteArray &arr)
+void BodyCompositionTest::fromArray(const QByteArray &arr)
 {
     if(!arr.isEmpty())
     {
@@ -119,25 +119,25 @@ void BodyCompositionAnalyzerTest::fromArray(const QByteArray &arr)
     }
 }
 
-QString BodyCompositionAnalyzerTest::readArray(const quint8 &begin, const quint8 &end) const
+QString BodyCompositionTest::readArray(const quint8 &begin, const quint8 &end) const
 {
     int len = end-begin+1;
     return 0<len && end<m_array.size() ? QString::fromLatin1(m_array.mid(begin, len)) : QString();
 }
 
-QString BodyCompositionAnalyzerTest::readBodyType() const
+QString BodyCompositionTest::readBodyType() const
 {
    QString s = readArray(0,0);
    return "0" == s ? "standard" : ("2" == s ? "athletic" : "unknown");
 }
 
-QString BodyCompositionAnalyzerTest::readGender() const
+QString BodyCompositionTest::readGender() const
 {
     QString s = readArray(2,2);
     return "1" == s ? "male" : ("2" == s ? "female" : "unknown");
 }
 
-QVariant BodyCompositionAnalyzerTest::readHeight() const
+QVariant BodyCompositionTest::readHeight() const
 {
     QString s = readArray(4,8).trimmed();
     bool ok;
@@ -145,7 +145,7 @@ QVariant BodyCompositionAnalyzerTest::readHeight() const
     return ok ? QVariant(result) : QVariant();
 }
 
-QVariant BodyCompositionAnalyzerTest::readWeight() const
+QVariant BodyCompositionTest::readWeight() const
 {
     QString s = readArray(10,14).trimmed();
     QVariant result;
@@ -163,7 +163,7 @@ QVariant BodyCompositionAnalyzerTest::readWeight() const
     return result;
 }
 
-QVariant BodyCompositionAnalyzerTest::readImpedence() const
+QVariant BodyCompositionTest::readImpedence() const
 {
     QString s = readArray(16,18).trimmed();
     bool ok;
@@ -171,7 +171,7 @@ QVariant BodyCompositionAnalyzerTest::readImpedence() const
     return ok ? QVariant(result) : QVariant();
 }
 
-QVariant BodyCompositionAnalyzerTest::readFatPercent() const
+QVariant BodyCompositionTest::readFatPercent() const
 {
     QString s = readArray(20,23).trimmed();
     QVariant result;
@@ -189,7 +189,7 @@ QVariant BodyCompositionAnalyzerTest::readFatPercent() const
     return result;
 }
 
-QVariant BodyCompositionAnalyzerTest::readFatMass() const
+QVariant BodyCompositionTest::readFatMass() const
 {
     QString s = readArray(25,29).trimmed();
     QVariant result;
@@ -207,7 +207,7 @@ QVariant BodyCompositionAnalyzerTest::readFatMass() const
     return result;
 }
 
-QVariant BodyCompositionAnalyzerTest::readFatFreeMass() const
+QVariant BodyCompositionTest::readFatFreeMass() const
 {
     QString s = readArray(31,35).trimmed();
     QVariant result;
@@ -225,7 +225,7 @@ QVariant BodyCompositionAnalyzerTest::readFatFreeMass() const
     return result;
 }
 
-QVariant BodyCompositionAnalyzerTest::readTotalBodyWater() const
+QVariant BodyCompositionTest::readTotalBodyWater() const
 {
     QString s = readArray(37,41).trimmed();
     QVariant result;
@@ -243,7 +243,7 @@ QVariant BodyCompositionAnalyzerTest::readTotalBodyWater() const
     return result;
 }
 
-QVariant BodyCompositionAnalyzerTest::readAge() const
+QVariant BodyCompositionTest::readAge() const
 {
     QString s = readArray(43,44).trimmed();
     QVariant result;
@@ -254,7 +254,7 @@ QVariant BodyCompositionAnalyzerTest::readAge() const
     return result;
 }
 
-QVariant BodyCompositionAnalyzerTest::readBMI() const
+QVariant BodyCompositionTest::readBMI() const
 {
     QString s = readArray(46,50).trimmed();
     QVariant result;
@@ -272,7 +272,7 @@ QVariant BodyCompositionAnalyzerTest::readBMI() const
     return result;
 }
 
-QVariant BodyCompositionAnalyzerTest::readBMR() const
+QVariant BodyCompositionTest::readBMR() const
 {
     QString s = readArray(52,56).trimmed();
     QVariant result;
@@ -290,7 +290,7 @@ QVariant BodyCompositionAnalyzerTest::readBMR() const
     return result;
 }
 
-QJsonObject BodyCompositionAnalyzerTest::toJsonObject() const
+QJsonObject BodyCompositionTest::toJsonObject() const
 {
     QJsonArray jsonArr;
     for(auto&& x : m_measurementList)

@@ -10,8 +10,8 @@ CONFIG += c++11
 
 SOURCES += \
     data/MeasurementBase.cpp \
-    data/AudiometerTest.cpp \
-    data/BodyCompositionAnalyzerTest.cpp \
+    data/HearingTest.cpp \
+    data/BodyCompositionTest.cpp \
     data/CDTTTest.cpp \
     data/FraxTest.cpp \
     data/WeighScaleTest.cpp \
@@ -27,21 +27,21 @@ SOURCES += \
     dialogs/CypressDialog.cpp \
     managers/ManagerBase.cpp \
     managers/AudiometerManager.cpp \
-    managers/CognitiveTestManager.cpp \
+    managers/ChoiceReactionManager.cpp \
     managers/SerialPortManager.cpp \
     managers/BluetoothLEManager.cpp \
     managers/FraxManager.cpp \
-    managers/TanitaManager.cpp \
     managers/CDTTManager.cpp \
     managers/WeighScaleManager.cpp \
+    managers/BodyCompositionAnalyzerManager.cpp \
     CypressApplication.cpp \
     main.cpp 
 
 HEADERS += \
     data/MeasurementBase.h \
     data/TestBase.h \
-    data/AudiometerTest.h \
-    data/BodyCompositionAnalyzerTest.h \
+    data/HearingTest.h \
+    data/BodyCompositionTest.h \
     data/CDTTTest.h \
     data/FraxTest.h \
     data/WeighScaleTest.h \
@@ -57,11 +57,11 @@ HEADERS += \
     dialogs/CypressDialog.h \
     managers/ManagerBase.h \
     managers/AudiometerManager.h \
-    managers/CognitiveTestManager.h \
+    managers/ChoiceReactionManager.h \
     managers/SerialPortManager.h \
     managers/BluetoothLEManager.h \
     managers/FraxManager.h \
-    managers/TanitaManager.h \
+    managers/BodyCompositionAnalyzerManager.h \
     managers/CDTTManager.h \
     managers/WeighScaleManager.h \
     CypressApplication.h

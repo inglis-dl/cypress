@@ -6,10 +6,12 @@
 #include <QJsonObject>
 #include <QSerialPortInfo>
 #include <QSettings>
+#include <QStandardItemModel>
 #include <QtMath>
 
 AudiometerManager::AudiometerManager(QObject *parent) : SerialPortManager(parent)
 {
+    setGroup("audiometer");
 }
 
 void AudiometerManager::buildModel(QStandardItemModel* model) const
@@ -33,7 +35,7 @@ void AudiometerManager::buildModel(QStandardItemModel* model) const
 
 void AudiometerManager::loadSettings(const QSettings &settings)
 {
-    QString name = settings.value("audiometer/client/port").toString();
+    QString name = settings.value(getGroup() + "/client/port").toString();
     if(!name.isEmpty())
     {
       setProperty("deviceName", name);
@@ -46,7 +48,7 @@ void AudiometerManager::saveSettings(QSettings *settings) const
 {
     if(!m_deviceName.isEmpty())
     {
-      settings->beginGroup("audiometer");
+      settings->beginGroup(getGroup());
       settings->setValue("client/port",m_deviceName);
       settings->endGroup();
       if(m_verbose)

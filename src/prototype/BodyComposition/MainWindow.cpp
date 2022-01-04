@@ -100,7 +100,7 @@ void MainWindow::initialize()
 
   // Scan for devices
   //
-  connect(&m_manager, &TanitaManager::scanningDevices,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::scanningDevices,
           this,[this]()
     {
       ui->deviceComboBox->clear();
@@ -110,10 +110,10 @@ void MainWindow::initialize()
 
   // Update the drop down list as devices are discovered during scanning
   //
-  connect(&m_manager, &TanitaManager::deviceDiscovered,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::deviceDiscovered,
           this, &MainWindow::updateDeviceList);
 
-  connect(&m_manager, &TanitaManager::deviceSelected,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::deviceSelected,
           this,[this](const QString &label){
       if(label != ui->deviceComboBox->currentText())
       {
@@ -124,7 +124,7 @@ void MainWindow::initialize()
   // Prompt user to select a device from the drop down list when previously
   // cached device information in the ini file is unavailable or invalid
   //
-  connect(&m_manager, &TanitaManager::canSelectDevice,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::canSelectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to select...");
       QMessageBox::warning(
@@ -147,7 +147,7 @@ void MainWindow::initialize()
 
   // Ready to connect device
   //
-  connect(&m_manager, &TanitaManager::canConnectDevice,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::canConnectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to connect...");
       ui->connectButton->setEnabled(true);
@@ -162,11 +162,11 @@ void MainWindow::initialize()
   // Connect to device
   //
   connect(ui->connectButton, &QPushButton::clicked,
-          &m_manager, &TanitaManager::connectDevice);
+          &m_manager, &BodyCompositionAnalyzerManager::connectDevice);
 
   // Connection is established, inputs are set and confirmed: enable measurement requests
   //
-  connect(&m_manager, &TanitaManager::canMeasure,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::canMeasure,
           this,[this](){
       ui->statusBar->showMessage("Ready to measure...");
       ui->resetButton->setEnabled(true);
@@ -178,7 +178,7 @@ void MainWindow::initialize()
 
   // Connection is established and a successful reset was done
   //
-  connect(&m_manager, &TanitaManager::canInput,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::canInput,
           this,[this](){
       ui->statusBar->showMessage("Ready to accept inputs...");
       ui->connectButton->setEnabled(false);
@@ -192,7 +192,7 @@ void MainWindow::initialize()
 
   // A successful confirmation of all inputs was done
   //
-  connect(&m_manager, &TanitaManager::canConfirm,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::canConfirm,
           this,[this](){
       ui->statusBar->showMessage("Ready to confirm inputs ...");
       ui->connectButton->setEnabled(false);
@@ -207,12 +207,12 @@ void MainWindow::initialize()
   // Disconnect from device
   //
   connect(ui->disconnectButton, &QPushButton::clicked,
-          &m_manager, &TanitaManager::disconnectDevice);
+          &m_manager, &BodyCompositionAnalyzerManager::disconnectDevice);
 
   // Reset the device (clear all input settings)
   //
   connect(ui->resetButton, &QPushButton::clicked,
-        &m_manager, &TanitaManager::resetDevice);
+        &m_manager, &BodyCompositionAnalyzerManager::resetDevice);
 
   // Set the inputs to the analyzer
   //
@@ -255,16 +255,16 @@ void MainWindow::initialize()
   // Confirm inputs and check if measurement can proceed
   //
   connect(ui->confirmButton, &QPushButton::clicked,
-        &m_manager, &TanitaManager::confirmSettings);
+        &m_manager, &BodyCompositionAnalyzerManager::confirmSettings);
 
   // Request a measurement from the device
   //
   connect(ui->measureButton, &QPushButton::clicked,
-        &m_manager, &TanitaManager::measure);
+        &m_manager, &BodyCompositionAnalyzerManager::measure);
 
   // Update the UI with any data
   //
-  connect(&m_manager, &TanitaManager::dataChanged,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::dataChanged,
           this,[this](){
       m_manager.buildModel(&m_model);
       int nrow = m_model.rowCount();
@@ -282,7 +282,7 @@ void MainWindow::initialize()
 
   // All measurements received: enable write test results
   //
-  connect(&m_manager, &TanitaManager::canWrite,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::canWrite,
           this,[this](){
       ui->statusBar->showMessage("Ready to save results...");
       ui->saveButton->setEnabled(true);
@@ -313,7 +313,7 @@ void MainWindow::initialize()
      }
   });
 
-  connect(&m_manager, &TanitaManager::error,
+  connect(&m_manager, &BodyCompositionAnalyzerManager::error,
           this, [this](const QString &error){
       ui->statusBar->showMessage(error);
       QMessageBox::warning(

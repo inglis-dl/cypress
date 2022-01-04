@@ -1,17 +1,16 @@
-#ifndef TANITAMANAGER_H
-#define TANITAMANAGER_H
+#ifndef BODYCOMPOSITIONANALYZERMANAGER_H
+#define BODYCOMPOSITIONANALYZERMANAGER_H
 
 #include "SerialPortManager.h"
-#include "../data/BodyCompositionAnalyzerTest.h"
-
+#include "../data/BodyCompositionTest.h"
 #include <QQueue>
 
-class TanitaManager : public SerialPortManager
+class BodyCompositionAnalyzerManager : public SerialPortManager
 {
     Q_OBJECT
 
 public:
-    explicit TanitaManager(QObject *parent = nullptr);
+    explicit BodyCompositionAnalyzerManager(QObject *parent = nullptr);
 
     void loadSettings(const QSettings &) override;
     void saveSettings(QSettings*) const override;
@@ -82,7 +81,7 @@ private:
 
     void processResponse(const QByteArray &, QByteArray);
 
-    BodyCompositionAnalyzerTest m_test;
+    BodyCompositionTest m_test;
 
     void clearData() override;
     void clearQueue();
@@ -91,4 +90,4 @@ private:
     QQueue<QByteArray> m_queue;
 };
 
-#endif // TANITAMANAGER_H
+#endif // BODYCOMPOSITIONANALYZERMANAGER_H

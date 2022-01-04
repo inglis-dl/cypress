@@ -1,11 +1,11 @@
-#ifndef AUDIOMETERTEST_H
-#define AUDIOMETERTEST_H
+#ifndef HEARINGTEST_H
+#define HEARINGTEST_H
 
 #include "TestBase.h"
 #include "HearingMeasurement.h"
 
 /*!
- * \class AudiometerTest
+ * \class HearingTest
  * \brief A Trementrics RA300 Audiometer test class
  *
  * Concrete implementation of TestBase using HearingMeasurement
@@ -22,11 +22,11 @@
  *
  */
 
-class AudiometerTest : public TestBase<HearingMeasurement>
+class HearingTest : public TestBase<HearingMeasurement>
 {
 public:
-    AudiometerTest() = default;
-    ~AudiometerTest() = default;
+    HearingTest() = default;
+    ~HearingTest() = default;
 
     void fromArray(const QByteArray &);
 
@@ -56,6 +56,6 @@ private:
     QList<HearingMeasurement> readHearingThresholdLevels(const QString& side) const;
 };
 
-Q_DECLARE_METATYPE(AudiometerTest);
+Q_DECLARE_METATYPE(HearingTest);
 
-#endif // AUDIOMETERTEST_H
+#endif // HEARINGTEST_H

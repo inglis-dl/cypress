@@ -1,4 +1,4 @@
-#include "CognitiveTestManager.h"
+#include "ChoiceReactionManager.h"
 
 #include <QDateTime>
 #include <QDebug>
@@ -7,15 +7,17 @@
 #include <QJsonObject>
 #include <QProcess>
 #include <QSettings>
+#include <QStandardItemModel>
 
-CognitiveTestManager::CognitiveTestManager(QObject *parent) :
+ChoiceReactionManager::ChoiceReactionManager(QObject *parent) :
     ManagerBase(parent)
 {
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
+    setGroup("choice_reaction");
 }
 
-void CognitiveTestManager::buildModel(QStandardItemModel *model) const
+void ChoiceReactionManager::buildModel(QStandardItemModel *model) const
 {
     // add measurements one row of two columns at a time
     //
@@ -46,7 +48,7 @@ void CognitiveTestManager::buildModel(QStandardItemModel *model) const
     }
 }
 
-bool CognitiveTestManager::isDefined(const QString &exeName) const
+bool ChoiceReactionManager::isDefined(const QString &exeName) const
 {
     bool ok = false;
     if(!exeName.isEmpty())
@@ -74,7 +76,7 @@ bool CognitiveTestManager::isDefined(const QString &exeName) const
     return ok;
 }
 
-void CognitiveTestManager::setRunnableName(const QString &exeName)
+void ChoiceReactionManager::setRunnableName(const QString &exeName)
 {
     if(isDefined(exeName))
     {
@@ -88,7 +90,7 @@ void CognitiveTestManager::setRunnableName(const QString &exeName)
     }
 }
 
-void CognitiveTestManager::setInputData(const QMap<QString, QVariant> &input)
+void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
 {
     if("simulate" == m_mode)
     {
@@ -115,21 +117,21 @@ void CognitiveTestManager::setInputData(const QMap<QString, QVariant> &input)
         configureProcess();
 }
 
-void CognitiveTestManager::loadSettings(const QSettings &settings)
+void ChoiceReactionManager::loadSettings(const QSettings &settings)
 {
     // the full spec path name including exe name
     // eg., C:\Program Files (x86)\CCB\CCB.exe
     //
-    QString exeName = settings.value("choice_reaction/client/exe").toString();
+    QString exeName = settings.value(getGroup() + "/client/exe").toString();
     qDebug() << "loading settings with exe " << exeName;
     setRunnableName(exeName);
 }
 
-void CognitiveTestManager::saveSettings(QSettings *settings) const
+void ChoiceReactionManager::saveSettings(QSettings *settings) const
 {
     if(!m_runnableName.isEmpty())
     {
-      settings->beginGroup("choice_reaction");
+      settings->beginGroup(getGroup());
       settings->setValue("client/exe",m_runnableName);
       settings->endGroup();
       if(m_verbose)
@@ -137,14 +139,14 @@ void CognitiveTestManager::saveSettings(QSettings *settings) const
     }
 }
 
-void CognitiveTestManager::clearData()
+void ChoiceReactionManager::clearData()
 {
     m_test.reset();
     m_outputFile.clear();
     emit dataChanged();
 }
 
-void CognitiveTestManager::configureProcess()
+void ChoiceReactionManager::configureProcess()
 {
     if("simulate" == m_mode)
     {
@@ -193,7 +195,7 @@ void CognitiveTestManager::configureProcess()
       });
 
       connect(&m_process,QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-              this, &CognitiveTestManager::readOutput);
+              this, &ChoiceReactionManager::readOutput);
 
       connect(&m_process,&QProcess::errorOccurred,
               this, [](QProcess::ProcessError error)
@@ -215,7 +217,7 @@ void CognitiveTestManager::configureProcess()
         qDebug() << "failed to configure process";
 }
 
-void CognitiveTestManager::readOutput()
+void ChoiceReactionManager::readOutput()
 {
     if("simulate" == m_mode)
     {
@@ -280,7 +282,7 @@ void CognitiveTestManager::readOutput()
         qDebug() << "ERROR: no output csv file found";
 }
 
-void CognitiveTestManager::measure()
+void ChoiceReactionManager::measure()
 {
     if("simulate" == m_mode)
     {
@@ -294,7 +296,7 @@ void CognitiveTestManager::measure()
     m_process.start();
 }
 
-void CognitiveTestManager::finish()
+void ChoiceReactionManager::finish()
 {
     if(!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
     {
@@ -305,7 +307,7 @@ void CognitiveTestManager::finish()
     m_outputFile.clear();
 }
 
-QJsonObject CognitiveTestManager::toJsonObject() const
+QJsonObject ChoiceReactionManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     if("simulate" != m_mode)

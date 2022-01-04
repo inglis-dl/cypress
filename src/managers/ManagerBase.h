@@ -2,9 +2,9 @@
 #define MANAGERBASE_H
 
 #include <QObject>
-#include <QStandardItemModel>
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
+QT_FORWARD_DECLARE_CLASS(QStandardItemModel)
 
 class ManagerBase : public QObject
 {
@@ -18,11 +18,16 @@ public:
     virtual void loadSettings(const QSettings &) = 0;
     virtual void saveSettings(QSettings*) const = 0;
 
+    // the ini file group heading for derived manager classes
+    //
+    void setGroup(const QString& group) { m_group = group.toLower(); }
+    QString getGroup() const { return m_group; }
+
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() const { return m_verbose; }
 
     void setMode(const QString& mode) { m_mode = mode; }
-    QString mode() { return m_mode; }
+    QString mode() const { return m_mode; }
 
     // collate test results and device and other meta data
     // for the main application to write to .json
@@ -70,10 +75,13 @@ protected:
     // SerialPortManager class clears device data during setDevice() while
     // test data is cleared depending on derived class implementation requirements.
     // Derived classes may also clear test data depending on the nature of the test,
-    // such as when multiple measurements are seaprately acquired.
+    // such as when multiple measurements are separately acquired.
     //
     virtual void clearData() = 0;
 
+    // the group name for a manager to write settings into
+    //
+    QString m_group;
 };
 
 #endif // MANAGERBASE_H

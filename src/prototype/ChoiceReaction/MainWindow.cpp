@@ -84,7 +84,7 @@ void MainWindow::initialize()
 
     // CCB.exe was found or set up successfully
     //
-    connect(&m_manager, &CognitiveTestManager::canMeasure,
+    connect(&m_manager, &ChoiceReactionManager::canMeasure,
             this,[this](){
         ui->statusBar->showMessage("Ready to measure...");
         ui->measureButton->setEnabled(true);
@@ -94,11 +94,11 @@ void MainWindow::initialize()
     // Request a measurement from the device (run CCB.exe)
     //
     connect(ui->measureButton, &QPushButton::clicked,
-          &m_manager, &CognitiveTestManager::measure);
+          &m_manager, &ChoiceReactionManager::measure);
 
     // Update the UI with any data
     //
-    connect(&m_manager, &CognitiveTestManager::dataChanged,
+    connect(&m_manager, &ChoiceReactionManager::dataChanged,
             this,[this](){
         QHeaderView *h = ui->testdataTableView->horizontalHeader();
         h->setSectionResizeMode(QHeaderView::Fixed);
@@ -122,7 +122,7 @@ void MainWindow::initialize()
 
     // All measurements received: enable write test results
     //
-    connect(&m_manager, &CognitiveTestManager::canWrite,
+    connect(&m_manager, &ChoiceReactionManager::canWrite,
             this,[this](){
         ui->statusBar->showMessage("Ready to save results...");
         ui->saveButton->setEnabled(true);

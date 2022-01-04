@@ -10,8 +10,8 @@ CONFIG += c++11
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-    ../../data/AudiometerTest.cpp \
     ../../data/HearingMeasurement.cpp \
+    ../../data/HearingTest.cpp \
     ../../data/MeasurementBase.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
@@ -21,7 +21,7 @@ SOURCES += \
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
-    ../../data/AudiometerTest.h \
+    ../../data/HearingTest.h \
     ../../data/MeasurementBase.h \
     ../../data/HearingMeasurement.h \
     ../../data/TestBase.h \

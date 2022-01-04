@@ -3,10 +3,11 @@
 
 #include "ui_MainWindow.h"
 #include <QDialog>
+#include <QStandardItemModel>
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
-#include "../../managers/CognitiveTestManager.h"
+#include "../../managers/ChoiceReactionManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -59,7 +60,7 @@ private:
     QMap<QString,QVariant> m_inputData;
     QMap<QString,QVariant> m_outputData;
 
-    CognitiveTestManager m_manager;
+    ChoiceReactionManager m_manager;
 
     QStandardItemModel m_model;
 };

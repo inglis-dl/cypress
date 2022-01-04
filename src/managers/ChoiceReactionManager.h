@@ -1,16 +1,16 @@
-#ifndef COGNITIVETESTMANAGER_H
-#define COGNITIVETESTMANAGER_H
+#ifndef CHOICEREACTIONMANAGER_H
+#define CHOICEREACTIONMANAGER_H
 
 #include "ManagerBase.h"
 #include "../data/ChoiceReactionTest.h"
 #include <QProcess>
 
-class CognitiveTestManager: public ManagerBase
+class ChoiceReactionManager: public ManagerBase
 {
     Q_OBJECT
 
 public:
-    explicit CognitiveTestManager(QObject *parent = nullptr);
+    explicit ChoiceReactionManager(QObject *parent = nullptr);
 
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
@@ -74,4 +74,4 @@ private:
     void configureProcess();
 };
 
-#endif // COGNITIVETESTMANAGER_H
+#endif // CHOICEREACTIONMANAGER_H

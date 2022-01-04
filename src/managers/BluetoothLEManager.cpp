@@ -6,6 +6,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QSettings>
+#include <QStandardItemModel>
 
 /**
  * Qt 5.14 adds a native Win32 port supporting Classic Bluetooth on Windows 7 or newer, and Bluetooth LE on Windows 8 or newer.
@@ -17,7 +18,8 @@
 
 BluetoothLEManager::BluetoothLEManager(QObject *parent) : ManagerBase(parent)
 {
-      m_test.setMaximumNumberOfMeasurements(2);
+    setGroup("thermometer");
+    m_test.setMaximumNumberOfMeasurements(2);
 }
 
 void BluetoothLEManager::buildModel(QStandardItemModel *model) const
@@ -83,7 +85,7 @@ void BluetoothLEManager::setLocalDevice(const QString &address)
 void BluetoothLEManager::loadSettings(const QSettings &settings)
 {
 #ifdef Q_OS_LINUX
-    QString localAddress = settings.value("thermometer/client/address").toString();
+    QString localAddress = settings.value(getGroup() + "/client/address").toString();
     qDebug() << "setting local device from settings file";
     setLocalDevice(localAddress);
 #endif
@@ -91,7 +93,7 @@ void BluetoothLEManager::loadSettings(const QSettings &settings)
     // Get the thermometer MAC address.
     // If none exists perform device discovery process
     //
-    QString address = settings.value("thermometer/peripheral/address").toString();
+    QString address = settings.value(getGroup() + "/peripheral/address").toString();
     if(!address.isEmpty())
     {
       setProperty("deviceName", address);
@@ -104,7 +106,7 @@ void BluetoothLEManager::saveSettings(QSettings *settings) const
 {
     if(!m_localDevice.isNull() && m_localDevice->isValid())
     {
-      settings->beginGroup("thermometer");
+      settings->beginGroup(getGroup());
       settings->setValue("client/name",m_localDevice->name());
       settings->setValue("client/address",m_localDevice->address().toString());
       settings->setValue("client/hostmode",m_localDevice->hostMode());
@@ -114,7 +116,7 @@ void BluetoothLEManager::saveSettings(QSettings *settings) const
     }
     if(!m_peripheral.isNull() && m_peripheral->isValid())
     {
-      settings->beginGroup("thermometer");
+      settings->beginGroup(getGroup());
       settings->setValue("peripheral/name",m_peripheral->name());
       settings->setValue("peripheral/address",m_peripheral->address().toString());
       settings->endGroup();

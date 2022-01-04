@@ -8,10 +8,12 @@
 #include <QJsonObject>
 #include <QSerialPortInfo>
 #include <QSettings>
+#include <QStandardItemModel>
 #include <QtMath>
 
 WeighScaleManager::WeighScaleManager(QObject *parent) : SerialPortManager(parent)
 {
+  setGroup("weigh_scale");
   m_test.setMaximumNumberOfMeasurements(2);
 }
 
@@ -30,7 +32,7 @@ void WeighScaleManager::buildModel(QStandardItemModel* model) const
 
 void WeighScaleManager::loadSettings(const QSettings &settings)
 {
-    QString name = settings.value("weighscale/client/port").toString();
+    QString name = settings.value(getGroup() + "/client/port").toString();
     if(!name.isEmpty())
     {
       setProperty("deviceName", name);
@@ -43,7 +45,7 @@ void WeighScaleManager::saveSettings(QSettings *settings) const
 {
     if(!m_deviceName.isEmpty())
     {
-      settings->beginGroup("weighscale");
+      settings->beginGroup(getGroup());
       settings->setValue("client/port",m_deviceName);
       settings->endGroup();
       if(m_verbose)

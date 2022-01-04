@@ -1,4 +1,4 @@
-#include "TanitaManager.h"
+#include "BodyCompositionAnalyzerManager.h"
 
 #include <QByteArray>
 #include <QDateTime>
@@ -7,31 +7,33 @@
 #include <QJsonObject>
 #include <QSerialPortInfo>
 #include <QSettings>
+#include <QStandardItemModel>
 #include <QtMath>
 
 // lookup table of default byte arrays for all serial commands
 //
-QMap<QString,QByteArray> TanitaManager::defaultLUT = TanitaManager::initDefaultLUT();
+QMap<QString,QByteArray> BodyCompositionAnalyzerManager::defaultLUT = BodyCompositionAnalyzerManager::initDefaultLUT();
 
 // lookup table of the unique first two bytes of a request to get the command
 //
-QMap<QByteArray,QString> TanitaManager::commandLUT = TanitaManager::initCommandLUT();
+QMap<QByteArray,QString> BodyCompositionAnalyzerManager::commandLUT = BodyCompositionAnalyzerManager::initCommandLUT();
 
 // lookup table of byte array responses for incorrect inputs
 // NOTE: if any of the set input commands are unclear, the response
 // from the unit can also be the reset command error
 //
-QMap<QByteArray,QString> TanitaManager::incorrectLUT= TanitaManager::initIncorrectResponseLUT();
+QMap<QByteArray,QString> BodyCompositionAnalyzerManager::incorrectLUT= BodyCompositionAnalyzerManager::initIncorrectResponseLUT();
 
 // lookup table of confirmation byte array responses for correct input or request commands
 //
-QMap<QByteArray,QString> TanitaManager::confirmLUT= TanitaManager::initConfirmationLUT();
+QMap<QByteArray,QString> BodyCompositionAnalyzerManager::confirmLUT= BodyCompositionAnalyzerManager::initConfirmationLUT();
 
-TanitaManager::TanitaManager(QObject *parent) : SerialPortManager(parent)
+BodyCompositionAnalyzerManager::BodyCompositionAnalyzerManager(QObject *parent) : SerialPortManager(parent)
 {
+  setGroup("body_composition_analyzer");
 }
 
-QMap<QString,QByteArray> TanitaManager::initDefaultLUT()
+QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
 {
     QMap<QString,QByteArray> commands;
     QByteArray atom;
@@ -91,7 +93,7 @@ QMap<QString,QByteArray> TanitaManager::initDefaultLUT()
     return commands;
 }
 
-QMap<QByteArray,QString> TanitaManager::initCommandLUT()
+QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initCommandLUT()
 {
     QMap<QByteArray,QString> commands;
     QByteArray atom;
@@ -133,7 +135,7 @@ QMap<QByteArray,QString> TanitaManager::initCommandLUT()
     return commands;
 }
 
-QMap<QByteArray,QString> TanitaManager::initConfirmationLUT()
+QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initConfirmationLUT()
 {
     QMap<QByteArray,QString> responses;
     QByteArray atom;
@@ -172,7 +174,7 @@ QMap<QByteArray,QString> TanitaManager::initConfirmationLUT()
     return responses;
 }
 
-QMap<QByteArray,QString> TanitaManager::initIncorrectResponseLUT()
+QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initIncorrectResponseLUT()
 {
     QMap<QByteArray,QString> responses;
     QByteArray atom;
@@ -232,9 +234,9 @@ QMap<QByteArray,QString> TanitaManager::initIncorrectResponseLUT()
     return responses;
 }
 
-void TanitaManager::loadSettings(const QSettings &settings)
+void BodyCompositionAnalyzerManager::loadSettings(const QSettings &settings)
 {
-    QString name = settings.value("tanita/client/port").toString();
+    QString name = settings.value(getGroup() + "/client/port").toString();
     if(!name.isEmpty())
     {
       setProperty("deviceName", name);
@@ -243,11 +245,11 @@ void TanitaManager::loadSettings(const QSettings &settings)
     }
 }
 
-void TanitaManager::saveSettings(QSettings *settings) const
+void BodyCompositionAnalyzerManager::saveSettings(QSettings *settings) const
 {
     if(!m_deviceName.isEmpty())
     {
-      settings->beginGroup("tanita");
+      settings->beginGroup(getGroup());
       settings->setValue("client/port",m_deviceName);
       settings->endGroup();
       if(m_verbose)
@@ -255,7 +257,7 @@ void TanitaManager::saveSettings(QSettings *settings) const
     }
 }
 
-void TanitaManager::buildModel(QStandardItemModel *model) const
+void BodyCompositionAnalyzerManager::buildModel(QStandardItemModel *model) const
 {
     qDebug() << "building model from " <<
                 QString::number(m_test.getNumberOfMeasurements()) <<
@@ -277,7 +279,7 @@ void TanitaManager::buildModel(QStandardItemModel *model) const
     }
 }
 
-void TanitaManager::clearData()
+void BodyCompositionAnalyzerManager::clearData()
 {
     m_deviceData.reset();
     m_test.reset();
@@ -285,7 +287,7 @@ void TanitaManager::clearData()
     emit dataChanged();
 }
 
-void TanitaManager::finish()
+void BodyCompositionAnalyzerManager::finish()
 {
     m_deviceData.reset();
     m_deviceList.clear();
@@ -298,7 +300,7 @@ void TanitaManager::finish()
     m_cache.clear();
 }
 
-bool TanitaManager::hasEndCode(const QByteArray &arr) const
+bool BodyCompositionAnalyzerManager::hasEndCode(const QByteArray &arr) const
 {
     int size = arr.isEmpty() ? 0 : arr.size();
     if( 2 > size ) return false;
@@ -307,7 +309,7 @@ bool TanitaManager::hasEndCode(const QByteArray &arr) const
        0x0a == arr.at(size-1) ); //\n
 }
 
-void TanitaManager::connectDevice()
+void BodyCompositionAnalyzerManager::connectDevice()
 {
     if("simulate" == m_mode)
     {
@@ -322,7 +324,7 @@ void TanitaManager::connectDevice()
       m_port.setBaudRate(QSerialPort::Baud4800);
 
       connect(&m_port, &QSerialPort::readyRead,
-               this, &TanitaManager::readDevice);
+               this, &BodyCompositionAnalyzerManager::readDevice);
 
       connect(&m_port, &QSerialPort::errorOccurred,
               this,[this](QSerialPort::SerialPortError error){
@@ -347,15 +349,15 @@ void TanitaManager::connectDevice()
     }
 }
 
-void TanitaManager::resetDevice()
+void BodyCompositionAnalyzerManager::resetDevice()
 {
     qDebug() << "reset device called, enqueing command";
     clearQueue();
-    m_queue.enqueue(TanitaManager::defaultLUT["reset"]);
+    m_queue.enqueue(BodyCompositionAnalyzerManager::defaultLUT["reset"]);
     writeDevice();
 }
 
-void TanitaManager::confirmSettings()
+void BodyCompositionAnalyzerManager::confirmSettings()
 {
     qDebug() << "***************CONFIRM SETTINGS called *******************";
     clearQueue();
@@ -365,22 +367,22 @@ void TanitaManager::confirmSettings()
     // to measure
     //
     m_cache.clear();
-    m_queue.enqueue(TanitaManager::defaultLUT["confirm_settings"]);
+    m_queue.enqueue(BodyCompositionAnalyzerManager::defaultLUT["confirm_settings"]);
     writeDevice();
 }
 
-void TanitaManager::measure()
+void BodyCompositionAnalyzerManager::measure()
 {
     qDebug() << "measure called";
     clearQueue();
-    m_queue.enqueue(TanitaManager::defaultLUT["measure_body_fat"]);
+    m_queue.enqueue(BodyCompositionAnalyzerManager::defaultLUT["measure_body_fat"]);
     writeDevice();
 }
 
 // inputs should only be set AFTER a successful reset
 // the order of inputs is important
 //
-void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
+void BodyCompositionAnalyzerManager::setInputs(const QMap<QString,QVariant> &inputs)
 {
     qDebug() << "********************* SETTING INPUTS ******************";
 
@@ -396,8 +398,8 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
         units = inputs["measurement system"].toString();
         QByteArray request =
           "metric" == units ?
-          TanitaManager::defaultLUT["set_measurement_system_metric"] :
-          TanitaManager::defaultLUT["set_measurement_system_imperial"];
+          BodyCompositionAnalyzerManager::defaultLUT["set_measurement_system_metric"] :
+          BodyCompositionAnalyzerManager::defaultLUT["set_measurement_system_imperial"];
         m_queue.enqueue(request);
         qDebug() << "enqueued measurement system input " << request << "from " << units;
     }
@@ -408,8 +410,8 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
     {
         QByteArray request =
           "westerner" == inputs["equation"].toString() ?
-          TanitaManager::defaultLUT["set_equation_westerner"] :
-          TanitaManager::defaultLUT["set_equation_oriental"];
+          BodyCompositionAnalyzerManager::defaultLUT["set_equation_westerner"] :
+          BodyCompositionAnalyzerManager::defaultLUT["set_equation_oriental"];
         m_queue.enqueue(request);
         qDebug() << "enqueued equation input " << request << "from " << inputs["equation"].toString();
     }
@@ -430,7 +432,7 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
           QByteArray a = QByteArray::fromStdString(s.toStdString());
           if(5 == a.size())
           {
-            QByteArray request = TanitaManager::defaultLUT["set_tare_weight"];
+            QByteArray request = BodyCompositionAnalyzerManager::defaultLUT["set_tare_weight"];
             request[2] = a[0];
             request[3] = a[1];
             request[4] = a[2];
@@ -454,8 +456,8 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
     {
         QByteArray request =
           "female" == inputs["gender"].toString() ?
-          TanitaManager::defaultLUT["set_gender_female"] :
-          TanitaManager::defaultLUT["set_gender_male"];
+          BodyCompositionAnalyzerManager::defaultLUT["set_gender_female"] :
+          BodyCompositionAnalyzerManager::defaultLUT["set_gender_male"];
         m_queue.enqueue(request);
         qDebug() << "enqueued gender input " << request << "from " << inputs["gender"].toString();
     }
@@ -468,8 +470,8 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
     {
         QByteArray request =
           "athlete" == inputs["body type"].toString() ?
-          TanitaManager::defaultLUT["set_body_type_athlete"] :
-          TanitaManager::defaultLUT["set_body_type_standard"];
+          BodyCompositionAnalyzerManager::defaultLUT["set_body_type_athlete"] :
+          BodyCompositionAnalyzerManager::defaultLUT["set_body_type_standard"];
         m_queue.enqueue(request);
         qDebug() << "enqueued body type input " << request << "from " << inputs["body type"].toString();
     }
@@ -499,7 +501,7 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
           QByteArray a = QByteArray::fromStdString(s.toStdString());
           if(5 == a.size())
           {
-            QByteArray request = TanitaManager::defaultLUT["set_height"];
+            QByteArray request = BodyCompositionAnalyzerManager::defaultLUT["set_height"];
             request[2] = a[0];
             request[3] = a[1];
             request[4] = a[2];
@@ -526,7 +528,7 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
         int a_max = 99;
         if(a_min <= value && value <= a_max)
         {
-          QByteArray request = TanitaManager::defaultLUT["set_age"];
+          QByteArray request = BodyCompositionAnalyzerManager::defaultLUT["set_age"];
           QString s = QString::number(value);
           QByteArray a = QByteArray::fromStdString(s.toStdString());
           if(2 == a.size())
@@ -547,7 +549,7 @@ void TanitaManager::setInputs(const QMap<QString,QVariant> &inputs)
     writeDevice();
 }
 
-void TanitaManager::clearQueue()
+void BodyCompositionAnalyzerManager::clearQueue()
 {
     if(!m_queue.isEmpty())
     {
@@ -556,18 +558,18 @@ void TanitaManager::clearQueue()
     }
 }
 
-void TanitaManager::processResponse(const QByteArray &request, QByteArray response)
+void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, QByteArray response)
 {
     if(!hasEndCode(response)) return;
     m_buffer.clear();
 
     QByteArray commandKey = request.left(2);
-    if(!TanitaManager::commandLUT.contains(commandKey))
+    if(!BodyCompositionAnalyzerManager::commandLUT.contains(commandKey))
     {
         qDebug() << "ERROR: failed to process response, unknown command " << commandKey << request;
         return;
     }
-    QString requestName = TanitaManager::commandLUT[commandKey];
+    QString requestName = BodyCompositionAnalyzerManager::commandLUT[commandKey];
     qDebug() << "processing response from request " << requestName;
 
     QByteArray code = response.trimmed();
@@ -575,9 +577,9 @@ void TanitaManager::processResponse(const QByteArray &request, QByteArray respon
     {
       QString info;
       // see if we can lookup what the issue is
-      if(TanitaManager::incorrectLUT.contains(response))
+      if(BodyCompositionAnalyzerManager::incorrectLUT.contains(response))
       {
-        info = TanitaManager::incorrectLUT[response];
+        info = BodyCompositionAnalyzerManager::incorrectLUT[response];
         qDebug() << "WARNING: the request produced an invalid response " << info;
       }
       else
@@ -622,9 +624,9 @@ void TanitaManager::processResponse(const QByteArray &request, QByteArray respon
     {
       // do we have a successful response?
       QString info;
-      if(TanitaManager::confirmLUT.contains(commandKey))
+      if(BodyCompositionAnalyzerManager::confirmLUT.contains(commandKey))
       {
-        info = TanitaManager::confirmLUT[commandKey];
+        info = BodyCompositionAnalyzerManager::confirmLUT[commandKey];
         qDebug() << "CONFIRMED: the command was accepted " << info;
       }
       /*
@@ -686,7 +688,7 @@ void TanitaManager::processResponse(const QByteArray &request, QByteArray respon
     writeDevice();
 }
 
-void TanitaManager::readDevice()
+void BodyCompositionAnalyzerManager::readDevice()
 {
     if("simulate" == m_mode)
     {
@@ -705,7 +707,7 @@ void TanitaManager::readDevice()
 
 }
 
-void TanitaManager::writeDevice()
+void BodyCompositionAnalyzerManager::writeDevice()
 {
   if(!m_queue.isEmpty())
   {
@@ -717,7 +719,7 @@ void TanitaManager::writeDevice()
     }
     else
     {
-      qDebug() << "dequeued request " << TanitaManager::commandLUT[m_request.left(2)] << m_request;
+      qDebug() << "dequeued request " << BodyCompositionAnalyzerManager::commandLUT[m_request.left(2)] << m_request;
       m_buffer.clear();
       //m_cache.clear();
       m_port.write(m_request);
@@ -725,7 +727,7 @@ void TanitaManager::writeDevice()
   }
 }
 
-QJsonObject TanitaManager::toJsonObject() const
+QJsonObject BodyCompositionAnalyzerManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());

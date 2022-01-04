@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
     QApplication::setOrganizationName("CLSA");
     QApplication::setOrganizationDomain("clsa-elcv.ca");
-    QApplication::setApplicationName("CognitiveTest");
+    QApplication::setApplicationName("ChoiceReaction");
     QApplication::setApplicationVersion("1.0.0");
 
     QApplication app(argc, argv);

@@ -6,9 +6,11 @@
 #include <QJsonObject>
 #include <QProcess>
 #include <QSettings>
+#include <QStandardItemModel>
 
 CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
 {
+    setGroup("cdtt");
 }
 
 void CDTTManager::loadSettings(const QSettings& settings)
@@ -16,7 +18,7 @@ void CDTTManager::loadSettings(const QSettings& settings)
     // the full spec path name including jar name
     // eg., C:\Users\clsa\Documents\CDTT-2018-07-22\CDTTstereo.jar
     //
-    QString runnableName = settings.value("cdtt/client/jar").toString();
+    QString runnableName = settings.value(getGroup() + "/client/jar").toString();
     setRunnableName(runnableName);
 }
 
@@ -24,7 +26,7 @@ void CDTTManager::saveSettings(QSettings* settings) const
 {
     if (!m_runnableName.isEmpty())
     {
-        settings->beginGroup("cdtt");
+        settings->beginGroup(getGroup());
         settings->setValue("client/jar", m_runnableName);
         settings->endGroup();
         if (m_verbose)
