@@ -21,6 +21,7 @@
 #include "./managers/ChoiceReactionManager.h"
 #include "./managers/FraxManager.h"
 #include "./managers/BodyCompositionAnalyzerManager.h"
+#include "./managers/TonometerManager.h"
 #include "./managers/WeighScaleManager.h"
 
 QMap<QString,CypressApplication::TestType> CypressApplication::testTypeLUT =
@@ -60,6 +61,7 @@ QMap<QString,CypressApplication::TestType> CypressApplication::initTestTypeLUT()
     lut["cdtt"] = TestType::CDTT;
     lut["choice_reaction"] = TestType::ChoiceReaction;
     lut["blood_pressure"] = TestType::BloodPressure;
+    lut["tonometry"] = TestType::Tonometry;
     return lut;
 }
 
@@ -95,48 +97,51 @@ void CypressApplication::initialize()
     {
       case TestType::Weight:
         qDebug() << "creating weigh scale manager";
-        m_manager = new WeighScaleManager;
+        m_manager = new WeighScaleManager(this);
         titles << "Weight Results";
         n_row = 2;
         break;
       case TestType::BodyComposition:
         qDebug() << "creating boyd composition manager";
-        m_manager = new BodyCompositionAnalyzerManager;
+        m_manager = new BodyCompositionAnalyzerManager(this);
         titles << "Body Composition Results";
         n_row = 8;
         break;
       case TestType::Hearing:
         qDebug() << "creating audiometer manager";
-        m_manager = new AudiometerManager;
+        m_manager = new AudiometerManager(this);
         titles << "Left Test Results" << "Right Test Results";
         n_col = 2;
         n_row = 8;
         break;
       case TestType::ChoiceReaction:
         qDebug() << "creating coginitive test manager";
-        m_manager = new ChoiceReactionManager;
+        m_manager = new ChoiceReactionManager(this);
         titles << "Left Test Results" << "Right Test Results";
         n_col = 2;
         n_row = 8;
         break;
       case TestType::Temperature:
         qDebug() << "creating BLE manager";
-        m_manager = new BluetoothLEManager;
+        m_manager = new BluetoothLEManager(this);
         titles << "Temperature Results";
         n_row = 2;
         break;
       case TestType::Frax:
         qDebug() << "creating frax manager";
-        m_manager = new FraxManager;
+        m_manager = new FraxManager(this);
         titles << "10 Year Fracture Risk Probabilities";
         n_row = 4;
         break;
       case TestType::CDTT:
         qDebug() << "creating CDTT manager";
-        m_manager = new CDTTManager;
+        m_manager = new CDTTManager(this);
         titles << "Left Test Results" << "Right Test Results";
         n_col = 2;
         n_row = 8;
+        break;
+      case TestType::Tonometry:
+        m_manager = new TonometerManager(this);
         break;
       case TestType::Spirometry:
         m_manager = nullptr;
@@ -465,9 +470,11 @@ void CypressApplication::writeOutput()
        if(m_outputFileName.isEmpty())
        {
          QStringList list;
-         list << barcode;
-         list << QDate().currentDate().toString("yyyyMMdd");
-         list << m_testTypeName + ".json";
+         list
+           << barcode
+           << QDate().currentDate().toString("yyyyMMdd")
+           << m_manager->getGroup()
+           << "test.json";
          fileName = dir.filePath( list.join("_") );
        }
        else

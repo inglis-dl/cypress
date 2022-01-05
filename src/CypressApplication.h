@@ -41,7 +41,8 @@ public:
         BloodPressure,
         Temperature,
         Hearing,
-        ChoiceReaction
+        ChoiceReaction,
+        Tonometry
     };
     Q_ENUM(TestType)
 

@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     data/MeasurementBase.cpp \
     data/HearingTest.cpp \
+    data/TonometerTest.cpp \
     data/BodyCompositionTest.cpp \
     data/CDTTTest.cpp \
     data/FraxTest.cpp \
@@ -21,6 +22,7 @@ SOURCES += \
     data/BodyCompositionMeasurement.cpp \
     data/CDTTMeasurement.cpp \
     data/FraxMeasurement.cpp \
+    data/TonometerMeasurement.cpp \
     data/WeightMeasurement.cpp \
     data/ChoiceReactionMeasurement.cpp \
     data/TemperatureMeasurement.cpp \
@@ -31,6 +33,7 @@ SOURCES += \
     managers/SerialPortManager.cpp \
     managers/BluetoothLEManager.cpp \
     managers/FraxManager.cpp \
+    managers/TonometerManager.cpp \
     managers/CDTTManager.cpp \
     managers/WeighScaleManager.cpp \
     managers/BodyCompositionAnalyzerManager.cpp \
@@ -41,10 +44,12 @@ HEADERS += \
     data/MeasurementBase.h \
     data/TestBase.h \
     data/HearingTest.h \
+    data/TonometerTest.h \
     data/BodyCompositionTest.h \
     data/CDTTTest.h \
     data/FraxTest.h \
     data/WeighScaleTest.h \
+    data/TonometerMeasurement.h \
     data/ChoiceReactionTest.h \
     data/TemperatureTest.h \
     data/HearingMeasurement.h \
@@ -62,6 +67,7 @@ HEADERS += \
     managers/BluetoothLEManager.h \
     managers/FraxManager.h \
     managers/BodyCompositionAnalyzerManager.h \
+    managers/TonometerManager.h \
     managers/CDTTManager.h \
     managers/WeighScaleManager.h \
     CypressApplication.h

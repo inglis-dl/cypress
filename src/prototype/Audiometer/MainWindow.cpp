@@ -228,7 +228,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if(m_verbose)
         qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("audiometer.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
     m_manager.finish();
     event->accept();
@@ -314,9 +314,11 @@ void MainWindow::writeOutput()
        if(m_outputFileName.isEmpty())
        {
          QStringList list;
-         list << barcode;
-         list << QDate().currentDate().toString("yyyyMMdd");
-         list << "audiometer.json";
+         list
+           << barcode
+           << QDate().currentDate().toString("yyyyMMdd")
+           << m_manager.getGroup()
+           << "test.json";
          fileName = dir.filePath( list.join("_") );
        }
        else

@@ -79,6 +79,8 @@ protected:
     //
     virtual void clearData() = 0;
 
+private:
+
     // the group name for a manager to write settings into
     //
     QString m_group;
