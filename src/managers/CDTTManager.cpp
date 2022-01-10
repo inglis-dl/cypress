@@ -11,6 +11,7 @@
 CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
 {
     setGroup("cdtt");
+    m_inputKeyList << "barcode";
 }
 
 void CDTTManager::loadSettings(const QSettings& settings)

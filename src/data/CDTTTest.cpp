@@ -117,7 +117,7 @@ QJsonObject CDTTTest::toJsonObject() const
     return json;
 }
 
-bool CDTTTest::queryTestMetaData(QSqlDatabase db)
+bool CDTTTest::queryTestMetaData(const QSqlDatabase &db)
 {
     QString idQueryString = QString("select * from [%0$A1:B1]").arg("Main");
     QSqlQuery idQuery(idQueryString, db);
@@ -148,7 +148,7 @@ bool CDTTTest::queryTestMetaData(QSqlDatabase db)
     return true;
 }
 
-bool CDTTTest::headerValid(QSqlRecord record)
+bool CDTTTest::headerValid(const QSqlRecord &record) const
 {
     QString debugString = record.fieldName(0);
     for (int i = 1; i < 21; i++) {
@@ -185,7 +185,7 @@ bool CDTTTest::headerValid(QSqlRecord record)
     return valid;
 }
 
-void CDTTTest::loadHeaderMetaData(QSqlQuery query)
+void CDTTTest::loadHeaderMetaData(const QSqlQuery &query)
 {
     // NOTE: At this point the header has been validated to ensure 
     //       the data at each index contains the expected data
@@ -212,7 +212,7 @@ void CDTTTest::loadHeaderMetaData(QSqlQuery query)
     addMetaIfDataExists(query, "digit 3 percent", 20);
 }
 
-void CDTTTest::addMetaIfDataExists(QSqlQuery query, QString metaName, int loc)
+void CDTTTest::addMetaIfDataExists(const QSqlQuery &query, const QString &metaName, const int &loc)
 {
     QVariant val = query.value(loc);
     qDebug() << metaName << ": " << val;
@@ -222,7 +222,7 @@ void CDTTTest::addMetaIfDataExists(QSqlQuery query, QString metaName, int loc)
     }
 }
 
-bool CDTTTest::queryTestMeasurements(QSqlDatabase db)
+bool CDTTTest::queryTestMeasurements(const QSqlDatabase &db)
 {
     QString pageName = QString("%0-%1").arg(getMetaDataCharacteristic("language").toString(), getMetaDataCharacteristic("talker").toString());
     bool metaMatches = measurementHeaderMetaDataMatches(db, pageName);
@@ -236,7 +236,7 @@ bool CDTTTest::queryTestMeasurements(QSqlDatabase db)
     }
 }
 
-bool CDTTTest::measurementHeaderMetaDataMatches(QSqlDatabase db, QString pageName)
+bool CDTTTest::measurementHeaderMetaDataMatches(const QSqlDatabase &db, const QString &pageName) const
 {
     QString queryString = QString("select * from [%0$A1:G4]").arg(pageName);
     QSqlQuery query(queryString, db);
@@ -257,7 +257,7 @@ bool CDTTTest::measurementHeaderMetaDataMatches(QSqlDatabase db, QString pageNam
     return languageMatches && numTestsMatches && talkerMatches && maskerMatches && dateMatches;
 }
 
-bool CDTTTest::measurementLanguageMatches(QSqlRecord record)
+bool CDTTTest::measurementLanguageMatches(const QSqlRecord &record) const
 {
     QString recLanguage = record.fieldName(2);
     QString metaLanguage = getMetaDataCharacteristic("language").toString();
@@ -266,7 +266,7 @@ bool CDTTTest::measurementLanguageMatches(QSqlRecord record)
     return languageMatches;
 }
 
-bool CDTTTest::measurementNumTestsMatches(QSqlRecord record)
+bool CDTTTest::measurementNumTestsMatches(const QSqlRecord &record) const
 {
     int numTests = record.fieldName(6).toInt();
     qDebug() << QString("Num Tests: %0").arg(numTests);
@@ -282,7 +282,7 @@ bool CDTTTest::measurementNumTestsMatches(QSqlRecord record)
     }
 }
 
-bool CDTTTest::measurementTalkerMatches(QSqlQuery query)
+bool CDTTTest::measurementTalkerMatches(const QSqlQuery &query) const
 {
     QString measeurementTalker = query.value(2).toString();
     QString metaTalker = getMetaDataCharacteristic("talker").toString();
@@ -291,7 +291,7 @@ bool CDTTTest::measurementTalkerMatches(QSqlQuery query)
     return talkerMatches;
 }
 
-bool CDTTTest::measurementMaskerMatches(QSqlQuery query)
+bool CDTTTest::measurementMaskerMatches(const QSqlQuery &query) const
 {
     float measeurementMasker = query.value(2).toFloat();
     float metaMasker = getMetaDataCharacteristic("msk level").toFloat();
@@ -301,14 +301,14 @@ bool CDTTTest::measurementMaskerMatches(QSqlQuery query)
     return maskerMatches;
 }
 
-bool CDTTTest::measurementDateMatches(QSqlQuery query)
+bool CDTTTest::measurementDateMatches(const QSqlQuery &query) const
 {
     // TODO: Figure out how to convert from qvariant to date and datetime then compare just date portion
     // return query.value(2).toString() == getMetaDataCharacteristic("datetime");
     return true;
 }
 
-bool CDTTTest::queryMeasurementsSection(QSqlDatabase db, QString pageName, int rowStart)
+bool CDTTTest::queryMeasurementsSection(const QSqlDatabase &db, const QString &pageName, const int &rowStart)
 {
     QString queryString = QString("select * from [%0$A%1:G%2]").arg(pageName, QString::number(rowStart), QString::number(rowStart + 30));
     QSqlQuery query(queryString, db);
@@ -317,7 +317,7 @@ bool CDTTTest::queryMeasurementsSection(QSqlDatabase db, QString pageName, int r
     bool listNumMatches = measurementListNumMatches(rec);
     query.next();
     query.next();
-    bool speechLevelMatches = measurementSpeachLevelMatches(query);
+    bool speechLevelMatches = measurementSpeechLevelMatches(query);
     query.next();
     bool modeMatches = measurementModeMatches(query);
     query.next();
@@ -333,7 +333,7 @@ bool CDTTTest::queryMeasurementsSection(QSqlDatabase db, QString pageName, int r
     }  
 }
 
-bool CDTTTest::measurementListNumMatches(QSqlRecord record)
+bool CDTTTest::measurementListNumMatches(const QSqlRecord &record) const
 {
     int measureListNum = record.fieldName(2).toInt();
     int metaListNum = getMetaDataCharacteristic("list number").toInt();
@@ -343,17 +343,17 @@ bool CDTTTest::measurementListNumMatches(QSqlRecord record)
     return listNumMatches;
 }
 
-bool CDTTTest::measurementSpeachLevelMatches(QSqlQuery query)
+bool CDTTTest::measurementSpeechLevelMatches(const QSqlQuery &query) const
 {
-    float measureSpeachLevel = query.value(2).toFloat();
-    float metaSpeachLevel = getMetaDataCharacteristic("sp level").toFloat();
-    bool speachLevelMatches = measureSpeachLevel == metaSpeachLevel;
-    qDebug() << QString("Speach Level (Measurement: %0 Meta: %1 Matches: %2")
-        .arg(QString::number(measureSpeachLevel), QString::number(metaSpeachLevel), speachLevelMatches ? "True" : "False");
-    return speachLevelMatches;
+    float measureSpeechLevel = query.value(2).toFloat();
+    float metaSpeechLevel = getMetaDataCharacteristic("sp level").toFloat();
+    bool speechLevelMatches = measureSpeechLevel == metaSpeechLevel;
+    qDebug() << QString("Speech Level (Measurement: %0 Meta: %1 Matches: %2")
+        .arg(QString::number(measureSpeechLevel), QString::number(metaSpeechLevel), speechLevelMatches ? "True" : "False");
+    return speechLevelMatches;
 }
 
-bool CDTTTest::measurementModeMatches(QSqlQuery query)
+bool CDTTTest::measurementModeMatches(const QSqlQuery &query) const
 {
     QString measureMode = query.value(4).toString();
     QString metaMode = getMetaDataCharacteristic("mode").toString();
@@ -363,7 +363,7 @@ bool CDTTTest::measurementModeMatches(QSqlQuery query)
     return modeMatches;
 }
 
-bool CDTTTest::measurementHeaderMatches(QSqlQuery query)
+bool CDTTTest::measurementHeaderMatches(QSqlQuery query) const
 {
     QString queryStimulus = query.value(1).toString();
     QString queryResponse = query.value(4).toString();
