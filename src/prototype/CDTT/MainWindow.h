@@ -1,20 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-/*
-#include <QDialog>
-#include <QStandardItemModel>
-#include <QCloseEvent>
-#include <QDate>
-#include <QDebug>
-#include <QDir>
-#include <QFileDialog>
-#include <QFileInfo>
-#include <QJsonObject>
-#include <QJsonDocument>
-#include <QMessageBox>
-#include <QSettings>
-*/
 #include "ui_MainWindow.h"
 #include "../../managers/CDTTManager.h"
 #include <QStandardItemModel>

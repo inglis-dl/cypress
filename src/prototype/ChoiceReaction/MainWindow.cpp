@@ -66,6 +66,12 @@ void MainWindow::initialize()
     // have the manager build the inputs from the input json file
     m_manager.setInputData(m_inputData);
 
+    // disable all buttons by default
+    //
+    for(auto&& x : this->findChildren<QPushButton *>())
+        x->setEnabled(false);
+
+    /**
     // Select the location of CCB.exe
     //
     ui->openButton->setEnabled(false);
@@ -77,7 +83,7 @@ void MainWindow::initialize()
     // Save button to store measurement and device info to .json
     //
     ui->saveButton->setEnabled(false);
-
+    */
     // Close the application
     //
     ui->closeButton->setEnabled(true);
@@ -176,10 +182,7 @@ void MainWindow::initialize()
 
 void MainWindow::run()
 {
-    // TODO:
-    // create logic and code for bypassing UI interaction
-    // create simulated inputs
-    //
+  m_manager.start();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

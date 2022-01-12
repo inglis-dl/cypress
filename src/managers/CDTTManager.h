@@ -54,6 +54,10 @@ public slots:
 
     void readOutput();
 
+    // ManagerBase impl requirement stub
+    //
+    void start() override {};
+
 private:
     QString m_runnableName;// full pathspec to CDTTstereo.jar
     QString m_runnablePath;// path to CDTTstereo.jar

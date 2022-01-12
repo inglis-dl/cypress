@@ -1,0 +1,31 @@
+Setting up the SQL server odbc driver for Qt (linux):
+https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?redirectedfrom=MSDN&view=sql-server-ver15
+
+Setting up Qt from online installer and initializing sql drivers
+- go to install root of Qt
+- go to ~/Qt/5.15.2/Src/qtbase/src/plugins/sqldrivers
+- if present del config.cache
+- run qmake
+- the list of drivers that can be build is listed, add any
+dev lib dependencies such as odbc or mysql as re required and repeat
+remove cache and run qmake
+- run sudo make and sudo make install
+
+CDTT test reading results on linux:
+- install command line utility xlsx2csv
+- run on xlsx file to dump each sheet to csv
+- xlsx2csv -q 'all' -n "Main" -i RESULT_FILE-XXXXXXX.xlsx results_part_1.csv
+- xlsx2csv -q 'all' -n "EN_CA-Male" -i RESULT_FILE-XXXXXXX.xlsx results_part_2.csv
+- parse csv as required
+
+Tonometer test reading results on linux:
+- install  mdbtools to run mdb-sql command line utility
+- two key db tables in ora.mdb (MS Access db): Measures, Patients
+- eg.
+ echo "Select * from Measures" | mdb-sql -p -d '","' ora.mdb
+ - dumps the entire table with first row as header and all
+  records as subsequent EOL terminated strings
+ - strings remain to be double quoated head and tail but
+ internal fields are delimited by ","
+
+Qt with ODBC on linux currently does not work correctly

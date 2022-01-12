@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
     try
     {
       qDebug() << "initialize start";
+      qDebug() << CypressApplication::staticMetaObject.className();
       cypress.initialize();
       qDebug() << "initialize end";
 

@@ -91,6 +91,12 @@ void MainWindow::initialize()
     else
        ui->barcodeLineEdit->setText("00000000"); // dummy
 
+    // disable all buttons by default
+    //
+    for(auto&& x : this->findChildren<QPushButton *>())
+        x->setEnabled(false);
+
+    /**
     // Save button to store measurement and device info to .json
     //
     ui->saveButton->setEnabled(false);
@@ -107,6 +113,7 @@ void MainWindow::initialize()
     //
     ui->disconnectButton->setEnabled(false);
 
+    */
     // scan for bluetooth low energy peripheral devices
     //
     ui->scanButton->setEnabled(true);
@@ -114,7 +121,7 @@ void MainWindow::initialize()
     ui->closeButton->setEnabled(true);
 
     connect(ui->scanButton, &QPushButton::clicked,
-            &m_manager, &BluetoothLEManager::scanDevices);
+            &m_manager, &BluetoothLEManager::start);
 
     connect(&m_manager, &BluetoothLEManager::scanningDevices,
             this,[this]()
@@ -237,7 +244,7 @@ void MainWindow::initialize()
 
 void MainWindow::run()
 {
-    m_manager.scanDevices();
+    m_manager.start();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

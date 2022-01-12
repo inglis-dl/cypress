@@ -483,9 +483,9 @@ void BodyCompositionAnalyzerManager::setInputs(const QMap<QString,QVariant> &inp
     if(inputs.contains("height"))
     {
         QVariant value = inputs["height"];
-        QVariant h_min = "metric" == units ? 90 : 36.0f;
-        QVariant h_max = "metric" == units ? 249 : 95.5f;
-        if(h_min <= value && value <= h_max)
+        QVariant h_min = "metric" == units ? 90.0f : 36.0f;
+        QVariant h_max = "metric" == units ? 249.0f : 95.5f;
+        if(h_min.toFloat() <= value.toFloat() && value.toFloat() <= h_max.toFloat())
         {
           QString s;
           if("metric" == units)

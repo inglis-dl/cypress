@@ -273,13 +273,13 @@ void TonometerManager::configureProcess()
           connect(&m_process, &QProcess::errorOccurred,
             this, [](QProcess::ProcessError error)
             {
-                QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), QString::SkipEmptyParts);
+                QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
                 qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
             });
 
           connect(&m_process, &QProcess::stateChanged,
             this, [](QProcess::ProcessState state) {
-                QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), QString::SkipEmptyParts);
+                QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
                 qDebug() << "process state: " << s.join(" ").toLower();
 
             });

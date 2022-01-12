@@ -56,6 +56,10 @@ public slots:
 
     void readOutput();
 
+    // ManagerBase impl requirement stub
+    //
+    void start() override {};
+
 private:
     QString m_runnableName; // full pathspec to CCB.exe
     QString m_runnablePath; // path to CCB.exe

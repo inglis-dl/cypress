@@ -62,6 +62,12 @@ void MainWindow::initialize()
   QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
   m_manager.loadSettings(settings);
 
+  // disable all buttons by default
+  //
+  for(auto&& x : this->findChildren<QPushButton *>())
+      x->setEnabled(false);
+
+  /**
   // Save button to store measurement and device info to .json
   //
   ui->saveButton->setEnabled(false);
@@ -81,7 +87,7 @@ void MainWindow::initialize()
   // Disconnect from the device
   //
   ui->disconnectButton->setEnabled(false);
-
+  */
   // Close the application
   //
   ui->closeButton->setEnabled(true);
@@ -124,14 +130,8 @@ void MainWindow::initialize()
 
   // Select a device (serial port) from drop down list
   //
-  connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-          this,[this]()
-    {
-      if(m_verbose)
-          qDebug() << "device selected from list " <<  ui->deviceComboBox->currentText();
-      m_manager.selectDevice(ui->deviceComboBox->currentText());
-    }
-  );
+  connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
+          &m_manager,&WeighScaleManager::selectDevice);
 
   // Ready to connect device
   //
@@ -231,7 +231,7 @@ void MainWindow::updateDeviceList(const QString &label)
 
 void MainWindow::run()
 {
-    m_manager.scanDevices();
+    m_manager.start();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

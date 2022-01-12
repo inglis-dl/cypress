@@ -40,6 +40,7 @@ public:
 
 public slots:
 
+    virtual void start() = 0;
     virtual void measure() = 0;
     virtual void finish() = 0;
 

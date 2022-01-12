@@ -51,6 +51,9 @@ void CypressDialog::initialize(CypressApplication *app)
       case CypressApplication::TestType::Spirometry:
         ui_title = "Spirometry Measurement";
         break;
+      case CypressApplication::TestType::Tonometry:
+        ui_title = "Tonometry Measurement";
+        break;
       case CypressApplication::TestType::BloodPressure:
         ui_title = "Blood Pressure Measurement";
         break;
@@ -59,7 +62,7 @@ void CypressDialog::initialize(CypressApplication *app)
         break;
     }
 
-    qDebug() << "buidling form from " << ui_name;
+    qDebug() << "building form from " << ui_name;
     QFormBuilder builder;
     QFile file(":/dialogs/"+ui_name);
     file.open(QFile::ReadOnly);

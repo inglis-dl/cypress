@@ -22,26 +22,14 @@ public:
     //
     bool devicesAvailable() const;
 
-    // scan for available devices (serial ports)
-    // emits scanning signal at start
-    // populates a list of devices using serial port name as key
-    // emits discovered signal with the serial port name when a port is discovered
-    // if the ini stored port is found
-    //   setDevice
-    // else
-    //   emits canSelect signal
-    //
-    void scanDevices();
-
-    // select a device (serial port) by name
-    // checks of the named port is in the list of scanned devices
-    // and calls setDevice
-    //
-    void selectDevice(const QString &);
-
     QJsonObject toJsonObject() const override;
 
 public slots:
+
+    // what the manager does in response to the main application
+    // window invoking its run method
+    //
+    void start() override { this->scanDevices(); }
 
     // connect to the serial port
     // opens the serial port with required parametere (baud rate etc.)
@@ -53,6 +41,12 @@ public slots:
     // disconnect from the serial port
     //
     void disconnectDevice();
+
+    // select a device (serial port) by name
+    // checks of the named port is in the list of scanned devices
+    // and calls setDevice
+    //
+    void selectDevice(const QString &);
 
 private slots:
 
@@ -98,6 +92,17 @@ signals:
     void deviceNameChanged(const QString &);
 
 protected:
+
+    // scan for available devices (serial ports)
+    // emits scanning signal at start
+    // populates a list of devices using serial port name as key
+    // emits discovered signal with the serial port name when a port is discovered
+    // if the ini stored port is found
+    //   setDevice
+    // else
+    //   emits canSelect signal
+    //
+    void scanDevices();
 
     // device data is separate from test data
     MeasurementBase m_deviceData;

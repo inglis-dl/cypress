@@ -188,7 +188,7 @@ void BluetoothLEManager::scanDevices()
       connect(m_agent.data(), QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
             this,[this](QBluetoothDeviceDiscoveryAgent::Error error)
         {
-          QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"),QString::SkipEmptyParts);
+          QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"),Qt::SkipEmptyParts);
           if(m_verbose)
               qDebug() << "device discovery error " << s.join(" ").toLower();
         }
@@ -429,7 +429,7 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
     connect(m_controller.data(), QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error),
       this,[this](QLowEnergyController::Error error)
       {
-        QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"),QString::SkipEmptyParts);
+        QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"),Qt::SkipEmptyParts);
         if(m_verbose)
           qDebug() << "low energy controller error " << s.join(" ").toLower();
       }
@@ -440,7 +440,7 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
 
     connect(m_controller.data(), &QLowEnergyController::stateChanged,
       this,[this](QLowEnergyController::ControllerState state){
-        QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"),QString::SkipEmptyParts);
+        QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"),Qt::SkipEmptyParts);
         if(m_verbose)
           qDebug() << "controller state changed to " << s.join(" ").toLower();
      });
@@ -611,7 +611,7 @@ void BluetoothLEManager::infoServiceStateChanged(QLowEnergyService::ServiceState
 {
     auto service = qobject_cast<QLowEnergyService *>(sender());
     QString name = service->serviceName();
-    QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"),QString::SkipEmptyParts);
+    QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"),Qt::SkipEmptyParts);
     if(m_verbose)
         qDebug() << name << " service state changed to " << s.join(" ").toLower();;
 
@@ -628,7 +628,7 @@ void BluetoothLEManager::thermoServiceStateChanged(QLowEnergyService::ServiceSta
 {
     auto service = qobject_cast<QLowEnergyService *>(sender());
     QString name = service->serviceName();
-    QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"),QString::SkipEmptyParts);
+    QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"),Qt::SkipEmptyParts);
     if(m_verbose)
         qDebug() << name << " service state changed to " << s.join(" ").toLower();;
 

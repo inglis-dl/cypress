@@ -75,17 +75,6 @@ signals:
 
 public slots:
 
-    // Scan for available peripheral devices.
-    // emits scanning signal at start
-    // populates a list of devices using device name as key
-    // emits discovered signal with the device name when a peripheral is discovered
-    // if the ini stored device is found
-    //   setDevice
-    // else
-    //   emits canSelect signal
-    //
-    void scanDevices();
-
     // Connect to the peripheral
     //
     void connectDevice();
@@ -99,6 +88,8 @@ public slots:
     void measure() override;
 
     void finish() override;
+
+    void start() override { this->scanDevices(); };
 
 private slots:
 
@@ -143,6 +134,18 @@ private slots:
     void updateInfoData(const QLowEnergyCharacteristic &, const QByteArray &);
 
  private:
+
+    // Scan for available peripheral devices.
+    // emits scanning signal at start
+    // populates a list of devices using device name as key
+    // emits discovered signal with the device name when a peripheral is discovered
+    // if the ini stored device is found
+    //   setDevice
+    // else
+    //   emits canSelect signal
+    //
+    void scanDevices();
+
     QScopedPointer<QBluetoothDeviceInfo> m_peripheral;
     QScopedPointer<QBluetoothLocalDevice> m_localDevice;
     QScopedPointer<QBluetoothDeviceDiscoveryAgent> m_agent;

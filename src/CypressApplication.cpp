@@ -8,6 +8,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QMessageBox>
+#include <QMetaMethod>
 #include <QSettings>
 #include <QStandardItemModel>
 #include <QFormBuilder>
@@ -155,6 +156,10 @@ void CypressApplication::initialize()
     }
     if(nullptr==m_manager)
         throw std::runtime_error("FATAL ERROR: failed to initialize a manager");
+
+    qDebug() << "created manager of class type " << m_manager->metaObject()->className();
+//    for(int i=0;i<m_manager->metaObject()->methodCount();i++)
+//        qDebug() << m_manager->metaObject()->method(i).name();
 
     m_manager->setVerbose(m_verbose);
     m_manager->setMode(m_mode);

@@ -66,6 +66,12 @@ void MainWindow::initialize()
     // have the manager build the inputs from the input json file
     m_manager.setInputData(m_inputData);
 
+    // disable all buttons by default
+    //
+    for(auto&& x : this->findChildren<QPushButton *>())
+        x->setEnabled(false);
+
+    /**
     // Select the location of ora.exe
     //
     ui->openButton->setEnabled(false);
@@ -78,6 +84,7 @@ void MainWindow::initialize()
     //
     ui->saveButton->setEnabled(false);
 
+    */
     // Close the application
     //
     ui->closeButton->setEnabled(true);
@@ -175,6 +182,7 @@ void MainWindow::initialize()
 
 void MainWindow::run()
 {
+  m_manager.start();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

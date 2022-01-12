@@ -70,6 +70,11 @@ void MainWindow::initialize()
   QSettings settings(dir.filePath("audiometer.ini"), QSettings::IniFormat);
   m_manager.loadSettings(settings);
 
+  // disable all buttons by default
+  //
+  for(auto&& x : this->findChildren<QPushButton *>())
+      x->setEnabled(false);
+  /**
   // Save button to store measurement and device info to .json
   //
   ui->saveButton->setEnabled(false);
@@ -85,7 +90,7 @@ void MainWindow::initialize()
   // Disconnect from the device
   //
   ui->disconnectButton->setEnabled(false);
-
+  */
   // Close the application
   //
   ui->closeButton->setEnabled(true);
@@ -220,7 +225,7 @@ void MainWindow::updateDeviceList(const QString &label)
 
 void MainWindow::run()
 {
-    m_manager.scanDevices();
+    m_manager.start();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
