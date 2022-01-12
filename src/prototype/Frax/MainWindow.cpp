@@ -57,9 +57,12 @@ void MainWindow::initialize()
     else
        ui->barcodeLineEdit->setText("00000000"); // dummy
 
+    // read the path to blackbox.exe
+    //
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
-    QSettings settings(dir.filePath("frax.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
+    m_manager.loadSettings(settings);
 
     // have the manager build the inputs from the input json file
     m_manager.setInputData(m_inputData);
@@ -139,10 +142,6 @@ void MainWindow::initialize()
     //
     connect(ui->closeButton, &QPushButton::clicked,
         this, &MainWindow::close);
-
-    // read the path to blackbox.exe
-    //
-    m_manager.loadSettings(settings);
 
     // validate the presence of blackbox.exe and enable
     // file selection as required

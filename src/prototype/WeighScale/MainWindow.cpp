@@ -59,7 +59,7 @@ void MainWindow::initialize()
   // Read the .ini file for cached local and peripheral device addresses
   //
   QDir dir = QCoreApplication::applicationDirPath();
-  QSettings settings(dir.filePath("weighscale.ini"), QSettings::IniFormat);
+  QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
   m_manager.loadSettings(settings);
 
   // disable all buttons by default

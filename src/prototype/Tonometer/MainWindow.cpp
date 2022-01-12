@@ -59,9 +59,12 @@ void MainWindow::initialize()
     else
        ui->barcodeLineEdit->setText("00000000"); // dummy
 
+    // read the path to C:\Program Files\Reichert\ora.exe
+    //
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
     QSettings settings(dir.filePath("frax.ini"), QSettings::IniFormat);
+    m_manager.loadSettings(settings);
 
     // have the manager build the inputs from the input json file
     m_manager.setInputData(m_inputData);
@@ -143,10 +146,6 @@ void MainWindow::initialize()
     //
     connect(ui->closeButton, &QPushButton::clicked,
         this, &MainWindow::close);
-
-    // read the path to ora.exe
-    //
-    m_manager.loadSettings(settings);
 
     // validate the presence of ora.exe and enable
     // file selection as required

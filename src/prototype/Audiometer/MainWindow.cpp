@@ -67,7 +67,7 @@ void MainWindow::initialize()
   // Read the .ini file for cached device data
   //
   QDir dir = QCoreApplication::applicationDirPath();
-  QSettings settings(dir.filePath("audiometer.ini"), QSettings::IniFormat);
+  QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
   m_manager.loadSettings(settings);
 
   // disable all buttons by default
