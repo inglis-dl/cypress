@@ -29,7 +29,7 @@ public slots:
     // what the manager does in response to the main application
     // window invoking its run method
     //
-    void start() override { this->scanDevices(); }
+    void start() override;
 
     // connect to the serial port
     // opens the serial port with required parametere (baud rate etc.)

@@ -105,7 +105,15 @@ void MainWindow::initialize()
   // Update the drop down list as devices are discovered during scanning
   //
   connect(&m_manager, &WeighScaleManager::deviceDiscovered,
-          this, &MainWindow::updateDeviceList);
+          this, [this](const QString &label){
+      int index = ui->deviceComboBox->findText(label);
+      bool oldState = ui->deviceComboBox->blockSignals(true);
+      if(-1 == index)
+      {
+          ui->deviceComboBox->addItem(label);
+      }
+      ui->deviceComboBox->blockSignals(oldState);
+  });
 
   connect(&m_manager, &WeighScaleManager::deviceSelected,
           this,[this](const QString &label){
@@ -212,21 +220,6 @@ void MainWindow::initialize()
   //
   connect(ui->closeButton, &QPushButton::clicked,
           this, &MainWindow::close);
-
-  emit m_manager.dataChanged();
-}
-
-void MainWindow::updateDeviceList(const QString &label)
-{
-    // Add the device to the list
-    //
-    int index = ui->deviceComboBox->findText(label);
-    bool oldState = ui->deviceComboBox->blockSignals(true);
-    if(-1 == index)
-    {
-        ui->deviceComboBox->addItem(label);
-    }
-    ui->deviceComboBox->blockSignals(oldState);
 }
 
 void MainWindow::run()

@@ -8,6 +8,12 @@ SerialPortManager::SerialPortManager(QObject *parent) : ManagerBase(parent)
 {
 }
 
+void SerialPortManager::start()
+{
+  scanDevices();
+  emit dataChanged();
+}
+
 bool SerialPortManager::isDefined(const QString &label) const
 {
     if("simulate" == m_mode)

@@ -17,6 +17,11 @@ ChoiceReactionManager::ChoiceReactionManager(QObject *parent) :
     setGroup("choice_reaction");
 }
 
+void ChoiceReactionManager::start()
+{
+    emit dataChanged();
+}
+
 void ChoiceReactionManager::buildModel(QStandardItemModel *model) const
 {
     // add measurements one row of two columns at a time

@@ -16,6 +16,11 @@ TonometerManager::TonometerManager(QObject* parent):
     m_inputKeyList << "sex";
 }
 
+void TonometerManager::start()
+{
+    emit dataChanged();
+}
+
 void TonometerManager::buildModel(QStandardItemModel *model) const
 {
     QVector<QString> v_side({"left","right"});

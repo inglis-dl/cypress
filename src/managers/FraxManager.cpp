@@ -27,6 +27,11 @@ FraxManager::FraxManager(QObject* parent):
     m_inputKeyList << "femoral_neck_bmd";
 }
 
+void FraxManager::start()
+{
+    emit dataChanged();
+}
+
 void FraxManager::buildModel(QStandardItemModel *model) const
 {
     // add the four probability measurements

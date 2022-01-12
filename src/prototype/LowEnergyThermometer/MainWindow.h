@@ -39,7 +39,7 @@ public:
     bool isVerbose(){ return m_verbose; }
 
 public slots:
-    void updateDeviceList(const QString &label);
+
     void writeOutput();
 
 protected:

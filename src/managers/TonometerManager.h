@@ -56,9 +56,7 @@ public slots:
 
     void readOutput();
 
-    // ManagerBase impl requirement stub
-    //
-    void start() override {};
+    void start() override;
 
 private:
     QString m_runnableName;// full pathspec to ora.exe

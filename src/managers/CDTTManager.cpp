@@ -14,6 +14,11 @@ CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
     m_inputKeyList << "barcode";
 }
 
+void CDTTManager::start()
+{
+    emit dataChanged();
+}
+
 void CDTTManager::loadSettings(const QSettings& settings)
 {
     // the full spec path name including jar name

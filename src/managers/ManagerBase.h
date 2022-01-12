@@ -40,8 +40,15 @@ public:
 
 public slots:
 
+    // subclasses call methods after main initialization just prior
+    // to running (eg., emit dataChanged signal)
+    //
     virtual void start() = 0;
+
     virtual void measure() = 0;
+
+    // subclasses call methods just prior to main close event
+    //
     virtual void finish() = 0;
 
 signals:

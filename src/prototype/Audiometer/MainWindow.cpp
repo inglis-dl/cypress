@@ -108,7 +108,15 @@ void MainWindow::initialize()
   // Update the drop down list as devices are discovered during scanning
   //
   connect(&m_manager, &AudiometerManager::deviceDiscovered,
-          this, &MainWindow::updateDeviceList);
+          this, [this](const QString &label){
+      int index = ui->deviceComboBox->findText(label);
+      bool oldState = ui->deviceComboBox->blockSignals(true);
+      if(-1 == index)
+      {
+          ui->deviceComboBox->addItem(label);
+      }
+      ui->deviceComboBox->blockSignals(oldState);
+  });
 
   // Prompt user to select a device from the drop down list when previously
   // cached device information in the ini file is unavailable or invalid
@@ -208,21 +216,6 @@ void MainWindow::initialize()
   //
   connect(ui->closeButton, &QPushButton::clicked,
           this, &MainWindow::close);
-
-  emit m_manager.dataChanged();
-}
-
-void MainWindow::updateDeviceList(const QString &label)
-{
-    // Add the device to the list
-    //
-    int index = ui->deviceComboBox->findText(label);
-    bool oldState = ui->deviceComboBox->blockSignals(true);
-    if(-1 == index)
-    {
-        ui->deviceComboBox->addItem(label);
-    }
-    ui->deviceComboBox->blockSignals(oldState);
 }
 
 void MainWindow::run()

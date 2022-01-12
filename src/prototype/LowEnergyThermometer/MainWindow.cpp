@@ -134,7 +134,15 @@ void MainWindow::initialize()
     // Update the drop down list as devices are discovered during scanning
     //
     connect(&m_manager, &BluetoothLEManager::deviceDiscovered,
-            this, &MainWindow::updateDeviceList);
+            this, [this](const QString &label){
+        int index = ui->deviceComboBox->findText(label);
+        bool oldState = ui->deviceComboBox->blockSignals(true);
+        if(-1 == index)
+        {
+            ui->deviceComboBox->addItem(label);
+        }
+        ui->deviceComboBox->blockSignals(oldState);
+    });
 
     connect(&m_manager, &BluetoothLEManager::deviceSelected,
             this,[this](const QString &label){
@@ -238,8 +246,6 @@ void MainWindow::initialize()
     //
     connect(ui->closeButton, &QPushButton::clicked,
             this, &MainWindow::close);
-
-    emit m_manager.dataChanged();
 }
 
 void MainWindow::run()
@@ -256,19 +262,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     m_manager.saveSettings(&settings);
     m_manager.finish();
     event->accept();
-}
-
-void MainWindow::updateDeviceList(const QString &label)
-{
-    // Add the device to the list
-    //
-    int index = ui->deviceComboBox->findText(label);
-    bool oldState = ui->deviceComboBox->blockSignals(true);
-    if(-1 == index)
-    {
-        ui->deviceComboBox->addItem(label);
-    }
-    ui->deviceComboBox->blockSignals(oldState);
 }
 
 void MainWindow::readInput()

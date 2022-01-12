@@ -41,7 +41,6 @@ public:
 
 public slots:
 
-    void updateDeviceList(const QString &);
     void writeOutput();
 
 protected:
