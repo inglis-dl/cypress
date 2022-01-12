@@ -217,10 +217,12 @@ void MainWindow::updateDeviceList(const QString &label)
     // Add the device to the list
     //
     int index = ui->deviceComboBox->findText(label);
+    bool oldState = ui->deviceComboBox->blockSignals(true);
     if(-1 == index)
     {
         ui->deviceComboBox->addItem(label);
     }
+    ui->deviceComboBox->blockSignals(oldState);
 }
 
 void MainWindow::run()
