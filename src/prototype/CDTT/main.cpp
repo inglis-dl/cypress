@@ -13,7 +13,6 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
 
-    // Need to pull changes from development branch to get all features of commandLineParser
     CommandLineParser parser;
     QString errMessage;
     switch (parser.parseCommandLine(app, &errMessage))

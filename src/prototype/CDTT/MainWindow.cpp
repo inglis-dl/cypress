@@ -45,6 +45,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::initialize()
 {
+    setupConnections();
+    initializeButtonState();
+
     m_manager.setVerbose(m_verbose);
     m_manager.setMode(m_mode);
 
@@ -52,12 +55,7 @@ void MainWindow::initialize()
     //
     readInput();
 
-    // Populate barcode display
-    //
-    if (m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
-        ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
-    else
-        ui->barcodeLineEdit->setText("00000000"); // dummy
+    populateBarcodeDisplay();
 
     // read the path to C:\Users\clsa\Documents\CDTT-2018-07-22\CDTTstereo.jar
     //
@@ -69,29 +67,12 @@ void MainWindow::initialize()
     // have the manager build the inputs from the input json file
     m_manager.setInputData(m_inputData);
 
-    // disable all buttons by default
-    //
-    for(auto&& x : this->findChildren<QPushButton *>())
-        x->setEnabled(false);
+    validateRunnablePresense();
+}
 
-    /**
-    // Select the location of CDTTstereo.jar
-    //
-    ui->openButton->setEnabled(false);
-
-    // Launch CDTTstereo.jar
-    //
-    ui->measureButton->setEnabled(false);
-
-    // Save button to store measurement and device info to .json
-    //
-    ui->saveButton->setEnabled(false);
-    */
-    // Close the application
-    //
-    ui->closeButton->setEnabled(true);
-
-    // catt jar was found or set up successfully
+void MainWindow::setupConnections()
+{
+    // cdtt jar was found or set up successfully
     //
     connect(&m_manager, &CDTTManager::canMeasure,
         this, [this]() {
@@ -147,20 +128,6 @@ void MainWindow::initialize()
     connect(ui->closeButton, &QPushButton::clicked,
         this, &MainWindow::close);
 
-    // validate the presence of CCB.exe and enable
-    // file selection as required
-    //
-    QString runnableName = m_manager.getRunnableName();
-    if (!m_manager.isDefined(runnableName))
-    {
-        ui->openButton->setEnabled(true);
-        QMessageBox::warning(
-            this, QApplication::applicationName(),
-            tr("Select the jar by clicking Open and browsing to the "
-                "required jar (CDTTstereo.jar) and selecting the file.  If the jar "
-                "is valid click the Run button to start the test otherwise check the installation."));
-    }
-
     connect(ui->openButton, &QPushButton::clicked,
         this, [this]() {
             QString fileName =
@@ -177,6 +144,45 @@ void MainWindow::initialize()
             else
                 qDebug() << fileName << " not a valid executable";
         });
+}
+
+void MainWindow::initializeButtonState()
+{
+    // disable all buttons by default
+    //
+    for (auto&& x : this->findChildren<QPushButton*>())
+        x->setEnabled(false);
+
+    // Close the application
+    //
+    ui->closeButton->setEnabled(true);
+}
+
+void MainWindow::populateBarcodeDisplay()
+{
+    // Populate barcode display
+    //
+    if (m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
+        ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
+    else
+        ui->barcodeLineEdit->setText("00000000"); // dummy
+}
+
+void MainWindow::validateRunnablePresense()
+{
+    // validate the presence of runnable and enable
+    // file selection as required
+    //
+    QString runnableName = m_manager.getRunnableName();
+    if (!m_manager.isDefined(runnableName))
+    {
+        ui->openButton->setEnabled(true);
+        QMessageBox::warning(
+            this, QApplication::applicationName(),
+            tr("Select the jar by clicking Open and browsing to the "
+                "required jar (CDTTstereo.jar) and selecting the file.  If the jar "
+                "is valid click the Run button to start the test otherwise check the installation."));
+    }
 }
 
 void MainWindow::run()
