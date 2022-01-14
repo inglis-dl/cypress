@@ -1,11 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "ui_MainWindow.h"
-#include "../../managers/CDTTManager.h"
-#include <QStandardItemModel>
 
-QT_FORWARD_DECLARE_CLASS(QCloseEvent)
+#include "ui_MainWindow.h"
+#include "../../managers/TemplateManager.h"
+#include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -51,7 +50,6 @@ private:
     void initializeButtonState();
     void readInput();
     void populateBarcodeDisplay();
-    void validateRunnablePresense();
 
     Ui::MainWindow* ui;
     QString m_inputFileName;
@@ -59,12 +57,12 @@ private:
     QString m_mode;
     bool m_verbose;
 
-    QMap<QString,QVariant> m_inputData;
+    QMap<QString, QVariant> m_inputData;
     QMap<QString, QVariant> m_outputData;
 
-    CDTTManager m_manager;
+    TemplateManager m_manager;
 
     QStandardItemModel m_model;
 };
 
-#endif // MAINWINDOW_H
+#endif MAINWINDOW_H

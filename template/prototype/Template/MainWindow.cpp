@@ -51,14 +51,12 @@ void MainWindow::initialize()
     m_manager.setVerbose(m_verbose);
     m_manager.setMode(m_mode);
 
-    // Read inputs required to launch cdtt test
+    // Read inputs required to launch  test
     //
     readInput();
 
     populateBarcodeDisplay();
 
-    // read the path to C:\Users\clsa\Documents\CDTT-2018-07-22\CDTTstereo.jar
-    //
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
@@ -66,15 +64,13 @@ void MainWindow::initialize()
 
     // have the manager build the inputs from the input json file
     m_manager.setInputData(m_inputData);
-
-    validateRunnablePresense();
 }
 
 void MainWindow::setupConnections()
 {
-    // cdtt jar was found or set up successfully
+    // Available to start measuring
     //
-    connect(&m_manager, &CDTTManager::canMeasure,
+    connect(&m_manager, &TemplateManager::canMeasure,
         this, [this]() {
             ui->statusBar->showMessage("Ready to measure...");
             ui->measureButton->setEnabled(true);
@@ -84,11 +80,11 @@ void MainWindow::setupConnections()
     // Request a measurement from the device (run CCB.exe)
     //
     connect(ui->measureButton, &QPushButton::clicked,
-        &m_manager, &CDTTManager::measure);
+        &m_manager, &TemplateManager::measure);
 
     // Update the UI with any data
     //
-    connect(&m_manager, &CDTTManager::dataChanged,
+    connect(&m_manager, &TemplateManager::dataChanged,
         this, [this]() {
             QHeaderView* h = ui->testdataTableView->horizontalHeader();
             h->setSectionResizeMode(QHeaderView::Fixed);
@@ -112,38 +108,21 @@ void MainWindow::setupConnections()
 
     // All measurements received: enable write test results
     //
-    connect(&m_manager, &CDTTManager::canWrite,
+    connect(&m_manager, &TemplateManager::canWrite,
         this, [this]() {
             ui->statusBar->showMessage("Ready to save results...");
             ui->saveButton->setEnabled(true);
         });
-
-    // Write test data to output
-    //
-    connect(ui->saveButton, &QPushButton::clicked,
-        this, &MainWindow::writeOutput);
 
     // Close the application
     //
     connect(ui->closeButton, &QPushButton::clicked,
         this, &MainWindow::close);
 
-    connect(ui->openButton, &QPushButton::clicked,
-        this, [this]() {
-            QString fileName =
-                QFileDialog::getOpenFileName(
-                    this, tr("Open File"),
-                    QCoreApplication::applicationDirPath(),
-                    tr("Applications (*.jar, *)"));
-            if (m_manager.isDefined(fileName))
-            {
-                m_manager.setRunnableName(fileName);
-                ui->measureButton->setEnabled(true);
-                ui->saveButton->setEnabled(false);
-            }
-            else
-                qDebug() << fileName << " not a valid executable";
-        });
+    // Write test data to output
+    //
+    connect(ui->saveButton, &QPushButton::clicked,
+        this, &MainWindow::writeOutput);
 }
 
 void MainWindow::initializeButtonState()
@@ -168,29 +147,12 @@ void MainWindow::populateBarcodeDisplay()
         ui->barcodeLineEdit->setText("00000000"); // dummy
 }
 
-void MainWindow::validateRunnablePresense()
-{
-    // validate the presence of runnable and enable
-    // file selection as required
-    //
-    QString runnableName = m_manager.getRunnableName();
-    if (!m_manager.isDefined(runnableName))
-    {
-        ui->openButton->setEnabled(true);
-        QMessageBox::warning(
-            this, QApplication::applicationName(),
-            tr("Select the jar by clicking Open and browsing to the "
-                "required jar (CDTTstereo.jar) and selecting the file.  If the jar "
-                "is valid click the Run button to start the test otherwise check the installation."));
-    }
-}
-
 void MainWindow::run()
 {
-   m_manager.start();
+    m_manager.start();
 }
 
-void MainWindow::closeEvent(QCloseEvent *event)
+void MainWindow::closeEvent(QCloseEvent* event)
 {
     if (m_verbose)
         qDebug() << "close event called";
@@ -283,10 +245,10 @@ void MainWindow::writeOutput()
         {
             QStringList list;
             list
-              << barcode
-              << QDate().currentDate().toString("yyyyMMdd")
-              << m_manager.getGroup()
-              << "test.json";
+                << barcode
+                << QDate().currentDate().toString("yyyyMMdd")
+                << m_manager.getGroup()
+                << "test.json";
             fileName = dir.filePath(list.join("_"));
         }
         else
@@ -300,5 +262,5 @@ void MainWindow::writeOutput()
     if (m_verbose)
         qDebug() << "wrote to file " << fileName;
 
-    ui->statusBar->showMessage("Canadian Digit Triple Test data recorded.  Close when ready.");
+    ui->statusBar->showMessage("Test data recorded.  Close when ready.");
 }

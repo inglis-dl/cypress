@@ -1,6 +1,6 @@
 #include "MainWindow.h"
 #include <QtWidgets/QApplication>
-#include "../../auxiliary/CommandLineParser.h"
+#include "../../../src/auxiliary/CommandLineParser.h"
 #include <QMessageBox>
 #include <QString>
 
@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
     QApplication::setOrganizationName("CLSA");
     QApplication::setOrganizationDomain("clsa-elcv.ca");
-    QApplication::setApplicationName("Canadian Digit Triple Test");
+    QApplication::setApplicationName("Template");
     QApplication::setApplicationVersion("1.0.0");
 
     QApplication app(argc, argv);
@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
             + parser.helpText() + "</pre></body></html>");
         return 1;
     }
-
 
     MainWindow window;
     window.setInputFileName(parser.getInputFilename());
