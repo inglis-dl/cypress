@@ -117,7 +117,12 @@ protected:
 
     QSharedPointer<QWidget> p_widget;
 
+    // key value pairs sorted by key
+    //
     QMap<QString,QVariant> m_inputData;
+
+    // an ordered set of input keys
+    //
     QList<QString> m_inputKeyList;
 
 private:

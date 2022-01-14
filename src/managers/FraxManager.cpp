@@ -12,8 +12,13 @@ FraxManager::FraxManager(QObject* parent):
 {
     setGroup("frax");
 
-    m_inputKeyList << "language";
+    // all managers must check for barcode and language input values
+    //
     m_inputKeyList << "barcode";
+    m_inputKeyList << "language";
+
+    // key/value pairs needed to build input.txt
+    //
     m_inputKeyList << "type";
     m_inputKeyList << "country_code";
     m_inputKeyList << "age";
@@ -280,7 +285,9 @@ void FraxManager::configureProcess()
         QStringList list;
         for(auto&& x : m_inputKeyList)
         {
-            if("barcode"!=x && "language"!=x && m_inputData.contains(x))
+            if("barcode"==x) continue;
+            if("language"==x) continue;
+            if(m_inputData.contains(x))
               list << m_inputData[x].toString();
         }
         QString line = list.join(",");

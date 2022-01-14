@@ -188,11 +188,8 @@ void MainWindow::run()
      // read the path to blackbox.exe
     //
     QDir dir = QCoreApplication::applicationDirPath();
-    qDebug() << "Dir: " << dir;
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
     m_manager.loadSettings(settings);
-
-    qDebug() << "run(): read input";
 
     // Read inputs required to launch frax test
     // In simulate mode the barcode is always populated with a default of "00000000"
