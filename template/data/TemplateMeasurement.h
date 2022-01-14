@@ -1,7 +1,7 @@
 #ifndef TEMPLATEMEASUREMENT_H
 #define TEMPLATEMEASUREMENT_H
 
-#include "MeasurementBase.h"
+#include "../../src/data/MeasurementBase.h"
 
 /*!
 * \class TemplateMeasurement

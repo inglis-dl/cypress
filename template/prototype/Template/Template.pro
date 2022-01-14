@@ -13,20 +13,20 @@ OBJECTS_DIR += debug
 UI_DIR += .
 RCC_DIR += GeneratedFiles
 HEADERS += ./MainWindow.h \
-    ../../data/MeasurementBase.h \
-    ../../data/TestBase.h \
-    ../../auxiliary/CommandLineParser.h \
-    ../../widgets/BarcodeWidget.h \
-    ../../managers/ManagerBase.h \
+    ../../../src/data/MeasurementBase.h \
+    ../../../src/data/TestBase.h \
+    ../../../src/auxiliary/CommandLineParser.h \
+    ../../../src/widgets/BarcodeWidget.h \
+    ../../../src/managers/ManagerBase.h \
     ../../data/TemplateMeasurement.h \
     ../../data/TemplateTest.h \
     ../../managers/TemplateManager.h
 SOURCES += ./MainWindow.cpp \
     ./main.cpp \
-    ../../auxiliary/CommandLineParser.cpp \
-    ../../data/MeasurementBase.cpp \
-    ../../managers/ManagerBase.cpp \
-    ../../widgets/BarcodeWidget.cpp \
+    ../../../src/auxiliary/CommandLineParser.cpp \
+    ../../../src/data/MeasurementBase.cpp \
+    ../../../src/managers/ManagerBase.cpp \
+    ../../../src/widgets/BarcodeWidget.cpp \
     ../../data/TemplateMeasurement.cpp \
     ../../data/TemplateTest.cpp \
     ../../managers/TemplateManager.cpp

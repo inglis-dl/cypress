@@ -1,6 +1,6 @@
 #include "MainWindow.h"
 #include <QtWidgets/QApplication>
-#include "../../auxiliary/CommandLineParser.h"
+#include "../../../src/auxiliary/CommandLineParser.h"
 #include <QMessageBox>
 #include <QString>
 

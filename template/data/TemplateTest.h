@@ -1,7 +1,7 @@
 #ifndef TEMPLATETEST_H
 #define TEMPLATETEST_H
 
-#include "TestBase.h"
+#include "../../src/data/TestBase.h"
 #include "TemplateMeasurement.h"
 
 #include <QDateTime>

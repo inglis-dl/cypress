@@ -1,7 +1,7 @@
 #ifndef TEMPLATEMANAGER_H
 #define TEMPLATEMANAGER_H
 
-#include "ManagerBase.h"
+#include "../../src/managers/ManagerBase.h"
 #include "../data/TemplateTest.h"
 
 class TemplateManager : public ManagerBase
