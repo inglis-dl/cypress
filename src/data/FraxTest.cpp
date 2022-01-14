@@ -36,18 +36,18 @@
 FraxTest::FraxTest()
 {
     m_outputKeyList << "type";
-    m_outputKeyList << "country code";
+    m_outputKeyList << "country_code";
     m_outputKeyList << "age";
     m_outputKeyList << "sex";
     m_outputKeyList << "bmi";
-    m_outputKeyList << "previous fracture";
-    m_outputKeyList << "parent hip fracture";
-    m_outputKeyList << "current smoker";
+    m_outputKeyList << "previous_fracture";
+    m_outputKeyList << "parent_hip_fracture";
+    m_outputKeyList << "current_smoker";
     m_outputKeyList << "gluccocorticoid";
-    m_outputKeyList << "rheumatoid arthritis";
-    m_outputKeyList << "secondary osteoporosis";
+    m_outputKeyList << "rheumatoid_arthritis";
+    m_outputKeyList << "secondary_osteoporosis";
     m_outputKeyList << "alcohol";
-    m_outputKeyList << "femoral neck bmd";
+    m_outputKeyList << "femoral_neck_bmd";
 }
 
 void FraxTest::fromFile(const QString &fileName)
@@ -85,18 +85,18 @@ void FraxTest::fromFile(const QString &fileName)
            addMeasurement(m);
 
            addMetaDataCharacteristic("type",list.at(0).toLower());
-           addMetaDataCharacteristic("country code",list.at(1).toUInt());
+           addMetaDataCharacteristic("country_code",list.at(1).toUInt());
            addMetaDataCharacteristic("age",list.at(2).toDouble());
            addMetaDataCharacteristic("sex",list.at(3).toUInt());
            addMetaDataCharacteristic("bmi",list.at(4).toDouble());
-           addMetaDataCharacteristic("previous fracture",list.at(5).toUInt());
-           addMetaDataCharacteristic("parent hip fracture",list.at(6).toUInt());
-           addMetaDataCharacteristic("current smoker",list.at(7).toUInt());
+           addMetaDataCharacteristic("previous_fracture",list.at(5).toUInt());
+           addMetaDataCharacteristic("parent_hip_fracture",list.at(6).toUInt());
+           addMetaDataCharacteristic("current_smoker",list.at(7).toUInt());
            addMetaDataCharacteristic("gluccocorticoid",list.at(8).toUInt());
-           addMetaDataCharacteristic("rheumatoid arthritis",list.at(9).toUInt());
-           addMetaDataCharacteristic("secondary osteoporosis",list.at(10).toUInt());
+           addMetaDataCharacteristic("rheumatoid_arthritis",list.at(9).toUInt());
+           addMetaDataCharacteristic("secondary_osteoporosis",list.at(10).toUInt());
            addMetaDataCharacteristic("alcohol",list.at(11).toUInt());
-           addMetaDataCharacteristic("femoral neck bmd",list.at(12).toDouble());
+           addMetaDataCharacteristic("femoral_neck_bmd",list.at(12).toDouble());
         }
     }
 }

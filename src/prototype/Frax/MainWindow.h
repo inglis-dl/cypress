@@ -46,6 +46,9 @@ public slots:
 protected:
     void closeEvent(QCloseEvent*) override;
 
+    void initializeModel();
+    void initializeConnections();
+
 private:
     void readInput();
 

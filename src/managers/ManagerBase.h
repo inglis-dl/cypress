@@ -2,6 +2,9 @@
 #define MANAGERBASE_H
 
 #include <QObject>
+#include <QWidget>
+#include <QMap>
+#include <QVariant>
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
 QT_FORWARD_DECLARE_CLASS(QStandardItemModel)
@@ -12,6 +15,7 @@ class ManagerBase : public QObject
 
 public:
     explicit ManagerBase(QObject *parent = nullptr);
+    ~ManagerBase() { if(!p_widget.isNull()) p_widget.clear(); };
 
     // load and save device, paths and other constant settings to .ini
     //
@@ -38,6 +42,19 @@ public:
     //
     virtual void buildModel(QStandardItemModel *) const = 0;
 
+    virtual void connectUI(QWidget *) = 0;
+
+    // Set the input data.
+    // The input data is read from the input
+    // json file to the main application.  This method should be
+    // used to filter the minimum inputs needed to run
+    // a test.  Filtering keys are stored in member
+    // m_inputKeyList.
+    //
+    virtual void setInputData(const QMap<QString,QVariant> &) = 0;
+
+    QVariant getInputDataValue(const QString &);
+
 public slots:
 
     // subclasses call methods after main initialization just prior
@@ -45,11 +62,18 @@ public slots:
     //
     virtual void start() = 0;
 
-    virtual void measure() = 0;
+    // actual measure will only execute if the barcode has been
+    // verified.  Subclasses must reimplement accordingly.
+    //
+    virtual void measure() { if(!m_validBarcode) return; }
 
     // subclasses call methods just prior to main close event
     //
     virtual void finish() = 0;
+
+    // verify a barcode against the value held in m_inputData
+    //
+    bool verifyBarcode(const QString &);
 
 signals:
 
@@ -79,6 +103,10 @@ protected:
     //
     QString m_mode;
 
+    // locking mechanism: barcode must be verified before measuring
+    //
+    bool m_validBarcode;
+
     // Context dependent clear test data and possibly device data (eg., serial port info)
     // SerialPortManager class clears device data during setDevice() while
     // test data is cleared depending on derived class implementation requirements.
@@ -87,11 +115,17 @@ protected:
     //
     virtual void clearData() = 0;
 
+    QSharedPointer<QWidget> p_widget;
+
+    QMap<QString,QVariant> m_inputData;
+    QList<QString> m_inputKeyList;
+
 private:
 
     // the group name for a manager to write settings into
     //
     QString m_group;
+
 };
 
 #endif // MANAGERBASE_H
