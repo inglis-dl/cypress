@@ -29,3 +29,16 @@ Tonometer test reading results on linux:
  internal fields are delimited by ","
 
 Qt with ODBC on linux currently does not work correctly
+
+
+QtUsb library 
+- fully functional github repo tested on Ubuntu 20.04 Ias of 20220114 
+- git clone https://github.com/fpoussin/QtUsb
+- for linux run non-distro qmake install of Qt (Qt src and pre-build installed using Maintenance tool)
+- in build dir: 
+  qmake path_to_qtusb_source
+  make
+  sudo make install
+- install includes and libs are then readily available in Qt Creator
+- in .pro file add usb lib (eg., QT += usb)
+- header files are prefixed (eg., #include <QtUsb/QUsb>)
