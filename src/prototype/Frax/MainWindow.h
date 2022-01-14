@@ -46,11 +46,10 @@ public slots:
 protected:
     void closeEvent(QCloseEvent*) override;
 
-    void initializeModel();
-    void initializeConnections();
-
 private:
     void readInput();
+    void initializeModel();
+    void initializeConnections();
 
     Ui::MainWindow *ui;
     QString m_inputFileName;

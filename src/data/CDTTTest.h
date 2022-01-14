@@ -4,15 +4,9 @@
 #include "TestBase.h"
 #include "CDTTMeasurement.h"
 
-#include <QDateTime>
-#include <QDebug>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QFileInfo>
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QSqlRecord>
-#include <QSqlField>
+QT_FORWARD_DECLARE_CLASS(QSqlDatabase)
+QT_FORWARD_DECLARE_CLASS(QSqlRecord)
+QT_FORWARD_DECLARE_CLASS(QSqlQuery)
 
 class CDTTTest : public TestBase<CDTTMeasurement>
 {
@@ -33,6 +27,7 @@ public:
     QJsonObject toJsonObject() const override;
 
 private:
+
     QList<QString> m_outputKeyList;
 
     bool queryTestMetaData(const QSqlDatabase &);

@@ -7,6 +7,8 @@
 
 class CDTTManager : public ManagerBase
 {
+    Q_OBJECT
+
 public:
     explicit CDTTManager(QObject* parent = nullptr);
 
@@ -15,22 +17,12 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel*) const override;
+    void buildModel(QStandardItemModel *) const override;
 
    // is the passed string a jar file
    // with the correct path elements ?
    //
-    bool isDefined(const QString&) const;
-
-    // set the executable (jar, exe etc.) full path and name
-    // calls isDefined to validate the passed arg
-    //
-    void setRunnableName(const QString &);
-
-    QString getRunnableName() const
-    {
-        return m_runnableName;
-    }
+    bool isDefined(const QString &) const;
 
     // Set the input data.
     // The input data is read from the input
@@ -39,9 +31,16 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QMap<QString, QVariant>&);
+    void setInputData(const QMap<QString, QVariant> &) override;
+
+    void connectUI(QWidget *) override {};
 
 public slots:
+
+    // what the manager does in response to the main application
+    // window invoking its run method
+    //
+    void start() override;
 
     // retrieve a measurement from the device
     //
@@ -52,9 +51,24 @@ public slots:
     //
     void finish() override;
 
+    // set the executable full path and name
+    // calls isDefined to validate the passed arg
+    //
+    void selectRunnable(const QString &);
+
     void readOutput();
 
-    void start() override;
+signals:
+
+    // a valid runnable was selected
+    // manager attempts to configure the process and may emit canMeasure on success
+    //
+    void runnableSelected();
+
+    // no runnable available or the selected runnable is invalid
+    // signal can be connected to a ui slot to launch a File select dialog
+    //
+    void canSelectRunnable();
 
 private:
     QString m_runnableName;// full pathspec to CDTTstereo.jar
@@ -67,9 +81,6 @@ private:
     CDTTTest m_test;
 
     void clearData() override;
-
-    QMap<QString, QVariant> m_inputData;
-    QList<QString> m_inputKeyList;
 
     void configureProcess();
 };

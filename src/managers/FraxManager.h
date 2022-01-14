@@ -31,7 +31,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QMap<QString,QVariant> &) override;
+    void setInputData(const QMap<QString, QVariant> &) override;
 
     void connectUI(QWidget *) override {};
 
@@ -54,7 +54,7 @@ public slots:
     // set the executable full path and name
     // calls isDefined to validate the passed arg
     //
-    void selectRunnable(const QString&);
+    void selectRunnable(const QString &);
 
     void readOutput();
 

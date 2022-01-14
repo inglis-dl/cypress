@@ -11,11 +11,16 @@
 CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
 {
     setGroup("cdtt");
+
+    // all managers must check for barcode and language input values
+    //
     m_inputKeyList << "barcode";
+    m_inputKeyList << "language";
 }
 
 void CDTTManager::start()
 {
+    configureProcess();
     emit dataChanged();
 }
 
@@ -24,8 +29,8 @@ void CDTTManager::loadSettings(const QSettings& settings)
     // the full spec path name including jar name
     // eg., C:\Users\clsa\Documents\CDTT-2018-07-22\CDTTstereo.jar
     //
-    QString runnableName = settings.value(getGroup() + "/client/jar").toString();
-    setRunnableName(runnableName);
+    QString jarName = settings.value(getGroup() + "/client/jar").toString();
+    selectRunnable(jarName);
 }
 
 void CDTTManager::saveSettings(QSettings* settings) const
@@ -112,7 +117,7 @@ bool CDTTManager::isDefined(const QString& runnableName) const
     return ok;
 }
 
-void CDTTManager::setRunnableName(const QString &runnableName)
+void CDTTManager::selectRunnable(const QString &runnableName)
 {
     if(isDefined(runnableName))
     {
@@ -124,6 +129,8 @@ void CDTTManager::setRunnableName(const QString &runnableName)
 
         configureProcess();
     }
+    else
+        emit canSelectRunnable();
 }
 
 void CDTTManager::measure()
@@ -144,7 +151,8 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
 {
     if ("simulate" == m_mode)
     {
-        m_inputData["barcode"] = 12345678;
+        m_inputData["barcode"] = "00000000";
+        m_inputData["language"] = "english";
         return;
     }
     bool ok = true;
@@ -181,28 +189,17 @@ void CDTTManager::readOutput()
         qDebug() << "process finished successfully";
 
     QDir dir(m_outputPath);
-    bool found = false;
-    QString fileName = QString("Results-%0.xlsx").arg(m_inputData["barcode"].toString());
-    for(auto&& x : dir.entryList())
-    {
-        if(x == fileName)
-        {
-            found = true;
-            break;
-        }
-    }
-
-    if(found)
+    QString fileName = dir.filePath(QString("Results-%0.xlsx").arg(getInputDataValue("barcode").toString()));
+    if(QFileInfo::exists(fileName))
     {
         qDebug() << "found output xlsx file " << fileName;
-        QString filePath = m_outputPath + QDir::separator() + fileName;
-        qDebug() << "found output xlsx file path " << filePath;
-        m_test.fromFile(filePath);
+        qDebug() << "found output xlsx file path " << dir.absolutePath();
+        m_test.fromFile(fileName);
         m_outputFile.clear();
         if(m_test.isValid())
         {
             emit canWrite();
-            m_outputFile = filePath;
+            m_outputFile = fileName;
         }
         else
             qDebug() << "ERROR: input from file produced invalid test results";
@@ -216,7 +213,6 @@ void CDTTManager::readOutput()
 void CDTTManager::clearData()
 {
     m_test.reset();
-    m_outputFile.clear();
     emit dataChanged();
 }
 
@@ -237,7 +233,8 @@ void CDTTManager::finish()
 
 void CDTTManager::configureProcess()
 {
-    if ("simulate" == m_mode)
+    if("simulate" == m_mode &&
+       !m_inputData.isEmpty())
     {
         emit canMeasure();
         return;
@@ -247,7 +244,8 @@ void CDTTManager::configureProcess()
     QDir working(m_runnablePath);
     QDir out(m_outputPath);
     if (info.exists() && "jar" == info.completeSuffix() &&
-        working.exists() && out.exists())
+        working.exists() && out.exists() &&
+       !m_inputData.isEmpty())
     {
         qDebug() << "OK: configuring command";
 
@@ -255,9 +253,8 @@ void CDTTManager::configureProcess()
         QString command = "java";
         QStringList arguments;
         arguments << "-jar"
-            //<< "CDTTstereo.jar"
             << info.fileName()
-            << m_inputData.value("barcode").toString();
+            << getInputDataValue("barcode").toString();
 
         m_process.setProcessChannelMode(QProcess::ForwardedChannels);
         m_process.setProgram(command);

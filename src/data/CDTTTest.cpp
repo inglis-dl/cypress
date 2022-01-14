@@ -1,5 +1,14 @@
 #include "CDTTTest.h"
 
+#include <QDebug>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QFileInfo>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlRecord>
+#include <QSqlField>
+
 // the minimum output data keys required from a successful a test
 //
 CDTTTest::CDTTTest()
@@ -19,39 +28,43 @@ CDTTTest::CDTTTest()
 
     // These show up depending on mode
     // TODO: figure out which mode CLSA uses and only keep the relevant ones
-    /*m_outputKeyList << "adaptive srt";
-    m_outputKeyList << "adaptive st dev";
-    m_outputKeyList << "adaptive reversals";
-    m_outputKeyList << "triplets score";
-    m_outputKeyList << "triplets percent";
-    m_outputKeyList << "digit 1 score";
-    m_outputKeyList << "digit 1 percent";
-    m_outputKeyList << "digit 2 score";
-    m_outputKeyList << "digit 2 percent";
-    m_outputKeyList << "digit 3 score";
-    m_outputKeyList << "digit 3 percent";*/
+    /**
+      m_outputKeyList << "adaptive srt";
+      m_outputKeyList << "adaptive st dev";
+      m_outputKeyList << "adaptive reversals";
+      m_outputKeyList << "triplets score";
+      m_outputKeyList << "triplets percent";
+      m_outputKeyList << "digit 1 score";
+      m_outputKeyList << "digit 1 percent";
+      m_outputKeyList << "digit 2 score";
+      m_outputKeyList << "digit 2 percent";
+      m_outputKeyList << "digit 3 score";
+      m_outputKeyList << "digit 3 percent";
+    */
 }
 
-void CDTTTest::fromFile(const QString &filePath)
+//TODO: implement void CDTTTest::simulate()
+//
+
+void CDTTTest::fromFile(const QString &fileName)
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", "xlsx_connection");
-    QFileInfo fileInfo(filePath);
-    if(fileInfo.exists())
+    if(QFileInfo::exists(fileName))
     {
-        qDebug() << "OK, reading input file " << filePath;
+        qDebug() << "OK, reading input file " << fileName;
 
-        db.setDatabaseName("DRIVER={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};DBQ=" + filePath);
-        if (db.open()) {
+        //TODO: impl for linux or insert ifdef OS blockers
+        //
+        db.setDatabaseName("DRIVER={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};DBQ=" + fileName);
+        if(db.open())
+        {
             reset();
-
-            bool metaDataObtained = queryTestMetaData(db);
-            // Return if meta data is not successfully obtained
-            if (metaDataObtained == false) return;
-
-            queryTestMeasurements(db);
-            
-            int n = getNumberOfMeasurements();
-            addMetaDataCharacteristic("number of measurements", n);
+            if (queryTestMetaData(db))
+            {
+              queryTestMeasurements(db);
+              int n = getNumberOfMeasurements();
+              addMetaDataCharacteristic("number of measurements", n);
+            }
         }
     }
 }
@@ -123,22 +136,24 @@ bool CDTTTest::queryTestMetaData(const QSqlDatabase &db)
     QSqlQuery idQuery(idQueryString, db);
     QSqlRecord idRec = idQuery.record();
     qDebug() << "Id Fields: " << idRec.fieldName(0) + "," + idRec.fieldName(1);
-    if (idRec.fieldName(0) == "Subject ID:") {
+    if("Subject ID:" == idRec.fieldName(0))
+    {
         addMetaDataCharacteristic("user id", idRec.fieldName(1).toInt());
     }
 
     QString headerQueryString = QString("select * from [%0$A4:U6]").arg("Main");
     QSqlQuery headerQuery(headerQueryString, db);
     QSqlRecord headerRec = headerQuery.record();
-    bool headerOk = headerValid(headerRec);
-    if (headerOk == false) {
+    if(!headerValid(headerRec))
+    {
         return false;
     }
 
     headerQuery.next();
     loadHeaderMetaData(headerQuery);
 
-    if (headerQuery.next()) {
+    if(headerQuery.next())
+    {
         // more than 1 test present
         // TODO: Figure out what to do in this case. Should the newest test be used?
         //       Should there be some sort of date check
@@ -151,7 +166,8 @@ bool CDTTTest::queryTestMetaData(const QSqlDatabase &db)
 bool CDTTTest::headerValid(const QSqlRecord &record) const
 {
     QString debugString = record.fieldName(0);
-    for (int i = 1; i < 21; i++) {
+    for(int i = 1; i < 21; i++)
+    {
         debugString += "," + record.fieldName(i);
     }
     qDebug() << debugString;
@@ -216,7 +232,8 @@ void CDTTTest::addMetaIfDataExists(const QSqlQuery &query, const QString &metaNa
 {
     QVariant val = query.value(loc);
     qDebug() << metaName << ": " << val;
-    if (val.isNull() == false && val != "") {
+    if(!val.isNull() && "" != val)
+    {
         addMetaDataCharacteristic(metaName, val);
         qDebug() << metaName << " meta data added";
     }
@@ -225,15 +242,12 @@ void CDTTTest::addMetaIfDataExists(const QSqlQuery &query, const QString &metaNa
 bool CDTTTest::queryTestMeasurements(const QSqlDatabase &db)
 {
     QString pageName = QString("%0-%1").arg(getMetaDataCharacteristic("language").toString(), getMetaDataCharacteristic("talker").toString());
-    bool metaMatches = measurementHeaderMetaDataMatches(db, pageName);
-    if (metaMatches) {
-        bool measurementsAdded = queryMeasurementsSection(db, pageName, 6);
-        return measurementsAdded;
+    if(measurementHeaderMetaDataMatches(db, pageName))
+    {
+        return queryMeasurementsSection(db, pageName, 6);
     }
-    else {
-        // TODO: Decide what to do in this case
-        return false;
-    }
+    // TODO: Decide what to do in this case
+    return false;
 }
 
 bool CDTTTest::measurementHeaderMetaDataMatches(const QSqlDatabase &db, const QString &pageName) const
@@ -270,14 +284,17 @@ bool CDTTTest::measurementNumTestsMatches(const QSqlRecord &record) const
 {
     int numTests = record.fieldName(6).toInt();
     qDebug() << QString("Num Tests: %0").arg(numTests);
-    if (numTests == 1) {
+    if(1 == numTests)
+    {
         return true;
     }
-    else if (numTests > 1) {
+    else if (1 < numTests)
+    {
         // TODO: Figure out what to do in this case
         return false;
     }
-    else {
+    else
+    {
         return false;
     }
 }
@@ -303,6 +320,7 @@ bool CDTTTest::measurementMaskerMatches(const QSqlQuery &query) const
 
 bool CDTTTest::measurementDateMatches(const QSqlQuery &query) const
 {
+    Q_UNUSED(query)
     // TODO: Figure out how to convert from qvariant to date and datetime then compare just date portion
     // return query.value(2).toString() == getMetaDataCharacteristic("datetime");
     return true;
@@ -323,11 +341,13 @@ bool CDTTTest::queryMeasurementsSection(const QSqlDatabase &db, const QString &p
     query.next();
     query.next();
     bool headerCorrect = measurementHeaderMatches(query);
-    if (listNumMatches && speechLevelMatches && modeMatches && headerCorrect) {
+    if(listNumMatches && speechLevelMatches && modeMatches && headerCorrect)
+    {
         bool measurementsCollected = collectMeasurements(query);
         return measurementsCollected;
     }
-    else {
+    else
+    {
         qDebug() << "Incorrect formatting of page " << pageName;
         return false;
     }  
@@ -398,12 +418,14 @@ bool CDTTTest::collectMeasurements(QSqlQuery query)
             row += QString(",%0").arg(query.value(i).toString());
         }
         newMeasurement.fromString(row);
-        if (newMeasurement.isValid()) {
+        if(newMeasurement.isValid())
+        {
             addMeasurement(newMeasurement);
             numValidMeasurements++;
             qDebug() << newMeasurement.toString();
         }
-        else {
+        else
+        {
             qDebug() << "Found INVALID measurement item";
         }
     }

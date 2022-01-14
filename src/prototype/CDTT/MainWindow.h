@@ -47,11 +47,9 @@ protected:
     void closeEvent(QCloseEvent*) override;
 
 private:
-    void setupConnections();
-    void initializeButtonState();
     void readInput();
-    void populateBarcodeDisplay();
-    void validateRunnablePresense();
+    void initializeModel();
+    void initializeConnections();
 
     Ui::MainWindow* ui;
     QString m_inputFileName;
