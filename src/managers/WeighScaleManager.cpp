@@ -14,6 +14,12 @@
 WeighScaleManager::WeighScaleManager(QObject *parent) : SerialPortManager(parent)
 {
   setGroup("weigh_scale");
+
+  // all managers must check for barcode and language input values
+  //
+  m_inputKeyList << "barcode";
+  m_inputKeyList << "language";
+
   m_test.setMaximumNumberOfMeasurements(2);
 }
 
@@ -51,6 +57,30 @@ void WeighScaleManager::saveSettings(QSettings *settings) const
       if(m_verbose)
           qDebug() << "wrote serial port to settings file";
     }
+}
+
+void WeighScaleManager::setInputData(const QMap<QString, QVariant> &input)
+{
+    if("simulate" == m_mode)
+    {
+        m_inputData["barcode"] = "00000000";
+        m_inputData["language"] = "english";
+        return;
+    }
+    bool ok = true;
+    for(auto&& x : m_inputKeyList)
+    {
+        if(!input.contains(x))
+        {
+            ok = false;
+            qDebug() << "ERROR: missing expected input " << x;
+            break;
+        }
+        else
+            m_inputData[x] = input[x];
+    }
+    if(!ok)
+        m_inputData.clear();
 }
 
 void WeighScaleManager::clearData()
@@ -122,6 +152,11 @@ void WeighScaleManager::zeroDevice()
 
 void WeighScaleManager::measure()
 {
+    if(!m_validBarcode)
+    {
+        qDebug() << "ERROR: barcode has not been validated";
+        return;
+    }
     m_request = QByteArray("p");
     writeDevice();
 }

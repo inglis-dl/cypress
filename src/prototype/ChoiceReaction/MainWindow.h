@@ -2,12 +2,10 @@
 #define MAINWINDOW_H
 
 #include "ui_MainWindow.h"
-#include <QDialog>
+#include "../../managers/ChoiceReactionManager.h"
 #include <QStandardItemModel>
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
-
-#include "../../managers/ChoiceReactionManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,7 +16,7 @@ class MainWindow : public QDialog
     Q_OBJECT
 
 public:
-    MainWindow(QWidget* parent = nullptr);
+    MainWindow(QWidget* parent = Q_NULLPTR);
     ~MainWindow();
 
     // This method internally calls readInput
@@ -50,6 +48,8 @@ protected:
 
 private:
     void readInput();
+    void initializeModel();
+    void initializeConnections();
 
     Ui::MainWindow *ui;
     QString m_inputFileName;

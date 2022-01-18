@@ -14,7 +14,7 @@ class ManagerBase : public QObject
     Q_OBJECT
 
 public:
-    explicit ManagerBase(QObject *parent = nullptr);
+    explicit ManagerBase(QObject *parent = Q_NULLPTR);
     ~ManagerBase() { if(!p_widget.isNull()) p_widget.clear(); };
 
     // load and save device, paths and other constant settings to .ini

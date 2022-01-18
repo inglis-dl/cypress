@@ -18,7 +18,7 @@ class BluetoothLEManager : public ManagerBase
     Q_PROPERTY(QString deviceName MEMBER m_deviceName NOTIFY deviceNameChanged)
 
 public:
-    explicit BluetoothLEManager(QObject *parent = nullptr);
+    explicit BluetoothLEManager(QObject *parent = Q_NULLPTR);
 
     // the host supports Bluetooth Low Energy discovery
     //
@@ -41,9 +41,18 @@ public:
     void loadSettings(const QSettings &) override;
     void saveSettings(QSettings *) const override;
 
+    QJsonObject toJsonObject() const override;
+
     void buildModel(QStandardItemModel *) const override;
 
-    QJsonObject toJsonObject() const override;
+    // Set the input data.
+    // The input data is read from the input
+    // json file to the main application.  This method should be
+    // used to filter the minimum inputs needed to run
+    // a test.  Filtering keys are stored in member
+    // m_inputKeyList.
+    //
+    void setInputData(const QMap<QString, QVariant> &) override;
 
 signals:
 
@@ -75,6 +84,11 @@ signals:
 
 public slots:
 
+    // what the manager does in response to the main application
+    // window invoking its run method
+    //
+    void start() override;
+
     // Connect to the peripheral
     //
     void connectDevice();
@@ -89,7 +103,7 @@ public slots:
 
     void finish() override;
 
-    void start() override { this->scanDevices(); };
+    void connectUI(QWidget *) override {};
 
 private slots:
 

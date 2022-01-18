@@ -134,13 +134,6 @@ void SerialPortManager::selectDevice(const QString &label)
 
 void SerialPortManager::setDevice(const QSerialPortInfo &info)
 {
-    /*
-    if(m_port.portName() == info.portName())
-    {
-        return;
-    }
-    */
-
     m_deviceData.reset();
 
     if("simulate" == m_mode)

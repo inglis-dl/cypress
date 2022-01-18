@@ -12,13 +12,20 @@
 ChoiceReactionManager::ChoiceReactionManager(QObject *parent) :
     ManagerBase(parent)
 {
+    setGroup("choice_reaction");
+
+    // all managers must check for barcode and language input values
+    //
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
-    setGroup("choice_reaction");
+
+    //TODO:
+    // use the "clinic" CCB arg for the site identification
 }
 
 void ChoiceReactionManager::start()
 {
+    configureProcess();
     emit dataChanged();
 }
 
@@ -43,7 +50,7 @@ void ChoiceReactionManager::buildModel(QStandardItemModel *model) const
         int col = "left" == m.getCharacteristic("correct position") ? 0 : 1;
         int *row = 0 == col ? &row_left : &row_right;
         QStandardItem* item = model->item(*row,col);
-        if(nullptr == item)
+        if(Q_NULLPTR == item)
         {
           item = new QStandardItem();
           model->setItem(*row,col,item);
@@ -55,6 +62,10 @@ void ChoiceReactionManager::buildModel(QStandardItemModel *model) const
 
 bool ChoiceReactionManager::isDefined(const QString &exeName) const
 {
+    if("simulate" == m_mode)
+    {
+       return true;
+    }
     bool ok = false;
     if(!exeName.isEmpty())
     {
@@ -62,7 +73,6 @@ bool ChoiceReactionManager::isDefined(const QString &exeName) const
         if(info.exists() && info.isExecutable())
         {
             QString path = info.absolutePath();
-
             qDebug() << "path to " << exeName << " is " << path;
             QDir dir = QDir::cleanPath(path + QDir::separator() + "results");
             if(dir.exists())
@@ -81,7 +91,7 @@ bool ChoiceReactionManager::isDefined(const QString &exeName) const
     return ok;
 }
 
-void ChoiceReactionManager::setRunnableName(const QString &exeName)
+void ChoiceReactionManager::selectRunnable(const QString &exeName)
 {
     if(isDefined(exeName))
     {
@@ -93,16 +103,18 @@ void ChoiceReactionManager::setRunnableName(const QString &exeName)
 
        configureProcess();
     }
+    else
+       emit canSelectRunnable();
 }
 
 void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
 {
     if("simulate" == m_mode)
     {
-        m_inputData["barcode"] = 12345678;
+        m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
-        m_inputData["user"] = "sim_user";
-        m_inputData["site"] = "sim_site";
+        m_inputData["interviewer_id"] = "simi";
+        m_inputData["clinic"] = "simc";
         return;
     }
     bool ok = true;
@@ -128,8 +140,7 @@ void ChoiceReactionManager::loadSettings(const QSettings &settings)
     // eg., C:\Program Files (x86)\CCB\CCB.exe
     //
     QString exeName = settings.value(getGroup() + "/client/exe").toString();
-    qDebug() << "loading settings with exe " << exeName;
-    setRunnableName(exeName);
+    selectRunnable(exeName);
 }
 
 void ChoiceReactionManager::saveSettings(QSettings *settings) const
@@ -153,17 +164,20 @@ void ChoiceReactionManager::clearData()
 
 void ChoiceReactionManager::configureProcess()
 {
-    if("simulate" == m_mode)
+    if("simulate" == m_mode &&
+       !m_inputData.isEmpty())
     {
         emit canMeasure();
         return;
     }
-    // the exe is present
+    // the CCB.exe is present
+    //
     QFileInfo info(m_runnableName);
     QDir working(m_runnablePath);
     QDir out(m_outputPath);
     if(info.exists() && info.isExecutable() &&
-       working.exists() && out.exists())
+       working.exists() && out.exists() &&
+       !m_inputData.isEmpty())
     {
       qDebug() << "OK: configuring command";
 
@@ -171,21 +185,25 @@ void ChoiceReactionManager::configureProcess()
       QStringList command;
       command << m_runnableName;
 
-      if(m_inputData.contains("barcode"))
-         command << "/i" + m_inputData["barcode"].toString();
+      if(m_inputData.contains("interviewer_id"))
+         command << "/u" + getInputDataValue("interviewer_id").toString();
 
-      if(m_inputData.contains("site"))
-         command << "/c" + m_inputData["site"].toString();
+      // minimum required input to identify the file belonging to the participant
+      //
+      command << "/i" + getInputDataValue("barcode").toString();
 
-      if(m_inputData.contains("user"))
-         command << "/u" + m_inputData["user"].toString();
+      // currently do not require a site name
+      if(m_inputData.contains("clinic"))
+         command << "/c" + getInputDataValue("clinic").toString();
 
-      if(m_inputData.contains("language"))
+      // required language "english" or "french" converted to En or Fr
+      QString s = getInputDataValue("language").toString().toLower();
+      if(!s.isEmpty())
       {
-         QString s = m_inputData["language"].toString().toLower();
-         s = s.at(0).toUpper() + s.mid(1);
-         command << "/l" + s;
+        s = s.at(0).toUpper() + s.mid(1);
+        command << "/l" + s;
       }
+
       m_process.setProcessChannelMode(QProcess::ForwardedChannels);
       m_process.setProgram(m_runnableName);
       m_process.setArguments(command);
@@ -227,17 +245,17 @@ void ChoiceReactionManager::readOutput()
     if("simulate" == m_mode)
     {
         qDebug() << "simulating read out";
-        m_test.addMetaDataCharacteristic("start datetime",QDateTime::currentDateTime());
+        m_test.addMetaDataCharacteristic("start_datetime",QDateTime::currentDateTime());
         m_test.reset();
         for(int i = 0; i < 60; i++)
         {
             m_test.addMeasurement(ChoiceReactionMeasurement::simulate());
         }
         m_test.addMetaDataCharacteristic("version","simulated");
-        m_test.addMetaDataCharacteristic("user id","simulated");
-        m_test.addMetaDataCharacteristic("interview id","simulated");
-        m_test.addMetaDataCharacteristic("end datetime",QDateTime::currentDateTime());
-        m_test.addMetaDataCharacteristic("number of measurements",60);
+        m_test.addMetaDataCharacteristic("user_id","00000000");
+        m_test.addMetaDataCharacteristic("interviewer_id","00000000");
+        m_test.addMetaDataCharacteristic("end_datetime",QDateTime::currentDateTime());
+        m_test.addMetaDataCharacteristic("number_of_measurements",60);
         emit canWrite();
         emit dataChanged();
         return;
@@ -254,12 +272,22 @@ void ChoiceReactionManager::readOutput()
     QDir dir(m_outputPath);
     bool found = false;
     QString fileName;
+
+    // the file name will be of the form CLSA_ELCV_InterviewId_YYYYMMDD.csv
+    // the UserId is mandatory but we use it to identify the participant with the barcode
+    // the InterviewerId is either "Default" or the command line argument for
+    // the interviewer id
+    // to uniquely identify files by name when multiple tests are run in one day
+    // we will use the user id as the interviewer id and the interviewer id
+    // as the barcode
+    //
     for(auto&& x : dir.entryList())
     {
         // TODO: verify the file contains the data for the
         // prescribed participant ID
         //
-        if (x.endsWith(".csv"))
+        if (x.endsWith(".csv") &&
+            x.contains(getInputDataValue("barcode").toString()))
         {
             fileName = x;
             found = true;
@@ -270,7 +298,6 @@ void ChoiceReactionManager::readOutput()
     {
         qDebug() << "found output csv file " << fileName;
         fileName = m_outputPath + QDir::separator() + fileName;
-        qDebug() << "found output csv file " << fileName;
         m_test.fromFile(fileName);
         m_outputFile.clear();
         if(m_test.isValid())
@@ -289,6 +316,11 @@ void ChoiceReactionManager::readOutput()
 
 void ChoiceReactionManager::measure()
 {
+    if(!m_validBarcode)
+    {
+        qDebug() << "ERROR: barcode has not been validated";
+        return;
+    }
     if("simulate" == m_mode)
     {
         readOutput();
@@ -303,12 +335,16 @@ void ChoiceReactionManager::measure()
 
 void ChoiceReactionManager::finish()
 {
+    m_test.reset();
+    if(QProcess::NotRunning != m_process.state())
+    {
+        m_process.close();
+    }
     if(!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
     {
       QFile ofile(m_outputFile);
       ofile.remove();
     }
-    m_test.reset();
     m_outputFile.clear();
 }
 

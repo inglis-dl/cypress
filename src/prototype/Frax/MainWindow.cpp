@@ -267,6 +267,9 @@ void MainWindow::writeOutput()
 
     QJsonObject jsonObj = m_manager.toJsonObject();
 
+    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
+    jsonObj.insert("barcode",QJsonValue(barcode));
+
     if (m_verbose)
         qDebug() << "determine file output name ... ";
 

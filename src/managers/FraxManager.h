@@ -10,7 +10,7 @@ class FraxManager : public ManagerBase
 	Q_OBJECT
 
 public:
-    explicit FraxManager(QObject* parent = nullptr);
+    explicit FraxManager(QObject* parent = Q_NULLPTR);
 
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;

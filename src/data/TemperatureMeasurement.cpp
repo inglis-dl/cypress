@@ -77,7 +77,7 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      //
      QByteArray t_arr = arr.mid(1,2);
      std::reverse(t_arr.begin(), t_arr.end());
-     float t_value = t_arr.toHex().toInt(nullptr,16)*0.1;
+     float t_value = t_arr.toHex().toInt(Q_NULLPTR,16)*0.1;
      char buffer[10];
      sprintf(buffer,"%5.1f",t_value);
      QVariant t_var = QString::fromLatin1(buffer).toDouble();
@@ -87,12 +87,12 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      //
      QByteArray y_arr = arr.mid(5,2);
      std::reverse(y_arr.begin(), y_arr.end());
-     int y_value = y_arr.toHex().toInt(nullptr,16);
-     int m_value = arr.mid(7,1).toHex().toInt(nullptr,16);
-     int d_value = arr.mid(8,1).toHex().toInt(nullptr,16);
-     int h_value = arr.mid(9,1).toHex().toInt(nullptr,16);
-     int j_value = arr.mid(10,1).toHex().toInt(nullptr,16);
-     int s_value = arr.mid(11,1).toHex().toInt(nullptr,16);
+     int y_value = y_arr.toHex().toInt(Q_NULLPTR,16);
+     int m_value = arr.mid(7,1).toHex().toInt(Q_NULLPTR,16);
+     int d_value = arr.mid(8,1).toHex().toInt(Q_NULLPTR,16);
+     int h_value = arr.mid(9,1).toHex().toInt(Q_NULLPTR,16);
+     int j_value = arr.mid(10,1).toHex().toInt(Q_NULLPTR,16);
+     int s_value = arr.mid(11,1).toHex().toInt(Q_NULLPTR,16);
      setCharacteristic("timestamp",
        QDateTime(
          QDate(y_value,m_value,d_value),
@@ -102,7 +102,7 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
 
      // Temperature location type:
      //
-     int t_type = arr.mid(12,1).toHex().toInt(nullptr,16);
+     int t_type = arr.mid(12,1).toHex().toInt(Q_NULLPTR,16);
      QString m_str = 1 == t_type ? "body" : "surface/room";
      setCharacteristic("mode", m_str);
 

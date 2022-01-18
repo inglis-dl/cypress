@@ -14,7 +14,7 @@ class SerialPortManager : public ManagerBase
     Q_PROPERTY(QString deviceName MEMBER m_deviceName NOTIFY deviceNameChanged)
 
 public:
-    explicit SerialPortManager(QObject *parent = nullptr);
+    explicit SerialPortManager(QObject *parent = Q_NULLPTR);
 
     bool isDefined(const QString &) const;
 

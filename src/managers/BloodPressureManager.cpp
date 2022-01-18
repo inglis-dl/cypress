@@ -62,7 +62,7 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
     //    int col = i % 2;
     //    int* row = col == 0 ? &row_left : &row_right;
     //    QStandardItem* item = model->item(*row, col);
-    //    if (nullptr == item)
+    //    if (Q_NULLPTR == item)
     //    {
     //        item = new QStandardItem();
     //        model->setItem(*row, col, item);

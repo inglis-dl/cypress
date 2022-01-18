@@ -10,7 +10,7 @@ class BodyCompositionAnalyzerManager : public SerialPortManager
     Q_OBJECT
 
 public:
-    explicit BodyCompositionAnalyzerManager(QObject *parent = nullptr);
+    explicit BodyCompositionAnalyzerManager(QObject *parent = Q_NULLPTR);
 
     void loadSettings(const QSettings &) override;
     void saveSettings(QSettings*) const override;
@@ -23,6 +23,10 @@ public:
     static QMap<QByteArray,QString> initCommandLUT();
     static QMap<QByteArray,QString> initIncorrectResponseLUT();
     static QMap<QByteArray,QString> initConfirmationLUT();
+
+    void setInputData(const QMap<QString,QVariant> &) override;
+
+    void connectUI(QWidget *) override;
 
 signals:
    // ready to receive the input map
@@ -49,8 +53,6 @@ public slots:
     // confirm the input after setInputs
     //
     void confirmSettings();
-
-    void setInputs(const QMap<QString,QVariant> &);
 
     // retrieve a measurement from the device
     //
@@ -88,6 +90,8 @@ private:
 
     QVector<QByteArray> m_cache;
     QQueue<QByteArray> m_queue;
+
+//    QSharedPointer<QWidget> p_widget;
 };
 
 #endif // BODYCOMPOSITIONANALYZERMANAGER_H

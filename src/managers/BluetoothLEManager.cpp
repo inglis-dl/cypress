@@ -19,7 +19,19 @@
 BluetoothLEManager::BluetoothLEManager(QObject *parent) : ManagerBase(parent)
 {
     setGroup("thermometer");
+
+    // all managers must check for barcode and language input values
+    //
+    m_inputKeyList << "barcode";
+    m_inputKeyList << "language";
+
     m_test.setMaximumNumberOfMeasurements(2);
+}
+
+void BluetoothLEManager::start()
+{
+    scanDevices();
+    emit dataChanged();
 }
 
 void BluetoothLEManager::buildModel(QStandardItemModel *model) const
@@ -123,6 +135,30 @@ void BluetoothLEManager::saveSettings(QSettings *settings) const
       if(m_verbose)
           qDebug() << "wrote peripheral device to settings file";
     }
+}
+
+void BluetoothLEManager::setInputData(const QMap<QString, QVariant> &input)
+{
+    if("simulate" == m_mode)
+    {
+        m_inputData["barcode"] = "00000000";
+        m_inputData["language"] = "english";
+        return;
+    }
+    bool ok = true;
+    for(auto&& x : m_inputKeyList)
+    {
+        if(!input.contains(x))
+        {
+            ok = false;
+            qDebug() << "ERROR: missing expected input " << x;
+            break;
+        }
+        else
+            m_inputData[x] = input[x];
+    }
+    if(!ok)
+        m_inputData.clear();
 }
 
 bool BluetoothLEManager::lowEnergyEnabled() const
@@ -540,6 +576,11 @@ void BluetoothLEManager::serviceDiscoveryComplete()
 
 void BluetoothLEManager::measure()
 {
+    if(!m_validBarcode)
+    {
+        qDebug() << "ERROR: barcode has not been validated";
+        return;
+    }
     if("simulate" == m_mode)
     {
         m_deviceData.setCharacteristic("device firmware revision", "1.0.0");

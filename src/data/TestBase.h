@@ -152,7 +152,7 @@ T* TestBase<T>::find_first(const QString& key, const QVariant& value)
             }
         }
     }
-    return nullptr;
+    return Q_NULLPTR;
 }
 
 #endif // TESTBASE_H

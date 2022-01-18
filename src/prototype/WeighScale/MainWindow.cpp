@@ -18,7 +18,21 @@ MainWindow::MainWindow(QWidget *parent)
     , m_manager(this)
 {
     ui->setupUi(this);
+}
 
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::initialize()
+{
+  initializeModel();
+  initializeConnections();
+}
+
+void MainWindow::initializeModel()
+{
     // allocate 1 column x 2 rows of weight measurement items
     //
     for(int row=0;row<2;row++)
@@ -35,62 +49,52 @@ MainWindow::MainWindow(QWidget *parent)
     ui->testdataTableView->verticalHeader()->hide();
 }
 
-MainWindow::~MainWindow()
+void MainWindow::initializeConnections()
 {
-    delete ui;
-}
-
-void MainWindow::initialize()
-{
-  m_manager.setVerbose(m_verbose);
-  m_manager.setMode(m_mode);
-
-  // Read inputs, such as interview barcode
-  //
-  readInput();
-
-  // Populate barcode display
-  //
-  if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
-     ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
-  else
-     ui->barcodeLineEdit->setText("00000000"); // dummy
-
-  // Read the .ini file for cached local and peripheral device addresses
-  //
-  QDir dir = QCoreApplication::applicationDirPath();
-  QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
-  m_manager.loadSettings(settings);
-
-  // disable all buttons by default
+  // Disable all buttons by default
   //
   for(auto&& x : this->findChildren<QPushButton *>())
       x->setEnabled(false);
 
-  /**
-  // Save button to store measurement and device info to .json
-  //
-  ui->saveButton->setEnabled(false);
-
-  // Zero the scale
-  //
-  ui->zeroButton->setEnabled(false);
-
-  // Read the weight measurement off the scale
-  //
-  ui->measureButton->setEnabled(false);
-
-  // Connect to the device
-  //
-  ui->connectButton->setEnabled(false);
-
-  // Disconnect from the device
-  //
-  ui->disconnectButton->setEnabled(false);
-  */
   // Close the application
   //
   ui->closeButton->setEnabled(true);
+
+  // Every instrument stage launched by an interviewer requires input
+  // of the interview barcode that accompanies a participant.
+  // The expected barcode is passed from upstream via .json file.
+  // In simulate mode this value is ignored and a default barcode "00000000" is
+  // assigned instead.
+  // In production mode the input to the barcodeLineEdit is verified against
+  // the content held by the manager and a message or exception is thrown accordingly
+  //
+  // TODO: for DCS interviews, the first digit corresponds the the wave rank
+  // for inhome interviews there is a host dependent prefix before the barcode
+  //
+  if("simulate"==m_mode)
+  {
+    ui->barcodeLineEdit->setText("00000000");
+  }
+
+  QRegExp rx("\\d{8}");
+  QRegExpValidator *v_barcode = new QRegExpValidator(rx);
+  ui->barcodeLineEdit->setValidator(v_barcode);
+
+  connect(ui->barcodeLineEdit, &QLineEdit::editingFinished,
+          this,[this](){
+      if(m_manager.verifyBarcode(ui->barcodeLineEdit->text()))
+      {
+         qDebug() << "OK: valid interview barcode";
+      }
+      else
+      {
+          // TODO: consider throwing exception and killing the application
+          //
+          QMessageBox::critical(
+          this, QApplication::applicationName(),
+          tr("The input does not match the expected barcode for this participant."));
+      }
+  });
 
   // Scan for devices
   //
@@ -224,6 +228,23 @@ void MainWindow::initialize()
 
 void MainWindow::run()
 {
+    m_manager.setVerbose(m_verbose);
+    m_manager.setMode(m_mode);
+
+    // Read the .ini file for cached local and peripheral device addresses
+    //
+    QDir dir = QCoreApplication::applicationDirPath();
+    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
+    m_manager.loadSettings(settings);
+
+    // Read inputs, such as interview barcode
+    //
+    readInput();
+
+    // Pass the input to the manager for verification
+    //
+    m_manager.setInputData(m_inputData);
+
     m_manager.start();
 }
 
@@ -244,7 +265,14 @@ void MainWindow::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
-        qDebug() << "no input file";
+        if("simulate" == m_mode)
+        {
+            m_inputData["barcode"]="00000000";
+        }
+        else
+        {
+            qDebug() << "ERROR: no input json file";
+        }
         return;
     }
     QFileInfo info(m_inputFileName);
@@ -319,7 +347,7 @@ void MainWindow::writeOutput()
        {
          QStringList list;
          list
-           << barcode
+           << m_manager.getInputDataValue("barcode").toString()
            << QDate().currentDate().toString("yyyyMMdd")
            << m_manager.getGroup()
            << "test.json";

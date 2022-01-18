@@ -7,7 +7,7 @@
 class BloodPressureManager : public ManagerBase
 {
 public:
-    explicit BloodPressureManager(QObject* parent = nullptr);
+    explicit BloodPressureManager(QObject* parent = Q_NULLPTR);
 
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;

@@ -19,7 +19,21 @@ MainWindow::MainWindow(QWidget *parent)
     , m_manager(this)
 {
     ui->setupUi(this);
+}
 
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::initialize()
+{
+  initializeModel();
+  initializeConnections();
+}
+
+void MainWindow::initializeModel()
+{
     // allocate 1 column x 1 rows of temperature measurement items
     //
     for(int row = 0; row < 2; row++)
@@ -36,89 +50,21 @@ MainWindow::MainWindow(QWidget *parent)
     ui->testdataTableView->verticalHeader()->hide();
 }
 
-MainWindow::~MainWindow()
+void MainWindow::initializeConnections()
 {
-    delete ui;
-}
-
-void MainWindow::initialize()
-{
-    m_manager.setVerbose(m_verbose);
-    m_manager.setMode(m_mode);
-
-    // Read the .ini file for cached local and peripheral device addresses
-    //
-    QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("thermometer.ini"), QSettings::IniFormat);
-    m_manager.loadSettings(settings);
-
-    if(!m_manager.lowEnergyEnabled())
-    {
-      QMessageBox msgBox;
-      msgBox.setText(tr("The host operating system does not support bluetooth "
-                        "low energy discovery."));
-      msgBox.setIcon(QMessageBox::Critical);
-      msgBox.exec();
-
-      // TODO: return error code
-      //
-      close();
-    }
-    if(!m_manager.localDeviceEnabled())
-    {
-      QMessageBox msgBox;
-      msgBox.setText(tr("The host operating system has no local bluetooth "
-                          "low energy adapter."));
-      msgBox.setIcon(QMessageBox::Critical);
-      msgBox.exec();
-
-      if(m_verbose)
-          qDebug() << "failed to find a local adapter";
-
-      // TODO: return error code
-      //
-      close();
-    }
-
-    // Read inputs, such as interview barcode
-    //
-    readInput();
-
-    // Populate barcode display
-    //
-    if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
-       ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
-    else
-       ui->barcodeLineEdit->setText("00000000"); // dummy
-
-    // disable all buttons by default
+    // Disable all buttons by default
     //
     for(auto&& x : this->findChildren<QPushButton *>())
         x->setEnabled(false);
 
-    /**
-    // Save button to store measurement and device info to .json
+    // Close the application
     //
-    ui->saveButton->setEnabled(false);
+    ui->closeButton->setEnabled(true);
 
-    // Read the measurement off the device
-    //
-    ui->measureButton->setEnabled(false);
-
-    // Connect to the device
-    //
-    ui->connectButton->setEnabled(false);
-
-    // Disconnect from the device
-    //
-    ui->disconnectButton->setEnabled(false);
-
-    */
-    // scan for bluetooth low energy peripheral devices
+    // Scan for bluetooth low energy peripheral devices
     //
     ui->scanButton->setEnabled(true);
 
-    ui->closeButton->setEnabled(true);
 
     connect(ui->scanButton, &QPushButton::clicked,
             &m_manager, &BluetoothLEManager::start);
@@ -250,6 +196,52 @@ void MainWindow::initialize()
 
 void MainWindow::run()
 {
+    m_manager.setVerbose(m_verbose);
+    m_manager.setMode(m_mode);
+
+    // Read the .ini file for cached local and peripheral device addresses
+    //
+    QDir dir = QCoreApplication::applicationDirPath();
+    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
+    m_manager.loadSettings(settings);
+
+    if(!m_manager.lowEnergyEnabled())
+    {
+      QMessageBox msgBox;
+      msgBox.setText(tr("The host operating system does not support bluetooth "
+                        "low energy discovery."));
+      msgBox.setIcon(QMessageBox::Critical);
+      msgBox.exec();
+
+      // TODO: return error code
+      //
+      close();
+    }
+    if(!m_manager.localDeviceEnabled())
+    {
+      QMessageBox msgBox;
+      msgBox.setText(tr("The host operating system has no local bluetooth "
+                          "low energy adapter."));
+      msgBox.setIcon(QMessageBox::Critical);
+      msgBox.exec();
+
+      if(m_verbose)
+          qDebug() << "failed to find a local adapter";
+
+      // TODO: return error code
+      //
+      close();
+    }
+
+
+    // Read inputs, such as interview barcode
+    //
+    readInput();
+
+    // Pass the input to the manager for verification
+    //
+    m_manager.setInputData(m_inputData);
+
     m_manager.start();
 }
 
@@ -270,7 +262,14 @@ void MainWindow::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
-        qDebug() << "no input file";
+        if("simulate" == m_mode)
+        {
+            m_inputData["barcode"]="00000000";
+        }
+        else
+        {
+            qDebug() << "ERROR: no input json file";
+        }
         return;
     }
     QFileInfo info(m_inputFileName);
@@ -345,7 +344,7 @@ void MainWindow::writeOutput()
         {
           QStringList list;
           list
-            << barcode
+            << m_manager.getInputDataValue("barcode").toString()
             << QDate().currentDate().toString("yyyyMMdd")
             << m_manager.getGroup()
             << "test.json";

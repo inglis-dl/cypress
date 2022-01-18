@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QDateTime>
 #include <QDebug>
+#include <QDialog>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QSerialPortInfo>
@@ -31,6 +32,11 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::confirmLUT= BodyComposi
 BodyCompositionAnalyzerManager::BodyCompositionAnalyzerManager(QObject *parent) : SerialPortManager(parent)
 {
   setGroup("body_composition_analyzer");
+
+  // all managers must check for barcode and language input values
+  //
+  m_inputKeyList << "barcode";
+  m_inputKeyList << "language";
 }
 
 QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
@@ -269,7 +275,7 @@ void BodyCompositionAnalyzerManager::buildModel(QStandardItemModel *model) const
         if(m.isValid())
            s = m.toString();
         QStandardItem* item = model->item(row,0);
-        if(nullptr == item)
+        if(Q_NULLPTR == item)
         {
            item = new QStandardItem();
            model->setItem(row,0,item);
@@ -373,6 +379,11 @@ void BodyCompositionAnalyzerManager::confirmSettings()
 
 void BodyCompositionAnalyzerManager::measure()
 {
+    if(!m_validBarcode)
+    {
+        qDebug() << "ERROR: barcode has not been validated";
+        return;
+    }
     qDebug() << "measure called";
     clearQueue();
     m_queue.enqueue(BodyCompositionAnalyzerManager::defaultLUT["measure_body_fat"]);
@@ -382,8 +393,14 @@ void BodyCompositionAnalyzerManager::measure()
 // inputs should only be set AFTER a successful reset
 // the order of inputs is important
 //
-void BodyCompositionAnalyzerManager::setInputs(const QMap<QString,QVariant> &inputs)
+void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &input)
 {
+    if("simulate" == m_mode)
+    {
+        m_inputData["barcode"] = "00000000";
+        m_inputData["language"] = "english";
+    }
+
     qDebug() << "********************* SETTING INPUTS ******************";
 
     // for input limits we need the units of measurement
@@ -393,35 +410,37 @@ void BodyCompositionAnalyzerManager::setInputs(const QMap<QString,QVariant> &inp
 
     // Units of measurement cannot be set if tare weight and height have been set
     //
-    if(inputs.contains("measurement system"))
+    if(input.contains("measurement_system"))
     {
-        units = inputs["measurement system"].toString();
+        units = input["measurement_system"].toString();
         QByteArray request =
           "metric" == units ?
           BodyCompositionAnalyzerManager::defaultLUT["set_measurement_system_metric"] :
           BodyCompositionAnalyzerManager::defaultLUT["set_measurement_system_imperial"];
         m_queue.enqueue(request);
         qDebug() << "enqueued measurement system input " << request << "from " << units;
+        m_inputData["measurement_system"] = input["measurement_system"];
     }
 
     // Set the equation, Westerner or Oriental.  The default setting is the equation for Westerner.
     //
-    if(inputs.contains("equation"))
+    if(input.contains("equation"))
     {
         QByteArray request =
-          "westerner" == inputs["equation"].toString() ?
+          "westerner" == input["equation"].toString() ?
           BodyCompositionAnalyzerManager::defaultLUT["set_equation_westerner"] :
           BodyCompositionAnalyzerManager::defaultLUT["set_equation_oriental"];
         m_queue.enqueue(request);
-        qDebug() << "enqueued equation input " << request << "from " << inputs["equation"].toString();
+        qDebug() << "enqueued equation input " << request << "from " << input["equation"].toString();
+        m_inputData["measurement_system"] = input["equation"];
     }
 
     // Set the tare weight. The tare weight need not be set if not required: it will be treated as 0.
     // Tanita BF-350 load cell limits total weight to 200kg or 440lb
     //
-    if(inputs.contains("tare weight"))
+    if(input.contains("tare_weight"))
     {
-        double value = inputs["tare weight"].toDouble();
+        double value = input["tare_weight"].toDouble();
         double tw_min = 0.0;
         double tw_max = "metric" == units ? 200.0 : 440.0;
         if(tw_min <= value && value <= tw_max)
@@ -441,48 +460,51 @@ void BodyCompositionAnalyzerManager::setInputs(const QMap<QString,QVariant> &inp
             m_queue.enqueue(request);
             qDebug() << "enqueued tare weight input " << request << "from " <<
                         QString::number(value);
+            m_inputData["tare_weight"] = input["tare_weight"];
           }
           else
             qDebug() << "ERROR: tare weight incorrect format " << s;
 
         }
         else
-          qDebug() << "ERROR: tare weight input out of range " << inputs["tare weight"];
+          qDebug() << "ERROR: tare weight input out of range " << input["tare_weight"];
     }
 
     // Set gender
     //
-    if(inputs.contains("gender"))
+    if(input.contains("gender"))
     {
         QByteArray request =
-          "female" == inputs["gender"].toString() ?
+          "female" == input["gender"].toString() ?
           BodyCompositionAnalyzerManager::defaultLUT["set_gender_female"] :
           BodyCompositionAnalyzerManager::defaultLUT["set_gender_male"];
         m_queue.enqueue(request);
-        qDebug() << "enqueued gender input " << request << "from " << inputs["gender"].toString();
+        qDebug() << "enqueued gender input " << request << "from " << input["gender"].toString();
+        m_inputData["gender"] = input["gender"];
     }
 
     // Set body type.  Once all the necessary items of data have been entered, the unit will
     // determine on the basis of age and gender whether to switch to Athlete or Standard mode.
     // Hence, even if you chose Athlete mode, the unit may switch to Standard mode.
     //
-    if(inputs.contains("body type"))
+    if(input.contains("body_type"))
     {
         QByteArray request =
-          "athlete" == inputs["body type"].toString() ?
+          "athlete" == input["body_type"].toString() ?
           BodyCompositionAnalyzerManager::defaultLUT["set_body_type_athlete"] :
           BodyCompositionAnalyzerManager::defaultLUT["set_body_type_standard"];
         m_queue.enqueue(request);
-        qDebug() << "enqueued body type input " << request << "from " << inputs["body type"].toString();
+        qDebug() << "enqueued body type input " << request << "from " << input["body_type"].toString();
+        m_inputData["body_type"] = input["body_type"];
     }
 
     // Set height
     // Tanita BF-350 height limits 90-249cm in 1cm increments
     // or 3ft-7ft11.5in in 0.5in increments
     //
-    if(inputs.contains("height"))
+    if(input.contains("height"))
     {
-        QVariant value = inputs["height"];
+        QVariant value = input["height"];
         QVariant h_min = "metric" == units ? 90.0f : 36.0f;
         QVariant h_max = "metric" == units ? 249.0f : 95.5f;
         if(h_min.toFloat() <= value.toFloat() && value.toFloat() <= h_max.toFloat())
@@ -510,20 +532,21 @@ void BodyCompositionAnalyzerManager::setInputs(const QMap<QString,QVariant> &inp
             m_queue.enqueue(request);
             qDebug() << "enqueued height input " << request << "from " <<
                         value.toString();
+            m_inputData["height"] = value;
           }
           else
             qDebug() << "ERROR: incorrect height format " << s;
         }
         else
-          qDebug() << "ERROR: height input out of range " <<  inputs["height"];
+          qDebug() << "ERROR: height input out of range " <<  input["height"];
     }
 
     // Set age
     // Tanita BF-350 age limits 7-99 years in 1 year increments
     //
-    if(inputs.contains("age"))
+    if(input.contains("age"))
     {
-        int value = inputs["age"].toUInt();
+        int value = input["age"].toUInt();
         int a_min = 7;
         int a_max = 99;
         if(a_min <= value && value <= a_max)
@@ -538,12 +561,13 @@ void BodyCompositionAnalyzerManager::setInputs(const QMap<QString,QVariant> &inp
             m_queue.enqueue(request);
             qDebug() << "enqueued age input " << request << "from " <<
                         QString::number(value);
+            m_inputData["age"] = input["age"];
           }
           else
             qDebug() << "ERROR: incorrect age format " << s;
         }
         else
-          qDebug() << "ERROR: age input out of range " << inputs["age"];
+          qDebug() << "ERROR: age input out of range " << input["age"];
     }
 
     writeDevice();
@@ -704,7 +728,6 @@ void BodyCompositionAnalyzerManager::readDevice()
     qDebug() << "read device received buffer " << m_buffer;
 
     processResponse(m_request, m_buffer);
-
 }
 
 void BodyCompositionAnalyzerManager::writeDevice()
@@ -721,7 +744,6 @@ void BodyCompositionAnalyzerManager::writeDevice()
     {
       qDebug() << "dequeued request " << BodyCompositionAnalyzerManager::commandLUT[m_request.left(2)] << m_request;
       m_buffer.clear();
-      //m_cache.clear();
       m_port.write(m_request);
     }
   }
@@ -732,4 +754,263 @@ QJsonObject BodyCompositionAnalyzerManager::toJsonObject() const
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
     return json;
+}
+
+// EXPERIMENTAL ---------------------------------------------------
+
+#include <QComboBox>
+#include <QStatusBar>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QApplication>
+#include <QLineEdit>
+#include <QGroupBox>
+#include <QButtonGroup>
+
+void BodyCompositionAnalyzerManager::connectUI(QWidget *widget)
+{
+    p_widget.reset(widget);
+    // Scan for devices
+    //
+    connect(this, &BodyCompositionAnalyzerManager::scanningDevices,
+            p_widget.get(),[this]()
+      {
+        p_widget->findChild<QComboBox*>("deviceComboBox")->clear();
+        p_widget->findChild<QStatusBar*>("statusBar")->showMessage("Discovering serial ports...");
+      }
+    );
+
+    // Update the drop down list as devices are discovered during scanning
+    //
+    connect(this, &BodyCompositionAnalyzerManager::deviceDiscovered,
+            p_widget.get(), [this](const QString &label){
+        QComboBox* ptr = p_widget->findChild<QComboBox*>("deviceComboBox");
+        int index = ptr->findText(label);
+        if(-1 == index)
+        {
+            bool oldState = ptr->blockSignals(true);
+            ptr->addItem(label);
+            ptr->blockSignals(oldState);
+        }
+    });
+
+    connect(this, &BodyCompositionAnalyzerManager::deviceSelected,
+            p_widget.get(),[this](const QString &label){
+        QComboBox* ptr = p_widget->findChild<QComboBox*>("deviceComboBox");
+        if(label != ptr->currentText())
+        {
+            ptr->setCurrentIndex(ptr->findText(label));
+        }
+    });
+
+    // Prompt user to select a device from the drop down list when previously
+    // cached device information in the ini file is unavailable or invalid
+    //
+    connect(this, &BodyCompositionAnalyzerManager::canSelectDevice,
+            p_widget.get(),[this](){
+        p_widget->findChild<QStatusBar*>("statusBar")->showMessage("Ready to select...");
+
+        QMessageBox::warning(
+          p_widget.get(), QApplication::applicationName(),
+          tr("Select the port from the list or connect to the currently visible port in the list.  If the device "
+          "is not in the list, quit the application and check that the port is "
+          "working and connect the analyzer to it before running this application."));
+    });
+
+    // Select a device (serial port) from drop down list
+    //
+    connect(p_widget->findChild<QComboBox*>("deviceComboBox"),
+            &QComboBox::currentTextChanged,
+            this,&BodyCompositionAnalyzerManager::selectDevice);
+
+    // Ready to connect device
+    //
+    connect(this, &BodyCompositionAnalyzerManager::canConnectDevice,
+            p_widget.get(),[this](){
+        p_widget->findChild<QStatusBar*>("statusBar")->showMessage("Ready to connect...");
+
+        for(auto&& x : p_widget->findChildren<QPushButton *>())
+            x->setEnabled(false);
+
+        p_widget->findChild<QPushButton*>("connectButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("closeButton")->setEnabled(true);
+    });
+
+    // Connect to device
+    //
+    connect(p_widget->findChild<QPushButton*>("connectButton"),
+            &QPushButton::clicked,
+            this, &BodyCompositionAnalyzerManager::connectDevice);
+
+    // Connection is established, inputs are set and confirmed: enable measurement requests
+    //
+    connect(this, &BodyCompositionAnalyzerManager::canMeasure,
+            p_widget.get(),[this](){
+        p_widget->findChild<QStatusBar*>("statusBar")->showMessage("Ready to measure...");
+
+        p_widget->findChild<QPushButton*>("resetButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("setButton")->setEnabled(false);
+        p_widget->findChild<QPushButton*>("measureButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("confirmButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("saveButton")->setEnabled(false);
+    });
+
+    // Connection is established and a successful reset was done
+    //
+    connect(this, &BodyCompositionAnalyzerManager::canInput,
+            p_widget.get(),[this](){
+        p_widget->findChild<QStatusBar*>("statusBar")->showMessage("Ready to accept inputs...");
+
+        p_widget->findChild<QPushButton*>("connectButton")->setEnabled(false);
+        p_widget->findChild<QPushButton*>("disconnectButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("resetButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("setButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("measureButton")->setEnabled(false);
+        p_widget->findChild<QPushButton*>("confirmButton")->setEnabled(false);
+        p_widget->findChild<QPushButton*>("saveButton")->setEnabled(false);
+    });
+
+    // A successful confirmation of all inputs was done
+    //
+    connect(this, &BodyCompositionAnalyzerManager::canConfirm,
+            p_widget.get(),[this](){
+        p_widget->findChild<QStatusBar*>("statusBar")->showMessage("Ready to confirm inputs ...");
+
+        p_widget->findChild<QPushButton*>("connectButton")->setEnabled(false);
+        p_widget->findChild<QPushButton*>("disconnectButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("resetButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("setButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("measureButton")->setEnabled(false);
+        p_widget->findChild<QPushButton*>("confirmButton")->setEnabled(true);
+        p_widget->findChild<QPushButton*>("saveButton")->setEnabled(false);
+    });
+
+    // Disconnect from device
+    //
+    connect(p_widget->findChild<QPushButton*>("disconnectButton"),
+            &QPushButton::clicked,
+            this, &BodyCompositionAnalyzerManager::disconnectDevice);
+
+    // Reset the device (clear all input settings)
+    //
+    connect(p_widget->findChild<QPushButton*>("resetButton"),
+            &QPushButton::clicked,
+            this, &BodyCompositionAnalyzerManager::resetDevice);
+
+    // Set the inputs to the analyzer
+    //
+    connect(p_widget->findChild<QPushButton*>("setButton"),
+            &QPushButton::clicked,
+            p_widget.get(),[this](){
+        QMap<QString,QVariant> inputs;
+        inputs["equation"] = "westerner";
+
+        inputs["measurement system"] =
+          "metricRadio" == p_widget->findChild<QButtonGroup*>("unitsGroup")->checkedButton()->objectName() ?
+            "metric" : "imperial";
+
+        QString units = inputs["measurement system"].toString();
+
+        inputs["gender"] =
+          "maleRadio" == p_widget->findChild<QButtonGroup*>("genderGroup")->checkedButton()->objectName() ?
+            "male" : "female";
+
+        QString s = p_widget->findChild<QLineEdit*>("ageLineEdit")->text().simplified();
+        s = s.replace(" ","");
+        inputs["age"] = s.toUInt();
+
+        inputs["body type"] =
+          "standardRadio" == p_widget->findChild<QButtonGroup*>("bodyTypeGroup")->checkedButton()->objectName() ?
+            "standard" : "athlete";
+
+        s = p_widget->findChild<QLineEdit*>("heightLineEdit")->text().simplified();
+        s = s.replace(" ","");
+        inputs["height"] = "metric" == units ? s.toUInt() :  s.toDouble();
+
+        s = p_widget->findChild<QLineEdit*>("tareWeightLineEdit")->text().simplified();
+        s = s.replace(" ","");
+        inputs["tare weight"] = s.toDouble();
+
+        qDebug() << inputs;
+
+        this->setInputData(inputs);
+    });
+
+    // Confirm inputs and check if measurement can proceed
+    //
+    connect(p_widget->findChild<QPushButton*>("confirmButton"),
+            &QPushButton::clicked,
+            this, &BodyCompositionAnalyzerManager::confirmSettings);
+
+    // Request a measurement from the device
+    //
+    connect(p_widget->findChild<QPushButton*>("measureButton"),
+            &QPushButton::clicked,
+            this, &BodyCompositionAnalyzerManager::measure);
+/*
+    // Update the UI with any data
+    //
+    connect(&m_manager, &BodyCompositionAnalyzerManager::dataChanged,
+            this,[this](){
+        m_manager.buildModel(&m_model);
+        int nrow = m_model.rowCount();
+        QSize ts_pre = ui->testdataTableView->size();
+        ui->testdataTableView->setColumnWidth(0,ui->testdataTableView->size().width()-2);
+        ui->testdataTableView->resize(
+                    ui->testdataTableView->width(),
+                    nrow*(ui->testdataTableView->rowHeight(0)+1)+
+                    ui->testdataTableView->horizontalHeader()->height());
+        QSize ts_post = ui->testdataTableView->size();
+        int dx = ts_post.width()-ts_pre.width();
+        int dy = ts_post.height()-ts_pre.height();
+        this->resize(this->width()+dx,this->height()+dy);
+    });
+*/
+
+    // All measurements received: enable write test results
+    //
+    connect(this, &BodyCompositionAnalyzerManager::canWrite,
+            p_widget.get(),[this](){
+        p_widget->findChild<QStatusBar*>("statusBar")->showMessage("Ready to save results...");
+
+        p_widget->findChild<QPushButton*>("saveButton")->setEnabled(true);
+    });
+
+    QIntValidator *v_age = new QIntValidator(this);
+    v_age->setRange(7,99);
+    p_widget->findChild<QLineEdit*>("ageLineEdit")->setValidator(v_age);
+
+    // When the units are changed to imperial, the input field for
+    // height input must change to accomodate 0.5" increments
+    //
+    connect(p_widget->findChild<QButtonGroup*>("unitsGroup"),
+            QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),
+            p_widget.get(),[this](QAbstractButton *button){
+       QLineEdit* ptr =  p_widget->findChild<QLineEdit*>("heightLineEdit");
+       ptr->setText("");
+       if("metricRadio" == button->objectName())
+       {
+           QIntValidator *v_ht = new QIntValidator(this);
+           v_ht->setRange(90,249);
+           ptr->setValidator(v_ht);
+       }
+       else
+       {
+           QDoubleValidator *v_ht = new QDoubleValidator(this);
+           v_ht->setRange(36.0,7*12 + 11.5);
+           v_ht->setDecimals(1);
+           ptr->setValidator(v_ht);
+       }
+    });
+
+    connect(this, &BodyCompositionAnalyzerManager::error,
+            p_widget.get(), [this](const QString &error){
+        p_widget->findChild<QStatusBar*>("statusBar")->showMessage(error);
+
+        QMessageBox::warning(
+          p_widget.get(), QApplication::applicationName(),
+          tr("A fatal error occured while attempting a measurement and the "
+             "device was disconnected. Turn the device on if it is off, re-connect, "
+             "re-input and confirm the inputs."));
+    });
 }

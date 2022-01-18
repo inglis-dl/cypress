@@ -1,8 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QDialog>
 #include "../../managers/WeighScaleManager.h"
+#include <QDialog>
 #include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
@@ -14,7 +14,7 @@ class MainWindow : public QDialog
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = Q_NULLPTR);
     ~MainWindow();
 
     // This method internally calls readInput
@@ -39,7 +39,6 @@ public:
     bool isVerbose(){ return m_verbose; }
 
 public slots:
-
     void writeOutput();
 
 protected:
@@ -47,6 +46,8 @@ protected:
 
 private:
     void readInput();
+    void initializeModel();
+    void initializeConnections();
 
     Ui::MainWindow *ui;
     QString m_inputFileName;

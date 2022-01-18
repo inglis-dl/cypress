@@ -12,6 +12,11 @@
 AudiometerManager::AudiometerManager(QObject *parent) : SerialPortManager(parent)
 {
     setGroup("audiometer");
+
+    // all managers must check for barcode and language input values
+    //
+    m_inputKeyList << "barcode";
+    m_inputKeyList << "language";
 }
 
 void AudiometerManager::buildModel(QStandardItemModel* model) const
@@ -54,6 +59,30 @@ void AudiometerManager::saveSettings(QSettings *settings) const
       if(m_verbose)
           qDebug() << "wrote serial port to settings file";
     }
+}
+
+void AudiometerManager::setInputData(const QMap<QString, QVariant> &input)
+{
+    if("simulate" == m_mode)
+    {
+        m_inputData["barcode"] = "00000000";
+        m_inputData["language"] = "english";
+        return;
+    }
+    bool ok = true;
+    for(auto&& x : m_inputKeyList)
+    {
+        if(!input.contains(x))
+        {
+            ok = false;
+            qDebug() << "ERROR: missing expected input " << x;
+            break;
+        }
+        else
+            m_inputData[x] = input[x];
+    }
+    if(!ok)
+        m_inputData.clear();
 }
 
 void AudiometerManager::clearData()
@@ -127,6 +156,11 @@ void AudiometerManager::readDevice()
 
 void AudiometerManager::measure()
 {
+    if(!m_validBarcode)
+    {
+        qDebug() << "ERROR: barcode has not been validated";
+        return;
+    }
     clearData();
     const char cmd[] = {0x05,'4',0x0d};
     m_request = QByteArray::fromRawData(cmd,3);

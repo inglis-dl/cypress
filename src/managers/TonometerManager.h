@@ -10,7 +10,7 @@ class TonometerManager : public ManagerBase
 	Q_OBJECT
 
 public:
-    explicit TonometerManager(QObject* parent = nullptr);
+    explicit TonometerManager(QObject* parent = Q_NULLPTR);
 
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
@@ -43,7 +43,14 @@ public:
     //
     void setInputData(const QMap<QString,QVariant> &);
 
+    void connectUI(QWidget *) override {};
+
 public slots:
+
+    // what the manager does in response to the main application
+    // window invoking its run method
+    //
+    void start() override;
 
     // retrieve a measurement from the device
     //
@@ -55,8 +62,6 @@ public slots:
     void finish() override;
 
     void readOutput();
-
-    void start() override;
 
 private:
     QString m_runnableName;// full pathspec to ora.exe

@@ -26,9 +26,10 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
         qDebug() << "OK, reading input file " << fileName;
 
         QTextStream stream(&ifile);
+        int clinic_pos = -1;
         int version_pos = -1;
-        int userid_pos = -1; // the interviewer's id
-        int interviewid_pos = -1;  // should be the same as the barcode
+        int userid_pos = -1; // the CLSA interviewer id
+        int interviewid_pos = -1;  // the participant's interview barcode
 
         reset();
 
@@ -45,8 +46,9 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                 if((ChoiceReactionMeasurement::TEST_CODE-1) == code)
                 {
                     // get the position of the meta data key:
-                    // Version, InterviewerId, UserId
+                    // Version, InterviewerId, UserId, Clinic
                     //
+                    clinic_pos = l.indexOf(QLatin1String("Clinic"));
                     version_pos = l.indexOf(QLatin1String("Version"));
                     userid_pos = l.indexOf(QLatin1String("UserId"));
                     interviewid_pos = l.indexOf(QLatin1String("InterviewerId"));
@@ -70,15 +72,20 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                       addMetaDataCharacteristic("version",l.at(version_pos));
                       qDebug() << "adding version meta info";
                     }
+                    if(-1 != clinic_pos)
+                    {
+                      addMetaDataCharacteristic("clinic",l.at(clinic_pos));
+                      qDebug() << "adding clinic meta info";
+                    }
                     if(-1 != userid_pos)
                     {
-                      addMetaDataCharacteristic("user id",l.at(userid_pos));
+                      addMetaDataCharacteristic("user_id",l.at(userid_pos));
                       qDebug() << "adding user id meta info";
                     }
                     if(-1 != interviewid_pos)
                     {
-                      addMetaDataCharacteristic("interview id",l.at(interviewid_pos));
-                      qDebug() << "adding interview id meta info";
+                      addMetaDataCharacteristic("interviewer_id",l.at(interviewid_pos));
+                      qDebug() << "adding interviewer id meta info";
                     }
                     // get the position of the following meta data keys
                     // that are within the last line of the file with the correct code:
@@ -91,7 +98,7 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                         s = s.remove(QRegExp("\\s(AM|PM)$")).trimmed();
                         qDebug() << "end datetime string " << s;
                         QDateTime d = QDateTime::fromString(s, "MM/dd/yyyy HH:mm:ss");
-                        addMetaDataCharacteristic("end datetime",d);
+                        addMetaDataCharacteristic("end_datetime",d);
                         qDebug() << "adding end datetime meta info";
                     }
                     pos = l.indexOf(QLatin1String("StartDateTimes"));
@@ -102,7 +109,7 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                         qDebug() << "start datetime string " << s;
 
                         QDateTime d = QDateTime::fromString(s, "MM/dd/yyyy HH:mm:ss");
-                        addMetaDataCharacteristic("start datetime",d);
+                        addMetaDataCharacteristic("start_datetime",d);
                         qDebug() << "adding start datetime meta info";
                     }
                 }
@@ -113,7 +120,7 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
             }
             // additional meta data: the number of measurements
             int n = getNumberOfMeasurements();
-            addMetaDataCharacteristic("number of measurements",n);
+            addMetaDataCharacteristic("number_of_measurements",n);
         }
         qDebug() << "closed stream";
         ifile.close();

@@ -79,7 +79,7 @@ void CDTTManager::buildModel(QStandardItemModel* model) const
         int col = i%2;
         int* row = col == 0 ? &row_left : &row_right;
         QStandardItem* item = model->item(*row, col);
-        if (nullptr == item)
+        if (Q_NULLPTR == item)
         {
             item = new QStandardItem();
             model->setItem(*row, col, item);
@@ -92,10 +92,10 @@ void CDTTManager::buildModel(QStandardItemModel* model) const
 bool CDTTManager::isDefined(const QString& runnableName) const
 {
     bool ok = false;
-    if (!runnableName.isEmpty())
+    if(!runnableName.isEmpty())
     {
         QFileInfo info(runnableName);
-        if (info.exists() && "jar" == info.completeSuffix())
+        if(info.exists() && "jar" == info.completeSuffix())
         {
             QString path = info.absolutePath();
 
@@ -135,6 +135,11 @@ void CDTTManager::selectRunnable(const QString &runnableName)
 
 void CDTTManager::measure()
 {
+    if(!m_validBarcode)
+    {
+        qDebug() << "ERROR: barcode has not been validated";
+        return;
+    }
     if ("simulate" == m_mode)
     {
         readOutput();
@@ -193,7 +198,6 @@ void CDTTManager::readOutput()
     if(QFileInfo::exists(fileName))
     {
         qDebug() << "found output xlsx file " << fileName;
-        qDebug() << "found output xlsx file path " << dir.absolutePath();
         m_test.fromFile(fileName);
         m_outputFile.clear();
         if(m_test.isValid())

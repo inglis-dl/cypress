@@ -10,7 +10,7 @@ class CDTTManager : public ManagerBase
     Q_OBJECT
 
 public:
-    explicit CDTTManager(QObject* parent = nullptr);
+    explicit CDTTManager(QObject* parent = Q_NULLPTR);
 
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;

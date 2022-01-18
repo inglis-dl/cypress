@@ -8,7 +8,7 @@ class CommandLineParser : QObject
 {
     Q_OBJECT
 public:
-    explicit CommandLineParser(QObject* parent = nullptr);
+    explicit CommandLineParser(QObject* parent = Q_NULLPTR);
 
     enum CommandLineParseResult {
         CommandLineOk,

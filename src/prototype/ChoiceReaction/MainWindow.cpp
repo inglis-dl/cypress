@@ -17,7 +17,21 @@ MainWindow::MainWindow(QWidget *parent)
     , m_verbose(false)
 {
     ui->setupUi(this);
+}
 
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::initialize()
+{
+  initializeModel();
+  initializeConnections();
+}
+
+void MainWindow::initializeModel()
+{
     // allocate 2 columns x 8 rows of hearing measurement items
     //
     for(int col=0;col<2;col++)
@@ -38,58 +52,81 @@ MainWindow::MainWindow(QWidget *parent)
     ui->testdataTableView->verticalHeader()->hide();
 }
 
-MainWindow::~MainWindow()
+void MainWindow::initializeConnections()
 {
-    delete ui;
-}
-
-void MainWindow::initialize()
-{
-    m_manager.setVerbose(m_verbose);
-    m_manager.setMode(m_mode);
-
-    // Read inputs required to launch cognitive test
-    //
-    readInput();
-
-    // Populate barcode display
-    //
-    if(m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
-       ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
-    else
-       ui->barcodeLineEdit->setText("00000000"); // dummy
-
-    // read the path to C:\Program Files (x86)\Cardiff_University\CCB\CCB.exe
-    //
-    QDir dir = QCoreApplication::applicationDirPath();
-    qDebug() << "Dir: " << dir;
-    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
-    m_manager.loadSettings(settings);
-
-    // have the manager build the inputs from the input json file
-    m_manager.setInputData(m_inputData);
-
-    // disable all buttons by default
+    // Disable all buttons by default
     //
     for(auto&& x : this->findChildren<QPushButton *>())
         x->setEnabled(false);
 
-    /**
-    // Select the location of CCB.exe
-    //
-    ui->openButton->setEnabled(false);
-
-    // Launch CCB.exe
-    //
-    ui->measureButton->setEnabled(false);
-
-    // Save button to store measurement and device info to .json
-    //
-    ui->saveButton->setEnabled(false);
-    */
     // Close the application
     //
     ui->closeButton->setEnabled(true);
+
+    // Every instrument stage launched by an interviewer requires input
+    // of the interview barcode that accompanies a participant.
+    // The expected barcode is passed from upstream via .json file.
+    // In simulate mode this value is ignored and a default barcode "00000000" is
+    // assigned instead.
+    // In production mode the input to the barcodeLineEdit is verified against
+    // the content held by the manager and a message or exception is thrown accordingly
+    //
+    // TODO: for DCS interviews, the first digit corresponds the the wave rank
+    // for inhome interviews there is a host dependent prefix before the barcode
+    //
+    if("simulate"==m_mode)
+    {
+      ui->barcodeLineEdit->setText("00000000");
+    }
+
+    QRegExp rx("\\d{8}");
+    QRegExpValidator *v_barcode = new QRegExpValidator(rx);
+    ui->barcodeLineEdit->setValidator(v_barcode);
+
+    connect(ui->barcodeLineEdit, &QLineEdit::editingFinished,
+            this,[this](){
+        if(m_manager.verifyBarcode(ui->barcodeLineEdit->text()))
+        {
+           qDebug() << "OK: valid interview barcode";
+        }
+        else
+        {
+            // TODO: consider throwing exception and killing the application
+            //
+            QMessageBox::critical(
+            this, QApplication::applicationName(),
+            tr("The input does not match the expected barcode for this participant."));
+        }
+    });
+
+    connect(&m_manager,&ChoiceReactionManager::canSelectRunnable,
+            this,[this](){
+        for(auto&& x : this->findChildren<QPushButton *>())
+            x->setEnabled(false);
+        ui->closeButton->setEnabled(true);
+        ui->openButton->setEnabled(true);
+        static bool warn = true;
+        if(warn)
+        {
+            QMessageBox::warning(
+            this, QApplication::applicationName(),
+            tr("Select the exe by clicking Open and browsing to the "
+            "required executable (CCB.exe) and selecting the file.  If the executable "
+            "is valid click the Run button to start the test otherwise check the installation."));
+            warn = false;
+        }
+    });
+
+    connect(ui->openButton, &QPushButton::clicked,
+        this, [this]() {
+            QString fileName =
+                QFileDialog::getOpenFileName(
+                    this, tr("Open File"),
+                    QCoreApplication::applicationDirPath(),
+                    tr("Applications (*.exe, *)"));
+
+            m_manager.selectRunnable(fileName);
+        });
 
     // CCB.exe was found or set up successfully
     //
@@ -146,42 +183,30 @@ void MainWindow::initialize()
     //
     connect(ui->closeButton, &QPushButton::clicked,
             this, &MainWindow::close);
-
-    // validate the presence of CCB.exe and enable
-    // file selection as required
-    //
-    QString runnableName = m_manager.getRunnableName();
-    if(!m_manager.isDefined(runnableName))
-    {
-        ui->openButton->setEnabled(true);
-        QMessageBox::warning(
-          this, QApplication::applicationName(),
-          tr("Select the exe by clicking Open and browsing to the "
-          "required executable (CCB.exe) and selecting the file.  If the executable "
-          "is valid click the Run button to start the test otherwise check the installation."));
-    }
-
-    connect(ui->openButton, &QPushButton::clicked,
-            this,[this](){
-        QString fileName =
-          QFileDialog::getOpenFileName(
-            this, tr("Open File"),
-                    QCoreApplication::applicationDirPath(),
-                    tr("Applications (*.exe, *)"));
-        if(m_manager.isDefined(fileName))
-        {
-            m_manager.setRunnableName(fileName);
-            ui->measureButton->setEnabled(true);
-            ui->saveButton->setEnabled(false);
-        }
-        else
-             qDebug() << fileName << " not a valid executable";
-    });
 }
 
 void MainWindow::run()
 {
-  m_manager.start();
+    m_manager.setVerbose(m_verbose);
+    m_manager.setMode(m_mode);
+
+    // read the path to C:\Program Files (x86)\Cardiff_University\CCB\CCB.exe
+    //
+    QDir dir = QCoreApplication::applicationDirPath();
+    qDebug() << "Dir: " << dir;
+    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
+    m_manager.loadSettings(settings);
+
+    // Read inputs required to launch cognitive test
+    // In simulate mode the barcode is always populated with a default of "00000000"
+    //
+    readInput();
+
+    // Pass the input to the manager for verification
+    //
+    m_manager.setInputData(m_inputData);
+
+    m_manager.start();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -202,7 +227,14 @@ void MainWindow::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
-        qDebug() << "no input file";
+        if("simulate" == m_mode)
+        {
+            m_inputData["barcode"]="00000000";
+        }
+        else
+        {
+            qDebug() << "ERROR: no input json file";
+        }
         return;
     }
     QFileInfo info(m_inputFileName);
@@ -277,7 +309,7 @@ void MainWindow::writeOutput()
        {
          QStringList list;
          list
-           << barcode
+           << m_manager.getInputDataValue("barcode").toString()
            << QDate().currentDate().toString("yyyyMMdd")
            << m_manager.getGroup()
            << "test.json";

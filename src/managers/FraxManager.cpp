@@ -47,7 +47,7 @@ void FraxManager::buildModel(QStandardItemModel *model) const
     for(int i = 0; i < m_test.getNumberOfMeasurements(); i++)
     {
         QStandardItem* item = model->item(i, 0);
-        if (nullptr == item)
+        if (Q_NULLPTR == item)
         {
             item = new QStandardItem();
             model->setItem(i, 0, item);
@@ -99,16 +99,16 @@ QJsonObject FraxManager::toJsonObject() const
     return json;
 }
 
-bool FraxManager::isDefined(const QString &runnableName) const
+bool FraxManager::isDefined(const QString &exeName) const
 {
     if("simulate" == m_mode)
     {
        return true;
     }
     bool ok = false;
-    if(!runnableName.isEmpty())
+    if(!exeName.isEmpty())
     {
-        QFileInfo info(runnableName);
+        QFileInfo info(exeName);
         if(info.exists() && info.isExecutable())
         {
             ok = true;
@@ -117,12 +117,12 @@ bool FraxManager::isDefined(const QString &runnableName) const
     return ok;
 }
 
-void FraxManager::selectRunnable(const QString &exeName)
+void FraxManager::selectRunnable(const QString &runnableName)
 {
-    if(isDefined(exeName))
+    if(isDefined(runnableName))
     {
-        QFileInfo info(exeName);
-        m_runnableName = exeName;
+        QFileInfo info(runnableName);
+        m_runnableName = runnableName;
         m_runnablePath = info.absolutePath();
         m_outputFile = QDir(m_runnablePath).filePath("output.txt");
         m_inputFile =  QDir(m_runnablePath).filePath("input.txt");
@@ -158,6 +158,7 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
+
         m_inputData["type"] = "t";
         m_inputData["country_code"] = 19;
         m_inputData["age"] = 84.19;
@@ -171,7 +172,6 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
         m_inputData["secondary osteoporosis"] = 0;
         m_inputData["alcohol"] = 0;
         m_inputData["femoral_neck_bmd"] = -1.1;
-
         return;
     }
     bool ok = true;
@@ -254,7 +254,7 @@ void FraxManager::configureProcess()
         return;
     }
 
-    // The blackbox.exe and input.txt file are present
+    // blackbox.exe and input.txt file are present
     //
     QFileInfo info(m_runnableName);
     QDir working(m_runnablePath);
