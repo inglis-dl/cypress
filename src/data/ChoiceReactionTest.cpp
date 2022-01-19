@@ -10,11 +10,11 @@
 //
 ChoiceReactionTest::ChoiceReactionTest()
 {
-    m_outputKeyList << "user id";
-    m_outputKeyList << "start datetime";
-    m_outputKeyList << "end datetime";
-    m_outputKeyList << "interview id";
-    m_outputKeyList << "number of measurements";
+    m_outputKeyList << "user_id";
+    m_outputKeyList << "start_datetime";
+    m_outputKeyList << "end_datetime";
+    m_outputKeyList << "interviewer_id";
+    m_outputKeyList << "number_of_measurements";
     m_outputKeyList << "version";
 }
 
@@ -28,8 +28,8 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
         QTextStream stream(&ifile);
         int clinic_pos = -1;
         int version_pos = -1;
-        int userid_pos = -1; // the CLSA interviewer id
-        int interviewid_pos = -1;  // the participant's interview barcode
+        int userid_pos = -1; // the participant's interview barcode
+        int interviewerid_pos = -1;  // the interviewer id
 
         reset();
 
@@ -51,7 +51,7 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                     clinic_pos = l.indexOf(QLatin1String("Clinic"));
                     version_pos = l.indexOf(QLatin1String("Version"));
                     userid_pos = l.indexOf(QLatin1String("UserId"));
-                    interviewid_pos = l.indexOf(QLatin1String("InterviewerId"));
+                    interviewerid_pos = l.indexOf(QLatin1String("InterviewerId"));
 
                     qDebug() << "found header item positions at line " << QString::number(n_line);
                 }
@@ -82,9 +82,9 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                       addMetaDataCharacteristic("user_id",l.at(userid_pos));
                       qDebug() << "adding user id meta info";
                     }
-                    if(-1 != interviewid_pos)
+                    if(-1 != interviewerid_pos)
                     {
-                      addMetaDataCharacteristic("interviewer_id",l.at(interviewid_pos));
+                      addMetaDataCharacteristic("interviewer_id",l.at(interviewerid_pos));
                       qDebug() << "adding interviewer id meta info";
                     }
                     // get the position of the following meta data keys

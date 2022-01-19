@@ -9,6 +9,9 @@
 #include <QSettings>
 #include <QStandardItemModel>
 
+QString ChoiceReactionManager::CCB_PREFIX = "CLSA_ELCV";
+QString ChoiceReactionManager::CCB_CLINIC = "CYPRESS";
+
 ChoiceReactionManager::ChoiceReactionManager(QObject *parent) :
     ManagerBase(parent)
 {
@@ -113,8 +116,6 @@ void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
-        m_inputData["interviewer_id"] = "simi";
-        m_inputData["clinic"] = "simc";
         return;
     }
     bool ok = true;
@@ -131,7 +132,10 @@ void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
     if(!ok)
         m_inputData.clear();
     else
+    {
+        qDebug() << "OK: input data is ok in setInputData()";
         configureProcess();
+    }
 }
 
 void ChoiceReactionManager::loadSettings(const QSettings &settings)
@@ -170,7 +174,7 @@ void ChoiceReactionManager::configureProcess()
         emit canMeasure();
         return;
     }
-    // the CCB.exe is present
+    // CCB.exe is present
     //
     QFileInfo info(m_runnableName);
     QDir working(m_runnablePath);
@@ -186,22 +190,24 @@ void ChoiceReactionManager::configureProcess()
       command << m_runnableName;
 
       if(m_inputData.contains("interviewer_id"))
-         command << "/u" + getInputDataValue("interviewer_id").toString();
+         command << "/i" + getInputDataValue("interviewer_id").toString();
+      else
+         command << "/iNone";
 
       // minimum required input to identify the file belonging to the participant
       //
-      command << "/i" + getInputDataValue("barcode").toString();
+      command << "/u" + getInputDataValue("barcode").toString();
 
-      // currently do not require a site name
-      if(m_inputData.contains("clinic"))
-         command << "/c" + getInputDataValue("clinic").toString();
+      // TODO: consider using upstream host "clinic" identifier
+      //
+      command << "/c" + CCB_CLINIC;
 
-      // required language "english" or "french" converted to En or Fr
-      QString s = getInputDataValue("language").toString().toLower();
+      // required language "english" or "french" converted to E or F
+      //
+      QString s = getInputDataValue("language").toString().toUpper();
       if(!s.isEmpty())
       {
-        s = s.at(0).toUpper() + s.mid(1);
-        command << "/l" + s;
+        command << "/l" + QString(s.at(0));
       }
 
       m_process.setProcessChannelMode(QProcess::ForwardedChannels);
@@ -253,7 +259,7 @@ void ChoiceReactionManager::readOutput()
         }
         m_test.addMetaDataCharacteristic("version","simulated");
         m_test.addMetaDataCharacteristic("user_id","00000000");
-        m_test.addMetaDataCharacteristic("interviewer_id","00000000");
+        m_test.addMetaDataCharacteristic("interviewer_id","simulated");
         m_test.addMetaDataCharacteristic("end_datetime",QDateTime::currentDateTime());
         m_test.addMetaDataCharacteristic("number_of_measurements",60);
         emit canWrite();
@@ -269,35 +275,23 @@ void ChoiceReactionManager::readOutput()
     else
         qDebug() <<"process finished successfully";
 
-    QDir dir(m_outputPath);
-    bool found = false;
-    QString fileName;
-
-    // the file name will be of the form CLSA_ELCV_InterviewId_YYYYMMDD.csv
-    // the UserId is mandatory but we use it to identify the participant with the barcode
-    // the InterviewerId is either "Default" or the command line argument for
-    // the interviewer id
-    // to uniquely identify files by name when multiple tests are run in one day
-    // we will use the user id as the interviewer id and the interviewer id
-    // as the barcode
+    // Output file name will be of the form
+    // <CCB_PREFIX>_<CCB_CLINIC>_YYYYMMDD.csv
+    // if CCB_CLINC is not specified at run time with /c option CCB_CLINIC = "Default"
+    // YYYYMMDD is the current date.  Multiple runs of CCB.exe therefore overwrite
+    // the output file.
+    // user id and interviewer id are embedded in the csv file content.
     //
-    for(auto&& x : dir.entryList())
-    {
-        // TODO: verify the file contains the data for the
-        // prescribed participant ID
-        //
-        if (x.endsWith(".csv") &&
-            x.contains(getInputDataValue("barcode").toString()))
-        {
-            fileName = x;
-            found = true;
-            break;
-        }
-    }
-    if(found)
+    //
+    QStringList pattern;
+    pattern << CCB_PREFIX << CCB_CLINIC << QDate().currentDate().toString("yyyyMMdd");
+    QString fileName = pattern.join("_") + ".csv";
+    QDir dir(m_outputPath);
+    if(dir.exists(fileName))
     {
         qDebug() << "found output csv file " << fileName;
-        fileName = m_outputPath + QDir::separator() + fileName;
+        fileName.prepend(QDir::separator());
+        fileName.prepend(m_outputPath);
         m_test.fromFile(fileName);
         m_outputFile.clear();
         if(m_test.isValid())
@@ -306,7 +300,12 @@ void ChoiceReactionManager::readOutput()
             m_outputFile = fileName;
         }
         else
+        {
+            // remove the file
+            QFile::remove(fileName);
             qDebug() << "ERROR: input from file produced invalid test results";
+            qDebug() << "removing " << fileName;
+        }
 
         emit dataChanged();
     }

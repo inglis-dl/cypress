@@ -190,7 +190,7 @@ void MainWindow::run()
     m_manager.setVerbose(m_verbose);
     m_manager.setMode(m_mode);
 
-    // read the path to C:\Program Files (x86)\Cardiff_University\CCB\CCB.exe
+    // Read the path to C:\Program Files (x86)\Cardiff_University\CCB\CCB.exe
     //
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
@@ -245,6 +245,7 @@ void MainWindow::readInput()
       file.open(QIODevice::ReadOnly | QIODevice::Text);
       QString val = file.readAll();
       file.close();
+
       qDebug() << val;
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());

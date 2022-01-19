@@ -12,6 +12,9 @@ class ChoiceReactionManager: public ManagerBase
 public:
     explicit ChoiceReactionManager(QObject *parent = Q_NULLPTR);
 
+    static QString CCB_PREFIX;
+    static QString CCB_CLINIC;
+
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
 
