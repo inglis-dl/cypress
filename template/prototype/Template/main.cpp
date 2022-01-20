@@ -1,14 +1,14 @@
 #include "MainWindow.h"
-#include <QtWidgets/QApplication>
+
 #include "../../../src/auxiliary/CommandLineParser.h"
+#include <QApplication>
 #include <QMessageBox>
-#include <QString>
 
 int main(int argc, char *argv[])
 {
     QApplication::setOrganizationName("CLSA");
     QApplication::setOrganizationDomain("clsa-elcv.ca");
-    QApplication::setApplicationName("Template");
+    QApplication::setApplicationName("TEMPLATE");
     QApplication::setApplicationVersion("1.0.0");
 
     QApplication app(argc, argv);

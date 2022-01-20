@@ -11,7 +11,11 @@
 TemplateManager::TemplateManager(QObject* parent) : ManagerBase(parent)
 {
     setGroup("template");
+
+    // all managers must check for barcode and language input values
+    //
     m_inputKeyList << "barcode";
+    m_inputKeyList << "language";
 }
 
 void TemplateManager::start()
@@ -30,10 +34,18 @@ void TemplateManager::saveSettings(QSettings* settings) const
 QJsonObject TemplateManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if ("simulate" != m_mode)
+    if("simulate" != m_mode)
     {
         // Simulate mode code
     }
+    QJsonObject jsonInput;
+    for(auto&& x : m_inputData.toStdMap())
+    {
+        // convert to space delimited phrases to snake_case
+        //
+        jsonInput.insert(QString(x.first).toLower().replace(QRegExp("[\\s]+"),"_"), QJsonValue::fromVariant(x.second));
+    }
+    json.insert("test_input",jsonInput);
     return json;
 }
 
@@ -69,6 +81,11 @@ void TemplateManager::buildModel(QStandardItemModel* model) const
 
 void TemplateManager::measure()
 {
+    if(!m_validBarcode)
+    {
+        qDebug() << "ERROR: barcode has not been validated";
+        return;
+    }
     if ("simulate" == m_mode)
     {
         readOutput();
@@ -82,31 +99,33 @@ void TemplateManager::measure()
 
 void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    if ("simulate" == m_mode)
+    if("simulate" == m_mode)
     {
-        m_inputData["barcode"] = 12345678;
+        m_inputData["barcode"] = "00000000";
+        m_inputData["language"] = "english";
         return;
     }
     bool ok = true;
-    for (auto&& x : m_inputKeyList)
+    m_inputData = input;
+    for(auto&& x : m_inputKeyList)
     {
-        if (!input.contains(x))
+        if(!input.contains(x))
         {
             ok = false;
             break;
         }
-        else
-            m_inputData[x] = input[x];
     }
-    if (!ok)
+    if(!ok)
         m_inputData.clear();
-    ////else
-    //    // DO SOMETHING
+    else
+    {
+    // DO SOMETHING
+    }
 }
 
 void TemplateManager::readOutput()
 {
-    if ("simulate" == m_mode)
+    if("simulate" == m_mode)
     {
         // TODO: Implement simulate mode
         return;

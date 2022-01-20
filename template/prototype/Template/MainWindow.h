@@ -1,10 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-
-#include "ui_MainWindow.h"
 #include "../../managers/TemplateManager.h"
+#include <QDialog>
 #include <QStandardItemModel>
+
+QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -46,10 +47,9 @@ protected:
     void closeEvent(QCloseEvent*) override;
 
 private:
-    void setupConnections();
-    void initializeButtonState();
     void readInput();
-    void populateBarcodeDisplay();
+    void initializeModel();
+    void initializeConnections();
 
     Ui::MainWindow* ui;
     QString m_inputFileName;

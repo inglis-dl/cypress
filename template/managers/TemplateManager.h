@@ -7,7 +7,7 @@
 class TemplateManager : public ManagerBase
 {
 public:
-    explicit TemplateManager(QObject* parent = nullptr);
+    explicit TemplateManager(QObject* parent = Q_NULLPTR);
 
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
@@ -16,16 +16,21 @@ public:
 
     void buildModel(QStandardItemModel*) const override;
 
-        // Set the input data.
-        // The input data is read from the input
-        // json file to the main application.  This method should be
-        // used to filter the minimum inputs needed to run
-        // a test.  Filtering keys are stored in member
-        // m_inputKeyList.
-        //
-        void setInputData(const QMap<QString, QVariant>&);
+    // Set the input data.
+    // The input data is read from the input
+    // json file to the main application.  This method should be
+    // used to filter the minimum inputs needed to run
+    // a test.  Filtering keys are stored in member
+    // m_inputKeyList.
+    //
+    void setInputData(const QMap<QString, QVariant> &) override;
 
 public slots:
+
+    // what the manager does in response to the main application
+    // window invoking its run method
+    //
+    void start() override;
 
     // retrieve a measurement from the device
     //
@@ -38,15 +43,10 @@ public slots:
 
     void readOutput();
 
-    void start() override;
-
 private:
     TemplateTest m_test;
 
     void clearData() override;
-
-    QMap<QString, QVariant> m_inputData;
-    QList<QString> m_inputKeyList;
 };
 
 #endif // TEMPLATEMANAGER_H
