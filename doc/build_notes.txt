@@ -42,3 +42,12 @@ QtUsb library
 - install includes and libs are then readily available in Qt Creator
 - in .pro file add usb lib (eg., QT += usb)
 - header files are prefixed (eg., #include <QtUsb/QUsb>)
+
+Win 7 build of QtUsb
+
+- git clone into C:\files\repository
+- install perl using 32 bit msi installer from https://strawberryperl.com/
+- check perl is installed: open win command prompt: perl -v
+- cd C:\files\repository\QtUsb
+- build_msvc.bat 2019 x64 static C:\Qt\5.15.2\msvc2019_x64
+
