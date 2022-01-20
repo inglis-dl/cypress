@@ -4,7 +4,7 @@
 win32 {
 TEMPLATE = app
 TARGET = Audiometer
-DESTDIR = ../../../../CypressBuilds/Audiometer/x64/Debug
+DESTDIR = ../../../../build/cypress/audiometer
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .

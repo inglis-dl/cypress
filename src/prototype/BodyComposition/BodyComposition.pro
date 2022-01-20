@@ -4,7 +4,7 @@
 win32 {
 TEMPLATE = app
 TARGET = BodyComposition
-DESTDIR = ../../../../CypressBuilds/BodyComposition/x64/Debug
+DESTDIR = ../../../../build/cypress/body_composition
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .

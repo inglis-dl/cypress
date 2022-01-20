@@ -4,7 +4,7 @@
 win32 {
 TEMPLATE = app
 TARGET = Tonometer
-DESTDIR = ../../../../CypressBuilds/Tonometer/x64/Debug
+DESTDIR = ../../../../build/cypress/tonometer
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .

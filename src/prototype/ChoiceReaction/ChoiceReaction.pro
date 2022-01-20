@@ -4,7 +4,7 @@
 win32 {
 TEMPLATE = app
 TARGET = ChoiceReaction
-DESTDIR = ../../../../CypressBuilds/ChoiceReaction/x64/Debug
+DESTDIR = ../../../../build/cypress/choice_reaction
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .

@@ -4,7 +4,7 @@
 win32 {
 TEMPLATE = app
 TARGET = LowEnergyThermometer
-DESTDIR = ../../../../CypressBuilds/LowEnergyThermometer/x64/Debug
+DESTDIR = ../../../../build/cypress/thermometer
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .

@@ -4,7 +4,7 @@
 win32 {
 TEMPLATE = app
 TARGET = WeighScale
-DESTDIR = ../../../../CypressBuilds/WeighScale/x64/Debug
+DESTDIR = ../../../../build/cypress/weigh_scale
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .

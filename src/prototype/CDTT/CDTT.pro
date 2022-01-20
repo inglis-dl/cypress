@@ -4,7 +4,7 @@
 win32 {
 TEMPLATE = app
 TARGET = CDTT
-DESTDIR = ../../../../CypressBuilds/CDTT/x64/Debug
+DESTDIR = ../../../../build/cypress/cdtt
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .
