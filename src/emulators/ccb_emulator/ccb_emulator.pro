@@ -4,7 +4,7 @@
 win32 {
 TEMPLATE = app
 TARGET = ccb_emulator
-DESTDIR = ../../../../build/cypress/choice_reaction/emulator
+DESTDIR = ../../../../../build/cypress/choice_reaction/emulator
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .

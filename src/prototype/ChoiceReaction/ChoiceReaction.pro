@@ -4,7 +4,7 @@
 win32 {
 TEMPLATE = app
 TARGET = ChoiceReaction
-DESTDIR = ../../../../build/cypress/choice_reaction
+DESTDIR = ../../../build/cypress/choice_reaction
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .
@@ -18,7 +18,7 @@ QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++11 console
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.

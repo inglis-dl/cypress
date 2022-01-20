@@ -175,6 +175,7 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
         return;
     }
     bool ok = true;
+    m_inputData = input;
     for(auto&& x : m_inputKeyList)
     {
         if(!input.contains(x))
@@ -183,8 +184,6 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
             qDebug() << "ERROR: missing expected input " << x;
             break;
         }
-        else
-            m_inputData[x] = input[x];
     }
     if(!ok)
         m_inputData.clear();

@@ -140,7 +140,7 @@ void CDTTManager::measure()
         qDebug() << "ERROR: barcode has not been validated";
         return;
     }
-    if ("simulate" == m_mode)
+    if("simulate" == m_mode)
     {
         readOutput();
         return;
@@ -154,22 +154,21 @@ void CDTTManager::measure()
 
 void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    if ("simulate" == m_mode)
+    if("simulate" == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
         return;
     }
     bool ok = true;
-    for (auto&& x : m_inputKeyList)
+    m_inputData = input;
+    for(auto&& x : m_inputKeyList)
     {
         if (!input.contains(x))
         {
             ok = false;
             break;
         }
-        else
-            m_inputData[x] = input[x];
     }
     if (!ok)
         m_inputData.clear();

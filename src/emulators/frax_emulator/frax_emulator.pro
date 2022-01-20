@@ -4,7 +4,7 @@
 win32 {
 TEMPLATE = app
 TARGET = frax_emulator
-DESTDIR = ../../../../build/cypress/frax/emulator
+DESTDIR = ../../../../../build/cypress/frax/emulator
 CONFIG += debug
 LIBS += -L"."
 DEPENDPATH += .
