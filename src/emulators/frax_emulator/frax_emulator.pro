@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 win32 {
 TEMPLATE = app
-TARGET = Frax
+TARGET = frax_emulator
 DESTDIR = ../../../../CypressBuilds/Frax/emulator/x64/Debug
 CONFIG += debug
 LIBS += -L"."

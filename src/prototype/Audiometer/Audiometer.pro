@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 win32 {
 TEMPLATE = app
-TARGET = CDTT
+TARGET = Audiometer
 DESTDIR = ../../../../CypressBuilds/Audiometer/x64/Debug
 CONFIG += debug
 LIBS += -L"."

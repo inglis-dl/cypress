@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 win32 {
 TEMPLATE = app
-TARGET = CDTT
+TARGET = BodyComposition
 DESTDIR = ../../../../CypressBuilds/BodyComposition/x64/Debug
 CONFIG += debug
 LIBS += -L"."

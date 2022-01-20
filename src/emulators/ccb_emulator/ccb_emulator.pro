@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 win32 {
 TEMPLATE = app
-TARGET = CDTT
+TARGET = ccb_emulator
 DESTDIR = ../../../../CypressBuilds/ChoiceReaction/emulator/x64/Debug
 CONFIG += debug
 LIBS += -L"."

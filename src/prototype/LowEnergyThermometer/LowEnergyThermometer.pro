@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 win32 {
 TEMPLATE = app
-TARGET = CDTT
+TARGET = LowEnergyThermometer
 DESTDIR = ../../../../CypressBuilds/LowEnergyThermometer/x64/Debug
 CONFIG += debug
 LIBS += -L"."

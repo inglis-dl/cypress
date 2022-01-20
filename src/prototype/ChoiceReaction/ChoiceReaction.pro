@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 win32 {
 TEMPLATE = app
-TARGET = CDTT
+TARGET = ChoiceReaction
 DESTDIR = ../../../../CypressBuilds/ChoiceReaction/x64/Debug
 CONFIG += debug
 LIBS += -L"."

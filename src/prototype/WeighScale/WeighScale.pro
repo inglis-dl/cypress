@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 win32 {
 TEMPLATE = app
-TARGET = CDTT
+TARGET = WeighScale
 DESTDIR = ../../../../CypressBuilds/WeighScale/x64/Debug
 CONFIG += debug
 LIBS += -L"."
