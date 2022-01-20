@@ -24,16 +24,6 @@ public:
     //
     bool isDefined(const QString &) const;
 
-    // set the executable full path and name
-    // calls isDefined to validate the passed arg
-    //
-    void setRunnableName(const QString &);
-
-    QString getRunnableName() const
-    {
-        return m_runnableName;
-    }
-
     // Set the input data.
     // The input data is read from the input
     // json file to the main application.  This method should be
@@ -41,7 +31,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QMap<QString,QVariant> &);
+    void setInputData(const QMap<QString,QVariant> &) override;
 
     void connectUI(QWidget *) override {};
 
@@ -61,7 +51,24 @@ public slots:
     //
     void finish() override;
 
+    // set the executable full path and name
+    // calls isDefined to validate the passed arg
+    //
+    void selectRunnable(const QString &);
+
     void readOutput();
+
+signals:
+
+    // a valid runnable was selected
+    // manager attempts to configure the process and may emit canMeasure on success
+    //
+    void runnableSelected();
+
+    // no runnable available or the selected runnable is invalid
+    // signal can be connected to a ui slot to launch a File select dialog
+    //
+    void canSelectRunnable();
 
 private:
     QString m_runnableName;// full pathspec to ora.exe
@@ -75,9 +82,6 @@ private:
     TonometerTest m_test;
 
     void clearData() override;
-
-    QMap<QString,QVariant> m_inputData;
-    QList<QString> m_inputKeyList;
 
     void configureProcess();
 };

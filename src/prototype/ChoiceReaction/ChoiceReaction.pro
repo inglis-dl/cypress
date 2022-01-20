@@ -3,22 +3,18 @@
 # ------------------------------------------------------
 win32 {
 TEMPLATE = app
-TARGET = ChoiceReaction
-DESTDIR = ../../../../CypressBuilds/CognitiveTest
+TARGET = CDTT
+DESTDIR = ../../../../CypressBuilds/ChoiceReaction/x64/Debug
 CONFIG += debug
-DEFINES += _WINDOWS _UNICODE _ENABLE_EXTENDED_ALIGNED_STORAGE WIN64
-LIBS += -L"../../../../../../../../../openssl/lib" \
-    -L"../../../../../../../../../Utils/my_sql/mysql-5.7.25-winx64/lib" \
-    -L"../../../../../../../../../Utils/postgresql/pgsql/lib" \
-    -lshell32
+LIBS += -L"."
 DEPENDPATH += .
 MOC_DIR += .
 OBJECTS_DIR += debug
 UI_DIR += .
 RCC_DIR += GeneratedFiles
 }
-unix {
-QT       += core gui
+
+QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -27,7 +23,6 @@ CONFIG += c++11
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-}
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \

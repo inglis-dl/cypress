@@ -2,7 +2,6 @@
 #include <QDebug>
 #include <QFileInfo>
 #include <QByteArray>
-//#include <QFile>
 #include <QDir>
 #include <QDate>
 

@@ -12,6 +12,11 @@ TonometerManager::TonometerManager(QObject* parent):
 {
     setGroup("tonometer");
 
+    // all managers must check for barcode and language input values
+    //
+    m_inputKeyList << "barcode";
+    m_inputKeyList << "language";
+
     m_inputKeyList << "date_of_birth";
     m_inputKeyList << "sex";
 }
@@ -39,10 +44,10 @@ void TonometerManager::buildModel(QStandardItemModel *model) const
 void TonometerManager::loadSettings(const QSettings& settings)
 {
     // the full spec path name including exe name
-    // eg., ../frax_module/blackbox.exe
+    // eg., C:\Program Files (x86)\Reichert\ORA.exe
     //
-    QString runnableName = settings.value(getGroup() + "/client/exe").toString();
-    setRunnableName(runnableName);
+    QString exeName = settings.value(getGroup() + "/client/exe").toString();
+    selectRunnable(exeName);
 }
 
 void TonometerManager::saveSettings(QSettings* settings) const
@@ -89,25 +94,20 @@ bool TonometerManager::isDefined(const QString &runnableName) const
     return ok;
 }
 
-void TonometerManager::setRunnableName(const QString &runnableName)
+void TonometerManager::selectRunnable(const QString &exeName)
 {
-    if(isDefined(runnableName))
+    if(isDefined(exeName))
     {
-        QFileInfo info(runnableName);
-        m_runnableName = runnableName;
-        m_runnablePath = info.absolutePath();
+       QFileInfo info(exeName);
+       m_runnableName = exeName;
+       m_runnablePath = info.absolutePath();
 
-        //TODO: change to db files
-        //
-        m_outputFile = QDir(m_runnablePath).filePath("output.txt");
-        m_inputFile =  QDir(m_runnablePath).filePath("input.txt");
-        m_temporaryFile = QDir(m_runnablePath).filePath("input_ORIG.txt");
+       //TODO: path to the ora.mdb file
 
-        if(QFileInfo::exists(m_inputFile))
-          configureProcess();
-        else
-          qDebug() << "ERROR: expected default input.txt does not exist";
+       configureProcess();
     }
+    else
+       emit canSelectRunnable();
 }
 
 void TonometerManager::measure()
@@ -127,6 +127,8 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
 {
     if("simulate" == m_mode)
     {
+        m_inputData["barcode"] = "00000000";
+        m_inputData["language"] = "english";
         m_inputData["date_of_birth"] = "1965-12-17 00:00:00";
         m_inputData["sex"] = 0;
         return;
@@ -206,14 +208,12 @@ void TonometerManager::readOutput()
 
 void TonometerManager::configureProcess()
 {
-    /*
     if("simulate" == m_mode)
     {
         emit canMeasure();
         return;
     }
-    */
-    // The exe and input file are present
+    // ORA.exe and input file are present
     //
     QFileInfo info(m_runnableName);
     QDir working(m_runnablePath);
