@@ -28,12 +28,6 @@ public:
     //
     bool localDeviceEnabled() const;
 
-    // Select a peripheral bluetooth lowe energy device by name.
-    // checks if the name as a key in the key value pair list of scanned devices
-    // and calls setDevice with the QBluetoothInfo value
-    //
-    void selectDevice(const QString &);
-
     // the host adapter is paired to the device (BTLE peripheral)
     //
     bool isPairedTo(const QString &) const;
@@ -96,6 +90,12 @@ public slots:
     // Disconnect from the peripheral
     //
     void disconnectDevice();
+
+    // Select a peripheral bluetooth lowe energy device by name.
+    // checks if the name as a key in the key value pair list of scanned devices
+    // and calls setDevice with the QBluetoothInfo value
+    //
+    void selectDevice(const QString &);
 
     // Retrieve a measurement from the device
     //
