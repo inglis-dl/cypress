@@ -3,7 +3,7 @@
 
 
 #include "ui_MainWindow.h"
-//#include "../../managers/BloodPressureManager.h"
+#include "../../managers/BloodPressureManager.h"
 #include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
@@ -61,7 +61,7 @@ private:
     QMap<QString, QVariant> m_inputData;
     QMap<QString, QVariant> m_outputData;
 
-    //BloodPressureManager m_manager;
+    BloodPressureManager m_manager;
 
     QStandardItemModel m_model;
 };

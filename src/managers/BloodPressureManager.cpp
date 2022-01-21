@@ -8,7 +8,10 @@
 #include <QSettings>
 #include <QStandardItemModel>
 
-BloodPressureManager::BloodPressureManager(QObject* parent) : ManagerBase(parent)
+#include "../prototype/BloodPressure/BPMMessage.h"
+
+BloodPressureManager::BloodPressureManager(QObject* parent) 
+    : ManagerBase(parent), m_bpm200(new QHidDevice())
 {
     setGroup("bloodpressure");
     m_inputKeyList << "barcode";
@@ -17,6 +20,12 @@ BloodPressureManager::BloodPressureManager(QObject* parent) : ManagerBase(parent
 void BloodPressureManager::start()
 {
     emit dataChanged();
+
+    m_bpm200->open(4279, 4660);
+    BPMMessage msg(0x11, 0x03);
+    QByteArray buf = msg.PackMessage();
+    m_bpm200->write(&buf, buf.size());
+    m_bpm200->close();
 }
 
 void BloodPressureManager::loadSettings(const QSettings& settings)
@@ -29,15 +38,9 @@ void BloodPressureManager::saveSettings(QSettings* settings) const
 
 QJsonObject BloodPressureManager::toJsonObject() const
 {
-    //QJsonObject json = m_test.toJsonObject();
-    QJsonObject json;
+    QJsonObject json = m_test.toJsonObject();
     if ("simulate" != m_mode)
     {
-        QFile ofile(m_outputFile);
-        ofile.open(QIODevice::ReadOnly);
-        QByteArray buffer = ofile.readAll();
-        json.insert("test_output_file", QString(buffer.toBase64()));
-        json.insert("test_output_file_mime_type", "csv");
     }
     return json;
 }
@@ -76,7 +79,6 @@ void BloodPressureManager::measure()
 {
     if ("simulate" == m_mode)
     {
-        readOutput();
         return;
     }
 
@@ -109,55 +111,17 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
     //    // DO SOMETHING
 }
 
-void BloodPressureManager::readOutput()
-{
-    if ("simulate" == m_mode)
-    {
-        // TODO: Implement simulate mode
-        return;
-    }
-
-    /*QDir dir(m_outputPath);
-    bool found = false;
-    QString fileName = QString("Results-%0.xlsx").arg(m_inputData["barcode"].toString());
-    for (auto&& x : dir.entryList())
-    {
-        if (x == fileName)
-        {
-            found = true;
-            break;
-        }
-    }
-
-    if (found)
-    {
-        qDebug() << "found output xlsx file " << fileName;
-        QString filePath = m_outputPath + QDir::separator() + fileName;
-        qDebug() << "found output xlsx file path " << filePath;
-        m_test.fromFile(filePath);
-        m_outputFile.clear();
-        if (m_test.isValid())
-        {
-            emit canWrite();
-            m_outputFile = filePath;
-        }
-        else
-            qDebug() << "ERROR: input from file produced invalid test results";
-
-        emit dataChanged();
-    }
-    else
-        qDebug() << "ERROR: no output csv file found";*/
-}
-
 void BloodPressureManager::clearData()
 {
-    //m_test.reset();
-    m_outputFile.clear();
+    m_test.reset();
     emit dataChanged();
+}
+
+void BloodPressureManager::connectUI(QWidget*)
+{
 }
 
 void BloodPressureManager::finish()
 {
-    //m_test.reset();
+    m_test.reset();
 }

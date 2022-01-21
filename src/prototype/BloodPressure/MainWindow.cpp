@@ -48,11 +48,9 @@ void MainWindow::initialize()
     setupConnections();
     initializeButtonState();
 
-    //m_manager.setVerbose(m_verbose);
-    //m_manager.setMode(m_mode);
+    m_manager.setVerbose(m_verbose);
+    m_manager.setMode(m_mode);
 
-    // Read inputs required to launch cdtt test
-    //
     readInput();
 
     populateBarcodeDisplay();
@@ -61,11 +59,11 @@ void MainWindow::initialize()
     //
     QDir dir = QCoreApplication::applicationDirPath();
     qDebug() << "Dir: " << dir;
-    //QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
-    //m_manager.loadSettings(settings);
+    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
+    m_manager.loadSettings(settings);
 
     // have the manager build the inputs from the input json file
-    //m_manager.setInputData(m_inputData);
+    m_manager.setInputData(m_inputData);
 
     validateRunnablePresense();
 }
@@ -73,7 +71,7 @@ void MainWindow::initialize()
 void MainWindow::setupConnections()
 {
     // Close the application
-        //
+    //
     connect(ui->closeButton, &QPushButton::clicked,
         this, &MainWindow::close);
 }
@@ -119,7 +117,7 @@ void MainWindow::validateRunnablePresense()
 
 void MainWindow::run()
 {
-    //m_manager.start();
+    m_manager.start();
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
