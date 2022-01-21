@@ -13,8 +13,9 @@ QByteArray AudiometerManager::END_CODE = AudiometerManager::initEndCode();
 
 QByteArray AudiometerManager::initEndCode()
 {
-    const char data[] = {
-        QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1(),'\x17','p','~'};
+    const char data[] =
+      { '~','p','\x17','Z','^',
+        QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1() };
     return QByteArray(data);
 }
 
@@ -111,16 +112,6 @@ void AudiometerManager::finish()
 bool AudiometerManager::hasEndCode(const QByteArray &arr)
 {
     return arr.endsWith(END_CODE);
-    /*
-    // interpret the last 6 bytes
-    int size = arr.isEmpty() ? 0 : arr.size();
-    if( 6 > size ) return false;
-    return (
-       QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1() == arr.at(size-1) &&
-       0x17 == arr.at(size-4) &&
-        'p' == arr.at(size-5) &&
-        '~' == arr.at(size-6));
-    */
 }
 
 void AudiometerManager::readDevice()
@@ -141,7 +132,7 @@ void AudiometerManager::readDevice()
           << "00055801011124431"
           << buffer
           << "04/01/20000000000       "
-          << "35  10  E2  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA       ~p\u0017;(\r";
+          << "35  10  E2  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA  AA       ~p\u0017Z^\r";
         m_buffer = QByteArray(sim.toLatin1());
     }
     else

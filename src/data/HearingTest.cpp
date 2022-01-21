@@ -9,10 +9,10 @@
 bool HearingTest::isValid() const
 {
     bool okMeta =
-      hasMetaDataCharacteristic("patient ID") &&
-      hasMetaDataCharacteristic("test datetime") &&
-      hasMetaDataCharacteristic("last calibration date") &&
-      hasMetaDataCharacteristic("test ID");
+      hasMetaDataCharacteristic("patient_id") &&
+      hasMetaDataCharacteristic("test_datetime") &&
+      hasMetaDataCharacteristic("last_calibration_date") &&
+      hasMetaDataCharacteristic("test_id");
 
     bool okTest = 16 == getNumberOfMeasurements();
     if(okTest)
@@ -52,10 +52,10 @@ QString HearingTest::toString() const
     if(isValid())
     {
         QStringList l;
-        l << QString("patient id: ") % getMetaDataCharacteristic("patient id").toString();
-        l << QString("test id: ") % getMetaDataCharacteristic("test id").toString();
-        l << QString("test datetime: ") % getMetaDataCharacteristic("test datetime").toDateTime().toString("yyyy-MM-dd hh:mm:ss");
-        l << QString("last calibration date: ") % getMetaDataCharacteristic("last calibration date").toDate().toString("yyyy-MM-dd");
+        l << QString("patient id: ") % getMetaDataCharacteristic("patient_id").toString();
+        l << QString("test id: ") % getMetaDataCharacteristic("test_id").toString();
+        l << QString("test datetime: ") % getMetaDataCharacteristic("test_datetime").toDateTime().toString("yyyy-MM-dd hh:mm:ss");
+        l << QString("last calibration date: ") % getMetaDataCharacteristic("last_calibration_date").toDate().toString("yyyy-MM-dd");
         for(auto&& x : m_measurementList)
         {
             l << x.toString();
@@ -81,10 +81,10 @@ void HearingTest::fromArray(const QByteArray &arr)
         reset();
         m_array = arr;
 
-        addMetaDataCharacteristic("patient id",readPatientID());
-        addMetaDataCharacteristic("test id",readTestID());
-        addMetaDataCharacteristic("test datetime",readTestDateTime());
-        addMetaDataCharacteristic("last calibration date",readCalibrationDate());
+        addMetaDataCharacteristic("patient_id",readPatientID());
+        addMetaDataCharacteristic("test_id",readTestID());
+        addMetaDataCharacteristic("test_datetime",readTestDateTime());
+        addMetaDataCharacteristic("last_calibration_date",readCalibrationDate());
 
         QList<HearingMeasurement> l_htl = readHearingThresholdLevels("left");
         QList<HearingMeasurement> r_htl = readHearingThresholdLevels("right");
