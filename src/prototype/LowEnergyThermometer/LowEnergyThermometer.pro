@@ -11,7 +11,7 @@ DEPENDPATH += .
 MOC_DIR += .
 OBJECTS_DIR += debug
 UI_DIR += .
-RCC_DIR += GeneratedFiles
+#RCC_DIR += GeneratedFiles
 }
 
 QT += core gui
@@ -48,6 +48,11 @@ HEADERS += \
 
 FORMS += \
     MainWindow.ui
+
+TRANSLATIONS += \
+    LowEnergyThermometer_en_CA.ts
+CONFIG += lrelease
+CONFIG += embed_translations
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

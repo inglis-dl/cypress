@@ -289,7 +289,9 @@ void MainWindow::initializeConnections()
   });
 
   QIntValidator *v_age = new QIntValidator(this);
-  v_age->setRange(7,99);
+  v_age->setRange(
+    BodyCompositionAnalyzerManager::AGE_MIN,
+    BodyCompositionAnalyzerManager::AGE_MAX);
   ui->ageLineEdit->setValidator(v_age);
 
   // When the units are changed to imperial, the input field for
@@ -301,13 +303,17 @@ void MainWindow::initializeConnections()
      if("metricRadio" == button->objectName())
      {
          QIntValidator *v_ht = new QIntValidator(this);
-         v_ht->setRange(90,249);
+         v_ht->setRange(
+           BodyCompositionAnalyzerManager::HEIGHT_MIN_METRIC,
+           BodyCompositionAnalyzerManager::HEIGHT_MAX_METRIC);
          ui->heightLineEdit->setValidator(v_ht);
      }
      else
      {
          QDoubleValidator *v_ht = new QDoubleValidator(this);
-         v_ht->setRange(36.0,7*12 + 11.5);
+         v_ht->setRange(
+           BodyCompositionAnalyzerManager::HEIGHT_MIN_IMPERIAL,
+           BodyCompositionAnalyzerManager::HEIGHT_MAX_IMPERIAL);
          v_ht->setDecimals(1);
          ui->heightLineEdit->setValidator(v_ht);
      }

@@ -11,6 +11,13 @@
 #include <QStandardItemModel>
 #include <QtMath>
 
+int BodyCompositionAnalyzerManager::AGE_MIN = 7;
+int BodyCompositionAnalyzerManager::AGE_MAX = 99;
+int BodyCompositionAnalyzerManager::HEIGHT_MIN_METRIC = 90;
+int BodyCompositionAnalyzerManager::HEIGHT_MAX_METRIC = 249;
+double BodyCompositionAnalyzerManager::HEIGHT_MIN_IMPERIAL = 36.0;
+double BodyCompositionAnalyzerManager::HEIGHT_MAX_IMPERIAL = 95.5;
+
 // lookup table of default byte arrays for all serial commands
 //
 QMap<QString,QByteArray> BodyCompositionAnalyzerManager::defaultLUT = BodyCompositionAnalyzerManager::initDefaultLUT();
@@ -37,6 +44,16 @@ BodyCompositionAnalyzerManager::BodyCompositionAnalyzerManager(QObject *parent) 
   //
   m_inputKeyList << "barcode";
   m_inputKeyList << "language";
+
+  // mandatory inputs for which there is no default
+  // settings having a default are:
+  // - measurement_system <metric,imperial>, default = metric
+  // - equation <westerner,oriental>, default = westerner
+  // - tare_weight, default 0 (kg)
+  //
+  m_inputKeyList << "height";  // unsigned integer cm
+  m_inputKeyList << "age";     // unsigned integer years
+  m_inputKeyList << "gender";  // <female,male> or <0,1>
 }
 
 QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
@@ -399,6 +416,10 @@ void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
+        m_inputData["age"] = 50;
+        m_inputData["gender"] = "male";
+        m_inputData["height"] = 170;
+        return;
     }
 
     qDebug() << "********************* SETTING INPUTS ******************";
@@ -412,7 +433,7 @@ void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &
     //
     if(input.contains("measurement_system"))
     {
-        units = input["measurement_system"].toString();
+        units = input["measurement_system"].toString().toLower();
         QByteArray request =
           "metric" == units ?
           BodyCompositionAnalyzerManager::defaultLUT["set_measurement_system_metric"] :
@@ -427,7 +448,7 @@ void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &
     if(input.contains("equation"))
     {
         QByteArray request =
-          "westerner" == input["equation"].toString() ?
+          "westerner" == input["equation"].toString().toLower() ?
           BodyCompositionAnalyzerManager::defaultLUT["set_equation_westerner"] :
           BodyCompositionAnalyzerManager::defaultLUT["set_equation_oriental"];
         m_queue.enqueue(request);
@@ -475,7 +496,7 @@ void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &
     if(input.contains("gender"))
     {
         QByteArray request =
-          "female" == input["gender"].toString() ?
+          (("female" == input["gender"].toString().toLower()) | (0 == input["gender"].toUInt())) ?
           BodyCompositionAnalyzerManager::defaultLUT["set_gender_female"] :
           BodyCompositionAnalyzerManager::defaultLUT["set_gender_male"];
         m_queue.enqueue(request);
@@ -490,7 +511,7 @@ void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &
     if(input.contains("body_type"))
     {
         QByteArray request =
-          "athlete" == input["body_type"].toString() ?
+          "athlete" == input["body_type"].toString().toLower() ?
           BodyCompositionAnalyzerManager::defaultLUT["set_body_type_athlete"] :
           BodyCompositionAnalyzerManager::defaultLUT["set_body_type_standard"];
         m_queue.enqueue(request);
@@ -570,7 +591,24 @@ void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &
           qDebug() << "ERROR: age input out of range " << input["age"];
     }
 
-    writeDevice();
+    // NOTE: validating member var m_inputData is different
+    // than other manager implementations since the UI allows for
+    // changing the inputs passed from upstream via .json file input
+    //
+    bool ok = true;
+    for(auto&& x : m_inputKeyList)
+    {
+        if(!m_inputData.contains(x))
+        {
+            ok = false;
+            break;
+        }
+    }
+    if(ok)
+    {
+        qDebug() << "OK: input data is ok in setInputData()";
+        writeDevice();
+    }
 }
 
 void BodyCompositionAnalyzerManager::clearQueue()

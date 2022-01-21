@@ -1,7 +1,9 @@
 #include "MainWindow.h"
 
 #include <QApplication>
+#include <QLocale>
 #include <QMessageBox>
+#include <QTranslator>
 #include "../../auxiliary/CommandLineParser.h"
 
 int main(int argc, char *argv[])
@@ -12,6 +14,16 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion("1.0.0");
 
     QApplication app(argc, argv);
+
+    QTranslator translator;
+    const QStringList uiLanguages = QLocale::system().uiLanguages();
+    for (const QString &locale : uiLanguages) {
+        const QString baseName = "LowEnergyThermometer_" + QLocale(locale).name();
+        if (translator.load(":/i18n/" + baseName)) {
+            app.installTranslator(&translator);
+            break;
+        }
+    }
 
     // process command line args
     //

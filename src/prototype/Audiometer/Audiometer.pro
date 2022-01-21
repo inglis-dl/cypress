@@ -11,7 +11,7 @@ DEPENDPATH += .
 MOC_DIR += .
 OBJECTS_DIR += debug
 UI_DIR += .
-RCC_DIR += GeneratedFiles
+#RCC_DIR += GeneratedFiles
 }
 
 QT += core gui
@@ -50,7 +50,7 @@ FORMS += \
     MainWindow.ui
 
 TRANSLATIONS += \
-    Audiometer_ec_CA.ts
+    Audiometer_en_CA.ts
 
 CONFIG += lrelease
 CONFIG += embed_translations

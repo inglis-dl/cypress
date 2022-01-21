@@ -28,6 +28,13 @@ public:
 
     void connectUI(QWidget *) override;
 
+    static int AGE_MIN;
+    static int AGE_MAX;
+    static int HEIGHT_MIN_METRIC;
+    static int HEIGHT_MAX_METRIC;
+    static double HEIGHT_MIN_IMPERIAL;
+    static double HEIGHT_MAX_IMPERIAL;
+
 signals:
    // ready to receive the input map
    //

@@ -1,8 +1,10 @@
 #include "MainWindow.h"
-#include <QtWidgets/QApplication>
-#include "../../auxiliary/CommandLineParser.h"
+
+#include <QApplication>
+#include <QLocale>
 #include <QMessageBox>
-#include <QString>
+#include <QTranslator>
+#include "../../auxiliary/CommandLineParser.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,6 +14,16 @@ int main(int argc, char *argv[])
     QApplication::setApplicationVersion("1.0.0");
 
     QApplication app(argc, argv);
+
+    QTranslator translator;
+    const QStringList uiLanguages = QLocale::system().uiLanguages();
+    for (const QString &locale : uiLanguages) {
+        const QString baseName = "ChoiceReaction_" + QLocale(locale).name();
+        if (translator.load(":/i18n/" + baseName)) {
+            app.installTranslator(&translator);
+            break;
+        }
+    }
 
     // Need to pull changes from development branch to get all features of commandLineParser
     CommandLineParser parser;

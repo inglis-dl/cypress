@@ -11,7 +11,7 @@ DEPENDPATH += .
 MOC_DIR += .
 OBJECTS_DIR += debug
 UI_DIR += .
-RCC_DIR += GeneratedFiles
+#RCC_DIR += GeneratedFiles
 }
 
 QT += core gui

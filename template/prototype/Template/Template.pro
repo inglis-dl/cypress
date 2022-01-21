@@ -11,7 +11,7 @@ DEPENDPATH += .
 MOC_DIR += .
 OBJECTS_DIR += debug
 UI_DIR += .
-RCC_DIR += GeneratedFiles
+#RCC_DIR += GeneratedFiles
 }
 
 QT += core gui
@@ -45,6 +45,11 @@ SOURCES += ./MainWindow.cpp \
     ../../managers/TemplateManager.cpp
 
 FORMS += ./MainWindow.ui
+
+TRANSLATIONS += \
+    TEMPLATE_en_CA.ts
+CONFIG += lrelease
+CONFIG += embed_translations
 
 unix {
 # Default rules for deployment.
