@@ -9,6 +9,15 @@
 #include <QStandardItemModel>
 #include <QtMath>
 
+QByteArray AudiometerManager::END_CODE = AudiometerManager::initEndCode();
+
+QByteArray AudiometerManager::initEndCode()
+{
+    const char data[] = {
+        QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1(),'\x17','p','~'};
+    return QByteArray(data);
+}
+
 AudiometerManager::AudiometerManager(QObject *parent) : SerialPortManager(parent)
 {
     setGroup("audiometer");
@@ -101,14 +110,17 @@ void AudiometerManager::finish()
 
 bool AudiometerManager::hasEndCode(const QByteArray &arr)
 {
+    return arr.endsWith(END_CODE);
+    /*
     // interpret the last 6 bytes
     int size = arr.isEmpty() ? 0 : arr.size();
     if( 6 > size ) return false;
     return (
-       0x0d == arr.at(size-1) &&
+       QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1() == arr.at(size-1) &&
        0x17 == arr.at(size-4) &&
         'p' == arr.at(size-5) &&
         '~' == arr.at(size-6));
+    */
 }
 
 void AudiometerManager::readDevice()

@@ -18,6 +18,10 @@ int BodyCompositionAnalyzerManager::HEIGHT_MAX_METRIC = 249;
 double BodyCompositionAnalyzerManager::HEIGHT_MIN_IMPERIAL = 36.0;
 double BodyCompositionAnalyzerManager::HEIGHT_MAX_IMPERIAL = 95.5;
 
+QByteArray BodyCompositionAnalyzerManager::END_CODE = QByteArray(
+  { QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1(),
+    QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1() });
+
 // lookup table of default byte arrays for all serial commands
 //
 QMap<QString,QByteArray> BodyCompositionAnalyzerManager::defaultLUT = BodyCompositionAnalyzerManager::initDefaultLUT();
@@ -60,12 +64,12 @@ QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
 {
     QMap<QString,QByteArray> commands;
     QByteArray atom;
-    QByteArray end;
-    end.append(0x0d);
-    end.append(0x0a);
+//    QByteArray end;
+//    end.append(QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1());
+//    end.append(QChar(QChar::SpecialCharacter::LineFeed).toLatin1());
 
     atom = QByteArray("U0");
-    atom.append(end);
+    atom.append(END_CODE);
     commands["set_measurement_system_metric"] = atom;
     atom[1] = '1';
     commands["set_measurement_system_imperial"] = atom;
@@ -76,14 +80,14 @@ QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
     commands["set_equation_westerner"] = atom;
 
     atom = QByteArray("D0000.0");
-    atom.append(end);
+    atom.append(END_CODE);
     commands["set_tare_weight"] = atom;
     atom[1] = '3';
     atom[5] = '0';
     commands["set_height"] = atom;
 
     atom = QByteArray("D11");
-    atom.append(end);
+    atom.append(END_CODE);
     commands["set_gender_male"] = atom;
     atom[2] = '2';
     commands["set_gender_female"] = atom;
@@ -95,22 +99,22 @@ QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
     commands["set_body_type_athlete"] = atom;
 
     atom = QByteArray("D400");
-    atom.append(end);
+    atom.append(END_CODE);
     commands["set_age"] = atom;
 
     atom = QByteArray("D?");
-    atom.append(end);
+    atom.append(END_CODE);
     commands["confirm_settings"] = atom;
 
     atom = QByteArray("G1");
-    atom.append(end);
+    atom.append(END_CODE);
     commands["measure_body_fat"] = atom;
     atom[1] = '2';
     commands["measure_weight"] = atom;
 
     atom.clear();
     atom.append(0x1f);
-    atom.append(end);
+    atom.append(END_CODE);
     commands["reset"] = atom;
 
     return commands;
@@ -152,7 +156,7 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initCommandLUT()
 
     atom.clear();
     atom.append(0x1f);
-    atom.append(0x0d);
+    atom.append(QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1());
     commands[atom] = "reset";
 
     return commands;
@@ -191,7 +195,7 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initConfirmationLUT()
 
     atom.clear();
     atom.append(0x1f);
-    atom.append(0x0d);
+    atom.append(QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1());
     responses[atom] = "received reset request";
 
     return responses;
@@ -201,12 +205,12 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initIncorrectResponseLU
 {
     QMap<QByteArray,QString> responses;
     QByteArray atom;
-    QByteArray end;
-    end.append(0x0d);
-    end.append(0x0a);
+    //QByteArray end;
+    //end.append(QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1());
+    //end.append(QChar(QChar::SpecialCharacter::LineFeed).toLatin1());
 
     atom = QByteArray("U!");
-    atom.append(end);
+    atom.append(END_CODE);
     responses[atom] = "incorrect measurement system setting";
 
     atom[0] = 'R';
@@ -216,7 +220,7 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initIncorrectResponseLU
     responses[atom] = "incorrect tare (tare) weight setting";
 
     atom = QByteArray("D1!");
-    atom.append(end);
+    atom.append(END_CODE);
     responses[atom] = "incorrect gender setting";
 
     atom[1] = '2';
@@ -226,10 +230,10 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initIncorrectResponseLU
     responses[atom] = "incorrect height setting";
 
     atom[1] = '4';
-    responses[atom] = "incorrect age setting";
+    responses[END_CODE] = "incorrect age setting";
 
     atom = QByteArray("E00");
-    atom.append(end);
+    atom.append(END_CODE);
     responses[atom] = "error: attempted to start measuring without completing settings";
 
     atom[2] = '1';
@@ -251,7 +255,7 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initIncorrectResponseLU
     responses[atom] = "error: stepped on platform too early, wait for flashing arrow to appear";
 
     atom = QByteArray("!");
-    atom.append(end);
+    atom.append(END_CODE);
     responses[atom] = "set input or reset command failed";
 
     return responses;
@@ -325,11 +329,14 @@ void BodyCompositionAnalyzerManager::finish()
 
 bool BodyCompositionAnalyzerManager::hasEndCode(const QByteArray &arr) const
 {
+    return arr.endsWith(END_CODE);
+    /*
     int size = arr.isEmpty() ? 0 : arr.size();
     if( 2 > size ) return false;
     return (
-       0x0d == arr.at(size-2) && //\r
-       0x0a == arr.at(size-1) ); //\n
+       QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1() == arr.at(size-2) && //\r
+       QChar(QChar::SpecialCharacter::LineFeed).toLatin1() == arr.at(size-1) ); //\n
+    */
 }
 
 void BodyCompositionAnalyzerManager::connectDevice()
@@ -338,6 +345,9 @@ void BodyCompositionAnalyzerManager::connectDevice()
     {
         return;
     }
+
+    if(m_port.isOpen())
+        m_port.close();
 
     if(m_port.open(QSerialPort::ReadWrite))
     {
@@ -423,6 +433,11 @@ void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &
     }
 
     qDebug() << "********************* SETTING INPUTS ******************";
+
+    if(input.contains("barcode"))
+        m_inputData["barcode"]=input["barcode"];
+    if(input.contains("language"))
+        m_inputData["language"]=input["language"];
 
     // for input limits we need the units of measurement
     // default to metric

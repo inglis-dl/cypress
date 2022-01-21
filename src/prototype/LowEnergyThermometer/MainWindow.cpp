@@ -110,14 +110,15 @@ void MainWindow::initializeConnections()
 
     // Select a bluetooth low energy device from the drop down list
     //
-    connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this,[this]()
-      {
-        if(m_verbose)
-            qDebug() << "device selected from list " <<  ui->deviceComboBox->currentText();
-        m_manager.selectDevice(ui->deviceComboBox->currentText());
-      }
-    );
+    connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
+            &m_manager,&BluetoothLEManager::selectDevice);
+
+    // Select a device (serial port) from drop down list
+    //
+    connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::activated),
+      this,[this](int index){
+        m_manager.selectDevice(ui->deviceComboBox->itemText(index));
+    });
 
     // Ready to connect device
     //

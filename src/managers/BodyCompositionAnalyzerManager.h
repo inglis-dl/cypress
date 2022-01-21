@@ -34,6 +34,7 @@ public:
     static int HEIGHT_MAX_METRIC;
     static double HEIGHT_MIN_IMPERIAL;
     static double HEIGHT_MAX_IMPERIAL;
+    static QByteArray END_CODE;
 
 signals:
    // ready to receive the input map

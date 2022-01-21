@@ -150,10 +150,15 @@ void MainWindow::initializeConnections()
 
   // Select a device (serial port) from drop down list
   //
-  // Select a device (serial port) from drop down list
-  //
   connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
           &m_manager,&AudiometerManager::selectDevice);
+
+  // Select a device (serial port) from drop down list
+  //
+  connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::activated),
+    this,[this](int index){
+      m_manager.selectDevice(ui->deviceComboBox->itemText(index));
+  });
 
   // Ready to connect device
   //

@@ -108,6 +108,9 @@ void WeighScaleManager::connectDevice()
         return;
     }
 
+    if(m_port.isOpen())
+        m_port.close();
+
     if(m_port.open(QSerialPort::ReadWrite))
     {
       m_port.setDataBits(QSerialPort::Data8);
