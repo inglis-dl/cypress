@@ -65,6 +65,9 @@ bool BPM200::Connect()
     bool successful = m_bpm200->open(m_vid, m_pid);
     if (successful) {
         qDebug() << "Successful opened a connection with the bpm";
+        comm->moveToThread(&CommThread);
+        // TODO: Connect everything
+        CommThread.start();
     }
     else {
         qDebug() << "Unable to open a connection with the bpm";
@@ -79,6 +82,8 @@ void BPM200::Disconnect()
 {
     if (m_bpm200->isOpen()) {
         qDebug() << "Closing connection with bpm";
+        CommThread.quit();
+        CommThread.wait();
         m_bpm200->close();
     }
     else {

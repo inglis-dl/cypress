@@ -1,11 +1,15 @@
 #include <QObject>
 #include <QHidDevice>
 #include <QDebug>
+#include <QThread>
 
 #include "BPMMessage.h"
+#include "BPMCommunication.h"
 
 class BPM200: public QObject
 {
+	Q_OBJECT
+	QThread CommThread;
 public:
 	explicit BPM200(QObject* parent = Q_NULLPTR);
 
@@ -19,6 +23,7 @@ public:
 
 	bool Connect();
 	void Disconnect();
+	BPMCommunication* comm = new BPMCommunication;
 private:
 	QHidDevice* m_bpm200;
 
