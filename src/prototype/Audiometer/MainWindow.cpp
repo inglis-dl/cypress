@@ -11,6 +11,8 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QSizePolicy>
+#include <QTimeLine>
+#include <QBrush>
 
 MainWindow::MainWindow(QWidget *parent)
     : QDialog(parent)
@@ -62,11 +64,23 @@ void MainWindow::initializeConnections()
   // Disable all buttons by default
   //
   for(auto&& x : this->findChildren<QPushButton *>())
+  {
       x->setEnabled(false);
+
+      // disable enter key press event passing onto auto focus buttons
+      //
+      x->setDefault(false);
+      x->setAutoDefault(false);
+  }
 
   // Close the application
   //
   ui->closeButton->setEnabled(true);
+
+  // Relay messages from the manager to the status bar
+  //
+  connect(&m_manager,&ManagerBase::message,
+          ui->statusBar, &QStatusBar::showMessage);
 
   // Every instrument stage launched by an interviewer requires input
   // of the interview barcode that accompanies a participant.
@@ -84,40 +98,67 @@ void MainWindow::initializeConnections()
     ui->barcodeLineEdit->setText("00000000");
   }
 
+  //TODO: handle the case for in home DCS visits where
+  // the barcode is prefixed with a host name code
+  //
   QRegExp rx("\\d{8}");
   QRegExpValidator *v_barcode = new QRegExpValidator(rx);
   ui->barcodeLineEdit->setValidator(v_barcode);
 
   connect(ui->barcodeLineEdit, &QLineEdit::editingFinished,
           this,[this](){
-      if(m_manager.verifyBarcode(ui->barcodeLineEdit->text()))
+      bool valid = false;
+      if(m_inputData.contains("barcode"))
       {
-         qDebug() << "OK: valid interview barcode";
+          QString str = ui->barcodeLineEdit->text().simplified();
+          str.replace(" ","");
+          valid = str == m_inputData["barcode"].toString();
+      }
+      auto p = this->findChild<QTimeLine *>("timer");
+      if(valid)
+      {
+          p->stop();
+          p->setCurrentTime(0);
+          auto p = ui->barcodeLineEdit->palette();
+          p.setBrush(QPalette::Base,QBrush(QColor(0,255,0,128)));
+          ui->barcodeLineEdit->setPalette(p);
+
+          // launch the manager
+          //
+          this->run();
       }
       else
       {
-          // TODO: consider throwing exception and killing the application
-          //
           QMessageBox::critical(
-          this, QApplication::applicationName(),
-          tr("The input does not match the expected barcode for this participant."));
+            this, QApplication::applicationName(),
+            tr("The input does not match the expected barcode for this participant."));
+
+          p->resume();
       }
   });
+
+  auto timeLine = new QTimeLine(2000,this);
+  timeLine->setFrameRange(0,255);
+  timeLine->setLoopCount(0);
+  timeLine->setObjectName("timer");
+  connect(timeLine, &QTimeLine::frameChanged,
+          this,[this](int frame){
+      auto p = ui->barcodeLineEdit->palette();
+      p.setBrush(QPalette::Base,QBrush(QColor(255,255,0,frame)));
+      ui->barcodeLineEdit->setPalette(p);
+  });
+  connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
+  timeLine->start();
 
   // Scan for devices
   //
   connect(&m_manager, &AudiometerManager::scanningDevices,
-          this,[this]()
-    {
-      ui->deviceComboBox->clear();
-      ui->statusBar->showMessage("Discovering serial ports...");
-    }
-  );
+          ui->deviceComboBox, &QComboBox::clear);
 
   // Update the drop down list as devices are discovered during scanning
   //
   connect(&m_manager, &AudiometerManager::deviceDiscovered,
-          this, [this](const QString &label){
+          this,[this](const QString &label){
       int index = ui->deviceComboBox->findText(label);
       bool oldState = ui->deviceComboBox->blockSignals(true);
       if(-1 == index)
@@ -140,7 +181,6 @@ void MainWindow::initializeConnections()
   //
   connect(&m_manager, &AudiometerManager::canSelectDevice,
           this,[this](){
-      ui->statusBar->showMessage("Ready to select...");
       QMessageBox::warning(
         this, QApplication::applicationName(),
         tr("Select the port from the list.  If the device "
@@ -164,7 +204,6 @@ void MainWindow::initializeConnections()
   //
   connect(&m_manager, &AudiometerManager::canConnectDevice,
           this,[this](){
-      ui->statusBar->showMessage("Ready to connect...");
       ui->connectButton->setEnabled(true);
       ui->disconnectButton->setEnabled(false);
       ui->measureButton->setEnabled(false);
@@ -180,7 +219,6 @@ void MainWindow::initializeConnections()
   //
   connect(&m_manager, &AudiometerManager::canMeasure,
           this,[this](){
-      ui->statusBar->showMessage("Ready to measure...");
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
       ui->measureButton->setEnabled(true);
@@ -202,7 +240,7 @@ void MainWindow::initializeConnections()
           this,[this](){
       m_manager.buildModel(&m_model);
 
-      QHeaderView *h = ui->testdataTableView->horizontalHeader();
+      auto h = ui->testdataTableView->horizontalHeader();
       QSize ts_pre = ui->testdataTableView->size();
       h->resizeSections(QHeaderView::ResizeToContents);
       ui->testdataTableView->setColumnWidth(0,h->sectionSize(0));
@@ -221,7 +259,6 @@ void MainWindow::initializeConnections()
   //
   connect(&m_manager, &AudiometerManager::canWrite,
           this,[this](){
-      ui->statusBar->showMessage("Ready to write...");
       ui->saveButton->setEnabled(true);
   });
 
@@ -234,8 +271,14 @@ void MainWindow::initializeConnections()
   //
   connect(ui->closeButton, &QPushButton::clicked,
           this, &MainWindow::close);
+
+  // Read inputs, such as interview barcode
+  //
+  readInput();
 }
 
+// run should only be called AFTER the user inputs a valid barcode
+//
 void MainWindow::run()
 {
     m_manager.setVerbose(m_verbose);
@@ -246,10 +289,6 @@ void MainWindow::run()
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
     m_manager.loadSettings(settings);
-
-    // Read inputs, such as interview barcode
-    //
-    readInput();
 
     // Pass the input to the manager for verification
     //
@@ -323,7 +362,7 @@ void MainWindow::writeOutput()
    QJsonObject jsonObj = m_manager.toJsonObject();
 
    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
-   jsonObj.insert("barcode",QJsonValue(barcode));
+   jsonObj.insert("verification_barcode",QJsonValue(barcode));
 
    if(m_verbose)
        qDebug() << "determine file output name ... ";

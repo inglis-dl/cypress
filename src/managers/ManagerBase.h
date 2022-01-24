@@ -65,15 +65,11 @@ public slots:
     // actual measure will only execute if the barcode has been
     // verified.  Subclasses must reimplement accordingly.
     //
-    virtual void measure() { if(!m_validBarcode) return; }
+    virtual void measure() = 0;
 
     // subclasses call methods just prior to main close event
     //
     virtual void finish() = 0;
-
-    // verify a barcode against the value held in m_inputData
-    //
-    bool verifyBarcode(const QString &);
 
 signals:
 
@@ -91,6 +87,10 @@ signals:
     //
     void canWrite();
 
+    // send a message to the UI status bar
+    //
+    void message(const QString &, const int &timeOut=0);
+
 protected:
 
     bool m_verbose;
@@ -102,10 +102,6 @@ protected:
     // - "live" - production mode
     //
     QString m_mode;
-
-    // locking mechanism: barcode must be verified before measuring
-    //
-    bool m_validBarcode;
 
     // Context dependent clear test data and possibly device data (eg., serial port info)
     // SerialPortManager class clears device data during setDevice() while

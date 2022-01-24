@@ -42,6 +42,7 @@ bool SerialPortManager::devicesAvailable() const
 void SerialPortManager::scanDevices()
 {
     m_deviceList.clear();
+    emit message(tr("Discovering serial ports..."));
     emit scanningDevices();
     if(m_verbose)
       qDebug() << "start scanning for devices ....";
@@ -116,6 +117,7 @@ void SerialPortManager::scanDevices()
     {
       // select a serial port from the list of scanned ports
       //
+      emit message(tr("Ready to select..."));
       emit canSelectDevice();
     }
 }
@@ -146,6 +148,7 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
        m_deviceData.setCharacteristic("port serial number", "simulated");
        m_deviceData.setCharacteristic("port system location", "simulated");
        m_deviceData.setCharacteristic("port description", "simulated");
+       emit message(tr("Ready to connect..."));
        emit canConnectDevice();
        return;
     }
@@ -181,6 +184,7 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
       // signal the GUI that the port is connectable so that
       // the connect button can be clicked
       //
+      emit message(tr("Ready to connect..."));
       emit canConnectDevice();
     }
     m_port.close();
@@ -190,6 +194,7 @@ void SerialPortManager::connectDevice()
 {
     if("simulate" == m_mode)
     {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
         return;
     }
@@ -210,8 +215,8 @@ void SerialPortManager::connectDevice()
       connect(&m_port, &QSerialPort::errorOccurred,
               this,[this](QSerialPort::SerialPortError error){
               if(error == QSerialPort::NoError)
-                return;
-                  qDebug() << "ERROR: serial port " << m_port.errorString();
+                 return;
+               qDebug() << "ERROR: serial port " << m_port.errorString();
               });
 
       connect(&m_port, &QSerialPort::dataTerminalReadyChanged,
@@ -226,12 +231,14 @@ void SerialPortManager::connectDevice()
 
       // signal the GUI that the measure button can be clicked
       //
+      emit message(tr("Ready to measure..."));
       emit canMeasure();
     }
 }
 
 void SerialPortManager::disconnectDevice()
 {
+    emit message(tr("Ready to connect..."));
     emit canConnectDevice();
     if("simulate" == m_mode)
     {

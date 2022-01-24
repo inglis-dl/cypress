@@ -128,7 +128,7 @@ void AudiometerManager::readDevice()
         char buffer[20];
         sprintf(buffer,"%02d/%02d/%d%02d:%02d:00",m,d,y,h,i);
         QTextStream(&sim)
-          << "\u00010\u0002012340000      "
+          << "\u00010\u0002000000000      "
           << "00055801011124431"
           << buffer
           << "04/01/20000000000       "
@@ -149,6 +149,7 @@ void AudiometerManager::readDevice()
         if(m_test.isValid())
         {
             // emit the can write signal
+            emit message(tr("Ready to write..."));
             emit canWrite();
         }
 
@@ -158,11 +159,6 @@ void AudiometerManager::readDevice()
 
 void AudiometerManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
     clearData();
     const char cmd[] = {0x05,'4',0x0d};
     m_request = QByteArray::fromRawData(cmd,3);
