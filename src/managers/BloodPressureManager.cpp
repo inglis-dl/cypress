@@ -8,28 +8,33 @@
 #include <QSettings>
 #include <QStandardItemModel>
 
-#include "../prototype/BloodPressure/BPMMessage.h"
-
 BloodPressureManager::BloodPressureManager(QObject* parent) 
-    : ManagerBase(parent), m_bpm200(new QHidDevice())
+    : ManagerBase(parent), bpm(new BPM200())
 {
     setGroup("bloodpressure");
     m_inputKeyList << "barcode";
+    m_inputKeyList << "language";
 }
 
 void BloodPressureManager::start()
 {
+    bool connected = bpm.Connect();
+    if (connected) {
+        emit canMeasure();
+        bpm.Cycle();
+        bpm.Disconnect();
+    }
+   
     emit dataChanged();
-
-    m_bpm200->open(4279, 4660);
-    BPMMessage msg(0x11, 0x03);
-    QByteArray buf = msg.PackMessage();
-    m_bpm200->write(&buf, buf.size());
-    m_bpm200->close();
 }
 
 void BloodPressureManager::loadSettings(const QSettings& settings)
 {
+    int vid = settings.value(getGroup() + "/client/vid").toInt();
+    bpm.SetVid(vid);
+
+    int pid = settings.value(getGroup() + "/client/pid").toInt();
+    bpm.SetPid(pid);
 }
 
 void BloodPressureManager::saveSettings(QSettings* settings) const
@@ -123,5 +128,6 @@ void BloodPressureManager::connectUI(QWidget*)
 
 void BloodPressureManager::finish()
 {
+    bpm.Disconnect();
     m_test.reset();
 }

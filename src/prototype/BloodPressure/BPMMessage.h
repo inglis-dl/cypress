@@ -22,6 +22,8 @@ public:
 	}
 
 	QByteArray PackMessage();
+
+	static QByteArray CreatePackedMessage(quint8 msgID, quint8 data0, quint8 data1 = 0x00, quint8 data2 = 0x00, quint8 data3 = 0x00);
 private:
 	QByteArray msgBytes;
 };

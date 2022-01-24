@@ -35,3 +35,9 @@ QByteArray BPMMessage::PackMessage()
     return packedMsg;
 }
 
+QByteArray BPMMessage::CreatePackedMessage(quint8 msgID, quint8 data0, quint8 data1, quint8 data2, quint8 data3)
+{
+    BPMMessage msg(msgID, data0, data1, data2, data3);
+    return msg.PackMessage();
+}
+

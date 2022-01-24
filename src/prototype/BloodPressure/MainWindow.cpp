@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    m_manager.finish();
     delete ui;
 }
 

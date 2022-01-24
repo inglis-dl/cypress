@@ -3,8 +3,7 @@
 
 #include "ManagerBase.h"
 #include "../data/BloodPressureTest.h"
-
-#include <QHidDevice>
+#include "../prototype/BloodPressure/BPM200.h"
 
 class BloodPressureManager : public ManagerBase
 {
@@ -47,8 +46,7 @@ protected:
 
 private:
     BloodPressureTest m_test;
-
-    QHidDevice* m_bpm200;
+    BPM200 bpm;
 };
 
 #endif // BLOODPRESSUREMANAGER_H
