@@ -154,11 +154,6 @@ void WeighScaleManager::zeroDevice()
 
 void WeighScaleManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
     m_request = QByteArray("p");
     writeDevice();
 }
@@ -195,6 +190,9 @@ void WeighScaleManager::readDevice()
       if("i" == QString(m_request))
       {
         m_deviceData.setCharacteristic("software ID", QString(m_buffer.simplified()));
+        // signal the GUI that the measure button can be clicked
+        //
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
       }
       else if("p" == QString(m_request))
@@ -202,8 +200,9 @@ void WeighScaleManager::readDevice()
          m_test.fromArray(m_buffer);
          if(m_test.isValid())
          {
-             // emit the can write signal
-             emit canWrite();
+           // emit the can write signal
+           emit message(tr("Ready to save results..."));
+           emit canWrite();
          }
       }
       else if("z" == QString(m_request))
@@ -211,7 +210,12 @@ void WeighScaleManager::readDevice()
           WeightMeasurement m;
           m.fromArray(m_buffer);
           if(m.isZero())
+          {
+            // signal the GUI that the measure button can be clicked
+            //
+            emit message(tr("Ready to measure..."));
             emit canMeasure();
+          }
       }
 
       emit dataChanged();

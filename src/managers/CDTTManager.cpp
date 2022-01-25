@@ -135,11 +135,6 @@ void CDTTManager::selectRunnable(const QString &runnableName)
 
 void CDTTManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
     if("simulate" == m_mode)
     {
         readOutput();
@@ -201,6 +196,7 @@ void CDTTManager::readOutput()
         m_outputFile.clear();
         if(m_test.isValid())
         {
+            emit message(tr("Ready to save results..."));
             emit canWrite();
             m_outputFile = fileName;
         }
@@ -239,6 +235,7 @@ void CDTTManager::configureProcess()
     if("simulate" == m_mode &&
        !m_inputData.isEmpty())
     {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
         return;
     }
@@ -289,6 +286,7 @@ void CDTTManager::configureProcess()
 
             });
 
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
     }
     else

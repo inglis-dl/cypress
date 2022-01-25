@@ -64,9 +64,6 @@ QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
 {
     QMap<QString,QByteArray> commands;
     QByteArray atom;
-//    QByteArray end;
-//    end.append(QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1());
-//    end.append(QChar(QChar::SpecialCharacter::LineFeed).toLatin1());
 
     atom = QByteArray("U0");
     atom.append(END_CODE);
@@ -205,9 +202,6 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initIncorrectResponseLU
 {
     QMap<QByteArray,QString> responses;
     QByteArray atom;
-    //QByteArray end;
-    //end.append(QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1());
-    //end.append(QChar(QChar::SpecialCharacter::LineFeed).toLatin1());
 
     atom = QByteArray("U!");
     atom.append(END_CODE);
@@ -330,13 +324,6 @@ void BodyCompositionAnalyzerManager::finish()
 bool BodyCompositionAnalyzerManager::hasEndCode(const QByteArray &arr) const
 {
     return arr.endsWith(END_CODE);
-    /*
-    int size = arr.isEmpty() ? 0 : arr.size();
-    if( 2 > size ) return false;
-    return (
-       QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1() == arr.at(size-2) && //\r
-       QChar(QChar::SpecialCharacter::LineFeed).toLatin1() == arr.at(size-1) ); //\n
-    */
 }
 
 void BodyCompositionAnalyzerManager::connectDevice()
@@ -406,11 +393,6 @@ void BodyCompositionAnalyzerManager::confirmSettings()
 
 void BodyCompositionAnalyzerManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
     qDebug() << "measure called";
     clearQueue();
     m_queue.enqueue(BodyCompositionAnalyzerManager::defaultLUT["measure_body_fat"]);
@@ -689,11 +671,8 @@ void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, 
         // most E cases will shut off the device requiring power up
         // and reconnection
         //
-
         emit error(info);
-
         disconnectDevice();
-
         return;
       }
     }
@@ -720,6 +699,7 @@ void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, 
          // confirm inputs completed
          if(5 == m_cache.size())
          {
+             emit message("Ready to measure...");
              emit canMeasure();
          }
       }
@@ -733,6 +713,7 @@ void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, 
                 "set_measurement_system_metric" == requestName ? "metric" : "imperial";
               m_test.setMeasurementSystem(units);
           }
+          emit message("Ready to confirm inputs...");
           emit canConfirm();
       }
       else if(requestName.startsWith("measure_"))
@@ -748,6 +729,7 @@ void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, 
               if(m_test.isValid())
               {
                   qDebug() << "OK: valid test";
+                  emit message("Ready to save results...");
                   emit canWrite();
               }
               else
@@ -758,6 +740,7 @@ void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, 
       else if("reset" == requestName)
       {
           m_test.reset();
+          emit message("Ready to accept inputs...");
           emit canInput();
           emit dataChanged();
       }

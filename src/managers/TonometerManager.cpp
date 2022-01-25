@@ -168,11 +168,13 @@ void TonometerManager::readOutput()
         m.setCharacteristic("units","-");
         m_test.addMeasurement(m);
 
-
         for(auto&& x : m_inputData.toStdMap())
         {
           m_test.addMetaDataCharacteristic(x.first,x.second);
         }
+
+        // emit the can write signal
+        emit message(tr("Ready to save results..."));
         emit canWrite();
         emit dataChanged();
         return;
@@ -194,6 +196,8 @@ void TonometerManager::readOutput()
         m_test.fromFile(m_outputFile);
         if(m_test.isValid())
         {
+            // emit the can write signal
+            emit message(tr("Ready to save results..."));
             emit canWrite();
         }
         else
@@ -209,6 +213,7 @@ void TonometerManager::configureProcess()
 {
     if("simulate" == m_mode)
     {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
         return;
     }
@@ -288,6 +293,7 @@ void TonometerManager::configureProcess()
 
             });
         }
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
     }
     else

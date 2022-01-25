@@ -149,7 +149,7 @@ void AudiometerManager::readDevice()
         if(m_test.isValid())
         {
             // emit the can write signal
-            emit message(tr("Ready to write..."));
+            emit message(tr("Ready to save results..."));
             emit canWrite();
         }
 

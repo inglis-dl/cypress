@@ -62,7 +62,6 @@ int main(int argc, char *argv[])
 
     window.show();
     window.initialize();
-    window.run();
 
     return app.exec();
 }

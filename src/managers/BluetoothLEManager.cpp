@@ -360,6 +360,7 @@ void BluetoothLEManager::discoveryCompleteInternal()
     else
     {
         // select a peripheral from the list of scanned devices
+        emit message(tr("Ready to select..."));
         emit canSelectDevice();
     }
 }
@@ -454,6 +455,7 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
       this,[this](){
         if(m_verbose)
             qDebug() << "controller disconnected from " << m_controller->remoteName();
+        emit message(tr("Ready to connect..."));
         emit canConnectDevice();
       }
     );
@@ -487,6 +489,7 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
         m_controller->discoverServices();
     });
 
+    emit message(tr("Ready to connect..."));
     emit canConnectDevice();
 }
 
@@ -494,6 +497,7 @@ void BluetoothLEManager::connectDevice()
 {
     if("simulate" == m_mode)
     {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
         return;
     }
@@ -575,11 +579,6 @@ void BluetoothLEManager::serviceDiscoveryComplete()
 
 void BluetoothLEManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
     if("simulate" == m_mode)
     {
         m_deviceData.setCharacteristic("device firmware revision", "1.0.0");
@@ -587,6 +586,7 @@ void BluetoothLEManager::measure()
         m_test.addMeasurement(TemperatureMeasurement::simulate());
         if(m_test.isValid())
         {
+          emit message(tr("Ready to save results..."));
           emit canWrite();
         }
         emit dataChanged();
@@ -661,7 +661,10 @@ void BluetoothLEManager::infoServiceStateChanged(QLowEnergyService::ServiceState
     // if both services have been discovered emit the canMeasure signal
     //
     if(QLowEnergyService::ServiceDiscovered == m_thermo_service->state())
+    {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
+    }
 }
 
 void BluetoothLEManager::thermoServiceStateChanged(QLowEnergyService::ServiceState state)
@@ -678,13 +681,17 @@ void BluetoothLEManager::thermoServiceStateChanged(QLowEnergyService::ServiceSta
     // if both services have been discovered emit the canMeasure signal
     //
     if(QLowEnergyService::ServiceDiscovered == m_info_service->state())
+    {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
+    }
 }
 
 void BluetoothLEManager::disconnectDevice()
 {
     if("simulate" == m_mode)
     {
+        emit message("Ready to connect...");
         emit canConnectDevice();
         return;
     }
@@ -732,6 +739,7 @@ void BluetoothLEManager::updateTemperatureData(const QLowEnergyCharacteristic &c
    m_test.fromArray(arr);
    if(m_test.isValid())
    {
+     emit message(tr("Ready to save results..."));
      emit canWrite();
    }
    emit dataChanged();

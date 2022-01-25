@@ -136,11 +136,6 @@ void FraxManager::selectRunnable(const QString &runnableName)
 
 void FraxManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
     if("simulate" == m_mode)
     {
         readOutput();
@@ -213,6 +208,7 @@ void FraxManager::readOutput()
         {
           m_test.addMetaDataCharacteristic(x.first,x.second);
         }
+        emit message(tr("Ready to save results..."));
         emit canWrite();
         emit dataChanged();
 
@@ -233,6 +229,7 @@ void FraxManager::readOutput()
         m_test.fromFile(m_outputFile);
         if(m_test.isValid())
         {
+            emit message(tr("Ready to save results..."));
             emit canWrite();
         }
         else
@@ -249,6 +246,7 @@ void FraxManager::configureProcess()
     if("simulate" == m_mode &&
        !m_inputData.isEmpty())
     {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
         return;
     }
@@ -326,6 +324,7 @@ void FraxManager::configureProcess()
               qDebug() << "process state: " << s.join(" ").toLower();
           });
 
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
     }
     else

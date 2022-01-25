@@ -170,6 +170,7 @@ void ChoiceReactionManager::configureProcess()
     if("simulate" == m_mode &&
        !m_inputData.isEmpty())
     {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
         return;
     }
@@ -239,6 +240,7 @@ void ChoiceReactionManager::configureProcess()
 
       });
 
+      emit message(tr("Ready to measure..."));
       emit canMeasure();
     }
     else
@@ -261,6 +263,8 @@ void ChoiceReactionManager::readOutput()
         m_test.addMetaDataCharacteristic("interviewer_id","simulated");
         m_test.addMetaDataCharacteristic("end_datetime",QDateTime::currentDateTime());
         m_test.addMetaDataCharacteristic("number_of_measurements",60);
+
+        emit message(tr("Ready to save results..."));
         emit canWrite();
         emit dataChanged();
         return;
@@ -295,6 +299,7 @@ void ChoiceReactionManager::readOutput()
         m_outputFile.clear();
         if(m_test.isValid())
         {
+            emit message(tr("Ready to save results..."));
             emit canWrite();
             m_outputFile = fileName;
         }
@@ -314,11 +319,6 @@ void ChoiceReactionManager::readOutput()
 
 void ChoiceReactionManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
     if("simulate" == m_mode)
     {
         readOutput();

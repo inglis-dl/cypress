@@ -81,11 +81,6 @@ void TemplateManager::buildModel(QStandardItemModel* model) const
 
 void TemplateManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
     if ("simulate" == m_mode)
     {
         readOutput();

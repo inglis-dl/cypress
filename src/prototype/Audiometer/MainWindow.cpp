@@ -12,7 +12,6 @@
 #include <QSettings>
 #include <QSizePolicy>
 #include <QTimeLine>
-#include <QBrush>
 
 MainWindow::MainWindow(QWidget *parent)
     : QDialog(parent)
@@ -222,6 +221,7 @@ void MainWindow::initializeConnections()
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
       ui->measureButton->setEnabled(true);
+      ui->saveButton->setEnabled(false);
   });
 
   // Disconnect from device
