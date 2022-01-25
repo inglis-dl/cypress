@@ -1,3 +1,6 @@
+#ifndef BPM200_H
+#define BPM200_H
+
 #include <QObject>
 #include <QHidDevice>
 #include <QDebug>
@@ -23,7 +26,7 @@ public:
 
 	bool Connect();
 	void Disconnect();
-	BPMCommunication* comm = new BPMCommunication;
+	BPMCommunication* comm;
 private:
 	QHidDevice* m_bpm200;
 
@@ -34,3 +37,4 @@ private:
 	int m_pid = 0;
 };
 
+#endif //BPM200_H

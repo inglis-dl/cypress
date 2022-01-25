@@ -1,3 +1,6 @@
+#ifndef CRC8_H
+#define CRC8_H
+
 #include <QDebug>
 
 class CRC8
@@ -8,3 +11,4 @@ public:
 	static const quint8 lookupTable[];
 };
 
+#endif //CRC8_H

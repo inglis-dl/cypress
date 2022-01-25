@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-
 #include "ui_MainWindow.h"
 #include "../../managers/BloodPressureManager.h"
 #include <QStandardItemModel>

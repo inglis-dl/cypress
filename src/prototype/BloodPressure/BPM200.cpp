@@ -1,6 +1,8 @@
 #include "BPM200.h"
 
-BPM200::BPM200(QObject* parent) : m_bpm200(new QHidDevice())
+BPM200::BPM200(QObject* parent) 
+    : m_bpm200(new QHidDevice())
+    , comm( new BPMCommunication(m_bpm200))
 {
 }
 

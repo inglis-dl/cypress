@@ -1,3 +1,6 @@
+#ifndef BPMMESSAGE_H
+#define BPMMESSAGE_H
+
 #include <QString>
 #include <QList>
 
@@ -28,3 +31,4 @@ private:
 	QByteArray msgBytes;
 };
 
+#endif //BPMMESSAGE_H
