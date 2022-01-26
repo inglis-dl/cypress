@@ -78,7 +78,7 @@ void MainWindow::initializeConnections()
   // Relay messages from the manager to the status bar
   //
   connect(&m_manager,&ManagerBase::message,
-          ui->statusBar, &QStatusBar::showMessage);
+          ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
   // Every instrument stage launched by an interviewer requires input
   // of the interview barcode that accompanies a participant.
@@ -120,6 +120,7 @@ void MainWindow::initializeConnections()
           auto p = ui->barcodeLineEdit->palette();
           p.setBrush(QPalette::Base,QBrush(QColor(0,255,0,128)));
           ui->barcodeLineEdit->setPalette(p);
+          ui->barcodeLineEdit->repaint();
 
           // launch the manager
           //

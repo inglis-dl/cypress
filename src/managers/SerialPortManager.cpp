@@ -10,6 +10,26 @@ SerialPortManager::SerialPortManager(QObject *parent) : ManagerBase(parent)
 
 void SerialPortManager::start()
 {
+    connect(&m_port, &QSerialPort::readyRead,
+             this, &SerialPortManager::readDevice);
+
+    connect(&m_port, &QSerialPort::errorOccurred,
+            this,[this](QSerialPort::SerialPortError error){
+            if(error == QSerialPort::NoError)
+               return;
+             qDebug() << "ERROR: serial port " << m_port.errorString();
+            });
+
+    connect(&m_port, &QSerialPort::dataTerminalReadyChanged,
+            this,[](bool set){
+        qDebug() << "data terminal ready DTR changed to " << (set?"high":"low");
+    });
+
+    connect(&m_port, &QSerialPort::requestToSendChanged,
+            this,[](bool set){
+        qDebug() << "request to send RTS changed to " << (set?"high":"low");
+    });
+
   scanDevices();
   emit dataChanged();
 }
@@ -27,16 +47,6 @@ bool SerialPortManager::isDefined(const QString &label) const
         defined = !info.isNull();
     }
     return defined;
-}
-
-bool SerialPortManager::devicesAvailable() const
-{
-    if("simulate" == m_mode)
-    {
-        return true;
-    }
-    QList<QSerialPortInfo> list = QSerialPortInfo::availablePorts();
-    return !list.empty();
 }
 
 void SerialPortManager::scanDevices()
@@ -208,26 +218,6 @@ void SerialPortManager::connectDevice()
       m_port.setParity(QSerialPort::NoParity);
       m_port.setStopBits(QSerialPort::OneStop);
       m_port.setBaudRate(QSerialPort::Baud9600);
-
-      connect(&m_port, &QSerialPort::readyRead,
-               this, &SerialPortManager::readDevice);
-
-      connect(&m_port, &QSerialPort::errorOccurred,
-              this,[this](QSerialPort::SerialPortError error){
-              if(error == QSerialPort::NoError)
-                 return;
-               qDebug() << "ERROR: serial port " << m_port.errorString();
-              });
-
-      connect(&m_port, &QSerialPort::dataTerminalReadyChanged,
-              this,[](bool set){
-          qDebug() << "data terminal ready DTR changed to " << (set?"high":"low");
-      });
-
-      connect(&m_port, &QSerialPort::requestToSendChanged,
-              this,[](bool set){
-          qDebug() << "request to send RTS changed to " << (set?"high":"low");
-      });
 
       // signal the GUI that the measure button can be clicked
       //

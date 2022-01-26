@@ -20,6 +20,29 @@ CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
 
 void CDTTManager::start()
 {
+    // connect signals and slots to QProcess one time only
+    //
+    connect(&m_process, &QProcess::started,
+        this, [this]() {
+            qDebug() << "process started: " << m_process.arguments().join(" ");
+        });
+
+    connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+        this, &CDTTManager::readOutput);
+
+    connect(&m_process, &QProcess::errorOccurred,
+        this, [](QProcess::ProcessError error)
+        {
+            QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
+        });
+
+    connect(&m_process, &QProcess::stateChanged,
+        this, [](QProcess::ProcessState state) {
+            QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "process state: " << s.join(" ").toLower();
+        });
+
     configureProcess();
     emit dataChanged();
 }
@@ -263,28 +286,6 @@ void CDTTManager::configureProcess()
 
         qDebug() << "process config args: " << m_process.arguments().join(" ");
         qDebug() << "process working dir: " << working.absolutePath();
-
-        connect(&m_process, &QProcess::started,
-            this, [this]() {
-                qDebug() << "process started: " << m_process.arguments().join(" ");
-            });
-
-        connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, &CDTTManager::readOutput);
-
-        connect(&m_process, &QProcess::errorOccurred,
-            this, [](QProcess::ProcessError error)
-            {
-                QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
-                qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
-            });
-
-        connect(&m_process, &QProcess::stateChanged,
-            this, [](QProcess::ProcessState state) {
-                QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
-                qDebug() << "process state: " << s.join(" ").toLower();
-
-            });
 
         emit message(tr("Ready to measure..."));
         emit canMeasure();

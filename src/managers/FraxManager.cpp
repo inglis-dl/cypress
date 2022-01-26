@@ -36,6 +36,29 @@ FraxManager::FraxManager(QObject* parent):
 
 void FraxManager::start()
 {
+    // connect signals and slots to QProcess one time only
+    //
+    connect(&m_process, &QProcess::started,
+        this, [this]() {
+            qDebug() << "process started: " << m_process.arguments().join(" ");
+        });
+
+    connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+        this, &CDTTManager::readOutput);
+
+    connect(&m_process, &QProcess::errorOccurred,
+        this, [](QProcess::ProcessError error)
+        {
+            QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
+        });
+
+    connect(&m_process, &QProcess::stateChanged,
+        this, [](QProcess::ProcessState state) {
+            QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "process state: " << s.join(" ").toLower();
+        });
+
     configureProcess();
     emit dataChanged();
 }
@@ -302,27 +325,6 @@ void FraxManager::configureProcess()
             qDebug() << "ERROR: failed writing to " << m_inputFile;
             return;
         }
-
-        connect(&m_process, &QProcess::started,
-          this, [this]() {
-              qDebug() << "process started: " << m_process.arguments().join(" ");
-          });
-
-        connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-          this, &FraxManager::readOutput);
-
-        connect(&m_process, &QProcess::errorOccurred,
-          this, [](QProcess::ProcessError error)
-          {
-              QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
-              qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
-          });
-
-        connect(&m_process, &QProcess::stateChanged,
-          this, [](QProcess::ProcessState state) {
-              QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
-              qDebug() << "process state: " << s.join(" ").toLower();
-          });
 
         emit message(tr("Ready to measure..."));
         emit canMeasure();

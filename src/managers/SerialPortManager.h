@@ -18,10 +18,6 @@ public:
 
     bool isDefined(const QString &) const;
 
-    // check if any devices (serial ports) are available
-    //
-    bool devicesAvailable() const;
-
     QJsonObject toJsonObject() const override;
 
 public slots:
