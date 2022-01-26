@@ -18,12 +18,15 @@ BloodPressureManager::BloodPressureManager(QObject* parent)
 
 void BloodPressureManager::start()
 {
-    bool connected = bpm.Connect();
-    if (connected) {
-        emit canMeasure();
-        bpm.Cycle();
-        bpm.Disconnect();
-    }
+    bpm.Connect();
+    // TODO: MOve this to a slot
+    //if (connected) {
+    //    emit canMeasure();
+    //    qDebug() << "Manager: calling Cycle";
+    //    bpm.Cycle();
+    //    /*qDebug() << "Manager: calling Start";
+    //    bpm.Start();*/
+    //}
    
     emit dataChanged();
 }
@@ -31,10 +34,8 @@ void BloodPressureManager::start()
 void BloodPressureManager::loadSettings(const QSettings& settings)
 {
     int vid = settings.value(getGroup() + "/client/vid").toInt();
-    bpm.SetVid(vid);
-
     int pid = settings.value(getGroup() + "/client/pid").toInt();
-    bpm.SetPid(pid);
+    bpm.SetConnectionInfo(vid, pid);
 }
 
 void BloodPressureManager::saveSettings(QSettings* settings) const

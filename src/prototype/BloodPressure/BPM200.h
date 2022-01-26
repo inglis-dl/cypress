@@ -5,6 +5,7 @@
 #include <QHidDevice>
 #include <QDebug>
 #include <QThread>
+#include <QString>
 
 #include "BPMMessage.h"
 #include "BPMCommunication.h"
@@ -16,22 +17,20 @@ class BPM200: public QObject
 public:
 	explicit BPM200(QObject* parent = Q_NULLPTR);
 
-	void SetVid(int vid) { m_vid = vid; };
-	void SetPid(int pid) { m_pid = pid; };
-	void Cycle();
-	void Start();
-	void Stop();
-	void Clear();
-	void Review();
+	void SetConnectionInfo(int vid, int pid) { m_vid = vid; m_pid = pid; };
 
-	bool Connect();
+	void Connect();
 	void Disconnect();
 	BPMCommunication* comm;
+	
+public slots:
+	void ReceiveConnectionStatus(bool connected);
+	void ReceiveMeasurement(QString measurement);
+signals:
+	void AttemptConnection(const int vid, const int pid);
+	void StartMeasurement();
+	void AbortMeasurement();
 private:
-	QHidDevice* m_bpm200;
-
-	void WriteCommand(quint8 msgId, quint8 data0, quint8 data1 = 0x00, quint8 data2 = 0x00, quint8 data3 = 0x00);
-
 	bool ConnectionInfoSet();
 	int m_vid = 0;
 	int m_pid = 0;

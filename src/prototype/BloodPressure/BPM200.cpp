@@ -1,50 +1,6 @@
 #include "BPM200.h"
 
-BPM200::BPM200(QObject* parent) 
-    : m_bpm200(new QHidDevice())
-    , comm( new BPMCommunication(m_bpm200))
-{
-}
-
-/*
-* Tell bpm to cycle
-*/
-void BPM200::Cycle()
-{
-    WriteCommand(0x11, 0x03);
-}
-
-/*
-* Tell bpm to start
-*/
-void BPM200::Start()
-{
-    WriteCommand(0x11, 0x04);
-}
-
-/*
-* Tell bpm to stop
-*/
-void BPM200::Stop()
-{
-    WriteCommand(0x11, 0x01);
-}
-
-/*
-* Tell bpm to clear
-*/
-void BPM200::Clear()
-{
-    WriteCommand(0x11, 0x05);
-}
-
-/*
-* Tell bpm to review
-*/
-void BPM200::Review()
-{
-    WriteCommand(0x11, 0x02);
-}
+BPM200::BPM200(QObject* parent) : comm( new BPMCommunication()){}
 
 /*
 * Attempts to connect to the blood pressue monitor
@@ -52,29 +8,25 @@ void BPM200::Review()
 * the device was already connected
 * and false otherwise
 */
-bool BPM200::Connect()
+void BPM200::Connect()
 {
-    if (m_bpm200->isOpen()) {
-        qDebug() << "Already connected";
-        return true;
-    }
-
     if (ConnectionInfoSet() == false) {
         qDebug() << "Connection info has not been set";
-        return false;
+        return;
     }
 
-    bool successful = m_bpm200->open(m_vid, m_pid);
-    if (successful) {
-        qDebug() << "Successful opened a connection with the bpm";
+    // Move to thread and setup connection if comm is not on comm thread
+    if (comm->thread() != &CommThread) {
         comm->moveToThread(&CommThread);
-        // TODO: Connect everything
+        connect(this, &BPM200::AttemptConnection, comm, &BPMCommunication::Connect);
+        connect(this, &BPM200::StartMeasurement, comm, &BPMCommunication::Measure);
+        connect(this, &BPM200::AbortMeasurement, comm, &BPMCommunication::Abort);
+        connect(comm, &BPMCommunication::ConnectionStatus, this, &BPM200::ReceiveConnectionStatus);
+        connect(comm, &BPMCommunication::MeasurementReady, this, &BPM200::ReceiveMeasurement);
         CommThread.start();
     }
-    else {
-        qDebug() << "Unable to open a connection with the bpm";
-    }
-    return successful;
+
+    emit AttemptConnection(m_vid, m_pid);
 }
 
 /*
@@ -82,21 +34,21 @@ bool BPM200::Connect()
 */
 void BPM200::Disconnect()
 {
-    if (m_bpm200->isOpen()) {
-        qDebug() << "Closing connection with bpm";
-        CommThread.quit();
-        CommThread.wait();
-        m_bpm200->close();
-    }
-    else {
-        qDebug() << "Cannot disconnect: Connection with bpm is not open";
+    qDebug() << "Disconnect called, terminating thread with bpm";
+    emit AbortMeasurement();
+    CommThread.quit();
+    CommThread.wait();
+}
+
+void BPM200::ReceiveConnectionStatus(bool connected) {
+    if (connected) {
+        // TODO: Change later, this is here just for testing
+        emit StartMeasurement();
     }
 }
 
-void BPM200::WriteCommand(quint8 msgId, quint8 data0, quint8 data1, quint8 data2, quint8 data3)
-{
-    QByteArray buf = BPMMessage::CreatePackedMessage(msgId, data0, data1, data2, data3);
-    m_bpm200->write(&buf);
+void BPM200::ReceiveMeasurement(QString measurement) {
+
 }
 
 /*
@@ -107,3 +59,4 @@ bool BPM200::ConnectionInfoSet()
 {
     return m_vid > 0 && m_pid > 0;
 }
+
