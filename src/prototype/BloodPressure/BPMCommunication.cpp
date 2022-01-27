@@ -61,30 +61,23 @@ int BPMCommunication::Cycle()
 	qDebug() << "BPMComm: Cycle";
 	WriteCommand(0x11, 0x03);
 
-	QTime currTime = QTime::currentTime();
-	QTime dieTime = currTime.addSecs(30);
-	while (currTime < dieTime) {
-		Read();
-		while (m_msgQueue->isEmpty() == false) {
+	// Read output from BPM looking for a cycle acknolegment with the cycle time
+	// Wait up to 30 seconds before giving up
+	int continueVal = -2;
+	int cycleTime = TimedReadLoop<int>(30, -1, continueVal,
+		[this, continueVal]() -> int {
 			BPMMessage nextMessage = m_msgQueue->dequeue();
-			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 3) {
+			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 3) { // Non generic condition
 				int cycleTime = nextMessage.GetData1();
 				qDebug() << "Ack received for cycle. Cycle Time set to " << cycleTime << endl;
 				return cycleTime;
 			}
 			else {
 				qDebug() << "WARNING: Received message that is not a cycle ack " << nextMessage.GetAsQString() << endl;
+				return continueVal;
 			}
-		}
-
-		currTime = QTime::currentTime();
-		qDebug() << currTime << endl;
-		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-	}
-
-	// return -1 meaning no ack received
-	qDebug() << "Did not receive an ack after calling cycle" << endl;
-	return -1;
+		});
+	return cycleTime;
 }
 
 void BPMCommunication::Clear()
@@ -152,4 +145,35 @@ void BPMCommunication::Read()
 			}
 		}
 	}
+}
+
+/*
+* Reads data from the BPM in a continuous loop and calls the passed in "func" to make
+* checks on the data recieved from the BPM. If the "func" returns the "continueVal" then
+* the loop will continue unless it has been running for an amount of time equal to or 
+* greater than "seconds". If the "func" returns any other value then the loop will end 
+* and that value will be the return value of this function. The "defaultReturnVal" is
+* the value that gets returned if a timeout is reached.
+*/
+template<typename T>
+T BPMCommunication::TimedReadLoop(int seconds, T defaultReturnVal, T continueVal, function<T()> func)
+{
+	QTime currTime = QTime::currentTime();
+	QTime dieTime = currTime.addSecs(seconds);
+	while (currTime < dieTime) {
+		Read();
+		while (m_msgQueue->isEmpty() == false) {
+			T value = func();
+			if (value != continueVal) {
+				return value;
+			}
+		}
+
+		currTime = QTime::currentTime();
+		qDebug() << currTime << endl;
+		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+	}
+
+	qDebug() << "Did not receive the expected data back from BPM within the time frame given" << endl;
+	return defaultReturnVal;
 }
