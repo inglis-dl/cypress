@@ -229,7 +229,7 @@ void CDTTManager::readOutput()
         emit dataChanged();
     }
     else
-        qDebug() << "ERROR: no output csv file found";
+        qDebug() << "ERROR: no output xlsx file found"<<fileName;
 }
 
 void CDTTManager::clearData()

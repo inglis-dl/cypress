@@ -1,4 +1,5 @@
 #include "CDTTTest.h"
+#include "QueryHelper.h"
 
 #include <QDebug>
 #include <QJsonObject>
@@ -144,11 +145,20 @@ QJsonObject CDTTTest::toJsonObject() const
 
 bool CDTTTest::queryTestMetaData(const QSqlDatabase &db)
 {
+    qDebug() << "START helper";
+    QStringList header;
+    header << "Subject ID:";
+    QueryHelper helper("A1","B1","Main",header,QueryHelper::Order::Row);
+    helper.buildQuery(db);
+    helper.processQuery();
+    qDebug() <<  "END helper";
+
     // get subject id from Main sheet
     // cell A1 = label = "Subject ID:"
     // cell B1 = value = interview barcode
     //
     QString idQueryString = QString("select * from [%0$A1:B1]").arg("Main");
+    qDebug() <<"query string"<<idQueryString;
     QSqlQuery idQuery(idQueryString, db);
     QSqlRecord idRec = idQuery.record();
 
@@ -177,6 +187,26 @@ bool CDTTTest::queryTestMetaData(const QSqlDatabase &db)
 
     // get adaptive test result summary from Main sheet
     //
+
+    qDebug() << "START helper 2";
+    header.clear();
+    header << "Date & time"
+           << "Language	Talker"
+           << "Mode"
+           << "Digits"
+           << "List #"
+           << "MSK signal"
+           << "Test Ear"
+           << "SP level"
+           << "MSK level"
+           << "SRT"
+           << "St. Dev."
+           << "Reversals";
+
+    QueryHelper helper2("A4","M5","Main",header,QueryHelper::Order::Column);
+    helper2.buildQuery(db);
+    helper2.processQuery();
+    qDebug() <<  "END helper 2";
 
     QString headerQueryString = QString("select * from [%0$A4:U6]").arg("Main");
     QSqlQuery headerQuery(headerQueryString, db);

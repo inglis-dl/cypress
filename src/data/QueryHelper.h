@@ -3,21 +3,20 @@
 
 #include <QObject>
 #include <QSqlQuery>
+#include <QJsonObject>
 
 QT_FORWARD_DECLARE_CLASS(QSqlDatabase)
 
 class QueryHelper
 {
-    Q_OBJECT
+public:
 
     enum Order {
         None,
         Row,
         Column
     };
-    Q_ENUM(Order)
 
-public:
     QueryHelper(const QString&,
                 const QString&,
                 const QString&,
@@ -25,11 +24,12 @@ public:
                 const QueryHelper::Order&
                  );
 
+    bool buildQuery(const QSqlDatabase&);
+    void processQuery();
+
 private:
 
     int columnToIndex(const QString&);
-    void buildQuery(const QSqlDatabase&);
-    void processQuery();
 
     int n_row;
     int n_col;
@@ -40,7 +40,8 @@ private:
     QStringList m_header;
     Order m_order;
 
-    QSqlQuery m_query;
+    QSqlQuery m_query;    
+    QJsonObject m_output;
 };
 
 #endif // QUERYHELPTER_H

@@ -6,11 +6,14 @@
 #include <QSqlRecord>
 #include <QSqlField>
 #include <QSqlError>
+#include <QSqlDriver>
+
+#include <stdexcept>
 
 QueryHelper::QueryHelper(
         const QString& _cellStart,
         const QString& _cellEnd,
-        const QString& _sheet = "Main",
+        const QString& _sheet = "Sheet1",
         const QStringList& _header = QStringList(),
         const QueryHelper::Order& _order = QueryHelper::Order::None) :
   m_cellStart(_cellStart),
@@ -27,7 +30,7 @@ QueryHelper::QueryHelper(
         rx.exactMatch(m_cellEnd)))
    {
        qDebug() << "ERROR: incorrect cell definitions" << m_cellStart << m_cellEnd;
-       throw std::logic_error("incorrect cell definition");
+       throw std::runtime_error("incorrect cell definition");
        return;
    }
 
@@ -84,17 +87,19 @@ QueryHelper::QueryHelper(
       if(n != n_row && n != n_col)
       {
           qDebug() << "ERROR: incorrect header size";
-          throw std::logic_error("incorrect header size");
+          throw std::runtime_error("incorrect header size");
           return;
       }
 
       // the order must be specified correctly
+      // header runs horizontally values run vertically ||
+      // header runs vertically values run horizontally
       //
       if((Order::Column == m_order && n != n_col) ||
          (Order::Row == m_order && n != n_row))
       {
           qDebug() << "ERROR: incorrect header for data order";
-          throw std::logic_error("incorrect header for data order");
+          throw std::runtime_error("incorrect header for data order");
           return;
       }
   }
@@ -113,50 +118,88 @@ inline int QueryHelper::columnToIndex(const QString &s)
     return result;
 }
 
-void QueryHelper::buildQuery(const QSqlDatabase &db)
+bool QueryHelper::buildQuery(const QSqlDatabase &db)
 {
-    QString q_str;
-    if(m_sheet.isEmpty())
-       q_str = QString("select * from [%1$%2]").arg(m_cellStart,m_cellEnd);
-    else
-       q_str = QString("select * from [%1$%2:%3]").arg(m_cellStart,m_cellEnd,m_sheet);
+    bool ok = true;
+
+    QString q_str =
+      QString("select * from [%1$%2:%3]").arg(m_sheet,m_cellStart,m_cellEnd);
 
     m_query = QSqlQuery(q_str,db);
+
+    if(!(m_query.isActive() && m_query.isSelect()))
+    {
+        qDebug() << "ERROR: cannot process query" << q_str;
+        ok = false;
+    }
+    qDebug() << "driver"<<db.driverName()<<"supports query size()" <<
+      (db.driver()->hasFeature(QSqlDriver::QuerySize)?"YES":"NO");
+
+    return ok;
 };
 
 void QueryHelper::processQuery()
 {
-   if(!m_query.isValid())
-   {
-       qDebug() << "ERROR: invalid query" << m_query.lastQuery();
-       qDebug() << m_query.lastError().text();
-       return;
-   }
-
-   // dump
-   qDebug() << "query number of rows returned" << QString::number(m_query.size());
    qDebug() << "order requested is" <<
     (Order::None==m_order? "none" : (Order::Row==m_order ? "row":"column"));
 
-   int rnum = 1;
-   do{
+   if(1 == n_row)
+   {
+       QSqlRecord r = m_query.record();
+       int n_val = r.count();
+       if(n_col != n_val)
+       {
+           qDebug() << "ERROR: expecting "<< QString::number(n_col) << "received" << QString::number(n_val);
+           throw std::runtime_error("ERROR: incorrect record size");
+       }
+       qDebug() << "processing 1 row containing" << QString::number(n_val) << "values";
+       for(int i=0;i<n_val;i++)
+           qDebug() << "value" << QString::number(i+1) << r.value(i).toString();
+
+       if(m_header.isEmpty())
+       {
+           // just return the values
+       }
+       else
+       {
+           // if the header size is 1
+           //
+           // if the header size is n_val
+           // create
+       }
+       // case 1 : 1 x 1
+       //      1.1: order = none - return the value
+       //      1.2: order = row - return the values
+       //      1.3: order = column - return the values
+       //
+       // case 2 : 1 x m
+       //      1.1: order = none
+       //      1.2: order = row
+       //      1.3: order = column
+       //
+   }
+   else
+   {
+     int rnum = 1;
+     do{
        QSqlRecord r = m_query.record();
        qDebug() << "record number"<< QString::number(rnum)<< "size" << QString::number(r.count());
        for(int i=0;i<r.count();i++)
            qDebug() << "value" << QString::number(i+1) << r.value(i).toString();
        rnum++;
-   }while(m_query.next());
+     }while(m_query.next());
 
-
-   // is there a header ?
-   if(m_header.isEmpty())
-   {
+     // case 1 : n x 1
+     //      1.1: order = none
+     //      1.2: order = row
+     //      1.3: order = column
+     //
+     // case 2 : n x m
+     //      1.1: order = none
+     //      1.2: order = row
+     //      1.3: order = column
+     //
 
    }
-   else
-   {
-
-   }
-
 }
 
