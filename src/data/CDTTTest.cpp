@@ -13,17 +13,27 @@
 //
 CDTTTest::CDTTTest()
 {
-    m_outputKeyList << "user id";
+    // test paramaters from Main sheet
+    //
+    m_outputKeyList << "subject_id";
     m_outputKeyList << "datetime";
     m_outputKeyList << "language";
     m_outputKeyList << "talker";
     m_outputKeyList << "mode";
     m_outputKeyList << "digits";
-    m_outputKeyList << "list number";
-    m_outputKeyList << "msk signal";
-    m_outputKeyList << "test ear";
-    m_outputKeyList << "sp level";
-    m_outputKeyList << "msk level";
+    m_outputKeyList << "list_number";
+    m_outputKeyList << "msk_signal";
+    m_outputKeyList << "test_ear";
+    m_outputKeyList << "sp_level";
+    m_outputKeyList << "msk_level";
+
+    // adaptive test results summary from Main sheet
+    //
+    m_outputKeyList << "adaptive_srt";
+    m_outputKeyList << "adaptive_st_dev";
+    m_outputKeyList << "adaptive_reversals";
+
+
     m_outputKeyList << "number of measurements";
 
     // These show up depending on mode
@@ -48,24 +58,26 @@ CDTTTest::CDTTTest()
 
 void CDTTTest::fromFile(const QString &fileName)
 {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", "xlsx_connection");
     if(QFileInfo::exists(fileName))
     {
         qDebug() << "OK, reading input file " << fileName;
 
         //TODO: impl for linux or insert ifdef OS blockers
         //
+        QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", "xlsx_connection");
         db.setDatabaseName("DRIVER={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};DBQ=" + fileName);
         if(db.open())
         {
             reset();
-            if (queryTestMetaData(db))
+            if(queryTestMetaData(db))
             {
               queryTestMeasurements(db);
               int n = getNumberOfMeasurements();
               addMetaDataCharacteristic("number of measurements", n);
             }
         }
+        db.close();
+        db.removeDatabase("xlsx_connection");
     }
 }
 
@@ -132,14 +144,39 @@ QJsonObject CDTTTest::toJsonObject() const
 
 bool CDTTTest::queryTestMetaData(const QSqlDatabase &db)
 {
+    // get subject id from Main sheet
+    // cell A1 = label = "Subject ID:"
+    // cell B1 = value = interview barcode
+    //
     QString idQueryString = QString("select * from [%0$A1:B1]").arg("Main");
     QSqlQuery idQuery(idQueryString, db);
     QSqlRecord idRec = idQuery.record();
-    qDebug() << "Id Fields: " << idRec.fieldName(0) + "," + idRec.fieldName(1);
-    if("Subject ID:" == idRec.fieldName(0))
+
+    // Qt way of checking...
+    // queries are returned row by row
+    // for a query spanning 2 spreadsheed rows we advance the query using next()
+    //
+    if(idRec.contains("Subject ID:"))
     {
-        addMetaDataCharacteristic("user id", idRec.fieldName(1).toInt());
+
     }
+
+    qDebug() << "Id Fields: " << idRec.fieldName(0) + "," + idRec.fieldName(1);
+    if("Subject ID:" == idRec.fieldName(0).simplified())
+    {
+        addMetaDataCharacteristic("subject_id", idRec.fieldName(1).toInt());
+    }
+
+    // get datetime from Main sheet
+    // cell A4 = label = "Date & time"
+    // cell A5 = value = YYYY-MM-DD, HH:mm:ss
+    //
+
+    // get test parameters from Main sheet
+    //
+
+    // get adaptive test result summary from Main sheet
+    //
 
     QString headerQueryString = QString("select * from [%0$A4:U6]").arg("Main");
     QSqlQuery headerQuery(headerQueryString, db);

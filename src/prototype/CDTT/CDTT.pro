@@ -28,6 +28,7 @@ HEADERS += \
     ../../data/CDTTMeasurement.h \
     ../../data/CDTTTest.h \
     ../../data/MeasurementBase.h \
+    ../../data/QueryHelper.h \
     ../../data/TestBase.h \
     ../../auxiliary/CommandLineParser.h \
     ../../managers/ManagerBase.h \
@@ -39,6 +40,7 @@ SOURCES += \
     ../../data/CDTTMeasurement.cpp \
     ../../data/CDTTTest.cpp \
     ../../data/MeasurementBase.cpp \
+    ../../data/QueryHelper.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/CDTTManager.cpp \
     MainWindow.cpp \
