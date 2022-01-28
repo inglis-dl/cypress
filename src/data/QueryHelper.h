@@ -17,15 +17,21 @@ public:
         Column
     };
 
+    enum HeaderMode {
+        Detach,
+        Integrate
+    };
+
     QueryHelper(const QString&,
                 const QString&,
-                const QString&,
-                const QStringList&,
-                const QueryHelper::Order&
-                 );
+                const QString&);
 
     bool buildQuery(const QSqlDatabase&);
     void processQuery();
+
+    void setHeader(const QStringList&);
+    void setOrder(const QueryHelper::Order&);
+    void setHeaderMode(const QueryHelper::HeaderMode&);
 
 private:
 
@@ -39,6 +45,7 @@ private:
     QString m_sheet;
     QStringList m_header;
     Order m_order;
+    HeaderMode m_mode;
 
     QSqlQuery m_query;    
     QJsonObject m_output;

@@ -148,7 +148,9 @@ bool CDTTTest::queryTestMetaData(const QSqlDatabase &db)
     qDebug() << "START helper";
     QStringList header;
     header << "Subject ID:";
-    QueryHelper helper("A1","B1","Main",header,QueryHelper::Order::Row);
+    QueryHelper helper("A1","B1","Main");
+    helper.setOrder(QueryHelper::Order::Row);
+    helper.setHeader(header);
     helper.buildQuery(db);
     helper.processQuery();
     qDebug() <<  "END helper";
@@ -203,7 +205,7 @@ bool CDTTTest::queryTestMetaData(const QSqlDatabase &db)
            << "St. Dev."
            << "Reversals";
 
-    QueryHelper helper2("A4","M5","Main",header,QueryHelper::Order::Column);
+    QueryHelper helper2("A4","M5","Main");
     helper2.buildQuery(db);
     helper2.processQuery();
     qDebug() <<  "END helper 2";

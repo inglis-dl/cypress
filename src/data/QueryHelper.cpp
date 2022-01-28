@@ -11,16 +11,14 @@
 #include <stdexcept>
 
 QueryHelper::QueryHelper(
-        const QString& _cellStart,
-        const QString& _cellEnd,
-        const QString& _sheet = "Sheet1",
-        const QStringList& _header = QStringList(),
-        const QueryHelper::Order& _order = QueryHelper::Order::None) :
-  m_cellStart(_cellStart),
-  m_cellEnd(_cellEnd),
-  m_sheet(_sheet),
-  m_header(_header),
-  m_order(_order)
+        const QString& cellStart,
+        const QString& cellEnd,
+        const QString& sheet = "Sheet1") :
+  m_cellStart(cellStart),
+  m_cellEnd(cellEnd),
+  m_sheet(sheet),
+  m_order(Order::None),
+  m_mode(HeaderMode::Integrate)
 {
    m_cellStart = m_cellStart.toUpper();
    m_cellEnd = m_cellEnd.toUpper();
@@ -68,41 +66,6 @@ QueryHelper::QueryHelper(
     m_cellEnd.replace(l2,l1);
   }
   qDebug() << "final cell labels" << m_cellStart<<m_cellEnd;
-
-  // check if the header is provided otherwise we must assume a simple
-  // block of cell values of the same type is being requested
-  // if we are providing a header, then we expect these to act as
-  // verification keys that should be contained in the first row or
-  // colmun of the block of cells
-  // if we want to verify that the header matches a row or column
-  // of cells, then the header size must equal the size of one or the other
-  // with the non matching dimension = 1
-  //
-  if(!m_header.isEmpty())
-  {
-      int n = m_header.size();
-
-      // column order or row order ?
-      // size has to equal either n_row or n_col
-      if(n != n_row && n != n_col)
-      {
-          qDebug() << "ERROR: incorrect header size";
-          throw std::runtime_error("incorrect header size");
-          return;
-      }
-
-      // the order must be specified correctly
-      // header runs horizontally values run vertically ||
-      // header runs vertically values run horizontally
-      //
-      if((Order::Column == m_order && n != n_col) ||
-         (Order::Row == m_order && n != n_row))
-      {
-          qDebug() << "ERROR: incorrect header for data order";
-          throw std::runtime_error("incorrect header for data order");
-          return;
-      }
-  }
 }
 
 inline int QueryHelper::columnToIndex(const QString &s)
@@ -116,6 +79,16 @@ inline int QueryHelper::columnToIndex(const QString &s)
         c++;
     }
     return result;
+}
+
+void QueryHelper::setOrder(const QueryHelper::Order &order)
+{
+  m_order = order;
+}
+
+void QueryHelper::setHeaderMode(const QueryHelper::HeaderMode &mode)
+{
+  m_mode = mode;
 }
 
 bool QueryHelper::buildQuery(const QSqlDatabase &db)
@@ -136,70 +109,134 @@ bool QueryHelper::buildQuery(const QSqlDatabase &db)
       (db.driver()->hasFeature(QSqlDriver::QuerySize)?"YES":"NO");
 
     return ok;
-};
-
-void QueryHelper::processQuery()
-{
-   qDebug() << "order requested is" <<
-    (Order::None==m_order? "none" : (Order::Row==m_order ? "row":"column"));
-
-   if(1 == n_row)
-   {
-       QSqlRecord r = m_query.record();
-       int n_val = r.count();
-       if(n_col != n_val)
-       {
-           qDebug() << "ERROR: expecting "<< QString::number(n_col) << "received" << QString::number(n_val);
-           throw std::runtime_error("ERROR: incorrect record size");
-       }
-       qDebug() << "processing 1 row containing" << QString::number(n_val) << "values";
-       for(int i=0;i<n_val;i++)
-           qDebug() << "value" << QString::number(i+1) << r.value(i).toString();
-
-       if(m_header.isEmpty())
-       {
-           // just return the values
-       }
-       else
-       {
-           // if the header size is 1
-           //
-           // if the header size is n_val
-           // create
-       }
-       // case 1 : 1 x 1
-       //      1.1: order = none - return the value
-       //      1.2: order = row - return the values
-       //      1.3: order = column - return the values
-       //
-       // case 2 : 1 x m
-       //      1.1: order = none
-       //      1.2: order = row
-       //      1.3: order = column
-       //
-   }
-   else
-   {
-     int rnum = 1;
-     do{
-       QSqlRecord r = m_query.record();
-       qDebug() << "record number"<< QString::number(rnum)<< "size" << QString::number(r.count());
-       for(int i=0;i<r.count();i++)
-           qDebug() << "value" << QString::number(i+1) << r.value(i).toString();
-       rnum++;
-     }while(m_query.next());
-
-     // case 1 : n x 1
-     //      1.1: order = none
-     //      1.2: order = row
-     //      1.3: order = column
-     //
-     // case 2 : n x m
-     //      1.1: order = none
-     //      1.2: order = row
-     //      1.3: order = column
-     //
-
-   }
 }
 
+// the order must be specified correctly
+// header runs horizontally, values run vertically
+// order = Column
+// case 1: n_row = 1, n_col = 1, n > 1   ERROR
+// case 2: n_row = 1, n_col = 1, n = 1   header confirmation {Integrate} OR label value with header {Detach}, mode can be None
+// case 3: n_row = 1, n_col = m, n != m  ERROR
+// case 4: n_row = 1, n_col = m, n = m   header confirmation {Integrate} OR label value with header {Detach}
+// case 5: n_row > 1, n_col = 1, n > 1   ERROR
+// case 6: n_row > 1, n_col = 1, n = 1   n_row - 1 values {Integrate} OR assign n_row values {Detach}
+// case 7: n_row > 1, n_col = m, n != m  ERROR
+// case 8: n_row > 1, n_col = m, n = m   n_row - 1 values {Integrate} OR assign n_row values {Detach}
+//
+// simplifies to
+// case 1': n_row = k, n_col = m, n != m  ERROR
+// case 2': n_row = 1, n_col = m, n = m   header confirmation {Integrate} OR label value with header {Detach}
+// record processing strategy ?
+// case 3': n_row > 1, n_col = m, n = m   n_row - 1 values {Integrate} OR assign n_row values {Detach}
+// record processing strategy ?
+
+// header runs vertically, values run horizontally
+// order = Row
+// case 1: n_col = 1, n_row = 1, n > 1   ERROR
+// case 2: n_col = 1, n_row = 1, n = 1   header confirmation {Integrate} OR label value with header {Detach}, mode can be None
+// case 3: n_col = 1, n_row = m, n != m  ERROR
+// case 4: n_col = 1, n_row = m, n = m   header confirmation {Integrate} OR label value with header {Detach}
+// case 5: n_col > 1, n_row = 1, n > 1   ERROR
+// case 6: n_col > 1, n_row = 1, n = 1   n_col - 1 values {Integrate} OR assign n_col values {Detach}
+// case 7: n_col > 1, n_row = m, n != m  ERROR
+// case 8: n_col > 1, n_row = m, n = m   n_col - 1 values {Integrate} OR assign n_col values {Detach}
+//
+// simplifies to
+// case 1': n_col = k, n_row = m, n != m  ERROR
+// case 2': n_col = 1, n_row = m, n = m   header confirmation {Integrate} OR label value with header {Detach}
+// record processing strategy ?
+// case 3': n_col > 1, n_row = m, n = m   n_row - 1 values {Integrate} OR assign n_row values {Detach}
+// record processing strategy ?
+//
+void QueryHelper::setHeader(const QStringList &header)
+{
+    m_header = header;
+    if(!m_header.isEmpty())
+    {
+        int n = m_header.size();
+        if(Order::None == m_order)
+        {
+            // a single value or row of values is being retrieved in one read
+            //
+            if(1 < n_row || n != n_col)
+            {
+                qDebug() << "ERROR: invalid header for single row of data in columns";
+                throw std::runtime_error("invalid header for single row of data in columns");
+                return;
+            }
+        }
+        else if(Order::Column == m_order)
+        {
+            if(n != n_col)
+            {
+              qDebug() << "ERROR: invalid row header for data in columns";
+              throw std::runtime_error("invalid row header for data in columns");
+              return;
+            }
+        }
+        else if(Order::Row == m_order)
+        {
+            if(n != n_row)
+            {
+              qDebug() << "ERROR: invalid column header for data in rows";
+              throw std::runtime_error("invalid column header for data in rows");
+              return;
+            }
+        }
+    }
+    else
+        qDebug() << "WARNING: possible header empty or invalid read order";
+}
+
+// for Excel files and QSqlQuery SELECT, data is returned
+// in a block n_col x n_row, row by row
+// ODBC does not support QSqlQuery size() to determine number of rows
+// the first row is always interpreted as a list of field names
+//
+void QueryHelper::processQuery()
+{
+  QSqlRecord r = m_query.record();
+  if(n_col != r.count())
+  {
+      qDebug() << "ERROR: data recovery failed for query" << m_query.lastQuery();
+  }
+  QVector<QVector<QVariant>> data;
+  QVector<QVariant> head;
+  for(int i=0;i<r.count();i++)
+    head << r.fieldName(i);
+  data << head;
+
+  if(n_col != head.size())
+  {
+    qDebug() << "ERROR: data recovery failed for query" << m_query.lastQuery();
+  }
+
+  if(1 < n_row)
+  {
+    while(m_query.next())
+    {
+      r = m_query.record();
+      QVector<QVariant> row;
+      for(int i=0;i<r.count();i++)
+        row << r.field(i).value();
+      data << row;
+
+      if(n_col != row.size())
+      {
+        qDebug() << "ERROR: data recovery failed for query" << m_query.lastQuery();
+      }
+    }
+  }
+
+  // dump the data
+  int j = 1;
+  for(auto&& row : data)
+  {
+      int k = 1;
+      for(auto&& col : row )
+
+          qDebug() << "["<<QString::number(j)<<","<<QString::number(k++)<<"]:"<<col.toString();
+      }
+      j++;
+  }
+}
