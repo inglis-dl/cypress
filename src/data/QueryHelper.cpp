@@ -20,52 +20,88 @@ QueryHelper::QueryHelper(
   m_order(Order::None),
   m_mode(HeaderMode::Integrate)
 {
-   m_cellStart = m_cellStart.toUpper();
-   m_cellEnd = m_cellEnd.toUpper();
+  initialize();
+}
 
-   QRegExp rx("^[A-Z]{1,2}[1-9]{1,1}[0-9]*$");
-   if(!(rx.exactMatch(m_cellStart) &&
-        rx.exactMatch(m_cellEnd)))
+QueryHelper::QueryHelper(const QueryHelper &other)
+{
+  m_cellStart = other.m_cellStart;
+  m_cellEnd = other.m_cellEnd;
+  m_sheet = other.m_sheet;
+  m_order = other.m_order;
+  m_mode = other.m_mode;
+  m_header = other.m_header;
+  initialize();
+}
+
+QueryHelper& QueryHelper::operator=(const QueryHelper &other)
+{
+    if(this != &other)
+    {
+      m_cellStart = other.m_cellStart;
+      m_cellEnd = other.m_cellEnd;
+      m_sheet = other.m_sheet;
+      m_order = other.m_order;
+      m_mode = other.m_mode;
+      m_header = other.m_header;
+      initialize();
+    }
+    return *this;
+}
+
+void QueryHelper::initialize()
+{
+    m_cellStart = m_cellStart.toUpper();
+    m_cellEnd = m_cellEnd.toUpper();
+
+    QRegExp rx("^[A-Z]{1,2}[1-9]{1,1}[0-9]*$");
+    if(!(rx.exactMatch(m_cellStart) &&
+         rx.exactMatch(m_cellEnd)))
+    {
+        qDebug() << "ERROR: incorrect cell definitions" << m_cellStart << m_cellEnd;
+        throw std::runtime_error("incorrect cell definition");
+        return;
+    }
+
+    QString l1 = QString(m_cellStart).remove(QRegExp("[0-9]"));
+    QString l2 = QString(m_cellEnd).remove(QRegExp("[0-9]"));
+    int c1 = columnToIndex(l1);
+    int c2 = columnToIndex(l2);
+    qDebug() << "l1" <<l1 << "index"<< QString::number(c1);
+    qDebug() << "l2" <<l2 << "index"<< QString::number(c2);
+    if(c1 > c2)
+    {
+        QString t = m_cellEnd;
+        m_cellEnd = m_cellStart;
+        m_cellStart = t;
+    }
+    n_col = abs(c2-c1)+1;
+    qDebug() << "n columns" << QString::number(n_col);
+
+    l1 = QString(m_cellStart).remove(QRegExp("[A-Z]"));
+    l2 = QString(m_cellEnd).remove(QRegExp("[A-Z]"));
+    int r1 = l1.toInt();
+    int r2 = l2.toInt();
+    n_row = abs(r2-r1)+1;
+    qDebug() << "n rows" << QString::number(n_row);
+
+   // case where the cell definitions read incorrectly eg., B2 -> C1
+   // the definition should alway lead to a reading from top left to bottom right
+   // up to here we are sorted by column label according to index value
+   // if the row value of start cell is > row value of end cell
+   // we swap the row values eg., B2 -> C1 becomes B1 -> C2
+   //
+   if(r1 > r2)
    {
-       qDebug() << "ERROR: incorrect cell definitions" << m_cellStart << m_cellEnd;
-       throw std::runtime_error("incorrect cell definition");
-       return;
+     m_cellStart.replace(l1,l2);
+     m_cellEnd.replace(l2,l1);
    }
+   qDebug() << "final cell labels" << m_cellStart<<m_cellEnd;
+}
 
-   QString l1 = QString(m_cellStart).remove(QRegExp("[0-9]"));
-   QString l2 = QString(m_cellEnd).remove(QRegExp("[0-9]"));
-   int c1 = columnToIndex(l1);
-   int c2 = columnToIndex(l2);
-   qDebug() << "l1" <<l1 << "index"<< QString::number(c1);
-   qDebug() << "l2" <<l2 << "index"<< QString::number(c2);
-   if(c1 > c2)
-   {
-       QString t = m_cellEnd;
-       m_cellEnd = m_cellStart;
-       m_cellStart = t;
-   }
-   n_col = abs(c2-c1)+1;
-   qDebug() << "n columns" << QString::number(n_col);
-
-   l1 = QString(m_cellStart).remove(QRegExp("[A-Z]"));
-   l2 = QString(m_cellEnd).remove(QRegExp("[A-Z]"));
-   int r1 = l1.toInt();
-   int r2 = l2.toInt();
-   n_row = abs(r2-r1)+1;
-   qDebug() << "n rows" << QString::number(n_row);
-
-  // case where the cell definitions read incorrectly eg., B2 -> C1
-  // the definition should alway lead to a reading from top left to bottom right
-  // up to here we are sorted by column label according to index value
-  // if the row value of start cell is > row value of end cell
-  // we swap the row values eg., B2 -> C1 becomes B1 -> C2
-  //
-  if(r1 > r2)
-  {
-    m_cellStart.replace(l1,l2);
-    m_cellEnd.replace(l2,l1);
-  }
-  qDebug() << "final cell labels" << m_cellStart<<m_cellEnd;
+void QueryHelper::setSheet(const QString &sheet)
+{
+    m_sheet = sheet.isEmpty() ? "Sheet1" : sheet;
 }
 
 inline int QueryHelper::columnToIndex(const QString &s)
@@ -234,9 +270,11 @@ void QueryHelper::processQuery()
   {
       int k = 1;
       for(auto&& col : row )
-
+      {
           qDebug() << "["<<QString::number(j)<<","<<QString::number(k++)<<"]:"<<col.toString();
       }
       j++;
   }
+
+  //
 }

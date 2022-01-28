@@ -70,12 +70,78 @@ void CDTTTest::fromFile(const QString &fileName)
         if(db.open())
         {
             reset();
+
+            // get the barcode
+            qDebug() << "-----------getting barcode...";
+            QStringList header;
+            header << "Subject ID:";
+            QueryHelper helper("A1","B1","Main");
+            helper.setOrder(QueryHelper::Order::Row);
+            helper.setHeader(header);
+            helper.buildQuery(db);
+            helper.processQuery();
+
+            qDebug() << "-----------getting meta data...";
+            // get the meta data
+            helper = QueryHelper("A4","J5","Main");
+            header.clear();
+            header << "Date & time"
+                   << "Language	Talker"
+                   << "Mode"
+                   << "Digits"
+                   << "List #"
+                   << "MSK signal"
+                   << "Test Ear"
+                   << "SP level"
+                   << "MSK level";
+            helper.setHeader(header);
+            helper.buildQuery(db);
+            helper.processQuery();
+
+            qDebug() << "-----------getting summary...";
+            // get the summary results
+            helper = QueryHelper("K4","M5","Main");
+            header.clear();
+            header << "SRT"
+                   << "St. Dev."
+                   << "Reversals";
+            helper.setHeader(header);
+            helper.buildQuery(db);
+            helper.processQuery();
+
+            // extract the language and talker to build the raw data sheet name
+
+            qDebug() << "-----------getting number of responses...";
+            // get the number of stimulus and response digits
+            // by querying the first column of the sheet
+            helper = QueryHelper("A13","A60","EN_CA-Male");
+            helper.buildQuery(db);
+            helper.processQuery();
+
+            // count the number of cells that had an integer value
+            // the first column can then be used as a header
+
+            qDebug() << "-----------getting stimulus digits...";
+            // get the stimulus digits
+            helper = QueryHelper("A13","D60","EN_CA-Male");
+            helper.buildQuery(db);
+            helper.processQuery();
+
+
+            qDebug() << "-----------getting response digits...";
+            // get the response digits
+            helper = QueryHelper("E13","G60","EN_CA-Male");
+            helper.buildQuery(db);
+            helper.processQuery();
+
+            /*
             if(queryTestMetaData(db))
             {
               queryTestMeasurements(db);
               int n = getNumberOfMeasurements();
               addMetaDataCharacteristic("number of measurements", n);
             }
+            */
         }
         db.close();
         db.removeDatabase("xlsx_connection");
@@ -145,16 +211,6 @@ QJsonObject CDTTTest::toJsonObject() const
 
 bool CDTTTest::queryTestMetaData(const QSqlDatabase &db)
 {
-    qDebug() << "START helper";
-    QStringList header;
-    header << "Subject ID:";
-    QueryHelper helper("A1","B1","Main");
-    helper.setOrder(QueryHelper::Order::Row);
-    helper.setHeader(header);
-    helper.buildQuery(db);
-    helper.processQuery();
-    qDebug() <<  "END helper";
-
     // get subject id from Main sheet
     // cell A1 = label = "Subject ID:"
     // cell B1 = value = interview barcode
@@ -190,25 +246,6 @@ bool CDTTTest::queryTestMetaData(const QSqlDatabase &db)
     // get adaptive test result summary from Main sheet
     //
 
-    qDebug() << "START helper 2";
-    header.clear();
-    header << "Date & time"
-           << "Language	Talker"
-           << "Mode"
-           << "Digits"
-           << "List #"
-           << "MSK signal"
-           << "Test Ear"
-           << "SP level"
-           << "MSK level"
-           << "SRT"
-           << "St. Dev."
-           << "Reversals";
-
-    QueryHelper helper2("A4","M5","Main");
-    helper2.buildQuery(db);
-    helper2.processQuery();
-    qDebug() <<  "END helper 2";
 
     QString headerQueryString = QString("select * from [%0$A4:U6]").arg("Main");
     QSqlQuery headerQuery(headerQueryString, db);
