@@ -7,6 +7,7 @@
 #include <QSqlField>
 #include <QSqlError>
 #include <QSqlDriver>
+#include <QJsonArray>
 
 #include <stdexcept>
 
@@ -17,8 +18,8 @@ QueryHelper::QueryHelper(
   m_cellStart(cellStart),
   m_cellEnd(cellEnd),
   m_sheet(sheet),
-  m_order(Order::None),
-  m_mode(HeaderMode::Integrate)
+  m_order(Order::Column),
+  m_mode(HeaderMode::Integrated)
 {
   initialize();
 }
@@ -143,6 +144,8 @@ bool QueryHelper::buildQuery(const QSqlDatabase &db)
     }
     qDebug() << "driver"<<db.driverName()<<"supports query size()" <<
       (db.driver()->hasFeature(QSqlDriver::QuerySize)?"YES":"NO");
+    qDebug() << "driver"<<db.driverName()<<"supports unicode strings" <<
+      (db.driver()->hasFeature(QSqlDriver::Unicode)?"YES":"NO");
 
     return ok;
 }
@@ -151,37 +154,37 @@ bool QueryHelper::buildQuery(const QSqlDatabase &db)
 // header runs horizontally, values run vertically
 // order = Column
 // case 1: n_row = 1, n_col = 1, n > 1   ERROR
-// case 2: n_row = 1, n_col = 1, n = 1   header confirmation {Integrate} OR label value with header {Detach}, mode can be None
+// case 2: n_row = 1, n_col = 1, n = 1   header confirmation {Integrated} OR label value with header {Detached}, mode can be None
 // case 3: n_row = 1, n_col = m, n != m  ERROR
-// case 4: n_row = 1, n_col = m, n = m   header confirmation {Integrate} OR label value with header {Detach}
+// case 4: n_row = 1, n_col = m, n = m   header confirmation {Integrated} OR label value with header {Detached}
 // case 5: n_row > 1, n_col = 1, n > 1   ERROR
-// case 6: n_row > 1, n_col = 1, n = 1   n_row - 1 values {Integrate} OR assign n_row values {Detach}
+// case 6: n_row > 1, n_col = 1, n = 1   n_row - 1 values {Integrated} OR assign n_row values {Detached}
 // case 7: n_row > 1, n_col = m, n != m  ERROR
-// case 8: n_row > 1, n_col = m, n = m   n_row - 1 values {Integrate} OR assign n_row values {Detach}
+// case 8: n_row > 1, n_col = m, n = m   n_row - 1 values {Integrated} OR assign n_row values {Detached}
 //
 // simplifies to
 // case 1': n_row = k, n_col = m, n != m  ERROR
-// case 2': n_row = 1, n_col = m, n = m   header confirmation {Integrate} OR label value with header {Detach}
+// case 2': n_row = 1, n_col = m, n = m   header confirmation {Integrated} OR label value with header {Detached}
 // record processing strategy ?
-// case 3': n_row > 1, n_col = m, n = m   n_row - 1 values {Integrate} OR assign n_row values {Detach}
+// case 3': n_row > 1, n_col = m, n = m   n_row - 1 values {Integrated} OR assign n_row values {Detached}
 // record processing strategy ?
-
+//
 // header runs vertically, values run horizontally
 // order = Row
 // case 1: n_col = 1, n_row = 1, n > 1   ERROR
-// case 2: n_col = 1, n_row = 1, n = 1   header confirmation {Integrate} OR label value with header {Detach}, mode can be None
+// case 2: n_col = 1, n_row = 1, n = 1   header confirmation {Integrated} OR label value with header {Detached}, mode can be None
 // case 3: n_col = 1, n_row = m, n != m  ERROR
-// case 4: n_col = 1, n_row = m, n = m   header confirmation {Integrate} OR label value with header {Detach}
+// case 4: n_col = 1, n_row = m, n = m   header confirmation {Integrated} OR label value with header {Detached}
 // case 5: n_col > 1, n_row = 1, n > 1   ERROR
-// case 6: n_col > 1, n_row = 1, n = 1   n_col - 1 values {Integrate} OR assign n_col values {Detach}
+// case 6: n_col > 1, n_row = 1, n = 1   n_col - 1 values {Integrated} OR assign n_col values {Detached}
 // case 7: n_col > 1, n_row = m, n != m  ERROR
-// case 8: n_col > 1, n_row = m, n = m   n_col - 1 values {Integrate} OR assign n_col values {Detach}
+// case 8: n_col > 1, n_row = m, n = m   n_col - 1 values {Integrated} OR assign n_col values {Detached}
 //
 // simplifies to
 // case 1': n_col = k, n_row = m, n != m  ERROR
-// case 2': n_col = 1, n_row = m, n = m   header confirmation {Integrate} OR label value with header {Detach}
+// case 2': n_col = 1, n_row = m, n = m   header confirmation {Integrated} OR label value with header {Detached}
 // record processing strategy ?
-// case 3': n_col > 1, n_row = m, n = m   n_row - 1 values {Integrate} OR assign n_row values {Detach}
+// case 3': n_col > 1, n_row = m, n = m   n_row - 1 values {Integrated} OR assign n_row values {Detached}
 // record processing strategy ?
 //
 void QueryHelper::setHeader(const QStringList &header)
@@ -190,18 +193,7 @@ void QueryHelper::setHeader(const QStringList &header)
     if(!m_header.isEmpty())
     {
         int n = m_header.size();
-        if(Order::None == m_order)
-        {
-            // a single value or row of values is being retrieved in one read
-            //
-            if(1 < n_row || n != n_col)
-            {
-                qDebug() << "ERROR: invalid header for single row of data in columns";
-                throw std::runtime_error("invalid header for single row of data in columns");
-                return;
-            }
-        }
-        else if(Order::Column == m_order)
+        if(Order::Column == m_order)
         {
             if(n != n_col)
             {
@@ -210,7 +202,7 @@ void QueryHelper::setHeader(const QStringList &header)
               return;
             }
         }
-        else if(Order::Row == m_order)
+        else // row order
         {
             if(n != n_row)
             {
@@ -224,10 +216,12 @@ void QueryHelper::setHeader(const QStringList &header)
         qDebug() << "WARNING: possible header empty or invalid read order";
 }
 
-// for Excel files and QSqlQuery SELECT, data is returned
-// in a block n_col x n_row, row by row
-// ODBC does not support QSqlQuery size() to determine number of rows
-// the first row is always interpreted as a list of field names
+// For Excel files and QSqlQuery SELECT, data is returned
+// in a block sized n_col x n_row, row by row.
+// ODBC does not support QSqlQuery size() to determine number of rows.
+// For multiple rows, the first row is interpreted as a list of field names.
+// If a requested cell range contains fewer rows of populated cells
+// the query ceases to provide records past the last filled row.
 //
 void QueryHelper::processQuery()
 {
@@ -264,17 +258,195 @@ void QueryHelper::processQuery()
     }
   }
 
-  // dump the data
-  int j = 1;
-  for(auto&& row : data)
+  m_output = QJsonObject();
+  if(!m_header.isEmpty())
   {
-      int k = 1;
-      for(auto&& col : row )
-      {
-          qDebug() << "["<<QString::number(j)<<","<<QString::number(k++)<<"]:"<<col.toString();
-      }
-      j++;
-  }
+    // header is not within the returned query data, attach the header as json keys
+    if(HeaderMode::Detached == m_mode)
+    {
+        if(Order::Column == m_order)
+        {
+          if(1 == n_row)
+          {
+            int i = 0;
+            for(auto&& col : head)
+              m_output.insert(m_header.at(i++),QJsonValue::fromVariant(col));
+          }
+          else
+          {
+            QVector<QJsonArray> arr;
+            arr.reserve(n_col);
+            for(auto&& row : data)
+            {
+              int i = 0;
+              for(auto&& col : row )
+                  arr.value(i++).push_back(QJsonValue::fromVariant(col));
+            }
+            for(int i=0;i<n_col;i++)
+               m_output.insert(m_header.at(i),arr.value(i));
+          }
+        }
+        else // row order
+        {
+            if(1 == n_row)
+            {
+              if(1 == n_col)
+              {
+                m_output.insert(m_header.first(),QJsonValue::fromVariant(head.first()));
+              }
+              else
+              {
+                QJsonArray arr;
+                for(auto&& col : head)
+                  arr.push_back(QJsonValue::fromVariant(col));
 
-  //
+                m_output.insert(m_header.first(),arr);
+              }
+            }
+            else
+            {
+              int i = 0;
+              for(auto&& row : data)
+              {
+                QJsonArray arr;
+                for(auto&& col : row )
+                {
+                  arr.push_back(QJsonValue::fromVariant(col));
+                }
+                m_output.insert(m_header.at(i++),arr);
+              }
+            }
+        }
+    }
+    else // integrated: the header must be contained within the query data
+    {
+      bool valid = true;
+      if(Order::Column == m_order)
+      {
+        for(int i=0;i<n_col;i++)
+        {
+          valid = m_header.at(i) == head.at(i).toString();
+          if(!valid)
+            break;
+        }
+        if(valid && 1 > n_row)
+        {
+          QVector<QJsonArray> arr;
+          arr.reserve(n_col);
+          bool first = true;
+          for(auto&& row : data)
+          {
+            if(first)
+            {
+              first = false;
+            }
+            else
+            {
+              int i = 0;
+              for(auto&& col : row )
+              {
+                QJsonValue value = QJsonValue::fromVariant(col);
+                arr.value(i++).push_back(value);
+              }
+            }
+          }
+          for(int i=0;i<n_col;i++)
+          {
+            m_output.insert(m_header.at(i),arr.value(i));
+          }
+        }
+      }
+      else // row order
+      {
+        if(1 == n_row)
+        {
+          valid = m_header.first() == head.first().toString();
+          if(valid && 1 > n_col)
+          {
+            QJsonArray arr;
+            for(int i=1;i<n_col;i++)
+            {
+              arr.push_back(QJsonValue::fromVariant(head.at(i)));
+            }
+            m_output.insert(m_header.first(),arr);
+          }
+        }
+        else
+        {
+          int i = 0;
+          for(auto&& row : data)
+          {
+            valid = m_header.at(i++) == row.first().toString();
+            if(!valid)
+              break;
+          }
+          if(valid && 1 > n_col)
+          {
+            i = 0;
+            for(auto&& row : data)
+            {
+              QJsonArray arr;
+              for(auto&& col : row)
+              {
+                if(col == row.first()) continue;
+                arr.push_back(QJsonValue::fromVariant(col));
+              }
+              m_output.insert(m_header.at(i++),arr);
+            }
+          }
+        }
+      }
+      m_output.insert("header_valid",QJsonValue(valid));
+    }
+  }
+  else // empty header, just fill in the data
+  {
+      // string keys are column or row numbers depending on order mode
+      // data returned as single values or QJsonArrays as required
+      //
+      if(Order::Column == m_order)
+      {
+        if(1 == n_row)
+        {
+          int i = 0;
+          for(auto&& col : head)
+              m_output.insert(QString::number(i++),QJsonValue::fromVariant(col));
+        }
+        else
+        {
+          QVector<QJsonArray> arr;
+          arr.reserve(n_col);
+          for(auto&& row : data)
+          {
+            int i = 0;
+            for(auto&& col : row)
+              arr.value(i++).push_back(QJsonValue::fromVariant(col));
+          }
+          int i = 0;
+          for(auto&& col : arr)
+            m_output.insert(QString::number(i++),col);
+        }
+      }
+      else
+      {
+        if(1 == n_col)
+        {
+          int i = 0;
+          for(auto&& row : data)
+            m_output.insert(QString::number(i++),QJsonValue::fromVariant(row.first()));
+        }
+        else
+        {
+          int i = 0;
+          for(auto&& row : data)
+          {
+            QJsonArray arr;
+            for(auto&& col : row)
+                arr.push_back(QJsonValue::fromVariant(col));
+
+            m_output.insert(QString::number(i++),arr);
+          }
+        }
+      }
+  }
 }

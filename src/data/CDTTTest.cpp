@@ -80,6 +80,7 @@ void CDTTTest::fromFile(const QString &fileName)
             helper.setHeader(header);
             helper.buildQuery(db);
             helper.processQuery();
+            qDebug() << helper.getOutput();
 
             qDebug() << "-----------getting meta data...";
             // get the meta data
@@ -97,6 +98,7 @@ void CDTTTest::fromFile(const QString &fileName)
             helper.setHeader(header);
             helper.buildQuery(db);
             helper.processQuery();
+            qDebug() << helper.getOutput();
 
             qDebug() << "-----------getting summary...";
             // get the summary results
@@ -108,6 +110,7 @@ void CDTTTest::fromFile(const QString &fileName)
             helper.setHeader(header);
             helper.buildQuery(db);
             helper.processQuery();
+            qDebug() << helper.getOutput();
 
             // extract the language and talker to build the raw data sheet name
 
@@ -115,17 +118,20 @@ void CDTTTest::fromFile(const QString &fileName)
             // get the number of stimulus and response digits
             // by querying the first column of the sheet
             helper = QueryHelper("A13","A60","EN_CA-Male");
+            helper.setHeader(QStringList());
             helper.buildQuery(db);
             helper.processQuery();
+            qDebug() << helper.getOutput();
 
             // count the number of cells that had an integer value
             // the first column can then be used as a header
 
             qDebug() << "-----------getting stimulus digits...";
             // get the stimulus digits
-            helper = QueryHelper("A13","D60","EN_CA-Male");
+            helper = QueryHelper("B13","D60","EN_CA-Male");
             helper.buildQuery(db);
             helper.processQuery();
+            qDebug() << helper.getOutput();
 
 
             qDebug() << "-----------getting response digits...";
@@ -133,6 +139,7 @@ void CDTTTest::fromFile(const QString &fileName)
             helper = QueryHelper("E13","G60","EN_CA-Male");
             helper.buildQuery(db);
             helper.processQuery();
+            qDebug() << helper.getOutput();
 
             /*
             if(queryTestMetaData(db))
