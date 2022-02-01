@@ -78,16 +78,21 @@ void CDTTTest::fromFile(const QString &fileName)
             QueryHelper helper("A1","B1","Main");
             helper.setOrder(QueryHelper::Order::Row);
             helper.setHeader(header);
-            helper.buildQuery(db);
-            helper.processQuery();
-            qDebug() << helper.getOutput();
+            bool ok = helper.buildQuery(db);
+            if(ok)
+            {
+              helper.processQuery();
+              qDebug() << helper.getOutput().toVariantMap();
+            }
 
             qDebug() << "-----------getting meta data...";
             // get the meta data
             helper = QueryHelper("A4","J5","Main");
+            helper.setOrder(QueryHelper::Order::Column);
             header.clear();
             header << "Date & time"
-                   << "Language	Talker"
+                   << "Language"
+                   << "Talker"
                    << "Mode"
                    << "Digits"
                    << "List #"
@@ -98,7 +103,7 @@ void CDTTTest::fromFile(const QString &fileName)
             helper.setHeader(header);
             helper.buildQuery(db);
             helper.processQuery();
-            qDebug() << helper.getOutput();
+            qDebug() << helper.getOutput().toVariantMap();
 
             qDebug() << "-----------getting summary...";
             // get the summary results
@@ -110,7 +115,7 @@ void CDTTTest::fromFile(const QString &fileName)
             helper.setHeader(header);
             helper.buildQuery(db);
             helper.processQuery();
-            qDebug() << helper.getOutput();
+            qDebug() << helper.getOutput().toVariantMap();
 
             // extract the language and talker to build the raw data sheet name
 
@@ -121,7 +126,7 @@ void CDTTTest::fromFile(const QString &fileName)
             helper.setHeader(QStringList());
             helper.buildQuery(db);
             helper.processQuery();
-            qDebug() << helper.getOutput();
+            qDebug() << helper.getOutput().toVariantMap();
 
             // count the number of cells that had an integer value
             // the first column can then be used as a header
@@ -131,7 +136,7 @@ void CDTTTest::fromFile(const QString &fileName)
             helper = QueryHelper("B13","D60","EN_CA-Male");
             helper.buildQuery(db);
             helper.processQuery();
-            qDebug() << helper.getOutput();
+            qDebug() << helper.getOutput().toVariantMap();
 
 
             qDebug() << "-----------getting response digits...";

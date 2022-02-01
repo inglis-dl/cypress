@@ -233,7 +233,11 @@ void QueryHelper::processQuery()
   QVector<QVector<QVariant>> data;
   QVector<QVariant> head;
   for(int i=0;i<r.count();i++)
+  {
+    QSqlField f = r.field(i);
+    qDebug() << QMetaType::typeName(f.type());
     head << r.fieldName(i);
+  }
   data << head;
 
   if(n_col != head.size())
@@ -261,26 +265,28 @@ void QueryHelper::processQuery()
   m_output = QJsonObject();
   if(!m_header.isEmpty())
   {
-    // header is not within the returned query data, attach the header as json keys
+    // header is not within the query data
     if(HeaderMode::Detached == m_mode)
     {
         if(Order::Column == m_order)
         {
-          if(1 == n_row)
+          if(1 == n_row) // store header key QJsonValue pairs
           {
             int i = 0;
             for(auto&& col : head)
-              m_output.insert(m_header.at(i++),QJsonValue::fromVariant(col));
+              m_output.insert(m_header.at(i++),col.toJsonValue());
           }
-          else
+          else // store header key QJsonArray pairs
           {
-            QVector<QJsonArray> arr;
-            arr.reserve(n_col);
+            QVector<QJsonArray> arr(n_col);
             for(auto&& row : data)
             {
-              int i = 0;
+              QJsonArray *p = arr.data();
               for(auto&& col : row )
-                  arr.value(i++).push_back(QJsonValue::fromVariant(col));
+              {
+                p->push_back(col.toJsonValue());
+                p++;
+              }
             }
             for(int i=0;i<n_col;i++)
                m_output.insert(m_header.at(i),arr.value(i));
@@ -288,40 +294,25 @@ void QueryHelper::processQuery()
         }
         else // row order
         {
-            if(1 == n_row)
-            {
-              if(1 == n_col)
-              {
-                m_output.insert(m_header.first(),QJsonValue::fromVariant(head.first()));
-              }
-              else
-              {
-                QJsonArray arr;
-                for(auto&& col : head)
-                  arr.push_back(QJsonValue::fromVariant(col));
+          int i = 0;
+          for(auto&& row : data)
+          {
+            QJsonArray arr;
+            for(auto&& col : row)
+               arr.push_back(QJsonValue::fromVariant(col));
 
-                m_output.insert(m_header.first(),arr);
-              }
-            }
-            else
-            {
-              int i = 0;
-              for(auto&& row : data)
-              {
-                QJsonArray arr;
-                for(auto&& col : row )
-                {
-                  arr.push_back(QJsonValue::fromVariant(col));
-                }
-                m_output.insert(m_header.at(i++),arr);
-              }
-            }
+             m_output.insert(m_header.at(i++),(1 == arr.size() ? arr.first() : arr));
+           }
         }
     }
-    else // integrated: the header must be contained within the query data
+    else
     {
+      // header is contained within the query data
+      // add an additional key value pair indicating
+      // header validity
+      //
       bool valid = true;
-      if(Order::Column == m_order)
+      if(Order::Column == m_order) // first row of data is the header ?
       {
         for(int i=0;i<n_col;i++)
         {
@@ -329,30 +320,23 @@ void QueryHelper::processQuery()
           if(!valid)
             break;
         }
-        if(valid && 1 > n_row)
+        if(valid && 1 < n_row)
         {
-          QVector<QJsonArray> arr;
-          arr.reserve(n_col);
-          bool first = true;
+          QVector<QJsonArray> arr(n_col);
           for(auto&& row : data)
           {
-            if(first)
+            if(head == row) continue;
+            QJsonArray *p = arr.data();
+            for(auto&& col : row )
             {
-              first = false;
-            }
-            else
-            {
-              int i = 0;
-              for(auto&& col : row )
-              {
-                QJsonValue value = QJsonValue::fromVariant(col);
-                arr.value(i++).push_back(value);
-              }
+              p->push_back(QJsonValue::fromVariant(col));
+              p++;
             }
           }
           for(int i=0;i<n_col;i++)
           {
-            m_output.insert(m_header.at(i),arr.value(i));
+            QJsonArray json = arr.value(i);
+            m_output.insert(m_header.at(i),(1 == json.size() ?  json.first() : json));
           }
         }
       }
@@ -361,14 +345,13 @@ void QueryHelper::processQuery()
         if(1 == n_row)
         {
           valid = m_header.first() == head.first().toString();
-          if(valid && 1 > n_col)
+          if(valid && 1 < n_col)
           {
             QJsonArray arr;
             for(int i=1;i<n_col;i++)
-            {
-              arr.push_back(QJsonValue::fromVariant(head.at(i)));
-            }
-            m_output.insert(m_header.first(),arr);
+              arr.push_back(head.at(i).toJsonValue());
+
+            m_output.insert(m_header.first(),(1 == arr.size() ? arr.first() : arr));
           }
         }
         else
@@ -380,7 +363,7 @@ void QueryHelper::processQuery()
             if(!valid)
               break;
           }
-          if(valid && 1 > n_col)
+          if(valid && 1 < n_col)
           {
             i = 0;
             for(auto&& row : data)
@@ -389,9 +372,9 @@ void QueryHelper::processQuery()
               for(auto&& col : row)
               {
                 if(col == row.first()) continue;
-                arr.push_back(QJsonValue::fromVariant(col));
+                arr.push_back(col.toJsonValue());
               }
-              m_output.insert(m_header.at(i++),arr);
+              m_output.insert(m_header.at(i++),(1 == arr.size() ? arr.first() : arr));
             }
           }
         }
@@ -404,49 +387,33 @@ void QueryHelper::processQuery()
       // string keys are column or row numbers depending on order mode
       // data returned as single values or QJsonArrays as required
       //
+      int sz = Order::Column == m_order ? n_col : n_row;
+      QVector<QJsonArray> arr(sz);
       if(Order::Column == m_order)
       {
-        if(1 == n_row)
+        for(auto&& row : data)
         {
-          int i = 0;
-          for(auto&& col : head)
-              m_output.insert(QString::number(i++),QJsonValue::fromVariant(col));
-        }
-        else
-        {
-          QVector<QJsonArray> arr;
-          arr.reserve(n_col);
-          for(auto&& row : data)
+          QJsonArray *p = arr.data();
+          for(auto&& col : row)
           {
-            int i = 0;
-            for(auto&& col : row)
-              arr.value(i++).push_back(QJsonValue::fromVariant(col));
+            p->push_back(col.toJsonValue());
+            p++;
           }
-          int i = 0;
-          for(auto&& col : arr)
-            m_output.insert(QString::number(i++),col);
         }
       }
       else
       {
-        if(1 == n_col)
+        for(auto&& row : data)
         {
-          int i = 0;
-          for(auto&& row : data)
-            m_output.insert(QString::number(i++),QJsonValue::fromVariant(row.first()));
-        }
-        else
-        {
-          int i = 0;
-          for(auto&& row : data)
-          {
-            QJsonArray arr;
-            for(auto&& col : row)
-                arr.push_back(QJsonValue::fromVariant(col));
+           QJsonArray json;
+           for(auto&& col : row)
+             json.push_back(col.toJsonValue());
 
-            m_output.insert(QString::number(i++),arr);
-          }
+           arr.push_back(json);
         }
       }
+      int i = 0;
+      for(auto&& json : arr)
+        m_output.insert(QString::number(i++),(1 == json.size() ? json.first() : json));
   }
 }
