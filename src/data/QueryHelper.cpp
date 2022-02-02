@@ -407,16 +407,16 @@ void QueryHelper::processQuery()
       }
       else
       {
+        QJsonArray *p = arr.data();
         for(auto&& row : data)
         {
-           QJsonArray json;
            int i = 0;
            for(auto&& col : row)
            {
              col.convert(field_type.at(i++));
-             json.push_back(col.toJsonValue());
+             p->push_back(col.toJsonValue());
            }
-           arr.push_back(json);
+           p++;
         }
       }
       int i = 0;

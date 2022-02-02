@@ -33,7 +33,6 @@ CDTTTest::CDTTTest()
     m_outputKeyList << "speech_reception_threshold";
     m_outputKeyList << "standard_deviation";
     m_outputKeyList << "reversal_count";
-
     m_outputKeyList << "trial_count";
 }
 
@@ -53,7 +52,6 @@ void CDTTTest::fromFile(const QString &fileName)
         if(db.open())
         {
             reset();
-
             bool ok = readBarcode(db);
             if(ok)
             {
@@ -67,15 +65,6 @@ void CDTTTest::fromFile(const QString &fileName)
             {
                 ok = readTrialData(db);
             }
-
-            /*
-            if(queryTestMetaData(db))
-            {
-              queryTestMeasurements(db);
-              int n = getNumberOfMeasurements();
-              addMetaDataCharacteristic("number of measurements", n);
-            }
-            */
         }
         db.close();
         db.removeDatabase("xlsx_connection");
@@ -93,7 +82,7 @@ bool CDTTTest::readBarcode(const QSqlDatabase &db)
     QueryHelper helper("A1","B1","Main");
     helper.setOrder(QueryHelper::Order::Row);
     helper.setHeader(header);
-    bool ok = true; //helper.buildQuery(db);
+    bool ok = true;
     if((ok = helper.buildQuery(db)))
     {
       helper.processQuery();
@@ -116,7 +105,7 @@ bool CDTTTest::readMetaData(const QSqlDatabase &db)
     qDebug() << "-----------getting meta data...";
     // get the meta data
     QueryHelper helper = QueryHelper("A4","J5","Main");
-    bool ok = true;//helper.buildQuery(db);
+    bool ok = true;
     if((ok = helper.buildQuery(db)))
     {
       QStringList header;
@@ -160,7 +149,7 @@ bool CDTTTest::readSummary(const QSqlDatabase &db)
     qDebug() << "-----------getting summary...";
     // get the summary results
     QueryHelper helper = QueryHelper("K4","M5","Main");
-    bool ok = true;//helper.buildQuery(db);
+    bool ok = true;
     if((ok = helper.buildQuery(db)))
     {
       QStringList header;
@@ -203,7 +192,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
       getMetaDataCharacteristic("talker").toString());
 
     QueryHelper helper = QueryHelper("A13","A60",sheet);
-    bool ok = true;//helper.buildQuery(db);
+    bool ok = true;
     if((ok = helper.buildQuery(db)))
     {
       helper.processQuery();
@@ -219,6 +208,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
     CDTTMeasurement m;
     m.setCharacteristic("name","trial_count");
     m.setCharacteristic("value",num_row);
+    addMeasurement(m);
 
     QString cell_suffix = QString::number(13+num_row-1);
     QString endCell = "D" + cell_suffix;
@@ -237,6 +227,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
          CDTTMeasurement m;
          m.setCharacteristic("name",it.key());
          m.setCharacteristic("value",it.value().toVariant().toStringList().join(","));
+         addMeasurement(m);
       }
     }
     else
@@ -257,6 +248,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
          CDTTMeasurement m;
          m.setCharacteristic("name",it.key());
          m.setCharacteristic("value",it.value().toVariant().toStringList().join(","));
+         addMeasurement(m);
       }
     }
 

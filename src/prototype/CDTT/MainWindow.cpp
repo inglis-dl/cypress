@@ -199,9 +199,8 @@ void MainWindow::initializeConnections()
             QSize ts_pre = ui->testdataTableView->size();
             h->resizeSections(QHeaderView::ResizeToContents);
             ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
-            ui->testdataTableView->setColumnWidth(1, h->sectionSize(1));
             ui->testdataTableView->resize(
-                h->sectionSize(0) + h->sectionSize(1) +
+                h->sectionSize(0) +
                 ui->testdataTableView->autoScrollMargin(),
                 8 * ui->testdataTableView->rowHeight(0) + 1 +
                 h->height());
