@@ -70,7 +70,7 @@ void FraxManager::buildModel(QStandardItemModel *model) const
     for(int i = 0; i < m_test.getNumberOfMeasurements(); i++)
     {
         QStandardItem* item = model->item(i, 0);
-        if (Q_NULLPTR == item)
+        if(Q_NULLPTR == item)
         {
             item = new QStandardItem();
             model->setItem(i, 0, item);
@@ -90,7 +90,7 @@ void FraxManager::loadSettings(const QSettings& settings)
 
 void FraxManager::saveSettings(QSettings* settings) const
 {
-    if (!m_runnableName.isEmpty())
+    if(!m_runnableName.isEmpty())
     {
         settings->beginGroup(getGroup());
         settings->setValue("client/exe", m_runnableName);

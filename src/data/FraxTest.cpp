@@ -70,17 +70,17 @@ void FraxTest::fromFile(const QString &fileName)
         if(17 == list.size())
         {
            FraxMeasurement m;
-           m.setCharacteristic("type","osteoporotic fracture");
+           m.setCharacteristic("type","osteoporotic_fracture");
            m.setCharacteristic("probability", list.at(13).toDouble());
            m.setCharacteristic("units","%");
            addMeasurement(m);
-           m.setCharacteristic("type","hip fracture");
+           m.setCharacteristic("type","hip_fracture");
            m.setCharacteristic("probability", list.at(14).toDouble());
            addMeasurement(m);
-           m.setCharacteristic("type","osteoporotic fracture bmd");
+           m.setCharacteristic("type","osteoporotic_fracture_bmd");
            m.setCharacteristic("probability", list.at(15).toDouble());
            addMeasurement(m);
-           m.setCharacteristic("type","hip fracture bmd");
+           m.setCharacteristic("type","hip_fracture_bmd");
            m.setCharacteristic("probability", list.at(16).toDouble());
            addMeasurement(m);
 

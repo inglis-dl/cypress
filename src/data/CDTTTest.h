@@ -3,6 +3,7 @@
 
 #include "TestBase.h"
 #include "CDTTMeasurement.h"
+#include <QJsonObject>
 
 QT_FORWARD_DECLARE_CLASS(QSqlDatabase)
 QT_FORWARD_DECLARE_CLASS(QSqlRecord)
@@ -29,29 +30,12 @@ public:
 private:
 
     QList<QString> m_outputKeyList;
+    QJsonObject m_jsonObj;
 
-    bool queryTestMetaData(const QSqlDatabase &);
-    bool headerValid(const QSqlRecord &) const;
-    void loadHeaderMetaData(const QSqlQuery &);
-    void addMetaIfDataExists(const QSqlQuery &, const QString &, const int &);
-
-    bool queryTestMeasurements(const QSqlDatabase &);
-
-    // Query the header of the 2nd page which contains duplicate meta data (should match main page)
-    bool measurementHeaderMetaDataMatches(const QSqlDatabase &, const QString &) const;
-    bool measurementLanguageMatches(const QSqlRecord &) const;
-    bool measurementNumTestsMatches(const QSqlRecord &) const;
-    bool measurementTalkerMatches(const QSqlQuery &) const;
-    bool measurementMaskerMatches(const QSqlQuery &) const;
-    bool measurementDateMatches(const QSqlQuery &) const;
-
-    // Query measuement section of 2nd page (Continas a small amount of duplicate meta data and then measurements)
-    bool queryMeasurementsSection(const QSqlDatabase&, const QString&, const int &);
-    bool measurementListNumMatches(const QSqlRecord&) const;
-    bool measurementSpeechLevelMatches(const QSqlQuery&) const;
-    bool measurementModeMatches(const QSqlQuery&) const;
-    bool measurementHeaderMatches(QSqlQuery query) const;
-    bool collectMeasurements(QSqlQuery query);
+    bool readBarcode(const QSqlDatabase &);
+    bool readMetaData(const QSqlDatabase &);
+    bool readSummary(const QSqlDatabase &);
+    bool readTrialData(const QSqlDatabase &);
 
 };
 

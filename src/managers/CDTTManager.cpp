@@ -77,38 +77,22 @@ QJsonObject CDTTManager::toJsonObject() const
         ofile.open(QIODevice::ReadOnly);
         QByteArray buffer = ofile.readAll();
         json.insert("test_output_file", QString(buffer.toBase64()));
-        json.insert("test_output_file_mime_type", "csv");
+        json.insert("test_output_file_mime_type", "xlsx");
     }
     return json;
 }
 
 void CDTTManager::buildModel(QStandardItemModel* model) const
 {
-    // add measurements one row of two columns at a time
-    //
-    int n_total = m_test.getNumberOfMeasurements();
-    int n_row = qMax(1, n_total / 2);
-    if (n_row != model->rowCount())
+    for(int i = 0; i < m_test.getNumberOfMeasurements(); i++)
     {
-        model->setRowCount(n_row);
-    }
-    int row_left = 0;
-    int row_right = 0;
-    for (int i = 0; i < n_total; i++)
-    {
-        CDTTMeasurement measurement = m_test.getMeasurement(i);
-        QString measurementStr = measurement.isValid() ? measurement.toString() : "NA";
-
-        int col = i%2;
-        int* row = col == 0 ? &row_left : &row_right;
-        QStandardItem* item = model->item(*row, col);
-        if (Q_NULLPTR == item)
+        QStandardItem* item = model->item(i, 0);
+        if(Q_NULLPTR == item)
         {
             item = new QStandardItem();
-            model->setItem(*row, col, item);
+            model->setItem(i, 0, item);
         }
-        item->setData(measurementStr, Qt::DisplayRole);
-        (*row)++;
+        item->setData(m_test.getMeasurement(i).toString(), Qt::DisplayRole);
     }
 }
 

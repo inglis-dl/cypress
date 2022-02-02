@@ -33,22 +33,19 @@ void MainWindow::initialize()
 
 void MainWindow::initializeModel()
 {
-    // allocate 2 columns x 8 rows of hearing measurement items
+    // allocate 1 columns x 4 rows of measurement items
     //
-    for (int col = 0; col < 2; col++)
+    for(int i = 0; i < 4; i++)
     {
-        for (int row = 0; row < 8; row++)
-        {
-            QStandardItem* item = new QStandardItem();
-            m_model.setItem(row, col, item);
-        }
+      QStandardItem* item = new QStandardItem();
+      m_model.setItem(i, 0, item);
     }
-    m_model.setHeaderData(0, Qt::Horizontal, "Left Test Results", Qt::DisplayRole);
-    m_model.setHeaderData(1, Qt::Horizontal, "Right Test Results", Qt::DisplayRole);
+
+    m_model.setHeaderData(0, Qt::Horizontal, "CDTT Results", Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
 
     ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->verticalHeader()->hide();
 }

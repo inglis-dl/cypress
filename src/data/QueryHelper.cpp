@@ -232,11 +232,13 @@ void QueryHelper::processQuery()
   }
   QVector<QVector<QVariant>> data;
   QVector<QVariant> head;
+  QVector<QVariant::Type> field_type;
   for(int i=0;i<r.count();i++)
   {
     QSqlField f = r.field(i);
     qDebug() << QMetaType::typeName(f.type());
-    head << r.fieldName(i);
+    field_type.push_back(f.type());
+    head << f.name();
   }
   data << head;
 
@@ -394,8 +396,10 @@ void QueryHelper::processQuery()
         for(auto&& row : data)
         {
           QJsonArray *p = arr.data();
+          int i = 0;
           for(auto&& col : row)
           {
+            col.convert(field_type.at(i++));
             p->push_back(col.toJsonValue());
             p++;
           }
@@ -406,14 +410,19 @@ void QueryHelper::processQuery()
         for(auto&& row : data)
         {
            QJsonArray json;
+           int i = 0;
            for(auto&& col : row)
+           {
+             col.convert(field_type.at(i++));
              json.push_back(col.toJsonValue());
-
+           }
            arr.push_back(json);
         }
       }
       int i = 0;
+      if(m_prefix.isEmpty())
+        m_prefix = Order::Column == m_order ? "column_" : "row_";
       for(auto&& json : arr)
-        m_output.insert(QString::number(i++),(1 == json.size() ? json.first() : json));
+        m_output.insert(m_prefix + QString::number(i++),(1 == json.size() ? json.first() : json));
   }
 }
