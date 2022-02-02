@@ -27,13 +27,6 @@ CDTTTest::CDTTTest()
     m_outputKeyList << "test_ear";
     m_outputKeyList << "sp_level";
     m_outputKeyList << "msk_level";
-
-    // adaptive test results summary from Main sheet
-    //
-    m_outputKeyList << "speech_reception_threshold";
-    m_outputKeyList << "standard_deviation";
-    m_outputKeyList << "reversal_count";
-    m_outputKeyList << "trial_count";
 }
 
 //TODO: implement void CDTTTest::simulate()
@@ -128,10 +121,11 @@ bool CDTTTest::readMetaData(const QSqlDatabase &db)
          QString s = obj["Date & time"].toString().simplified().replace(", "," ");
          addMetaDataCharacteristic("datetime",QDateTime::fromString(s, "yyyy-MM-dd hh:mm:ss"));
          addMetaDataCharacteristic("language",obj["Language"].toString());
+         addMetaDataCharacteristic("talker",obj["Talker"].toString());
          addMetaDataCharacteristic("mode",obj["Mode"].toString());
          addMetaDataCharacteristic("digits",obj["Digits"].toString());
          addMetaDataCharacteristic("list_number",obj["List #"].toInt());
-         addMetaDataCharacteristic("msk_signal",obj["MSK Signal"].toString());
+         addMetaDataCharacteristic("msk_signal",obj["MSK signal"].toString());
          addMetaDataCharacteristic("test_ear",obj["Test Ear"].toString());
          addMetaDataCharacteristic("sp_level",obj["SP level"].toDouble());
          addMetaDataCharacteristic("msk_level",obj["MSK level"].toDouble());

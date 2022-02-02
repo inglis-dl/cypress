@@ -44,8 +44,8 @@ void MainWindow::initializeModel()
     m_model.setHeaderData(0, Qt::Horizontal, "CDTT Results", Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
 
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->verticalHeader()->hide();
 }
