@@ -1,0 +1,49 @@
+Start BPM working correctly:
+
+- start ack cycle(1) reading(1)
+
+### Cycle 1 ######
+- Inflating (repeated w pressure)
+- Brief Pause
+- Deflating (repeated w pressure)
+- BP result 0, 129, 81, 59
+- Long pause
+
+### Cycle 2 ######
+- Inflating (repeated w pressure)
+- Brief Pause
+- Deflating (repeated w pressure)
+- BP result 0, 118, 79, 58
+- Long pause
+
+### Cycle 3 ######
+- Inflating (repeated w pressure)
+- Brief Pause
+- Deflating (repeated w pressure)
+- BP result 0, 123, 81, 61
+- Long pause
+
+### Cycle 4 ######
+- Inflating (repeated w pressure)
+- Brief Pause
+- Deflating (repeated w pressure)
+- BP result 0, 123, 82, 64
+- Long pause 15:24:23.669 - > 15:24:44.381 
+
+### Cycle 5 ######
+- Inflating (repeated w pressure)
+- Brief Pause 15:24:54.765 -> 15:24:57.466
+- Deflating (repeated w pressure)
+- BP result 0, 120, 74, 61
+- Long pause 15:25:27.285 -> 15:25:44.387
+
+### Cycle 6 ######
+- Inflating (repeated w pressure)
+- Brief Pause 15:25:54.477 -> 15:25:57.178
+- Deflating (repeated w pressure)
+- BP result 0, 118, 82, 67
+- Brief pause 15:26:23.917 -> 15:26:28.718
+- BP Average 5, 120, 80, 62
+- Review button clicked cycle(1) reading#(0) resultCode(0)
+	NOTE: The physical Review button was not actually pressed
+- Review reading(0) SBP(120) DBP(80) Pulse (62)

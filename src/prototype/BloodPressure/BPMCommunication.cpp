@@ -24,14 +24,15 @@ void BPMCommunication::Connect(int vid, int pid) {
 }
 
 void BPMCommunication::Measure() {
-	// Read and write from bpm here
-	int cycleTime = -1;
+	// Read and write from bpm her
+	bool clearSuccessful = Clear();
+	cycleTime = -1;
 	while (cycleTime != 1) {
-		cycleTime = Cycle();
+		Cycle();
 	}
-
-	Review();
-	Stop();
+	Start();
+	bool reviewSuccessful = Review();
+	bool stopSuccessful = Stop();
 	Clear();
 }
 
@@ -39,106 +40,102 @@ void BPMCommunication::Abort() {
 	// Read and write from bpm here
 }
 
-int BPMCommunication::Start()
+bool BPMCommunication::Start()
 {
     qDebug() << "BPMComm: Start";
 	WriteCommand(0x11, 0x04);
-	//while (true) {
-	//	
 
-	//	// Read messages from BPM and store in read queue
-	//	const int dataLength = 64;
-	//	QByteArray readData[dataLength];
-	//	m_bpm200->read(readData, dataLength, 1000);
-	//	qDebug() << readData->toStdString();
-	//}
-	return defaultVal;
+	// Read output from BPM looking for a start acknolegment
+	// Wait up to 30 seconds before giving up
+	int result = TimedReadLoop(600,
+		[this]() -> bool {
+			BPMMessage nextMessage = m_msgQueue->dequeue();
+			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 4) { // Non generic condition
+				qDebug() << "Ack received for start: " << nextMessage.GetAsQString() << endl;
+				cycleTime = nextMessage.GetData1();
+				readingNumber = nextMessage.GetData2();
+				return false;
+			}
+			else {
+				qDebug() << "WARNING: Expected a start ack. But got- " << nextMessage.GetAsQString() << endl;
+				return false;
+			}
+		});
+	return result;
+	return true;
 }
 
-int BPMCommunication::Stop()
+bool BPMCommunication::Stop()
 {
     qDebug() << "BPMComm: Stop";
     WriteCommand(0x11, 0x01);
 
 	// Read output from BPM looking for a stop acknolegment
 	// Wait up to 30 seconds before giving up
-	int result = TimedReadLoop<int>(5, defaultVal, continueVal,
-		[this]() -> int {
-			BPMMessage nextMessage = m_msgQueue->dequeue();
-			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 1) { // Non generic condition
-				qDebug() << "Ack received for stop" << endl;
-				return defaultVal;
-			}
-			else {
-				qDebug() << "WARNING: Expected a stop ack. But got- " << nextMessage.GetAsQString() << endl;
-				return continueVal;
-			}
+	bool result = TimedReadLoop(5,
+		[this]() -> bool {
+			return AckCheck(1, "Stop");
 		});
 	return result;
 }
 
-int BPMCommunication::Cycle()
+bool BPMCommunication::Cycle()
 {
 	qDebug() << "BPMComm: Cycle";
 	WriteCommand(0x11, 0x03);
 
 	// Read output from BPM looking for a cycle acknolegment with the cycle time
 	// Wait up to 30 seconds before giving up
-	int cycleTime = TimedReadLoop<int>(5, defaultVal, continueVal,
-		[this]() -> int {
+	bool result = TimedReadLoop(5,
+		[this]() -> bool {
 			BPMMessage nextMessage = m_msgQueue->dequeue();
 			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 3) { // Non generic condition
-				int cycleTime = nextMessage.GetData1();
+				cycleTime = nextMessage.GetData1();
 				qDebug() << "Ack received for cycle. Cycle Time set to " << cycleTime << endl;
-				return cycleTime;
+				return true;
 			}
 			else {
 				qDebug() << "WARNING: Expected a cycle ack. But got- " << nextMessage.GetAsQString() << endl;
-				return continueVal;
+				return false;
 			}
 		});
-	return cycleTime;
+	return result;
 }
 
-int BPMCommunication::Clear()
+bool BPMCommunication::Clear()
 {
 	qDebug() << "BPMComm: Clear";
 	WriteCommand(0x11, 0x05);
 
 	// Read output from BPM looking for a clear acknolegment
 	// Wait up to 30 seconds before giving up
-	int result = TimedReadLoop<int>(5, defaultVal, continueVal,
-		[this]() -> int {
-			BPMMessage nextMessage = m_msgQueue->dequeue();
-			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 5) { // Non generic condition
-				qDebug() << "Ack received for clear" << endl;
-				return defaultVal;
-			}
-			else {
-				qDebug() << "WARNING: Expected a clear ack. But got- " << nextMessage.GetAsQString() << endl;
-				return continueVal;
-			}
+	int result = TimedReadLoop(5,
+		[this]() -> bool {
+			return AckCheck(5, "Clear");
 		});
 	return result;
 }
 
-int BPMCommunication::Review()
+bool BPMCommunication::Review()
 {
 	qDebug() << "BPMComm: Review";
 	WriteCommand(0x11, 0x02);
 
 	// Read output from BPM looking for a clear acknolegment
 	// Wait up to 30 seconds before giving up
-	int result = TimedReadLoop<int>(5, defaultVal, continueVal,
-		[this]() -> int {
+	int result = TimedReadLoop(5,
+		[this]() -> bool {
 			BPMMessage nextMessage = m_msgQueue->dequeue();
 			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 2) { // Non generic condition
 				qDebug() << "Ack received for review: " << nextMessage.GetAsQString() << endl;
-				return defaultVal;
+				cycleTime = nextMessage.GetData1();
+				readingNumber = nextMessage.GetData2();
+				resultCode = nextMessage.GetData3();
+				return true;
 			}
 			else {
-				qDebug() << "WARNING: Expected a clear ack. But got- " << nextMessage.GetAsQString() << endl;
-				return continueVal;
+				qDebug() << "WARNING: Expected a review ack. But got- " << nextMessage.GetAsQString() << endl;
+				return false;
 			}
 		});
 	return result;
@@ -205,23 +202,19 @@ void BPMCommunication::Read()
 
 /*
 * Reads data from the BPM in a continuous loop and calls the passed in "func" to make
-* checks on the data recieved from the BPM. If the "func" returns the "continueVal" then
-* the loop will continue unless it has been running for an amount of time equal to or 
-* greater than "seconds". If the "func" returns any other value then the loop will end 
-* and that value will be the return value of this function. The "defaultReturnVal" is
-* the value that gets returned if a timeout is reached.
+* checks on the data recieved from the BPM. The loop will continue until true is returned
+* by the "func" or after "timeout" seconds. 
 */
-template<typename T>
-T BPMCommunication::TimedReadLoop(int seconds, T defaultReturnVal, T continueVal, function<T()> func)
+bool BPMCommunication::TimedReadLoop(int timeout, function<bool()> func)
 {
 	QTime currTime = QTime::currentTime();
-	QTime dieTime = currTime.addSecs(seconds);
+	QTime dieTime = currTime.addSecs(timeout);
 	while (currTime < dieTime) {
 		Read();
 		while (m_msgQueue->isEmpty() == false) {
-			T value = func();
-			if (value != continueVal) {
-				return value;
+			bool successful = func();
+			if (successful) {
+				return true;
 			}
 		}
 
@@ -231,5 +224,25 @@ T BPMCommunication::TimedReadLoop(int seconds, T defaultReturnVal, T continueVal
 	}
 
 	qDebug() << "Did not receive the expected data back from BPM within the time frame given" << endl;
-	return defaultReturnVal;
+	return false;
 }
+
+/*
+* Checks if the next message in the message queue is an acknowledgement 
+* for the expected command
+*/
+bool BPMCommunication::AckCheck(int expectedData0, QString logName)
+{
+	int acknowledgmentMsgId = 6;
+	BPMMessage nextMessage = m_msgQueue->dequeue();
+	if (nextMessage.GetMsgId() == acknowledgmentMsgId && nextMessage.GetData0() == expectedData0) {
+		qDebug() << "Ack received for " << logName << endl;
+		return true;
+	}
+	else {
+		qDebug() << "WARNING: Expected a " << logName << " ack. But got- " << nextMessage.GetAsQString() << endl;
+		return false;
+	}
+}
+
+
