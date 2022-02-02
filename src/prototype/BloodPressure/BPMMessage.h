@@ -29,6 +29,9 @@ public:
 	static QByteArray CreatePackedMessage(quint8 msgID, quint8 data0, quint8 data1 = 0x00, quint8 data2 = 0x00, quint8 data3 = 0x00);
 private:
 	QByteArray msgBytes;
+	const quint8 reportNum = 0x00;
+	const quint8 stx = 0x02;
+	const quint8 etx = 0x03;
 };
 
 #endif //BPMMESSAGE_H

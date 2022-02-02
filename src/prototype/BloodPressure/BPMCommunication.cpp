@@ -26,16 +26,20 @@ void BPMCommunication::Connect(int vid, int pid) {
 void BPMCommunication::Measure() {
 	// Read and write from bpm here
 	int cycleTime = -1;
-	while (cycleTime != 5) {
+	while (cycleTime != 1) {
 		cycleTime = Cycle();
 	}
+
+	Review();
+	Stop();
+	Clear();
 }
 
 void BPMCommunication::Abort() {
 	// Read and write from bpm here
 }
 
-void BPMCommunication::Start()
+int BPMCommunication::Start()
 {
     qDebug() << "BPMComm: Start";
 	WriteCommand(0x11, 0x04);
@@ -48,12 +52,29 @@ void BPMCommunication::Start()
 	//	m_bpm200->read(readData, dataLength, 1000);
 	//	qDebug() << readData->toStdString();
 	//}
+	return defaultVal;
 }
 
-void BPMCommunication::Stop()
+int BPMCommunication::Stop()
 {
     qDebug() << "BPMComm: Stop";
     WriteCommand(0x11, 0x01);
+
+	// Read output from BPM looking for a stop acknolegment
+	// Wait up to 30 seconds before giving up
+	int result = TimedReadLoop<int>(5, defaultVal, continueVal,
+		[this]() -> int {
+			BPMMessage nextMessage = m_msgQueue->dequeue();
+			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 1) { // Non generic condition
+				qDebug() << "Ack received for stop" << endl;
+				return defaultVal;
+			}
+			else {
+				qDebug() << "WARNING: Expected a stop ack. But got- " << nextMessage.GetAsQString() << endl;
+				return continueVal;
+			}
+		});
+	return result;
 }
 
 int BPMCommunication::Cycle()
@@ -63,9 +84,8 @@ int BPMCommunication::Cycle()
 
 	// Read output from BPM looking for a cycle acknolegment with the cycle time
 	// Wait up to 30 seconds before giving up
-	int continueVal = -2;
-	int cycleTime = TimedReadLoop<int>(30, -1, continueVal,
-		[this, continueVal]() -> int {
+	int cycleTime = TimedReadLoop<int>(5, defaultVal, continueVal,
+		[this]() -> int {
 			BPMMessage nextMessage = m_msgQueue->dequeue();
 			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 3) { // Non generic condition
 				int cycleTime = nextMessage.GetData1();
@@ -73,19 +93,55 @@ int BPMCommunication::Cycle()
 				return cycleTime;
 			}
 			else {
-				qDebug() << "WARNING: Received message that is not a cycle ack " << nextMessage.GetAsQString() << endl;
+				qDebug() << "WARNING: Expected a cycle ack. But got- " << nextMessage.GetAsQString() << endl;
 				return continueVal;
 			}
 		});
 	return cycleTime;
 }
 
-void BPMCommunication::Clear()
+int BPMCommunication::Clear()
 {
+	qDebug() << "BPMComm: Clear";
+	WriteCommand(0x11, 0x05);
+
+	// Read output from BPM looking for a clear acknolegment
+	// Wait up to 30 seconds before giving up
+	int result = TimedReadLoop<int>(5, defaultVal, continueVal,
+		[this]() -> int {
+			BPMMessage nextMessage = m_msgQueue->dequeue();
+			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 5) { // Non generic condition
+				qDebug() << "Ack received for clear" << endl;
+				return defaultVal;
+			}
+			else {
+				qDebug() << "WARNING: Expected a clear ack. But got- " << nextMessage.GetAsQString() << endl;
+				return continueVal;
+			}
+		});
+	return result;
 }
 
-void BPMCommunication::Review()
+int BPMCommunication::Review()
 {
+	qDebug() << "BPMComm: Review";
+	WriteCommand(0x11, 0x02);
+
+	// Read output from BPM looking for a clear acknolegment
+	// Wait up to 30 seconds before giving up
+	int result = TimedReadLoop<int>(5, defaultVal, continueVal,
+		[this]() -> int {
+			BPMMessage nextMessage = m_msgQueue->dequeue();
+			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 2) { // Non generic condition
+				qDebug() << "Ack received for review: " << nextMessage.GetAsQString() << endl;
+				return defaultVal;
+			}
+			else {
+				qDebug() << "WARNING: Expected a clear ack. But got- " << nextMessage.GetAsQString() << endl;
+				return continueVal;
+			}
+		});
+	return result;
 }
 
 void BPMCommunication::WriteCommand(quint8 msgId, quint8 data0, quint8 data1, quint8 data2, quint8 data3)
