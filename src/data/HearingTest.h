@@ -25,7 +25,7 @@
 class HearingTest : public TestBase<HearingMeasurement>
 {
 public:
-    HearingTest() = default;
+    HearingTest();
     ~HearingTest() = default;
 
     void fromArray(const QByteArray &);
@@ -45,6 +45,7 @@ public:
     QJsonObject toJsonObject() const override;
 
 private:
+    QList<QString> m_outputKeyList;
     QByteArray m_array;
     QString readArray(const quint8 &, const quint8 &) const;
 

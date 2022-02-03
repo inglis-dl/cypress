@@ -1,4 +1,4 @@
-#include "QueryHelper.h"
+#include "XLSXQueryHelper.h"
 
 #include <QDebug>
 #include <QSqlDatabase>
@@ -11,7 +11,7 @@
 
 #include <stdexcept>
 
-QueryHelper::QueryHelper(
+XLSXQueryHelper::XLSXQueryHelper(
         const QString& cellStart,
         const QString& cellEnd,
         const QString& sheet = "Sheet1") :
@@ -24,7 +24,7 @@ QueryHelper::QueryHelper(
   initialize();
 }
 
-QueryHelper::QueryHelper(const QueryHelper &other)
+XLSXQueryHelper::XLSXQueryHelper(const XLSXQueryHelper &other)
 {
   m_cellStart = other.m_cellStart;
   m_cellEnd = other.m_cellEnd;
@@ -35,7 +35,7 @@ QueryHelper::QueryHelper(const QueryHelper &other)
   initialize();
 }
 
-QueryHelper& QueryHelper::operator=(const QueryHelper &other)
+XLSXQueryHelper& XLSXQueryHelper::operator=(const XLSXQueryHelper &other)
 {
     if(this != &other)
     {
@@ -50,7 +50,7 @@ QueryHelper& QueryHelper::operator=(const QueryHelper &other)
     return *this;
 }
 
-void QueryHelper::initialize()
+void XLSXQueryHelper::initialize()
 {
     m_cellStart = m_cellStart.toUpper();
     m_cellEnd = m_cellEnd.toUpper();
@@ -100,12 +100,12 @@ void QueryHelper::initialize()
    qDebug() << "final cell labels" << m_cellStart<<m_cellEnd;
 }
 
-void QueryHelper::setSheet(const QString &sheet)
+void XLSXQueryHelper::setSheet(const QString &sheet)
 {
     m_sheet = sheet.isEmpty() ? "Sheet1" : sheet;
 }
 
-inline int QueryHelper::columnToIndex(const QString &s)
+inline int XLSXQueryHelper::columnToIndex(const QString &s)
 {
     int result = 0;
     auto c = s.constBegin();
@@ -118,17 +118,17 @@ inline int QueryHelper::columnToIndex(const QString &s)
     return result;
 }
 
-void QueryHelper::setOrder(const QueryHelper::Order &order)
+void XLSXQueryHelper::setOrder(const XLSXQueryHelper::Order &order)
 {
   m_order = order;
 }
 
-void QueryHelper::setHeaderMode(const QueryHelper::HeaderMode &mode)
+void XLSXQueryHelper::setHeaderMode(const XLSXQueryHelper::HeaderMode &mode)
 {
   m_mode = mode;
 }
 
-bool QueryHelper::buildQuery(const QSqlDatabase &db)
+bool XLSXQueryHelper::buildQuery(const QSqlDatabase &db)
 {
     bool ok = true;
 
@@ -187,7 +187,7 @@ bool QueryHelper::buildQuery(const QSqlDatabase &db)
 // case 3': n_col > 1, n_row = m, n = m   n_row - 1 values {Integrated} OR assign n_row values {Detached}
 // record processing strategy ?
 //
-void QueryHelper::setHeader(const QStringList &header)
+void XLSXQueryHelper::setHeader(const QStringList &header)
 {
     m_header = header;
     if(!m_header.isEmpty())
@@ -223,7 +223,7 @@ void QueryHelper::setHeader(const QStringList &header)
 // If a requested cell range contains fewer rows of populated cells
 // the query ceases to provide records past the last filled row.
 //
-void QueryHelper::processQuery()
+void XLSXQueryHelper::processQuery()
 {
   QSqlRecord r = m_query.record();
   if(n_col != r.count())
