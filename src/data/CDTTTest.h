@@ -6,8 +6,6 @@
 #include <QJsonObject>
 
 QT_FORWARD_DECLARE_CLASS(QSqlDatabase)
-QT_FORWARD_DECLARE_CLASS(QSqlRecord)
-QT_FORWARD_DECLARE_CLASS(QSqlQuery)
 
 class CDTTTest : public TestBase<CDTTMeasurement>
 {
@@ -15,7 +13,14 @@ public:
     CDTTTest();
     ~CDTTTest() = default;
 
+    // read from a MS Excel file using ODBC sql
+    //
     void fromFile(const QString &);
+
+    // generate a fictitious set of results
+    // arg is the interview barcode
+    //
+    void simulate(const QString&);
 
     // String representation for debug and GUI display purposes
     //

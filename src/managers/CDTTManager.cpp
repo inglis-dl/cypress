@@ -58,7 +58,7 @@ void CDTTManager::loadSettings(const QSettings& settings)
 
 void CDTTManager::saveSettings(QSettings* settings) const
 {
-    if (!m_runnableName.isEmpty())
+    if(!m_runnableName.isEmpty())
     {
         settings->beginGroup(getGroup());
         settings->setValue("client/jar", m_runnableName);
@@ -71,7 +71,7 @@ void CDTTManager::saveSettings(QSettings* settings) const
 QJsonObject CDTTManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if ("simulate" != m_mode)
+    if("simulate" != m_mode)
     {
         QFile ofile(m_outputFile);
         ofile.open(QIODevice::ReadOnly);
@@ -133,7 +133,6 @@ void CDTTManager::selectRunnable(const QString &runnableName)
         m_runnablePath = info.absolutePath();
         QDir dir = QDir::cleanPath(m_runnablePath + QDir::separator() + "applicationFiles" + QDir::separator() + "Results");
         m_outputPath = dir.path();
-
         configureProcess();
     }
     else
@@ -142,13 +141,12 @@ void CDTTManager::selectRunnable(const QString &runnableName)
 
 void CDTTManager::measure()
 {
+    clearData();
     if("simulate" == m_mode)
     {
         readOutput();
         return;
     }
-
-    clearData();
     // launch the process
     qDebug() << "starting process from measure";
     m_process.start();
@@ -160,13 +158,12 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
-        return;
     }
     bool ok = true;
     m_inputData = input;
     for(auto&& x : m_inputKeyList)
     {
-        if (!input.contains(x))
+        if(!input.contains(x))
         {
             ok = false;
             break;
@@ -182,7 +179,13 @@ void CDTTManager::readOutput()
 {
     if("simulate" == m_mode)
     {
-        // TODO: Implement simulate mode
+        m_test.simulate(m_inputData["barcode"].toString());
+        if(m_test.isValid())
+        {
+          emit message(tr("Ready to save results..."));
+          emit canWrite();
+        }
+        emit dataChanged();
         return;
     }
 
@@ -225,6 +228,10 @@ void CDTTManager::clearData()
 void CDTTManager::finish()
 {
     m_test.reset();
+    if("simulate" == m_mode)
+    {
+        return;
+    }
     if(QProcess::NotRunning != m_process.state())
     {
         m_process.close();
@@ -239,11 +246,13 @@ void CDTTManager::finish()
 
 void CDTTManager::configureProcess()
 {
-    if("simulate" == m_mode &&
-       !m_inputData.isEmpty())
+    if("simulate" == m_mode)
     {
-        emit message(tr("Ready to measure..."));
-        emit canMeasure();
+        if(!m_inputData.isEmpty())
+        {
+          emit message(tr("Ready to measure..."));
+          emit canMeasure();
+        }
         return;
     }
     // the exe is present

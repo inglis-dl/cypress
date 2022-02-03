@@ -21,9 +21,18 @@ QString CDTTMeasurement::toString() const
   QString s;
   if(isValid())
   {
-    s = QString("%1: %2").arg(
-          getCharacteristic("name").toString(),
-          getCharacteristic("value").toString());
+    QString name = getCharacteristic("name").toString();
+    QVariant value = getCharacteristic("value");
+    QString representation;
+    if(QVariant::List == value.type())
+    {
+        value.convert(QVariant::StringList);
+        representation = value.toStringList().join(",");
+    }
+    else
+        representation = value.toString();
+
+    s = QString("%1: %2").arg(name, representation);
   }
   return s;
 }

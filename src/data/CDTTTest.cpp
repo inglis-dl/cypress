@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFileInfo>
+#include <QRandomGenerator>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlRecord>
@@ -29,8 +30,49 @@ CDTTTest::CDTTTest()
     m_outputKeyList << "msk_level";
 }
 
-//TODO: implement void CDTTTest::simulate()
-//
+void CDTTTest::simulate(const QString &barcode)
+{
+  reset();
+  addMetaDataCharacteristic("subject_id",barcode);
+  addMetaDataCharacteristic("datetime",QDateTime::currentDateTime());
+  addMetaDataCharacteristic("language","EN_CA");
+  addMetaDataCharacteristic("talker","Male");
+  addMetaDataCharacteristic("mode","Adaptive");
+  addMetaDataCharacteristic("digits","TRIPLET-80");
+  addMetaDataCharacteristic("list_number",1);
+  addMetaDataCharacteristic("msk_signal","SSNOISE");
+  addMetaDataCharacteristic("test_ear","Binaural");
+  addMetaDataCharacteristic("sp_level",65.0f);
+  addMetaDataCharacteristic("msk_level",65.0f);
+
+  CDTTMeasurement m;
+
+  m.setCharacteristic("name","speech_reception_threshold");
+
+  // typical double range from -14 to +2
+  //
+  double mu = QRandomGenerator::global()->generateDouble();
+  double srt = (1.0 - mu)*-14.0f + mu*2.0f;
+  m.setCharacteristic("value",srt);
+  addMeasurement(m);
+  m.reset();
+
+  m.setCharacteristic("name","standard_deviation");
+
+  //typical double range 1 - 5
+  //
+  double stddev = (1.0 - mu)*1.0f + mu*5.0f;
+  m.setCharacteristic("value",stddev);
+  addMeasurement(m);
+  m.reset();
+
+  m.setCharacteristic("name","reversal_count");
+
+  // typical integer range 6 to 20
+  //
+  m.setCharacteristic("value",QRandomGenerator::global()->bounded(6, 20));
+  addMeasurement(m);
+}
 
 void CDTTTest::fromFile(const QString &fileName)
 {
@@ -220,7 +262,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
       {
          CDTTMeasurement m;
          m.setCharacteristic("name",it.key());
-         m.setCharacteristic("value",it.value().toVariant().toStringList().join(","));
+         m.setCharacteristic("value",it.value().toVariant());
          addMeasurement(m);
       }
     }
@@ -241,7 +283,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
       {
          CDTTMeasurement m;
          m.setCharacteristic("name",it.key());
-         m.setCharacteristic("value",it.value().toVariant().toStringList().join(","));
+         m.setCharacteristic("value",it.value().toVariant());
          addMeasurement(m);
       }
     }

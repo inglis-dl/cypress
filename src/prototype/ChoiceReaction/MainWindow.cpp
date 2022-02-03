@@ -130,8 +130,6 @@ void MainWindow::initializeConnections()
           QMessageBox::critical(
             this, QApplication::applicationName(),
             tr("The input does not match the expected barcode for this participant."));
-
-          p->resume();
       }
   });
 

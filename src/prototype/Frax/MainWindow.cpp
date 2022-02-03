@@ -128,8 +128,6 @@ void MainWindow::initializeConnections()
           QMessageBox::critical(
             this, QApplication::applicationName(),
             tr("The input does not match the expected barcode for this participant."));
-
-          p->resume();
       }
   });
 
@@ -228,7 +226,6 @@ void MainWindow::initializeConnections()
         this, &MainWindow::close);
 
     // Read inputs required to launch frax test
-    // In simulate mode the barcode is always populated with a default of "00000000"
     //
     readInput();
 }
@@ -271,7 +268,8 @@ void MainWindow::readInput()
     {
         if("simulate" == m_mode)
         {
-            m_inputData["barcode"]="00000000";
+            m_inputData["barcode"] = "00000000";
+            m_inputData["language"] = "english";
         }
         else
         {

@@ -127,8 +127,6 @@ void MainWindow::initializeConnections()
           QMessageBox::critical(
             this, QApplication::applicationName(),
             tr("The input does not match the expected barcode for this participant."));
-
-          p->resume();
       }
   });
 
@@ -269,7 +267,8 @@ void MainWindow::readInput()
     {
         if("simulate" == m_mode)
         {
-            m_inputData["barcode"]="00000000";
+            m_inputData["barcode"] = "00000000";
+            m_inputData["language"] = "english";
         }
         else
         {
@@ -364,7 +363,6 @@ void MainWindow::writeOutput()
 
     if (m_verbose)
         qDebug() << "wrote to file " << fileName;
-
 
     ui->statusBar->showMessage("Canadian Digit Triple Test data recorded.  Close when ready.");
 }
