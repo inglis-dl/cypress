@@ -52,6 +52,9 @@ private:
 
 	// The last result code
 	int resultCode = -1;
+
+	// True if the bpm is currently taking measurements
+	bool measuring = false;
 };
 
 #endif //BPMCOMMUNICATION_H

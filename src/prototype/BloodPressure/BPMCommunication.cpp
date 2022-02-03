@@ -24,16 +24,17 @@ void BPMCommunication::Connect(int vid, int pid) {
 }
 
 void BPMCommunication::Measure() {
-	// Read and write from bpm her
+	// Clear old data
 	bool clearSuccessful = Clear();
+
+	// Cycle until set to 1
 	cycleTime = -1;
 	while (cycleTime != 1) {
 		Cycle();
 	}
+
+	// Start Measuring
 	Start();
-	bool reviewSuccessful = Review();
-	bool stopSuccessful = Stop();
-	Clear();
 }
 
 void BPMCommunication::Abort() {
@@ -49,17 +50,64 @@ bool BPMCommunication::Start()
 	// Wait up to 30 seconds before giving up
 	int result = TimedReadLoop(600,
 		[this]() -> bool {
-			BPMMessage nextMessage = m_msgQueue->dequeue();
-			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 4) { // Non generic condition
-				qDebug() << "Ack received for start: " << nextMessage.GetAsQString() << endl;
-				cycleTime = nextMessage.GetData1();
-				readingNumber = nextMessage.GetData2();
-				return false;
+			BPMMessage msg = m_msgQueue->dequeue();
+			quint8 msgId = msg.GetMsgId();
+			quint8 data0 = msg.GetData0();
+			if (msgId == 0x52) {
+				int sbp = msg.GetData1();
+				int dbp = msg.GetData2();
+				int pulse = msg.GetData3();
+				qDebug() << "Review (Done measuring). SBP = " << sbp << " DBP = " << dbp << "Pulse = " << pulse << endl;
+				measuring = false;
+				return true;
+			}
+			// else if Start acknowledgment...
+			else if (msgId == 0x06 && data0 == 0x04) {
+				qDebug() << "Ack received for start: " << msg.GetAsQString() << endl;
+				cycleTime = msg.GetData1();
+				readingNumber = msg.GetData2();
+				measuring = true;
+			}
+			// else if inflating ...
+			else if (msgId == 0x49) {
+				cuffPressure = data0 + msg.GetData1();
+				qDebug() << "Cuff pressure = " << cuffPressure << " (Inflating)" << endl;
+			}
+			// else if deflating ...
+			else if (msgId == 0x44) {
+				cuffPressure = data0 + msg.GetData1();
+				qDebug() << "Cuff pressure = " << cuffPressure << " (Deflating)" << endl;
+			}
+			// else if bp result recieved ...
+			else if (msgId == 0x42 && data0 == 0x00) {
+				// TODO: Send signal with results
+				int sbp = msg.GetData1();
+				int dbp = msg.GetData2();
+				int pulse = msg.GetData3();
+				qDebug() << "Result Recieved. SBP = " << sbp << " DBP = " << dbp << "Pulse = " << pulse << endl;
+			}
+			// else if bp error recieved ...
+			else if (msgId == 0x42 && data0 != 0x00) {
+				// TODO: have an error signal to manager. Probably abort measurement
+				qDebug() << "Error occured from BPM" << endl;
+			}
+			// else if bp average recieved ...
+			else if (msgId == 0x41) {
+				int sbp = msg.GetData1();
+				int dbp = msg.GetData2();
+				int pulse = msg.GetData3();
+				qDebug() << "Average Recieved. Count = " << data0 << " SBP = " << sbp << " DBP = " << dbp << "Pulse = " << pulse << endl;
+			}
+			// else if review button clicked ...
+			// NOTE: This gets called once by bpm even if 
+			// the physical button is not clicked
+			else if (msgId == 0x55 && data0 == 0x02) {
+				qDebug() << "Review initiated" << endl;
 			}
 			else {
-				qDebug() << "WARNING: Expected a start ack. But got- " << nextMessage.GetAsQString() << endl;
-				return false;
+				qDebug() << "WARNING: Expected a start ack. But got- " << msg.GetAsQString() << endl;	
 			}
+			return false;
 		});
 	return result;
 	return true;
@@ -72,11 +120,15 @@ bool BPMCommunication::Stop()
 
 	// Read output from BPM looking for a stop acknolegment
 	// Wait up to 30 seconds before giving up
-	bool result = TimedReadLoop(5,
+	bool stopAckRecieved = TimedReadLoop(5,
 		[this]() -> bool {
 			return AckCheck(1, "Stop");
 		});
-	return result;
+	// Set measuring false is stop ack sucessfully recieved
+	if (stopAckRecieved) {
+		measuring = false;
+	}
+	return stopAckRecieved;
 }
 
 bool BPMCommunication::Cycle()
@@ -89,7 +141,7 @@ bool BPMCommunication::Cycle()
 	bool result = TimedReadLoop(5,
 		[this]() -> bool {
 			BPMMessage nextMessage = m_msgQueue->dequeue();
-			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 3) { // Non generic condition
+			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 3) {
 				cycleTime = nextMessage.GetData1();
 				qDebug() << "Ack received for cycle. Cycle Time set to " << cycleTime << endl;
 				return true;
