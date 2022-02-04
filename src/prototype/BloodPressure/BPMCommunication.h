@@ -23,38 +23,51 @@ public slots:
 
 signals:
 	void ConnectionStatus(const bool connected);
-	void MeasurementReady(const QString measurement);
+	void VersionInfoAvailable(const QString version);
+	void MeasurementReady(const QString measurement, bool isAverage);
+	void MeasurementComplete(const QString measurement);
+	void MeasurementFailed();
+	void ConnectionLost();
 
 private:
+	bool ConnectToBpm();
 	bool Start();
 	bool Stop();
 	bool Cycle();
 	bool Clear();
 	bool Review();
-	void WriteCommand(const quint8 msgId, const quint8 data0, const quint8 data1 = 0x00, const quint8 data2 = 0x00, const quint8 data3 = 0x00);
+	bool Handshake();
+	bool TimedWrite(const quint8 msgId, const quint8 data0, const quint8 data1 = 0x00, const quint8 data2 = 0x00, const quint8 data3 = 0x00);
 	void Read();
 
-	bool TimedReadLoop(const int seconds, const function<bool()> func);
+	bool TimedLoop(const int timeout, const function<bool()> func, const QString debugName = "");
+	bool TimedReadLoop(const int timeout, const function<bool()> func, const QString debugName = "");
 	bool AckCheck(const int expectedData0, const QString logName);
 
 	QHidDevice* m_bpm200;
 	QQueue<BPMMessage>* m_msgQueue;
 
+	// The vid and pid for connecting to the bpm
+	int m_vid = -1;
+	int m_pid = -1;
+
 
 	// The last reported cycle time
-	int cycleTime = -1;
+	int m_cycleTime = -1;
 
 	// The last reported cuff pressure
-	int cuffPressure = -1;
+	int m_cuffPressure = -1;
 
 	// The last reported reading number
-	int readingNumber = -1;
+	int m_readingNumber = -1;
 
 	// The last result code
-	int resultCode = -1;
+	int m_resultCode = -1;
 
 	// True if the bpm is currently taking measurements
-	bool measuring = false;
+	bool m_measuring = false;
+
+	bool m_aborted = false;
 };
 
 #endif //BPMCOMMUNICATION_H
