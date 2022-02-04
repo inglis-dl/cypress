@@ -36,7 +36,7 @@ void ChoiceReactionManager::start()
         });
 
     connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-        this, &CDTTManager::readOutput);
+        this, &ChoiceReactionManager::readOutput);
 
     connect(&m_process, &QProcess::errorOccurred,
         this, [](QProcess::ProcessError error)
@@ -50,6 +50,8 @@ void ChoiceReactionManager::start()
             QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
             qDebug() << "process state: " << s.join(" ").toLower();
         });
+
+    m_process.setProcessChannelMode(QProcess::ForwardedChannels);
 
     configureProcess();
     emit dataChanged();
@@ -127,6 +129,7 @@ void ChoiceReactionManager::selectRunnable(const QString &exeName)
        QDir dir = QDir::cleanPath(m_runnablePath + QDir::separator() + "results");
        m_outputPath = dir.path();
 
+       emit runnableSelected();
        configureProcess();
     }
     else
@@ -233,7 +236,6 @@ void ChoiceReactionManager::configureProcess()
         command << "/l" + QString(s.at(0));
       }
 
-      m_process.setProcessChannelMode(QProcess::ForwardedChannels);
       m_process.setProgram(m_runnableName);
       m_process.setArguments(command);
       m_process.setWorkingDirectory(m_runnablePath);

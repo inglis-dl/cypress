@@ -43,6 +43,8 @@ void CDTTManager::start()
             qDebug() << "process state: " << s.join(" ").toLower();
         });
 
+    m_process.setProcessChannelMode(QProcess::ForwardedChannels);
+
     configureProcess();
     emit dataChanged();
 }
@@ -133,6 +135,8 @@ void CDTTManager::selectRunnable(const QString &runnableName)
         m_runnablePath = info.absolutePath();
         QDir dir = QDir::cleanPath(m_runnablePath + QDir::separator() + "applicationFiles" + QDir::separator() + "Results");
         m_outputPath = dir.path();
+
+        emit runnableSelected();
         configureProcess();
     }
     else
@@ -255,12 +259,11 @@ void CDTTManager::configureProcess()
         }
         return;
     }
-    // the exe is present
-    QFileInfo info(m_runnableName);
+
     QDir working(m_runnablePath);
     QDir out(m_outputPath);
-    if (info.exists() && "jar" == info.completeSuffix() &&
-        working.exists() && out.exists() &&
+    if(isDefined(m_runnableName) &&
+       working.exists() && out.exists() &&
        !m_inputData.isEmpty())
     {
         qDebug() << "OK: configuring command";
@@ -269,10 +272,10 @@ void CDTTManager::configureProcess()
         QString command = "java";
         QStringList arguments;
         arguments << "-jar"
-            << info.fileName()
+            << m_runnableName
             << getInputDataValue("barcode").toString();
 
-        m_process.setProcessChannelMode(QProcess::ForwardedChannels);
+
         m_process.setProgram(command);
         m_process.setArguments(arguments);
         m_process.setWorkingDirectory(working.absolutePath());

@@ -44,7 +44,7 @@ void FraxManager::start()
         });
 
     connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-        this, &CDTTManager::readOutput);
+        this, &FraxManager::readOutput);
 
     connect(&m_process, &QProcess::errorOccurred,
         this, [](QProcess::ProcessError error)
@@ -58,6 +58,8 @@ void FraxManager::start()
             QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
             qDebug() << "process state: " << s.join(" ").toLower();
         });
+
+    m_process.setProcessChannelMode(QProcess::ForwardedChannels);
 
     configureProcess();
     emit dataChanged();
@@ -151,6 +153,7 @@ void FraxManager::selectRunnable(const QString &runnableName)
         m_inputFile =  QDir(m_runnablePath).filePath("input.txt");
         m_temporaryFile = QDir(m_runnablePath).filePath("input_ORIG.txt");
 
+        emit runnableSelected();
         configureProcess();
     }
     else
@@ -187,20 +190,52 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
         m_inputData["current_smoker"] = 0;
         m_inputData["gluccocorticoid"] = 0;
         m_inputData["rheumatoid_arthritis"] = 0;
-        m_inputData["secondary osteoporosis"] = 0;
+        m_inputData["secondary_osteoporosis"] = 0;
         m_inputData["alcohol"] = 0;
         m_inputData["femoral_neck_bmd"] = -1.1;
         return;
     }
     bool ok = true;
     m_inputData = input;
+    QStringList intKeys = {
+        "sex","previous_fracture","parent_hip_fracture",
+        "current_smoker","gluccocorticoid","rheumatoid_arthritis",
+        "secondary_osteoporosis","alcohol"};
+    QStringList doubleKeys = {"age","bmi","femoral_neck_bmd"};
     for(auto&& x : m_inputKeyList)
     {
-        if(!input.contains(x))
+        if(m_inputData.contains(x))
         {
-            ok = false;
-            qDebug() << "ERROR: missing expected input " << x;
-            break;
+            if("barcode" == x || "language" == x) continue;
+            QVariant value = m_inputData[x];
+            bool valueOk = true;
+            if(intKeys.contains(x))
+            {
+              if((valueOk = value.canConvert(QMetaType::Int)))
+              {
+                int v = value.toInt();
+                if(!(1 == v || 0 == v))
+                {
+                    valueOk = false;
+                }
+              }
+            }
+            else if(doubleKeys.contains(x))
+            {
+              valueOk = value.canConvert(QMetaType::Double);
+            }
+            if(!valueOk)
+            {
+              ok = false;
+              qDebug() << "ERROR: invalid input" << x << value.toString();
+              break;
+            }
+        }
+        else
+        {
+          ok = false;
+          qDebug() << "ERROR: missing expected input " << x;
+          break;
         }
     }
     if(!ok)
@@ -276,21 +311,19 @@ void FraxManager::configureProcess()
 
     // blackbox.exe and input.txt file are present
     //
-    QFileInfo info(m_runnableName);
     QDir working(m_runnablePath);
-    if (info.exists() && info.isExecutable() &&
-        working.exists() && QFileInfo::exists(m_inputFile) &&
+    if(isDefined(m_runnableName) &&
+       working.exists() && QFileInfo::exists(m_inputFile) &&
        !m_inputData.isEmpty())
     {
         qDebug() << "OK: configuring command";
 
-        m_process.setProcessChannelMode(QProcess::ForwardedChannels);
         m_process.setProgram(m_runnableName);
         m_process.setWorkingDirectory(m_runnablePath);
 
         qDebug() << "process working dir: " << m_runnablePath;
 
-        // backup the original intput.txt
+        // backup original intput.txt
         //
         if(!QFileInfo::exists(m_temporaryFile))
         {
@@ -299,14 +332,13 @@ void FraxManager::configureProcess()
           else
               qDebug() << "ERROR: failed to backup default " << m_inputFile;
         }
-        // generate the input.txt file content
-        // exclude the interview barcode and language
+        // generate input.txt file content
+        // exclude interview barcode and language
         //
         QStringList list;
         for(auto&& x : m_inputKeyList)
         {
-            if("barcode"==x) continue;
-            if("language"==x) continue;
+            if("barcode" == x || "language" == x) continue;
             if(m_inputData.contains(x))
               list << m_inputData[x].toString();
         }
@@ -317,8 +349,8 @@ void FraxManager::configureProcess()
             QTextStream stream(&ofile);
             stream << line << Qt::endl;
             ofile.close();
-            qDebug() << "populated the input.txt file " << m_inputFile;
-            qDebug() << "content should be " << line;
+            qDebug() << "populated input.txt file " << m_inputFile;
+            qDebug() << "content = " << line;
         }
         else
         {
