@@ -4,13 +4,15 @@
 #include "TestBase.h"
 #include "TonometerMeasurement.h"
 
+QT_FORWARD_DECLARE_CLASS(QSqlQuery)
+
 class TonometerTest : public TestBase<TonometerMeasurement>
 {
 public:
     TonometerTest();
     ~TonometerTest() = default;
 
-    void fromFile(const QString&);
+    void fromQuery(QSqlQuery*);
 
     // String representation for debug and GUI display purposes
     //

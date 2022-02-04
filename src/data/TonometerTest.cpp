@@ -4,101 +4,82 @@
 #include <QDebug>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QFile>
-
-
-/**
- * sample contents of output.txt from blackbox.exe
- *
- * t,19,50.2,0,21.60494,1,0,1,0,0,0, 0, -1.1, 6.37,1.17,4.47,0.34
- *
- * 0 1  2  3 4        5 6 7 8 9 10 11 12 13   14   15   16
- * 0 : t or z (score input for field at position 12)
- * 1 : country code (19 = Canada)
- * 2 : Age in years (positive real number, can have decimals) Age should be 40-90.
- * 3 : Sex (0 : men, 1 : women)
- * 4 : BMI kg/m2 (positive real number, can have decimals)
- * 5 : Previous fracture (0 : no, 1 : yes)
- * 6 : Parental history of hip fracture (0 : no, 1 : yes)
- * 7 : Current smoker (0 : no, 1 : yes)
- * 8 : Gluccocorticoid (0 : no, 1 : yes)
- * 9 : Rheumatoid Arthritis (0 : no, 1 : yes)
- * 10: Secondary osteoporosis (0 : no, 1 : yes)
- * 11: Alcohol more than two drinks a day (0 : no, 1 : yes)
- * 12: Femoral neck BMD (real number, can have decimals). There are two inputs possible, T-score or Z-score
- * 13: 10 year probability (x 100) of osteoporotic fracture, calculated without knowing BMD (positive real number with decimals)
- * 14: 10 year probability (x 100) of hip fracture, calculated without knowing BMD (positive real number with decimals)
- * 15: 10 year probability (x 100) of osteoporotic fracture, calculated knowing BMD (real number with decimals)
- * 16: 10 year probability (x 100) of hip fracture, calculated knowing BMD (real number with decimals)
- *
- */
+#include <QFileInfo>
+#include <QSqlField>
+#include <QSqlQuery>
+#include <QSqlRecord>
 
 TonometerTest::TonometerTest()
 {
-    m_outputKeyList << "type";
-    m_outputKeyList << "country code";
-    m_outputKeyList << "age";
-    m_outputKeyList << "sex";
-    m_outputKeyList << "bmi";
-    m_outputKeyList << "previous fracture";
-    m_outputKeyList << "parent hip fracture";
-    m_outputKeyList << "current smoker";
-    m_outputKeyList << "gluccocorticoid";
-    m_outputKeyList << "rheumatoid arthritis";
-    m_outputKeyList << "secondary osteoporosis";
-    m_outputKeyList << "alcohol";
-    m_outputKeyList << "femoral neck bmd";
+    // exam meta data
+    m_outputKeyList << "measure_number"; // integer
+    m_outputKeyList << "session_date";   // datetime
+    m_outputKeyList << "patient_id";     //  string
+    m_outputKeyList << "ora_serial_number"; // string (unique to site)
+    m_outputKeyList << "ora_software";      // string
+    m_outputKeyList << "pc_software";       // string
+    m_outputKeyList << "meds";            // string (not applicable? never used)
+    m_outputKeyList << "conditionss";     // string (not applicable? never used)
+    m_outputKeyList << "notes_1";         // string (not applicable? never used)
+    m_outputKeyList << "notes_2";         // string (not applicable? never used)
+    m_outputKeyList << "notes_3";         // string (not applicable? never used)
+    m_outputKeyList << "m_g2";            // double (not applicable? always 6.711 for both eyes)
+    m_outputKeyList << "b_g2";            // double (not applicable? always 68)
+    m_outputKeyList << "m_g3";            // double (not applicable? always 4.444)
+    m_outputKeyList << "b_g3";            // double (not applicable? always -22.9)
+    m_outputKeyList << "iop_cc_coef";     // double (not applicable? always 0.43)
+    m_outputKeyList << "crf_coef";        // double (not applicable? always 0.7)
+    m_outputKeyList << "m_abc";           // double (range 1.03 - 1.09)
+    m_outputKeyList << "b_abc";           // double (range -23.85 - -3.42)
+    m_outputKeyList << "b_pp";            // double (not applicable? always 6.12)
+    m_outputKeyList << "best_weighted";   // integer/boolean (not applicable? always 0 or false)
+
+    // data per eye
+    m_outputKeyList << "measure_id";      // integer (range 1 - 3)
+    m_outputKeyList << "measure_date";    // datetime
+    m_outputKeyList << "eye";             // string (L,R)
+    m_outputKeyList << "iopg";            // double (range 5.6 - 28.3)
+    m_outputKeyList << "iopcc";           // double (range 0.8 - 34.8)
+    m_outputKeyList << "crf";             // double (range 0.45 - 18.3)
+    m_outputKeyList << "cct_avg";         // double (not applicable? always 0)
+    m_outputKeyList << "cct_lowest";      // double (not applicable? always 0)
+    m_outputKeyList << "cctsd";           // double (not applicable? always 0)
+    m_outputKeyList << "ch";              // double (range 4.3 - 17.5)
+    m_outputKeyList << "tear_film_value"; // double (range -14 - 31.4)
+    m_outputKeyList << "pressure";        // comma delim string integer vector
+    m_outputKeyList << "applanation";     // string integer vector
+    m_outputKeyList << "time_in";         // double (range 5.7 - 9.8)
+    m_outputKeyList << "time_out";        // double (16.4 - 21.3)
+    m_outputKeyList << "quality_index";   // double (range 0.9 - 9.7)
+    m_outputKeyList << "indexes";         // comma delim string double vector
 }
 
-void TonometerTest::fromFile(const QString &fileName)
+void TonometerTest::fromQuery(QSqlQuery *query)
 {
-    QFile ifile(fileName);
-    if(ifile.open(QIODevice::ReadOnly))
+    if(!(query->isActive() && query->isSelect()))
     {
-        qDebug() << "OK, reading input file " << fileName;
-
-        QTextStream instream(&ifile);
-        QString line = instream.readLine();
-        if(false == instream.atEnd())
-        {
-            qDebug() << "Tonometer: More lines of content than expected";
-        }
-        ifile.close();        
-        reset();
-
-        QStringList list = line.split(",");
-        if(17 == list.size())
-        {
-           TonometerMeasurement m;
-           m.setCharacteristic("type","osteoporotic fracture");
-           m.setCharacteristic("probability", list.at(13).toDouble());
-           m.setCharacteristic("units","%");
-           addMeasurement(m);
-           m.setCharacteristic("type","hip fracture");
-           m.setCharacteristic("probability", list.at(14).toDouble());
-           addMeasurement(m);
-           m.setCharacteristic("type","osteoporotic fracture bmd");
-           m.setCharacteristic("probability", list.at(15).toDouble());
-           addMeasurement(m);
-           m.setCharacteristic("type","hip fracture bmd");
-           m.setCharacteristic("probability", list.at(16).toDouble());
-           addMeasurement(m);
-
-           addMetaDataCharacteristic("type",list.at(0).toLower());
-           addMetaDataCharacteristic("country code",list.at(1).toUInt());
-           addMetaDataCharacteristic("age",list.at(2).toDouble());
-           addMetaDataCharacteristic("sex",list.at(3).toUInt());
-           addMetaDataCharacteristic("bmi",list.at(4).toDouble());
-           addMetaDataCharacteristic("previous fracture",list.at(5).toUInt());
-           addMetaDataCharacteristic("parent hip fracture",list.at(6).toUInt());
-           addMetaDataCharacteristic("current smoker",list.at(7).toUInt());
-           addMetaDataCharacteristic("gluccocorticoid",list.at(8).toUInt());
-           addMetaDataCharacteristic("rheumatoid arthritis",list.at(9).toUInt());
-           addMetaDataCharacteristic("secondary osteoporosis",list.at(10).toUInt());
-           addMetaDataCharacteristic("alcohol",list.at(11).toUInt());
-           addMetaDataCharacteristic("femoral neck bmd",list.at(12).toDouble());
-        }
+        qDebug() << "ERROR: cannot process query" << query->lastQuery();
+        return;
     }
+    QSqlRecord r = query->record();
+    qDebug() << "first record" << QString::number(r.count()) << "fields";
+
+    QVector<QVariant> head;
+    QVector<QVariant::Type> field_type;
+    for(int i=0;i<r.count();i++)
+    {
+      QSqlField f = r.field(i);
+      qDebug() << f.name() << QMetaType::typeName(f.type());
+      field_type.push_back(f.type());
+      head << f.name();
+    }
+
+    /*
+    if(QFileInfo::exists(fileName))
+    {
+
+    }
+    */
 }
 
 // String representation for debug and GUI display purposes

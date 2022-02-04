@@ -5,6 +5,8 @@
 #include <QFileInfo>
 #include <QJsonObject>
 #include <QSettings>
+#include <QSqlDatabase>
+#include <QSqlQuery>
 #include <QStandardItemModel>
 
 TonometerManager::TonometerManager(QObject* parent):
@@ -14,15 +16,41 @@ TonometerManager::TonometerManager(QObject* parent):
 
     // all managers must check for barcode and language input values
     //
-    m_inputKeyList << "barcode";
+    m_inputKeyList << "barcode"; // Name column in Patients table
     m_inputKeyList << "language";
 
-    m_inputKeyList << "date_of_birth";
-    m_inputKeyList << "sex";
+    // tonometer specific mandator inputs
+    //
+    m_inputKeyList << "date_of_birth"; // format dd/MM/YY 00:00:00, BirthDate column in Patients table
+    m_inputKeyList << "sex";           // 0  = female, 1 = male, Sex column in Patients table
 }
 
 void TonometerManager::start()
 {
+    // connect signals and slots to QProcess one time only
+    //
+    connect(&m_process, &QProcess::started,
+        this, [this]() {
+            qDebug() << "process started: " << m_process.arguments().join(" ");
+        });
+
+    connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+        this, &TonometerManager::readOutput);
+
+    connect(&m_process, &QProcess::errorOccurred,
+        this, [](QProcess::ProcessError error)
+        {
+            QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
+        });
+
+    connect(&m_process, &QProcess::stateChanged,
+        this, [](QProcess::ProcessState state) {
+            QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "process state: " << s.join(" ").toLower();
+        });
+
+    configureProcess();
     emit dataChanged();
 }
 
@@ -32,7 +60,7 @@ void TonometerManager::buildModel(QStandardItemModel *model) const
     for(auto&& side : v_side)
     {
       int col = "left" == side ? 0 : 1;
-      for(int row=0;row<8;row++)
+      for(int row=0;row<14;row++)
       {
         TonometerMeasurement m; // = m_test.getMeasurement(side,row);
         QStandardItem* item = model->item(row,col);
@@ -48,6 +76,8 @@ void TonometerManager::loadSettings(const QSettings& settings)
     //
     QString exeName = settings.value(getGroup() + "/client/exe").toString();
     selectRunnable(exeName);
+    QString dbName = settings.value(getGroup() + "/client/mdb").toString();
+    selectDatabase(dbName);
 }
 
 void TonometerManager::saveSettings(QSettings* settings) const
@@ -56,6 +86,7 @@ void TonometerManager::saveSettings(QSettings* settings) const
     {
         settings->beginGroup(getGroup());
         settings->setValue("client/exe", m_runnableName);
+        settings->setValue("client/mdb", m_databaseName);
         settings->endGroup();
         if (m_verbose)
             qDebug() << "wrote exe fullspec path to settings file";
@@ -64,34 +95,19 @@ void TonometerManager::saveSettings(QSettings* settings) const
 
 QJsonObject TonometerManager::toJsonObject() const
 {
-    QJsonObject json = m_test.toJsonObject();
-    if("simulate" != m_mode)
-    {
-      //QFile ofile(m_outputFile);
-      //ofile.open(QIODevice::ReadOnly);
-      //QByteArray buffer = ofile.readAll();
-      //json.insert("test_output_file",QString(buffer.toBase64()));
-      json.insert("test_output_file_mime_type","txt");
-    }
+    QJsonObject json;
+    if(m_test.isValid())
+      json = m_test.toJsonObject();
     return json;
 }
 
-bool TonometerManager::isDefined(const QString &runnableName) const
+bool TonometerManager::isDefined(const QString &fileName) const
 {
     if("simulate" == m_mode)
     {
        return true;
     }
-    bool ok = false;
-    if(!runnableName.isEmpty())
-    {
-        QFileInfo info(runnableName);
-        if(info.exists() && info.isExecutable())
-        {
-            ok = true;
-        }
-    }
-    return ok;
+    return (!fileName.isEmpty() &&  QFileInfo::exists(fileName));
 }
 
 void TonometerManager::selectRunnable(const QString &exeName)
@@ -101,13 +117,24 @@ void TonometerManager::selectRunnable(const QString &exeName)
        QFileInfo info(exeName);
        m_runnableName = exeName;
        m_runnablePath = info.absolutePath();
-
-       //TODO: path to the ora.mdb file
-
+       emit runnableSelected();
        configureProcess();
     }
     else
        emit canSelectRunnable();
+}
+
+void TonometerManager::selectDatabase(const QString &dbName)
+{
+    if(isDefined(dbName))
+    {
+       m_databaseName = dbName;
+       m_temporaryFile = m_databaseName + ".ORIG";
+       emit databaseSelected();
+       configureProcess();
+    }
+    else
+       emit canSelectDatabase();
 }
 
 void TonometerManager::measure()
@@ -129,7 +156,7 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
-        m_inputData["date_of_birth"] = "1965-12-17 00:00:00";
+        m_inputData["date_of_birth"] = "17/12/65 00:00:00";
         m_inputData["sex"] = 0;
         return;
     }
@@ -137,7 +164,20 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
     m_inputData = input;
     for(auto&& x : m_inputKeyList)
     {
-        if(!input.contains(x))
+        if(m_inputData.contains(x))
+        {
+            QVariant value = m_inputData[x];
+           if("sex" == x)
+           {
+             if(QVariant::Type::String == value.type())
+             {
+                m_inputData[x] = value.toString().toLower().startsWith("f") ? 0 : 1;
+             }
+             // TODO: handle DOB input formatting
+             //
+           }
+        }
+        else
         {
             ok = false;
             qDebug() << "ERROR: missing expected input " << x;
@@ -180,7 +220,7 @@ void TonometerManager::readOutput()
         return;
     }
 
-    if (QProcess::NormalExit != m_process.exitStatus())
+    if(QProcess::NormalExit != m_process.exitStatus())
     {
         qDebug() << "ERROR: process failed to finish correctly: cannot read output";
         return;
@@ -188,25 +228,36 @@ void TonometerManager::readOutput()
     else
         qDebug() << "process finished successfully";
 
-    if(QFileInfo::exists(m_outputFile))
+    if(isDefined(m_databaseName))
     {
-        qDebug() << "found output txt file " << m_outputFile;
-        //TODO: this could be read from a db file
+        //TODO: impl for linux or insert ifdef OS blockers
         //
-        m_test.fromFile(m_outputFile);
-        if(m_test.isValid())
+        QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", "mdb_connection");
+        db.setDatabaseName(
+          "DRIVER={Microsoft Access Driver (*.mdb)};DSN='';DBQ=" + m_databaseName);
+        if(db.open())
         {
-            // emit the can write signal
-            emit message(tr("Ready to save results..."));
-            emit canWrite();
-        }
-        else
-            qDebug() << "ERROR: input from file produced invalid test results";
+            QString q_str = QString(
+              "SELECT m.* FROM Measures m "
+              "JOIN Patients p ON p.PatientID=m.PatientID "
+              "WHERE p.ID='%1'").arg(m_inputData["barcode"].toString());
 
+            QSqlQuery query = QSqlQuery(q_str,db);
+            m_test.fromQuery(&query);
+            if(m_test.isValid())
+            {
+              emit message(tr("Ready to save results..."));
+              emit canWrite();
+            }
+            else
+              qDebug() << "ERROR: ora database produced invalid test results";
+        }
+        db.close();
+        db.removeDatabase("mdb_connection");
         emit dataChanged();
     }
     else
-        qDebug() << "ERROR: no output.txt file found";
+        qDebug() << "ERROR: ora database is missing";
 }
 
 void TonometerManager::configureProcess()
@@ -217,12 +268,12 @@ void TonometerManager::configureProcess()
         emit canMeasure();
         return;
     }
-    // ORA.exe and input file are present
+    // ORA.exe, ora.mdb and input file are present
     //
-    QFileInfo info(m_runnableName);
     QDir working(m_runnablePath);
-    if (info.exists() && info.isExecutable() &&
-        working.exists() && QFileInfo::exists(m_inputFile))
+    if (isDefined(m_runnableName) &&
+        isDefined(m_databaseName) &&
+        working.exists())
     {
         qDebug() << "OK: configuring command";
 
@@ -232,69 +283,44 @@ void TonometerManager::configureProcess()
 
         qDebug() << "process working dir: " << m_runnablePath;
 
-        // backup the original intput.txt
+        // backup the original ora.mdb
         if(QFileInfo::exists(m_temporaryFile))
         {
             QFile tfile(m_temporaryFile);
             tfile.remove();
         }
-        QFile::copy(m_inputFile, m_temporaryFile);
+        QFile::copy(m_databaseName, m_temporaryFile);
         qDebug() << "wrote backup to " << m_temporaryFile;
 
-        // generate the input.txt file content
-        if(m_inputData.isEmpty())
+        // TODO: write to the ora.mdb database
+        QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", "mdb_connection");
+        db.setDatabaseName(
+          "DRIVER={Microsoft Access Driver (*.mdb)};DSN='';DBQ=" + m_databaseName);
+        if(db.open())
         {
-            qDebug() << "ERROR: no input data to write to input.txt";
-            return;
-        }
-        QStringList list;
-        for(auto&& x : m_inputKeyList)
-        {
-            if(m_inputData.contains(x))
-              list << m_inputData[x].toString();
-        }
-        QString line = list.join(",");
-        QFile ofile(m_inputFile);
-        if(ofile.open(QIODevice::WriteOnly | QIODevice::Text))
-        {
-            QTextStream stream(&ofile);
-            stream << line;
-            ofile.close();
-            qDebug() << "populated the input.txt file " << m_inputFile;
-            qDebug() << "content should be " << line;
-        }
-        else
-        {
-            qDebug() << "ERROR: failed writing to " << m_inputFile;
-            return;
-        }
+            QString q_str = QString(
+              "INSERT INTO Patients ("
+              "Name, BirthDate, Sex, GroupID, ID, RaceID) values("
+              "%1,%2,%3,%4,%5,%6)").arg(
+                "CLSA",
+                m_inputData["date_of_birth"].toString(),
+                QString::number(m_inputData["sex"].toInt()),
+                QString::number(2),  // default group id
+                m_inputData["barcode"].toString(),
+                QString::number(1)   // default race id
+             );
 
-        if("simulate" != m_mode)
-        {
-          connect(&m_process, &QProcess::started,
-            this, [this]() {
-                qDebug() << "process started: " << m_process.arguments().join(" ");
-            });
-
-          connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, &TonometerManager::readOutput);
-
-          connect(&m_process, &QProcess::errorOccurred,
-            this, [](QProcess::ProcessError error)
+            QSqlQuery query = QSqlQuery(db);
+            if(query.exec(q_str))
             {
-                QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
-                qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
-            });
-
-          connect(&m_process, &QProcess::stateChanged,
-            this, [](QProcess::ProcessState state) {
-                QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
-                qDebug() << "process state: " << s.join(" ").toLower();
-
-            });
+                emit message(tr("Ready to measure..."));
+                emit canMeasure();
+            }
+            else
+              qDebug() << "ERROR: failed to query database [" << q_str<<"]";
         }
-        emit message(tr("Ready to measure..."));
-        emit canMeasure();
+        db.close();
+        db.removeDatabase("mdb_connection");
     }
     else
         qDebug() << "failed to configure process";
@@ -319,20 +345,15 @@ void TonometerManager::finish()
         m_process.close();
     }
 
-    if(!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
-    {
-        qDebug() << "removing output file " << m_outputFile;
-        QFile ofile(m_outputFile);
-        ofile.remove();
-        m_outputFile.clear();
-    }
-
+    // TODO: either use a DELETE FROM query or
+    // simply restore a pre-exam copy of ora.mdb
+    //
     if(!m_temporaryFile.isEmpty() && QFileInfo::exists(m_temporaryFile))
     {
         // remove the inputfile first
-        QFile ifile(m_inputFile);
+        QFile ifile(m_databaseName);
         ifile.remove();
-        QFile::copy(m_temporaryFile, m_inputFile);
+        QFile::copy(m_temporaryFile, m_databaseName);
         qDebug() << "restored backup from " << m_temporaryFile;
         QFile tempFile(m_temporaryFile);
         tempFile.remove();

@@ -56,6 +56,8 @@ public slots:
     //
     void selectRunnable(const QString &);
 
+    void selectDatabase(const QString &);
+
     void readOutput();
 
 signals:
@@ -70,13 +72,16 @@ signals:
     //
     void canSelectRunnable();
 
+    void databaseSelected();
+
+    void canSelectDatabase();
+
 private:
     QString m_runnableName;// full pathspec to ora.exe
     QString m_runnablePath;// path to ora.exe
+    QString m_databaseName;// full pathspec to ora.mdb
 
-    QString m_outputFile;    // full pathspec to working output.txt
-    QString m_inputFile;     // full pathspec to working input.txt
-    QString m_temporaryFile; // store a copy of the default input.txt
+    QString m_temporaryFile; // store a copy of ora.mdb
     QProcess m_process;
 
     TonometerTest m_test;

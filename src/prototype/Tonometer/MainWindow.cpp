@@ -34,11 +34,12 @@ void MainWindow::initialize()
 
 void MainWindow::initializeModel()
 {
-    // allocate 2 columns (left eye, right eye) x 8 rows of tonometer measurement items
+    // allocate 2 columns (left eye, right eye) x 14 rows of tonometer measurement items
+    // do not display applanation, pressure, indexes strings
     //
     for(int col = 0; col < 2; col++)
     {
-      for(int row = 0; row < 8; row++)
+      for(int row = 0; row < 14; row++)
       {
         QStandardItem* item = new QStandardItem();
         m_model.setItem(row, col, item);
@@ -171,10 +172,32 @@ void MainWindow::initializeConnections()
                 QFileDialog::getOpenFileName(
                     this, tr("Open File"),
                     QCoreApplication::applicationDirPath(),
-                    tr("Applications (*.exe, *)"));
+                    tr("Applications (*.exe, *.mdb)"));
 
-            m_manager.selectRunnable(fileName);
+            QFileInfo info(fileName);
+            if("exe" == info.suffix())
+              m_manager.selectRunnable(fileName);
+            else if("mdb" == info.suffix())
+              m_manager.selectDatabase(fileName);
         });
+
+    connect(&m_manager,&TonometerManager::canSelectDatabase,
+            this,[this](){
+        for(auto&& x : this->findChildren<QPushButton *>())
+            x->setEnabled(false);
+        ui->closeButton->setEnabled(true);
+        ui->openButton->setEnabled(true);
+        static bool warn = true;
+        if(warn)
+        {
+            QMessageBox::warning(
+            this, QApplication::applicationName(),
+            tr("Select the database by clicking Open and browsing to the "
+            "required file (ora.mdb) and selecting the file.  If the database "
+            "is valid click the Run button to start the test otherwise check the installation."));
+            warn = false;
+        }
+    });
 
     // ora.exe was found or set up successfully
     //
