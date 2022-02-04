@@ -326,11 +326,9 @@ void MainWindow::readInput()
       file.open(QIODevice::ReadOnly | QIODevice::Text);
       QString val = file.readAll();
       file.close();
-      qDebug() << val;
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject jsonObj = jsonDoc.object();
-      QMapIterator<QString,QVariant> it(m_inputData);
       QList<QString> keys = jsonObj.keys();
       for(int i=0;i<keys.size();i++)
       {
