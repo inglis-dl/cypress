@@ -1,12 +1,12 @@
-#ifndef XLSXQUERYHELPER_H
-#define XLSXQUERYHELPER_H
+#ifndef EXCELQUERYHELPER_H
+#define EXCELQUERYHELPER_H
 
 #include <QObject>
 #include <QSqlQuery>
 #include <QJsonObject>
 
 /*!
- * \class QueryHelper
+ * \class ExcelQueryHelper
  * \brief Helper class to query MS Excel files
  *
  * MS Excel files can be queried over ODBC driver
@@ -31,7 +31,7 @@
 
 QT_FORWARD_DECLARE_CLASS(QSqlDatabase)
 
-class XLSXQueryHelper
+class ExcelQueryHelper
 {
 public:
 
@@ -45,11 +45,11 @@ public:
         Integrated
     };
 
-    XLSXQueryHelper(const QString&,
+    ExcelQueryHelper(const QString&,
                 const QString&,
                 const QString&);
-    XLSXQueryHelper(const XLSXQueryHelper &other);
-    XLSXQueryHelper& operator=(const XLSXQueryHelper &other);
+    ExcelQueryHelper(const ExcelQueryHelper &other);
+    ExcelQueryHelper& operator=(const ExcelQueryHelper &other);
 
     // Build a QSqlQuery from the provided cell range and sheet name
     // and query the provided QSqlDatabase.  The database connection must be
@@ -83,7 +83,7 @@ public:
     // then the first item of each row is expected to match a
     // header key with remaining row elements interpreted as data.
     //
-    void setOrder(const XLSXQueryHelper::Order&);
+    void setOrder(const ExcelQueryHelper::Order&);
 
     // Set the mode of the header keys.
     // In Detached mode the header is not part of the returned query data.
@@ -91,7 +91,7 @@ public:
     // and a validation check is applied and provided in the json output.
     // HeaderMode has no effect if the supplied header is empty.
     //
-    void setHeaderMode(const XLSXQueryHelper::HeaderMode&);
+    void setHeaderMode(const ExcelQueryHelper::HeaderMode&);
 
     // Output is stored in a QJsonObject which requires keys for
     // json values. When there is no supplied header, use the
@@ -123,4 +123,4 @@ private:
     QJsonObject m_output;
 };
 
-#endif // XLSXQUERYHELPER_H
+#endif // EXCELQUERYHELPER_H

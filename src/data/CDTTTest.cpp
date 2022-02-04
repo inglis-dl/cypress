@@ -1,5 +1,5 @@
 #include "CDTTTest.h"
-#include "XLSXQueryHelper.h"
+#include "ExcelQueryHelper.h"
 
 #include <QDebug>
 #include <QJsonObject>
@@ -114,8 +114,8 @@ bool CDTTTest::readBarcode(const QSqlDatabase &db)
 
     QStringList header;
     header << "Subject ID:";
-    XLSXQueryHelper helper("A1","B1","Main");
-    helper.setOrder(XLSXQueryHelper::Order::Row);
+    ExcelQueryHelper helper("A1","B1","Main");
+    helper.setOrder(ExcelQueryHelper::Order::Row);
     helper.setHeader(header);
     bool ok = true;
     if((ok = helper.buildQuery(db)))
@@ -139,7 +139,7 @@ bool CDTTTest::readMetaData(const QSqlDatabase &db)
 {
     qDebug() << "-----------getting meta data...";
     // get the meta data
-    XLSXQueryHelper helper = XLSXQueryHelper("A4","J5","Main");
+    ExcelQueryHelper helper = ExcelQueryHelper("A4","J5","Main");
     bool ok = true;
     if((ok = helper.buildQuery(db)))
     {
@@ -184,7 +184,7 @@ bool CDTTTest::readSummary(const QSqlDatabase &db)
 {
     qDebug() << "-----------getting summary...";
     // get the summary results
-    XLSXQueryHelper helper = XLSXQueryHelper("K4","M5","Main");
+    ExcelQueryHelper helper = ExcelQueryHelper("K4","M5","Main");
     bool ok = true;
     if((ok = helper.buildQuery(db)))
     {
@@ -227,7 +227,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
       getMetaDataCharacteristic("language").toString(),
       getMetaDataCharacteristic("talker").toString());
 
-    XLSXQueryHelper helper = XLSXQueryHelper("A13","A60",sheet);
+    ExcelQueryHelper helper = ExcelQueryHelper("A13","A60",sheet);
     bool ok = true;
     if((ok = helper.buildQuery(db)))
     {
@@ -251,10 +251,10 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
 
     qDebug() << "-----------getting stimulus digits...";
     // get the stimulus digits
-    helper = XLSXQueryHelper("B13",endCell,sheet);
+    helper = ExcelQueryHelper("B13",endCell,sheet);
     if((ok = helper.buildQuery(db)))
     {
-      helper.setOrder(XLSXQueryHelper::Order::Row);
+      helper.setOrder(ExcelQueryHelper::Order::Row);
       helper.setPrefix("stimulus_");
       helper.processQuery();
       obj = helper.getOutput();
@@ -272,10 +272,10 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
     qDebug() << "-----------getting response digits...";
     // get the response digits
     endCell = "G" + cell_suffix;
-    helper = XLSXQueryHelper("E13",endCell,sheet);
+    helper = ExcelQueryHelper("E13",endCell,sheet);
     if((ok = helper.buildQuery(db)))
     {
-      helper.setOrder(XLSXQueryHelper::Order::Row);
+      helper.setOrder(ExcelQueryHelper::Order::Row);
       helper.setPrefix("response_");
       helper.processQuery();
       obj = helper.getOutput();

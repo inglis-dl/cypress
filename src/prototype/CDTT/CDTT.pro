@@ -27,10 +27,10 @@ CONFIG += c++11 console
 HEADERS += \
     ../../data/CDTTMeasurement.h \
     ../../data/CDTTTest.h \
+    ../../data/ExcelQueryHelper.h \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
     ../../auxiliary/CommandLineParser.h \
-    ../../data/XLSXQueryHelper.h \
     ../../managers/ManagerBase.h \
     ../../managers/CDTTManager.h \
     MainWindow.h
@@ -39,8 +39,8 @@ SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../data/CDTTMeasurement.cpp \
     ../../data/CDTTTest.cpp \
+    ../../data/ExcelQueryHelper.cpp \
     ../../data/MeasurementBase.cpp \
-    ../../data/XLSXQueryHelper.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/CDTTManager.cpp \
     MainWindow.cpp \
