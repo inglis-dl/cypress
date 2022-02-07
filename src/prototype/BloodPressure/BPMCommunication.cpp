@@ -88,6 +88,8 @@ void BPMCommunication::Abort() {
 		Stop();
 		m_aborted = true;
 	}
+	//QThread::
+	AbortFinished(true);
 }
 
 /*

@@ -7,29 +7,38 @@ BloodPressureTest::BloodPressureTest()
     m_outputKeyList << "user id";
 }
 
-void BloodPressureTest::fromFile(const QString& filePath)
+void BloodPressureTest::addMeasurement(const int sbp, const int dbp, const int pulse, const bool isAverage)
 {
+    BloodPressureMeasurement measurement;
+    measurement.storeData(sbp, dbp, pulse, isAverage);
+    m_measurementList.append(measurement);
 }
 
 // String representation for debug and GUI display purposes
 //
 QString BloodPressureTest::toString() const
 {
-    QString s;
+    QString outputStr;
     if (isValid())
     {
-        QStringList l;
-        for (auto&& x : m_measurementList)
+        QStringList tempList;
+        for (auto&& measurement : m_measurementList)
         {
-            l << x.toString();
+            tempList << measurement.toString();
         }
-        s = l.join("\n");
+        outputStr = tempList.join("\n");
     }
-    return s;
+    return outputStr;
 }
 
 bool BloodPressureTest::isValid() const
 {
+    for (auto&& measurement : m_measurementList)
+    {
+        if (measurement.isValid() == false) {
+            return false;
+        }
+    }
     return true;
 }
 

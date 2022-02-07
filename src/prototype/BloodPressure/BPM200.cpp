@@ -21,6 +21,7 @@ void BPM200::Connect()
         connect(this, &BPM200::AttemptConnection, comm, &BPMCommunication::Connect);
         connect(this, &BPM200::StartMeasurement, comm, &BPMCommunication::Measure);
         connect(this, &BPM200::AbortMeasurement, comm, &BPMCommunication::Abort);
+        connect(comm, &BPMCommunication::AbortFinished, this, &BPM200::AbortComplete);
         connect(comm, &BPMCommunication::ConnectionStatus, this, &BPM200::ReceiveConnectionStatus);
         connect(comm, &BPMCommunication::MeasurementReady, this, &BPM200::ReceiveMeasurement);
         CommThread.start();
@@ -36,8 +37,6 @@ void BPM200::Disconnect()
 {
     qDebug() << "Disconnect called, terminating thread with bpm";
     emit AbortMeasurement();
-    CommThread.quit();
-    CommThread.wait();
 }
 
 void BPM200::ReceiveConnectionStatus(bool connected) {
@@ -49,6 +48,11 @@ void BPM200::ReceiveConnectionStatus(bool connected) {
 
 void BPM200::ReceiveMeasurement(QString measurement) {
 
+}
+
+void BPM200::AbortComplete(bool successful) {
+    CommThread.quit();
+    CommThread.wait();
 }
 
 /*

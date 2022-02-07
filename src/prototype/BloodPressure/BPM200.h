@@ -26,6 +26,7 @@ public:
 public slots:
 	void ReceiveConnectionStatus(bool connected);
 	void ReceiveMeasurement(QString measurement);
+	void AbortComplete(bool successful);
 signals:
 	void AttemptConnection(const int vid, const int pid);
 	void StartMeasurement();

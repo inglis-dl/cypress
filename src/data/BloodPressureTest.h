@@ -16,7 +16,7 @@ public:
     BloodPressureTest();
     ~BloodPressureTest() = default;
 
-    void fromFile(const QString&);
+    void addMeasurement(const int sbp, const int dbp, const int pulse, const bool isAverage);
 
     // String representation for debug and GUI display purposes
     //

@@ -19,13 +19,18 @@ public:
     BloodPressureMeasurement() = default;
     ~BloodPressureMeasurement() = default;
 
-    void fromString(const QString&);
+    void storeData(const int sbp, const int dbp, const int pulse, const bool isAverage);
 
     bool isValid() const override;
 
     QString toString() const override;
 
     static BloodPressureMeasurement simulate();
+private:
+    int m_sbp = -1;
+    int m_dbp = -1;
+    int m_pulse = -1;
+    bool m_isAverage = false;
 };
 
 Q_DECLARE_METATYPE(BloodPressureMeasurement);

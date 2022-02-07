@@ -28,6 +28,7 @@ signals:
 	void MeasurementComplete(const QString measurement);
 	void MeasurementFailed();
 	void ConnectionLost();
+	void AbortFinished(bool successful);
 
 private:
 	bool ConnectToBpm();
