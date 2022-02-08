@@ -15,7 +15,7 @@ public:
 
     // read from a MS Excel file using ODBC sql
     //
-    void fromFile(const QString &);
+    void fromDatabase(const QSqlDatabase&);
 
     // generate a fictitious set of results
     // arg is the interview barcode

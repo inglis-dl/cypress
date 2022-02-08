@@ -425,4 +425,6 @@ void ExcelQueryHelper::processQuery()
       for(auto&& json : arr)
         m_output.insert(m_prefix + QString::number(i++),(1 == json.size() ? json.first() : json));
   }
+
+  m_query.finish();
 }

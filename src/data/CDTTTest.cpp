@@ -74,36 +74,25 @@ void CDTTTest::simulate(const QString &barcode)
   addMeasurement(m);
 }
 
-void CDTTTest::fromFile(const QString &fileName)
+void CDTTTest::fromDatabase(const QSqlDatabase &db)
 {
-    if(QFileInfo::exists(fileName))
+  if(db.open())
+  {
+    reset();
+    bool ok = readBarcode(db);
+    if(ok)
     {
-        qDebug() << "OK, reading input file " << fileName;
-
-        //TODO: impl for linux or insert ifdef OS blockers
-        //
-        QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", "xlsx_connection");
-        db.setDatabaseName("DRIVER={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};DBQ=" + fileName);
-        if(db.open())
-        {
-            reset();
-            bool ok = readBarcode(db);
-            if(ok)
-            {
-                ok = readMetaData(db);
-            }
-            if(ok)
-            {
-                ok = readSummary(db);
-            }
-            if(ok)
-            {
-                ok = readTrialData(db);
-            }
-        }
-        db.close();
-        db.removeDatabase("xlsx_connection");
+      ok = readMetaData(db);
     }
+    if(ok)
+    {
+      ok = readSummary(db);
+    }
+    if(ok)
+    {
+      ok = readTrialData(db);
+    }
+  }
 }
 
 bool CDTTTest::readBarcode(const QSqlDatabase &db)

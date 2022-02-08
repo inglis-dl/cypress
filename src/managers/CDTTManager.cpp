@@ -6,6 +6,7 @@
 #include <QJsonObject>
 #include <QProcess>
 #include <QSettings>
+#include <QSqlDatabase>
 #include <QStandardItemModel>
 
 CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
@@ -205,19 +206,29 @@ void CDTTManager::readOutput()
     QString fileName = dir.filePath(QString("Results-%0.xlsx").arg(getInputDataValue("barcode").toString()));
     if(QFileInfo::exists(fileName))
     {
-        qDebug() << "found output xlsx file " << fileName;
-        m_test.fromFile(fileName);
+      qDebug() << "found output xlsx file " << fileName;
+
+      //TODO: impl for linux or insert ifdef OS blockers
+      //
+      QSqlDatabase db;
+      if(!QSqlDatabase::contains("mdb_connection"))
+        db = QSqlDatabase::addDatabase("QODBC", "xlsx_connection");
+      db.setDatabaseName("DRIVER={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};DBQ=" + fileName);
+      if(db.open())
+      {
+        m_test.fromDatabase(db);
         m_outputFile.clear();
         if(m_test.isValid())
         {
-            emit message(tr("Ready to save results..."));
-            emit canWrite();
-            m_outputFile = fileName;
+          emit message(tr("Ready to save results..."));
+          emit canWrite();
+          m_outputFile = fileName;
         }
         else
-            qDebug() << "ERROR: input from file produced invalid test results";
-
-        emit dataChanged();
+          qDebug() << "ERROR: input from file produced invalid test results";
+      }
+      db.close();
+      emit dataChanged();
     }
     else
         qDebug() << "ERROR: no output xlsx file found"<<fileName;
