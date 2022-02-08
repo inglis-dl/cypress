@@ -7,6 +7,7 @@
 #include <QQueue>
 #include <functional>
 #include <iostream>
+#include <QThread>
 using namespace std;
 
 #include "BPMMessage.h"
@@ -19,7 +20,9 @@ public:
 public slots:
 	void Connect(const int vid, const int pid);
 	void Measure();
-	void Abort();
+	void Abort(QThread* uiThread);
+
+	void DebugThreadId() { qDebug() << "BPM comm: Running on thread: " << QThread::currentThreadId(); };
 
 signals:
 	void ConnectionStatus(const bool connected);

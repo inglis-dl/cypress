@@ -1,6 +1,5 @@
 #include "MainWindow.h"
 
-#include <QCloseEvent>
 #include <QDate>
 #include <QDebug>
 #include <QDir>
@@ -40,7 +39,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    m_manager.finish();
     delete ui;
 }
 
@@ -130,6 +128,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
     m_manager.finish();*/
+    m_manager.finish();
     event->accept();
 }
 

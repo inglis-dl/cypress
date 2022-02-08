@@ -4,6 +4,7 @@
 #include "ui_MainWindow.h"
 #include "../../managers/BloodPressureManager.h"
 #include <QStandardItemModel>
+#include <QCloseEvent>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

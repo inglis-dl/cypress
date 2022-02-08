@@ -28,7 +28,7 @@ public:
     // m_inputKeyList.
     //
     void setInputData(const QMap<QString, QVariant>&);
-
+    BPM200 bpm;
 public slots:
 
     void start() override;
@@ -46,7 +46,6 @@ protected:
 
 private:
     BloodPressureTest m_test;
-    BPM200 bpm;
 };
 
 #endif // BLOODPRESSUREMANAGER_H

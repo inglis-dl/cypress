@@ -30,11 +30,14 @@ public slots:
 signals:
 	void AttemptConnection(const int vid, const int pid);
 	void StartMeasurement();
-	void AbortMeasurement();
+	void AbortMeasurement(QThread* uiThread);
+
+	void AskForThreadId();
 private:
 	bool ConnectionInfoSet();
 	int m_vid = 0;
 	int m_pid = 0;
+	bool m_aborted = false;
 };
 
 #endif //BPM200_H

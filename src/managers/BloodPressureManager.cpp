@@ -14,6 +14,7 @@ BloodPressureManager::BloodPressureManager(QObject* parent)
     setGroup("bloodpressure");
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
+    qDebug() << "Manager created on thread: " << QThread::currentThreadId();
 }
 
 void BloodPressureManager::start()

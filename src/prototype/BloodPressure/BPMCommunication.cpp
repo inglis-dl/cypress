@@ -82,14 +82,16 @@ void BPMCommunication::Measure() {
 /*
 * If measuring, stop the measurement and turn off bpm.
 */
-void BPMCommunication::Abort() {
+void BPMCommunication::Abort(QThread* uiThread) {
 	bool connected = ConnectToBpm();
 	if (connected && m_measuring) {
 		Stop();
 		m_aborted = true;
 	}
-	//QThread::
-	AbortFinished(true);
+	qDebug() << "BPM comm: abort on thread: " << QThread::currentThreadId();
+	this->moveToThread(uiThread);
+	qDebug() << "BPM comm: after move thread: " << QThread::currentThreadId();
+	emit AbortFinished(true);
 }
 
 /*
