@@ -54,32 +54,27 @@ QJsonObject BloodPressureManager::toJsonObject() const
 
 void BloodPressureManager::buildModel(QStandardItemModel* model) const
 {
-    //// add measurements one row of two columns at a time
-    ////
-    //int n_total = m_test.getNumberOfMeasurements();
-    //int n_row = qMax(1, n_total / 2);
-    //if (n_row != model->rowCount())
-    //{
-    //    model->setRowCount(n_row);
-    //}
-    //int row_left = 0;
-    //int row_right = 0;
-    //for (int i = 0; i < n_total; i++)
-    //{
-    //    BloodPressureMeasurement measurement = m_test.getMeasurement(i);
-    //    QString measurementStr = measurement.isValid() ? measurement.toString() : "NA";
-
-    //    int col = i % 2;
-    //    int* row = col == 0 ? &row_left : &row_right;
-    //    QStandardItem* item = model->item(*row, col);
-    //    if (Q_NULLPTR == item)
-    //    {
-    //        item = new QStandardItem();
-    //        model->setItem(*row, col, item);
-    //    }
-    //    item->setData(measurementStr, Qt::DisplayRole);
-    //    (*row)++;
-    //}
+    // add measurements one row of one columns at a time
+    //
+    int n_total = m_test.getNumberOfMeasurements();
+    int n_row = qMax(1, n_total);
+    if (n_row != model->rowCount())
+    {
+        model->setRowCount(n_row);
+    }
+    int row_left = 0;
+    for (int i = 0; i < n_total; i++)
+    {
+        BloodPressureMeasurement measurement = m_test.getMeasurement(i);
+        QString measurementStr = measurement.isValid() ? measurement.toString() : "NA";
+        QStandardItem* item = model->item(i);
+        if (Q_NULLPTR == item)
+        {
+            item = new QStandardItem();
+            model->setItem(i, 0, item);
+        }
+        item->setData(measurementStr, Qt::DisplayRole);
+    }
 }
 
 void BloodPressureManager::measure()
@@ -146,11 +141,17 @@ void BloodPressureManager::finish()
 
 void BloodPressureManager::measurementAvailable(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done)
 {
-    m_test.addMeasurement(sbp, dbp, pulse, isAverage);
-
     if (done) {
         // TODO: Show results on screen
+        bool reviewDataVerified = m_test.verifyReviewData(sbp, dbp, pulse, isAverage);
+        if (reviewDataVerified) {
+            emit canWrite();
+            return;
+        }
     }
+
+    m_test.addMeasurement(sbp, dbp, pulse, isAverage);
+    emit dataChanged();
 }
 
 void BloodPressureManager::connectionStatusAvailable(const bool connected)

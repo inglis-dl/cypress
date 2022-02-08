@@ -25,12 +25,9 @@ public:
 
     QString toString() const override;
 
+    bool hasValues(const int sbp, const int dbp, const int pulse, const bool isAverage);
+
     static BloodPressureMeasurement simulate();
-private:
-    int m_sbp = -1;
-    int m_dbp = -1;
-    int m_pulse = -1;
-    bool m_isAverage = false;
 };
 
 Q_DECLARE_METATYPE(BloodPressureMeasurement);

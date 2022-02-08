@@ -28,6 +28,8 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
+    bool verifyReviewData(const int sbp, const int dbp, const int pulse, const bool isAverage);
+
 private:
     QList<QString> m_outputKeyList;
 };

@@ -47,12 +47,18 @@ bool BloodPressureTest::isValid() const
 QJsonObject BloodPressureTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    for (auto&& x : m_measurementList)
+    for (auto&& measurement : m_measurementList)
     {
-        jsonArr.append(x.toJsonObject());
+        jsonArr.append(measurement.toJsonObject());
     }
     QJsonObject json;
     json.insert("test_meta_data", m_metaData.toJsonObject());
     json.insert("test_results", jsonArr);
     return json;
+}
+
+bool BloodPressureTest::verifyReviewData(const int sbp, const int dbp, const int pulse, const bool isAverage)
+{
+    BloodPressureMeasurement avg = m_measurementList.last();
+    return avg.hasValues(sbp, dbp, pulse, isAverage);
 }

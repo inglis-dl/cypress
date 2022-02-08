@@ -19,16 +19,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     // allocate 2 columns x 8 rows of hearing measurement items
     //
-    for (int col = 0; col < 2; col++)
+
+    for (int row = 0; row < 8; row++)
     {
-        for (int row = 0; row < 8; row++)
-        {
-            QStandardItem* item = new QStandardItem();
-            m_model.setItem(row, col, item);
-        }
+        QStandardItem* item = new QStandardItem();
+        m_model.setItem(row, 0, item);
     }
-    m_model.setHeaderData(0, Qt::Horizontal, "Left Test Results", Qt::DisplayRole);
-    m_model.setHeaderData(1, Qt::Horizontal, "Right Test Results", Qt::DisplayRole);
+    m_model.setHeaderData(0, Qt::Horizontal, "Test Results", Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
 
     ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -69,23 +66,7 @@ void MainWindow::initialize()
 
 void MainWindow::setupConnections()
 {
-    // Disable all buttons by default
-    //
-    for (auto&& x : this->findChildren<QPushButton*>())
-    {
-        x->setEnabled(false);
-
-        // disable enter key press event passing onto auto focus buttons
-        //
-        x->setDefault(false);
-        x->setAutoDefault(false);
-    }
-
-    // Close the application
-    //
-    ui->closeButton->setEnabled(true);
-
-    // jar was found or set up successfully
+    // bpm connected successfully
     //
     connect(&m_manager, &BloodPressureManager::canMeasure,
         this, [this]() {
@@ -240,62 +221,62 @@ void MainWindow::readInput()
 
 void MainWindow::writeOutput()
 {
-    //if (m_verbose)
-    //    qDebug() << "begin write process ... ";
+    if (m_verbose)
+        qDebug() << "begin write process ... ";
 
-    //QJsonObject jsonObj = m_manager.toJsonObject();
+    QJsonObject jsonObj = m_manager.toJsonObject();
 
-    //QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
-    //jsonObj.insert("barcode", QJsonValue(barcode));
+    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
+    jsonObj.insert("barcode", QJsonValue(barcode));
 
-    //if (m_verbose)
-    //    qDebug() << "determine file output name ... ";
+    if (m_verbose)
+        qDebug() << "determine file output name ... ";
 
-    //QString fileName;
+    QString fileName;
 
-    //// Use the output filename if it has a valid path
-    //// If the path is invalid, use the directory where the application exe resides
-    //// If the output filename is empty default output .json file is of the form
-    //// <participant ID>_<now>_<devicename>.json
-    ////
-    //bool constructDefault = false;
+    // Use the output filename if it has a valid path
+    // If the path is invalid, use the directory where the application exe resides
+    // If the output filename is empty default output .json file is of the form
+    // <participant ID>_<now>_<devicename>.json
+    //
+    bool constructDefault = false;
 
-    //// TODO: if the run mode is not debug, an output file name is mandatory, throw an error
-    ////
-    //if (m_outputFileName.isEmpty())
-    //    constructDefault = true;
-    //else
-    //{
-    //    QFileInfo info(m_outputFileName);
-    //    QDir dir = info.absoluteDir();
-    //    if (dir.exists())
-    //        fileName = m_outputFileName;
-    //    else
-    //        constructDefault = true;
-    //}
-    //if (constructDefault)
-    //{
-    //    QDir dir = QCoreApplication::applicationDirPath();
-    //    if (m_outputFileName.isEmpty())
-    //    {
-    //        QStringList list;
-    //        list
-    //            << barcode
-    //            << QDate().currentDate().toString("yyyyMMdd")
-    //            << m_manager.getGroup()
-    //            << "test.json";
-    //        fileName = dir.filePath(list.join("_"));
-    //    }
-    //    else
-    //        fileName = dir.filePath(m_outputFileName);
-    //}
+    // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
+    //
+    if (m_outputFileName.isEmpty())
+        constructDefault = true;
+    else
+    {
+        QFileInfo info(m_outputFileName);
+        QDir dir = info.absoluteDir();
+        if (dir.exists())
+            fileName = m_outputFileName;
+        else
+            constructDefault = true;
+    }
+    if (constructDefault)
+    {
+        QDir dir = QCoreApplication::applicationDirPath();
+        if (m_outputFileName.isEmpty())
+        {
+            QStringList list;
+            list
+                << barcode
+                << QDate().currentDate().toString("yyyyMMdd")
+                << m_manager.getGroup()
+                << "test.json";
+            fileName = dir.filePath(list.join("_"));
+        }
+        else
+            fileName = dir.filePath(m_outputFileName);
+    }
 
-    //QFile saveFile(fileName);
-    //saveFile.open(QIODevice::WriteOnly);
-    //saveFile.write(QJsonDocument(jsonObj).toJson());
+    QFile saveFile(fileName);
+    saveFile.open(QIODevice::WriteOnly);
+    saveFile.write(QJsonDocument(jsonObj).toJson());
 
-    //if (m_verbose)
-    //    qDebug() << "wrote to file " << fileName;
+    if (m_verbose)
+        qDebug() << "wrote to file " << fileName;
 
-    //ui->statusBar->showMessage("Canadian Digit Triple Test data recorded.  Close when ready.");
+    ui->statusBar->showMessage("Blood Pressure data recorded.  Close when ready.");
 }
