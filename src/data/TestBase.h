@@ -146,7 +146,7 @@ T* TestBase<T>::find_first(const QString& key, const QVariant& value)
     {
         for(auto&& v : x.toStdMap())
         {
-            if(v.first==key && v.second==value)
+            if(key == v.first && value == v.second)
             {
                 return &x;
             }

@@ -58,18 +58,35 @@ bool TonometerMeasurement::isValid() const
 
 QString TonometerMeasurement::toString() const
 {
+    QStringList skip = {"applanation,pressure,indexes"};
     QString s;
     if(isValid())
     {
-        // TODO: determine if this is a decimal value or
-        // comma deliminated string of values
-        //
-        s = QString("%1: %2(%3)")
-            .arg(
-                getCharacteristic("name").toString(),
-                QString::number(getCharacteristic("value").toDouble()),
-                getCharacteristic("units").toString()
-            );
+      if(skip.contains(getCharacteristic("name").toString()))
+      {
+        s = QString("%1 %2: %3...").arg(
+          getCharacteristic("side").toString(),
+          getCharacteristic("name").toString(),
+          getCharacteristic("value").toString().left(10));
+      }
+      else
+      {
+        if(getCharacteristic("units").isNull())
+        {
+          s = QString("%1 %2: %3").arg(
+            getCharacteristic("side").toString(),
+            getCharacteristic("name").toString(),
+            getCharacteristic("value").toString());
+        }
+        else
+        {
+          s = QString("%1 %2: %3(%4)").arg(
+            getCharacteristic("side").toString(),
+            getCharacteristic("name").toString(),
+            getCharacteristic("value").toString(),
+            getCharacteristic("units").toString());
+        }
+      }
     }
     return s;
 }

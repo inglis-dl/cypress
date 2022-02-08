@@ -26,6 +26,7 @@ CONFIG += c++11 console
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../data/AccessQueryHelper.h \
     ../../data/TonometerMeasurement.h \
     ../../data/TonometerTest.h \
     ../../data/MeasurementBase.h \
@@ -36,6 +37,7 @@ HEADERS += \
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../data/AccessQueryHelper.cpp \
     ../../data/TonometerMeasurement.cpp \
     ../../data/TonometerTest.cpp \
     ../../data/MeasurementBase.cpp \
