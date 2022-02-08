@@ -92,6 +92,7 @@ void BloodPressureManager::measure()
     clearData();
     // launch the process
     qDebug() << "starting process from measure";
+    bpm.Measure();
 }
 
 void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
@@ -118,6 +119,15 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
     //    // DO SOMETHING
 }
 
+void BloodPressureManager::SetupConnections()
+{
+    connect(&bpm, &BPM200::ConnectionStatusReady, this, &BloodPressureManager::connectionStatusAvailable);
+    connect(&bpm, &BPM200::MeasurementReady, this, &BloodPressureManager::measurementAvailable);
+    
+    // Setup Connections for bpm200
+    bpm.SetupConnections();
+}
+
 void BloodPressureManager::clearData()
 {
     m_test.reset();
@@ -132,4 +142,26 @@ void BloodPressureManager::finish()
 {
     bpm.Disconnect();
     m_test.reset();
+}
+
+void BloodPressureManager::measurementAvailable(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done)
+{
+    m_test.addMeasurement(sbp, dbp, pulse, isAverage);
+
+    if (done) {
+        // TODO: Show results on screen
+    }
+}
+
+void BloodPressureManager::connectionStatusAvailable(const bool connected)
+{
+    if (connected) {
+        emit canMeasure();
+    }
+    else {
+        // TODO: Show the following message to user 
+        //       "There was a problem connecting to the Blood Pressure Monitor.
+        //        Please ensure that the bpm is plugged in, turned on and connected 
+        //        to the computer"
+    }
 }

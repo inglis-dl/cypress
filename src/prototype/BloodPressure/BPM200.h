@@ -16,28 +16,40 @@ class BPM200: public QObject
 	QThread CommThread;
 public:
 	explicit BPM200(QObject* parent = Q_NULLPTR);
+	void SetupConnections();
 
 	void SetConnectionInfo(int vid, int pid) { m_vid = vid; m_pid = pid; };
 
 	void Connect();
+	void Measure() { emit StartMeasurement(); };
 	void Disconnect();
-	BPMCommunication* comm;
 	
 public slots:
-	void ReceiveConnectionStatus(bool connected);
-	void ReceiveMeasurement(QString measurement);
+	// slots for comm
+	void ConnectionStatusReceived(bool connected) {
+		//if (connected) emit StartMeasurement(); // TODO: REMOVE THIS
+		emit ConnectionStatusReady(connected);
+	}
+	void MeasurementReceived(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done) { MeasurementReady(sbp, dbp, pulse, isAverage, done); }
 	void AbortComplete(bool successful);
 signals:
+	// Signals to comm
 	void AttemptConnection(const int vid, const int pid);
 	void StartMeasurement();
 	void AbortMeasurement(QThread* uiThread);
 
+	// signals to manager
+	void ConnectionStatusReady(bool connected);
+	void MeasurementReady(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done);
+
 	void AskForThreadId();
 private:
+	BPMCommunication* comm;
 	bool ConnectionInfoSet();
 	int m_vid = 0;
 	int m_pid = 0;
 	bool m_aborted = false;
+	bool m_connectionsSet = false;
 };
 
 #endif //BPM200_H

@@ -148,8 +148,9 @@ bool BPMCommunication::Start()
 				int sbp = msg.GetData1();
 				int dbp = msg.GetData2();
 				int pulse = msg.GetData3();
+				bool isAverage = data0 == 0;
 				qDebug() << "Review (Done measuring). SBP = " << sbp << " DBP = " << dbp << "Pulse = " << pulse << endl;
-				emit MeasurementComplete("");
+				emit MeasurementReady(sbp, dbp, pulse, isAverage, true);
 				m_measuring = false;
 				return true;
 			}
@@ -176,7 +177,7 @@ bool BPMCommunication::Start()
 				int dbp = msg.GetData2();
 				int pulse = msg.GetData3();
 				qDebug() << "Average Recieved. Count = " << data0 << " SBP = " << sbp << " DBP = " << dbp << "Pulse = " << pulse << endl;
-				emit MeasurementReady("", true);
+				emit MeasurementReady(sbp, dbp, pulse, true, false);
 			}
 			// else if bp result recieved ...
 			else if (msgId == 0x42 && data0 == 0x00) {
@@ -185,7 +186,7 @@ bool BPMCommunication::Start()
 				int dbp = msg.GetData2();
 				int pulse = msg.GetData3();
 				qDebug() << "Result Recieved. SBP = " << sbp << " DBP = " << dbp << "Pulse = " << pulse << endl;
-				emit MeasurementReady("", false);
+				emit MeasurementReady(sbp, dbp, pulse, false, false);
 			}
 			// else if bp error recieved ...
 			else if (msgId == 0x42 && data0 != 0x00) {

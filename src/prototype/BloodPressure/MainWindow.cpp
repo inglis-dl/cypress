@@ -69,10 +69,77 @@ void MainWindow::initialize()
 
 void MainWindow::setupConnections()
 {
+    // Disable all buttons by default
+    //
+    for (auto&& x : this->findChildren<QPushButton*>())
+    {
+        x->setEnabled(false);
+
+        // disable enter key press event passing onto auto focus buttons
+        //
+        x->setDefault(false);
+        x->setAutoDefault(false);
+    }
+
+    // Close the application
+    //
+    ui->closeButton->setEnabled(true);
+
+    // jar was found or set up successfully
+    //
+    connect(&m_manager, &BloodPressureManager::canMeasure,
+        this, [this]() {
+            ui->measureButton->setEnabled(true);
+            ui->saveButton->setEnabled(false);
+        });
+
+    // Request a measurement from the device (bpm)
+    //
+    connect(ui->measureButton, &QPushButton::clicked,
+        &m_manager, &BloodPressureManager::measure);
+
+    // Update the UI with any data
+    //
+    connect(&m_manager, &BloodPressureManager::dataChanged,
+        this, [this]() {
+            auto h = ui->testdataTableView->horizontalHeader();
+            h->setSectionResizeMode(QHeaderView::Fixed);
+
+            m_manager.buildModel(&m_model);
+
+            QSize ts_pre = ui->testdataTableView->size();
+            h->resizeSections(QHeaderView::ResizeToContents);
+            ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
+            ui->testdataTableView->resize(
+                h->sectionSize(0) +
+                ui->testdataTableView->autoScrollMargin(),
+                8 * ui->testdataTableView->rowHeight(0) + 1 +
+                h->height());
+            QSize ts_post = ui->testdataTableView->size();
+            int dx = ts_post.width() - ts_pre.width();
+            int dy = ts_post.height() - ts_pre.height();
+            this->resize(this->width() + dx, this->height() + dy);
+        });
+
+    // All measurements received: enable write test results
+    //
+    connect(&m_manager, &BloodPressureManager::canWrite,
+        this, [this]() {
+            ui->saveButton->setEnabled(true);
+        });
+
+    // Write test data to output
+    //
+    connect(ui->saveButton, &QPushButton::clicked,
+        this, &MainWindow::writeOutput);
+
     // Close the application
     //
     connect(ui->closeButton, &QPushButton::clicked,
         this, &MainWindow::close);
+
+    // Setup Connections for manager
+    m_manager.SetupConnections();
 }
 
 void MainWindow::initializeButtonState()

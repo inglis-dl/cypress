@@ -5,6 +5,25 @@
 BPM200::BPM200(QObject* parent) : comm( new BPMCommunication()){}
 
 /*
+* Setup signal/slot connections between BPM200 and BPMCommunication
+*/
+void BPM200::SetupConnections()
+{
+    // Connection bpm200 signals with comm slots
+    connect(this, &BPM200::AttemptConnection, comm, &BPMCommunication::Connect);
+    connect(this, &BPM200::StartMeasurement, comm, &BPMCommunication::Measure);
+    connect(this, &BPM200::AbortMeasurement, comm, &BPMCommunication::Abort);
+
+    // Connection comm signals with bpm200 slots
+    connect(comm, &BPMCommunication::AbortFinished, this, &BPM200::AbortComplete);
+    connect(comm, &BPMCommunication::ConnectionStatus, this, &BPM200::ConnectionStatusReceived);
+    connect(comm, &BPMCommunication::MeasurementReady, this, &BPM200::MeasurementReceived);
+
+    // Set connections set to true
+    m_connectionsSet = true;
+}
+
+/*
 * Attempts to connect to the blood pressue monitor
 * Returns true if the connection is successful or if
 * the device was already connected
@@ -12,26 +31,25 @@ BPM200::BPM200(QObject* parent) : comm( new BPMCommunication()){}
 */
 void BPM200::Connect()
 {
+    // Do not attempt connection unless the required 
+    // connection info has not been set
     if (ConnectionInfoSet() == false) {
         qDebug() << "Connection info has not been set";
         return;
     }
 
-    // Move to thread and setup connection if comm is not on comm thread
-    if (comm->thread() != &CommThread) {
-        comm->moveToThread(&CommThread);
-        connect(this, &BPM200::AttemptConnection, comm, &BPMCommunication::Connect);
-        connect(this, &BPM200::StartMeasurement, comm, &BPMCommunication::Measure);
-        connect(this, &BPM200::AbortMeasurement, comm, &BPMCommunication::Abort);
-        connect(this, &BPM200::AskForThreadId, comm, &BPMCommunication::DebugThreadId);
-        connect(comm, &BPMCommunication::AbortFinished, this, &BPM200::AbortComplete);
-        connect(comm, &BPMCommunication::ConnectionStatus, this, &BPM200::ReceiveConnectionStatus);
-        connect(comm, &BPMCommunication::MeasurementReady, this, &BPM200::ReceiveMeasurement);
-        qDebug() << "before start, Comm thread running: " << CommThread.isRunning();
-        CommThread.start();
-        qDebug() << "after start , Comm thread running: " << CommThread.isRunning();
+    // Setup connections if they are not already set
+    if (m_connectionsSet == false) {
+        SetupConnections();
     }
 
+    // Move comm to comm thread and start comm thread
+    if (comm->thread() != &CommThread) {
+        comm->moveToThread(&CommThread);
+        CommThread.start();
+    }
+
+    // Attempt to connect to bpm
     emit AttemptConnection(m_vid, m_pid);
 }
 
@@ -40,32 +58,22 @@ void BPM200::Connect()
 */
 void BPM200::Disconnect()
 {
-    qDebug() << "Disconnect called on thread (" << QThread::currentThread()->currentThreadId << ") , terminating thread with bpm";
-    qDebug() << "Disconnect: Comm thread running: " << CommThread.isRunning();
+    qDebug() << "BPM200: Disconnect called, terminating thread with bpm";
     emit AbortMeasurement(QThread::currentThread());
     while (m_aborted == false) {
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }
-    qDebug() << "Finished";
+    qDebug() << "BPM200: Finished";
 }
 
-void BPM200::ReceiveConnectionStatus(bool connected) {
-    if (connected) {
-        // TODO: Change later, this is here just for testing
-        emit StartMeasurement();
-    }
-}
-
-void BPM200::ReceiveMeasurement(QString measurement) {
-
-}
-
+/*
+* This gets called once the abort has completed on the comm thread
+* Then this will close the comm thread and set a bool to notify 
+* that the abort has completed
+*/
 void BPM200::AbortComplete(bool successful) {
-    qDebug() << "Disconnect called on thread: " << QThread::currentThreadId() << ", comm on thread: ";
-    emit AskForThreadId();
-    qDebug() << "Comm thread running: " << CommThread.isRunning();
+    qDebug() << "BPM200: Abort complete";
     CommThread.quit();
-    qDebug() << "Comm thread running: " << CommThread.isRunning();
     CommThread.wait();
     m_aborted = true;
 }

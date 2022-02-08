@@ -22,13 +22,10 @@ public slots:
 	void Measure();
 	void Abort(QThread* uiThread);
 
-	void DebugThreadId() { qDebug() << "BPM comm: Running on thread: " << QThread::currentThreadId(); };
-
 signals:
 	void ConnectionStatus(const bool connected);
 	void VersionInfoAvailable(const QString version);
-	void MeasurementReady(const QString measurement, bool isAverage);
-	void MeasurementComplete(const QString measurement);
+	void MeasurementReady(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done);
 	void MeasurementFailed();
 	void ConnectionLost();
 	void AbortFinished(bool successful);

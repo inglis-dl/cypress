@@ -28,7 +28,8 @@ public:
     // m_inputKeyList.
     //
     void setInputData(const QMap<QString, QVariant>&);
-    BPM200 bpm;
+
+    void SetupConnections();
 public slots:
 
     void start() override;
@@ -41,10 +42,15 @@ public slots:
     // data has been retrieved and processed by any upstream classes
     //
     void finish() override;
+
+    // slot for signals coming from bpm200
+    void measurementAvailable(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done);
+    void connectionStatusAvailable(const bool connected);
 protected:
     void clearData() override;
 
 private:
+    BPM200 bpm;
     BloodPressureTest m_test;
 };
 
