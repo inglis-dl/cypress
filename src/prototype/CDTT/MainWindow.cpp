@@ -99,7 +99,7 @@ void MainWindow::initializeConnections()
   QRegExpValidator *v_barcode = new QRegExpValidator(rx);
   ui->barcodeLineEdit->setValidator(v_barcode);
 
-  connect(ui->barcodeLineEdit, &QLineEdit::editingFinished,
+  connect(ui->barcodeLineEdit, &QLineEdit::returnPressed,
           this,[this](){
       bool valid = false;
       if(m_inputData.contains("barcode"))
