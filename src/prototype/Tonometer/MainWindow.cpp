@@ -104,7 +104,7 @@ void MainWindow::initializeConnections()
   QRegExpValidator *v_barcode = new QRegExpValidator(rx);
   ui->barcodeLineEdit->setValidator(v_barcode);
 
-  connect(ui->barcodeLineEdit, &QLineEdit::editingFinished,
+  connect(ui->barcodeLineEdit, &QLineEdit::returnPressed,
           this,[this](){
       bool valid = false;
       if(m_inputData.contains("barcode"))
@@ -123,6 +123,7 @@ void MainWindow::initializeConnections()
           ui->barcodeLineEdit->setPalette(p);
           ui->barcodeLineEdit->repaint();
 
+          ui->barcodeLineEdit->setDisabled(true);
           // launch the manager
           //
           this->run();
@@ -262,15 +263,15 @@ void MainWindow::run()
     m_manager.setVerbose(m_verbose);
     m_manager.setMode(m_mode);
 
+    // Pass the input to the manager for verification
+    //
+    m_manager.setInputData(m_inputData);
+
     // Read the path to C:\Program Files\Reichert\ora.exe
     //
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
     m_manager.loadSettings(settings);
-
-    // Pass the input to the manager for verification
-    //
-    m_manager.setInputData(m_inputData);
 
     m_manager.start();
 }

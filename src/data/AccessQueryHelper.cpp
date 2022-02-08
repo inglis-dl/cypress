@@ -107,7 +107,7 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
     else
     {
       q_str = QString(
-        "SELECT m.* FROM Measures AS m "
+        "SELECT DISTINCT * FROM Measures AS m "
         "INNER JOIN Patients AS p ON p.PatientID=m.PatientID "
         "WHERE ID=%1 "
         "AND SEX=%2 "

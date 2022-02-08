@@ -9,7 +9,6 @@
 #include <QJsonObject>
 #include <QSettings>
 #include <QSqlDatabase>
-//#include <QSqlQuery>
 #include <QStandardItemModel>
 
 TonometerManager::TonometerManager(QObject* parent):
@@ -66,8 +65,12 @@ void TonometerManager::buildModel(QStandardItemModel *model) const
       QStringList list = m_test.getMeasurementStrings(side);
       for(int row=0;row<list.size();row++)
       {
-        TonometerMeasurement m; // = m_test.getMeasurement(side,row);
         QStandardItem* item = model->item(row,col);
+        if(Q_NULLPTR == item)
+        {
+            item = new QStandardItem();
+            model->setItem(row,col,item);
+        }
         item->setData(list.at(row), Qt::DisplayRole);
       }
     }
@@ -162,10 +165,11 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
         m_inputData["language"] = "english";
         m_inputData["date_of_birth"] = "1965-12-17";
         m_inputData["sex"] = -1;
-        return;
     }
+    else
+      m_inputData = input;
+
     bool ok = true;
-    m_inputData = input;
     for(auto&& x : m_inputKeyList)
     {
         if(m_inputData.contains(x))
@@ -177,8 +181,6 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
              {
                 m_inputData[x] = value.toString().toLower().startsWith("f") ? 0 : -1;
              }
-             // TODO: handle DOB input formatting
-             //
            }
         }
         else
@@ -189,45 +191,24 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
         }
     }
     if(!ok)
+    {
+        qDebug() << "ERROR: invalid input data";
+        emit message(tr("ERROR: the input data is incorrect"));
         m_inputData.clear();
-    else
-        configureProcess();
+    }
 }
 
 void TonometerManager::readOutput()
 {
     if("simulate" == m_mode)
     {
-        qDebug() << "simulating read out";
-
-        //TODO: impl left and right measurements
-        //
-        TonometerMeasurement m;
-        m.setCharacteristic("name","IOPG");
-        m.setCharacteristic("value", 1.0);
-        m.setCharacteristic("units","mmHg");
-        m_test.addMeasurement(m);
-        m.setCharacteristic("name","IOPCC");
-        m.setCharacteristic("value", 1.0);
-        m.setCharacteristic("units","mmHg");
-        m_test.addMeasurement(m);
-        m.setCharacteristic("name","CH");
-        m.setCharacteristic("value", 1.0);
-        m.setCharacteristic("units","mmHg");
-        m_test.addMeasurement(m);
-        m.setCharacteristic("name","CRF");
-        m.setCharacteristic("value", 1.0);
-        m.setCharacteristic("units","mmHg");
-        m_test.addMeasurement(m);
-
-        for(auto&& x : m_inputData.toStdMap())
+        m_test.simulate(m_inputData);
+        if(m_test.isValid())
         {
-          m_test.addMetaDataCharacteristic(x.first,x.second);
+          // emit the can write signal
+          emit message(tr("Ready to save results..."));
+          emit canWrite();
         }
-
-        // emit the can write signal
-        emit message(tr("Ready to save results..."));
-        emit canWrite();
         emit dataChanged();
         return;
     }
@@ -266,6 +247,8 @@ void TonometerManager::readOutput()
 
 void TonometerManager::configureProcess()
 {
+    if(m_inputData.isEmpty()) return;
+
     if("simulate" == m_mode)
     {
         emit message(tr("Ready to measure..."));
@@ -354,7 +337,6 @@ void TonometerManager::clearData()
 
 void TonometerManager::finish()
 {
-    m_test.reset();
     if("simulate" == m_mode)
     {
       return;

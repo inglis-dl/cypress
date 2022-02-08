@@ -14,6 +14,8 @@ public:
 
     void fromJson(const QJsonArray&);
 
+    void simulate(const QMap<QString,QVariant>&);
+
     // String representation for debug purposes
     //
     QString toString() const override;
