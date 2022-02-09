@@ -1,6 +1,7 @@
 #include "AccessQueryHelper.h"
 #include <QSqlDatabase>
 #include <QSqlField>
+#include <QSqlQuery>
 #include <QSqlRecord>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -29,23 +30,37 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
         qDebug() << "ERROR: db is not open" << db.isOpenError();
         return result;
     }
-    m_query = QSqlQuery(db);
+    QSqlQuery query = QSqlQuery(db);
     QString q_str;
-    if(Operation::Count == m_operation)
+    if(Operation::Count == m_operation ||
+       Operation::CountMeasures == m_operation)
     {
-      q_str = QString(
-        "SELECT COUNT(*) As Num FROM Patients "
-        "WHERE ID=%1 "
-        "AND BirthDate=#%2# "
-        "AND Sex=%3").arg(
-        input["barcode"].toString(),
-        input["date_of_birth"].toString(),
-        input["sex"].toString()
+      if(Operation::Count == m_operation)
+        q_str = QString(
+          "SELECT COUNT(*) As Num FROM Patients "
+          "WHERE ID=%1 "
+          "AND BirthDate=#%2# "
+          "AND Sex=%3").arg(
+          input["barcode"].toString(),
+          input["date_of_birth"].toString(),
+          input["sex"].toString()
         );
+      else
+        q_str = QString(
+          "SELECT COUNT(*) AS Num FROM Patients AS p "
+          "INNER JOIN Measures AS m ON m.PatientID=p.PatientID "
+          "WHERE ID=%1 "
+          "AND BirthDate=#%2# "
+          "AND Sex=%3").arg(
+          input["barcode"].toString(),
+          input["date_of_birth"].toString(),
+          input["sex"].toString()
+        );
+
       int count = -1;
-      if(m_query.exec(q_str) && m_query.first())
+      if(query.exec(q_str) && query.first())
       {
-        QSqlRecord r = m_query.record();
+        QSqlRecord r = query.record();
         if(r.contains("Num"))
         {
           count = r.value("Num").toInt();
@@ -66,21 +81,21 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
         input["sex"].toString()
         );
 
-      if(m_query.exec(q_str) && m_query.first())
+      if(query.exec(q_str) && query.first())
       {
-        QSqlRecord r = m_query.record();
+        QSqlRecord r = query.record();
         if(r.contains("PatientID"))
         {
           int p_id = r.value("PatientID").toInt();
           q_str = QString(
             "DELETE * FROM Measures WHERE PatientID=%1").arg(p_id);
-          m_query.finish();
-          if(m_query.exec(q_str))
+          query.finish();
+          if(query.exec(q_str))
           {
             q_str = QString(
               "DELETE * FROM Patients WHERE PatientID=%1").arg(p_id);
-            m_query.finish();
-            if(m_query.exec(q_str))
+            query.finish();
+            if(query.exec(q_str))
             {
               result = true;
             }
@@ -99,7 +114,7 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
         input["barcode"].toString(),
         QString::number(1)
       );
-      if(m_query.exec(q_str))
+      if(query.exec(q_str))
       {
         result = true;
       }
@@ -116,12 +131,12 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
         input["sex"].toString(),
         input["date_of_birth"].toString()
       );
-      if(m_query.exec(q_str))
+      if(query.exec(q_str))
       {
           QJsonArray arr;
-          while(m_query.next())
+          while(query.next())
           {
-            QSqlRecord r = m_query.record();
+            QSqlRecord r = query.record();
             QJsonObject obj;
             for(int i=0;i<r.count();i++)
             {
@@ -134,6 +149,6 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
       }
     }
 
-    m_query.finish();
+    query.finish();
     return result;
 }

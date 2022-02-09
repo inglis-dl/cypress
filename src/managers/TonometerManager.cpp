@@ -255,6 +255,7 @@ void TonometerManager::configureProcess()
         emit canMeasure();
         return;
     }
+
     // ORA.exe, ora.mdb and input file are present
     //
     QDir working(m_runnablePath);
@@ -283,44 +284,59 @@ void TonometerManager::configureProcess()
         {
           m_db = QSqlDatabase::addDatabase("QODBC", "mdb_connection");
           m_db.setDatabaseName(
-            "DRIVER={Microsoft Access Driver (*.mdb, ^.accdb)};FIL={MS Access};DBQ=" + m_databaseName);
+            "DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};FIL={MS Access};DBQ=" + m_databaseName);
+          if(m_db.isValid())
+            m_db.open();
+          else
+            qDebug() << "ERROR: invalid database using"<<m_databaseName;
         }
-        if(m_db.open())
+        if(m_db.isOpen())
         {
             bool insert = true;
             AccessQueryHelper helper;
-            helper.setOperation(AccessQueryHelper::Operation::Count);
+            helper.setOperation(AccessQueryHelper::Operation::CountMeasures);
             QVariant result = helper.processQuery(m_inputData,m_db);
             // first check if the query failed
-            if((result.canConvert(QMetaType::Bool) && result.toBool()) ||
-               (result.canConvert(QMetaType::Int) && -1 == result.toInt()))
+            if(result.canConvert(QMetaType::Int) && -1 == result.toInt())
             {
-                qDebug() << "ERROR: configuration failed during count query";
+                qDebug() << "ERROR: configuration failed count query";
                 insert = false;
             }
             else
             {
-              if(0 < result.toInt()) // clear out participant data
+              // clear out participant data from Patients and Measures
+              if(0 < result.toInt())
               {
                 helper.setOperation(AccessQueryHelper::Operation::Delete);
                 result = helper.processQuery(m_inputData,m_db);
                 if(!result.toBool())
                 {
-                  qDebug() << "ERROR: configuration failed during delete query";
+                  qDebug() << "ERROR: configuration failed delete query";
                   insert = false;
                 }
               }
             }
             if(insert)
             {
-                helper.setOperation(AccessQueryHelper::Operation::Insert);
+              helper.setOperation(AccessQueryHelper::Operation::Insert);
+              result = helper.processQuery(m_inputData,m_db);
+              if(result.toBool())
+              {
+                // verify we have only 1 entry in the Patients table
+                helper.setOperation(AccessQueryHelper::Operation::Count);
                 result = helper.processQuery(m_inputData,m_db);
-                if(result.toBool())
+                if(1 != result.toInt())
+                {
+                  qDebug() << "ERROR: configuration failed insert non-unary"
+                           << QString::number(result.toInt());
+                }
+                else
                 {
                   emit message(tr("Ready to measure..."));
                   emit canMeasure();
                 }
-                else
+              }
+              else
                   qDebug() << "ERROR: configuration failed during insert query";
             }
         }
