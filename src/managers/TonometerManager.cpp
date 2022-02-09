@@ -292,29 +292,56 @@ void TonometerManager::configureProcess()
         }
         if(m_db.isOpen())
         {
+            // case 1) - db has no particpant records in the Patients or Measures table
+            // - insert one particpant record to the db
+            //
+            // case 2) - db has records in both the Measures and Patients tables
+            // - delete all records
+            // - insert one particpant record to the db
+            //
+            // case 3) - db has 1 record in the Patients table, no records in the Measures table
+            // - no insert required
+            //
             bool insert = true;
             AccessQueryHelper helper;
             helper.setOperation(AccessQueryHelper::Operation::CountMeasures);
             QVariant result = helper.processQuery(m_inputData,m_db);
             // first check if the query failed
-            if(result.canConvert(QMetaType::Int) && -1 == result.toInt())
+            if(-1 == result.toInt())
             {
-                qDebug() << "ERROR: configuration failed count query";
+              qDebug() << "ERROR: configuration failed count query";
+              insert = false;
+            }
+            else if(0 < result.toInt())
+            {
+              // clear out participant data from Patients and Measures
+              helper.setOperation(AccessQueryHelper::Operation::Delete);
+              result = helper.processQuery(m_inputData,m_db);
+              if(!result.toBool())
+              {
+                qDebug() << "ERROR: configuration failed delete query";
                 insert = false;
+              }
             }
             else
             {
-              // clear out participant data from Patients and Measures
-              if(0 < result.toInt())
+              // are there any records in the Patients table ?
+              helper.setOperation(AccessQueryHelper::Operation::Count);
+              result = helper.processQuery(m_inputData,m_db);
+              if(-1 == result.toInt())
               {
-                helper.setOperation(AccessQueryHelper::Operation::Delete);
-                result = helper.processQuery(m_inputData,m_db);
-                if(!result.toBool())
-                {
-                  qDebug() << "ERROR: configuration failed delete query";
-                  insert = false;
-                }
+                qDebug() << "ERROR: configuration failed count query";
+                insert = false;
               }
+              else if(1 == result.toInt())
+              {
+                qDebug() << "OK, no insert required, patient already exists in db";
+                insert = false;
+              }
+              else if(0 == result.toInt())
+                insert = true;
+              else
+                  qDebug() << "ERROR:"<< QString::number(result.toInt()) << "records already in db for patient";
             }
             if(insert)
             {

@@ -47,8 +47,8 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
         );
       else
         q_str = QString(
-          "SELECT COUNT(*) AS Num FROM Patients AS p "
-          "INNER JOIN Measures AS m ON m.PatientID=p.PatientID "
+          "SELECT COUNT(m.PatientID) AS Num FROM Measures AS m "
+          "INNER JOIN Patients AS p ON p.PatientID=m.PatientID "
           "WHERE ID=%1 "
           "AND BirthDate=#%2# "
           "AND Sex=%3").arg(
