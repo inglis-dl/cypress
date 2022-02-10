@@ -221,7 +221,9 @@ void TonometerManager::readOutput()
     else
       qDebug() << "process finished successfully";
 
-    if(isDefined(m_databaseName))
+    if(m_db.isValid() && !m_db.isOpen())
+        m_db.open();
+    if(m_db.isOpen())
     {
       AccessQueryHelper helper;
       helper.setOperation(AccessQueryHelper::Operation::Results);
@@ -240,6 +242,7 @@ void TonometerManager::readOutput()
           qDebug() << "ERROR: ora database produced invalid test results";
       }
       emit dataChanged();
+      m_db.close();
     }
     else
       qDebug() << "ERROR: ora database is missing";
@@ -290,6 +293,8 @@ void TonometerManager::configureProcess()
           else
             qDebug() << "ERROR: invalid database using"<<m_databaseName;
         }
+        if(m_db.isValid() && !m_db.isOpen())
+            m_db.open();
         if(m_db.isOpen())
         {
             // case 1) - db has no particpant records in the Patients or Measures table
@@ -372,6 +377,7 @@ void TonometerManager::configureProcess()
               else
                 qDebug() << "ERROR: configuration failed during insert query";
             }
+          m_db.close();
         }
     }
     else
@@ -390,16 +396,23 @@ void TonometerManager::finish()
     {
       return;
     }
-    AccessQueryHelper helper;
-    helper.setOperation(AccessQueryHelper::Operation::Delete);
-    QVariant result = helper.processQuery(m_inputData,m_db);
-    if(!result.toBool())
-    {
-      qDebug() << "ERROR: finish failed during delete query";
-    }
-
+    if(m_db.isValid() && !m_db.isOpen())
+        m_db.open();
     if(m_db.isOpen())
     {
+      AccessQueryHelper helper;
+      helper.setOperation(AccessQueryHelper::Operation::DeleteMeasures);
+      QVariant result = helper.processQuery(m_inputData,m_db);
+      if(!result.toBool())
+      {
+        qDebug() << "ERROR: finish failed during delete measures query";
+      }
+      helper.setOperation(AccessQueryHelper::Operation::Delete);
+      result = helper.processQuery(m_inputData,m_db);
+      if(!result.toBool())
+      {
+        qDebug() << "ERROR: finish failed during delete patient query";
+      }
       m_db.close();
     }
 
