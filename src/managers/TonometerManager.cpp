@@ -260,8 +260,8 @@ void TonometerManager::configureProcess()
     //
     QDir working(m_runnablePath);
     if(isDefined(m_runnableName) &&
-        isDefined(m_databaseName) &&
-        working.exists())
+       isDefined(m_databaseName) &&
+       working.exists())
     {
         qDebug() << "OK: configuring command";
 
@@ -296,7 +296,8 @@ void TonometerManager::configureProcess()
             // - insert one particpant record to the db
             //
             // case 2) - db has records in both the Measures and Patients tables
-            // - delete all records
+            // - delete all Meausures records
+            // - delete all Patients records
             // - insert one particpant record to the db
             //
             // case 3) - db has 1 record in the Patients table, no records in the Measures table
@@ -314,7 +315,27 @@ void TonometerManager::configureProcess()
             }
             else if(0 < result.toInt())
             {
-              // clear out participant data from Patients and Measures
+              // clear out participant data from Measures
+              helper.setOperation(AccessQueryHelper::Operation::DeleteMeasures);
+              result = helper.processQuery(m_inputData,m_db);
+              if(!result.toBool())
+              {
+                qDebug() << "ERROR: configuration failed delete query";
+                insert = false;
+              }
+            }
+
+            helper.setOperation(AccessQueryHelper::Operation::Count);
+            result = helper.processQuery(m_inputData,m_db);
+            // first check if the query failed
+            if(-1 == result.toInt())
+            {
+              qDebug() << "ERROR: configuration failed count query";
+              insert = false;
+            }
+            else if(1 < result.toInt())
+            {
+              // clear out participant data from Patients
               helper.setOperation(AccessQueryHelper::Operation::Delete);
               result = helper.processQuery(m_inputData,m_db);
               if(!result.toBool())
@@ -323,26 +344,11 @@ void TonometerManager::configureProcess()
                 insert = false;
               }
             }
-            else
+            else if(1 == result.toInt())
             {
-              // are there any records in the Patients table ?
-              helper.setOperation(AccessQueryHelper::Operation::Count);
-              result = helper.processQuery(m_inputData,m_db);
-              if(-1 == result.toInt())
-              {
-                qDebug() << "ERROR: configuration failed count query";
-                insert = false;
-              }
-              else if(1 == result.toInt())
-              {
-                qDebug() << "OK, no insert required, patient already exists in db";
-                insert = false;
-              }
-              else if(0 == result.toInt())
-                insert = true;
-              else
-                  qDebug() << "ERROR:"<< QString::number(result.toInt()) << "records already in db for patient";
+              insert = false;
             }
+
             if(insert)
             {
               helper.setOperation(AccessQueryHelper::Operation::Insert);
@@ -364,7 +370,7 @@ void TonometerManager::configureProcess()
                 }
               }
               else
-                  qDebug() << "ERROR: configuration failed during insert query";
+                qDebug() << "ERROR: configuration failed during insert query";
             }
         }
     }

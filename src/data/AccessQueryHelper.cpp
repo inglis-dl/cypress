@@ -47,7 +47,7 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
         );
       else
         q_str = QString(
-          "SELECT COUNT(m.PatientID) AS Num FROM Measures AS m "
+          "SELECT COUNT(*) AS Num FROM Measures AS m "
           "INNER JOIN Patients AS p ON p.PatientID=m.PatientID "
           "WHERE ID=%1 "
           "AND BirthDate=#%2# "
@@ -68,38 +68,41 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
       }
       result = QVariant(count);
     }
-    else if(Operation::Delete == m_operation)
+    else if(Operation::Delete == m_operation ||
+            Operation::DeleteMeasures == m_operation)
     {
-      // first get the PatientID value for the participant
-      q_str = QString(
-        "SELECT PatientID FROM Patients "
-        "WHERE ID=%1 "
-        "AND BirthDate=#%2# "
-        "AND Sex=%3").arg(
-        input["barcode"].toString(),
-        input["date_of_birth"].toString(),
-        input["sex"].toString()
-        );
-
-      if(query.exec(q_str) && query.first())
+      if(Operation::DeleteMeasures == m_operation)
       {
-        QSqlRecord r = query.record();
-        if(r.contains("PatientID"))
+        q_str = QString(
+          "DELETE * FROM Measures "
+          "WHERE PatientID IN ("
+          "SELECT PatientID FROM Patients "
+          "WHERE ID=%1 "
+          "AND BirthDate=#%2# "
+          "AND Sex=%3)").arg(
+          input["barcode"].toString(),
+          input["date_of_birth"].toString(),
+          input["sex"].toString()
+          );
+        if(query.exec(q_str))
         {
-          int p_id = r.value("PatientID").toInt();
-          q_str = QString(
-            "DELETE * FROM Measures WHERE PatientID=%1").arg(p_id);
-          query.finish();
-          if(query.exec(q_str))
-          {
-            q_str = QString(
-              "DELETE * FROM Patients WHERE PatientID=%1").arg(p_id);
-            query.finish();
-            if(query.exec(q_str))
-            {
-              result = true;
-            }
-          }
+          result = true;
+        }
+      }
+      else
+      {
+        q_str = QString(
+          "DELETE * FROM Patients "
+          "WHERE ID=%1 "
+          "AND BirthDate=#%2# "
+          "AND Sex=%3").arg(
+          input["barcode"].toString(),
+          input["date_of_birth"].toString(),
+          input["sex"].toString()
+        );
+        if(query.exec(q_str))
+        {
+          result = true;
         }
       }
     }

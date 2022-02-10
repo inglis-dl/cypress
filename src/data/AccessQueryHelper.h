@@ -27,7 +27,8 @@ public:
     enum Operation {
         Count,  // get the number of Patients records matching the participant
         CountMeasures,  // get the number of Patients records with Measures matching the participant
-        Delete, // clear the db of all Patients and Measures records matching the participant
+        Delete, // clear the db of all Patients records matching the participant
+        DeleteMeasures, // clear the db of all Measures records matching the participant
         Insert, // intsert the participant into the Patients table
         Results // get all Measures for the participant
     };
