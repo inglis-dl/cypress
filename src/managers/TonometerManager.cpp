@@ -27,6 +27,11 @@ TonometerManager::TonometerManager(QObject* parent):
     m_inputKeyList << "sex";           // 0  = female, 1 = male, Sex column in Patients table
 }
 
+TonometerManager::~TonometerManager()
+{
+  QSqlDatabase::removeDatabase("mdb_connection");
+}
+
 void TonometerManager::start()
 {
     // connect signals and slots to QProcess one time only
@@ -221,13 +226,14 @@ void TonometerManager::readOutput()
     else
       qDebug() << "process finished successfully";
 
-    if(m_db.isValid() && !m_db.isOpen())
-        m_db.open();
-    if(m_db.isOpen())
+    QSqlDatabase db = QSqlDatabase::database("mdb_connection");
+    if(db.isValid() && !db.isOpen())
+        db.open();
+    if(db.isOpen())
     {
       AccessQueryHelper helper;
       helper.setOperation(AccessQueryHelper::Operation::Results);
-      QVariant result = helper.processQuery(m_inputData,m_db);
+      QVariant result = helper.processQuery(m_inputData,db);
       if(result.isValid() && !result.isNull())
       {
         QJsonArray arr = QJsonValue::fromVariant(result).toArray();
@@ -242,7 +248,7 @@ void TonometerManager::readOutput()
           qDebug() << "ERROR: ora database produced invalid test results";
       }
       emit dataChanged();
-      m_db.close();
+      db.close();
     }
     else
       qDebug() << "ERROR: ora database is missing";
@@ -281,19 +287,23 @@ void TonometerManager::configureProcess()
             qDebug() << "wrote backup to " << m_temporaryFile;
         }
 
+        QSqlDatabase db;
         if(!QSqlDatabase::contains("mdb_connection"))
         {
-          m_db = QSqlDatabase::addDatabase("QODBC", "mdb_connection");
-          m_db.setDatabaseName(
+          db = QSqlDatabase::addDatabase("QODBC", "mdb_connection");
+          db.setDatabaseName(
             "DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};FIL={MS Access};DBQ=" + m_databaseName);
-          if(m_db.isValid())
-            m_db.open();
+          if(db.isValid())
+            db.open();
           else
             qDebug() << "ERROR: invalid database using"<<m_databaseName;
         }
-        if(m_db.isValid() && !m_db.isOpen())
-            m_db.open();
-        if(m_db.isOpen())
+        else
+          db = QSqlDatabase::database("mdb_connection");
+
+        if(db.isValid() && !db.isOpen())
+            db.open();
+        if(db.isOpen())
         {
             // case 1) - db has no particpant records in the Patients or Measures table
             // - insert one particpant record to the db
@@ -309,7 +319,7 @@ void TonometerManager::configureProcess()
             bool insert = true;
             AccessQueryHelper helper;
             helper.setOperation(AccessQueryHelper::Operation::CountMeasures);
-            QVariant result = helper.processQuery(m_inputData,m_db);
+            QVariant result = helper.processQuery(m_inputData,db);
             // first check if the query failed
             if(-1 == result.toInt())
             {
@@ -320,7 +330,7 @@ void TonometerManager::configureProcess()
             {
               // clear out participant data from Measures
               helper.setOperation(AccessQueryHelper::Operation::DeleteMeasures);
-              result = helper.processQuery(m_inputData,m_db);
+              result = helper.processQuery(m_inputData,db);
               if(!result.toBool())
               {
                 qDebug() << "ERROR: configuration failed delete query";
@@ -329,7 +339,7 @@ void TonometerManager::configureProcess()
             }
 
             helper.setOperation(AccessQueryHelper::Operation::Count);
-            result = helper.processQuery(m_inputData,m_db);
+            result = helper.processQuery(m_inputData,db);
             // first check if the query failed
             if(-1 == result.toInt())
             {
@@ -340,7 +350,7 @@ void TonometerManager::configureProcess()
             {
               // clear out participant data from Patients
               helper.setOperation(AccessQueryHelper::Operation::Delete);
-              result = helper.processQuery(m_inputData,m_db);
+              result = helper.processQuery(m_inputData,db);
               if(!result.toBool())
               {
                 qDebug() << "ERROR: configuration failed delete query";
@@ -355,12 +365,12 @@ void TonometerManager::configureProcess()
             if(insert)
             {
               helper.setOperation(AccessQueryHelper::Operation::Insert);
-              result = helper.processQuery(m_inputData,m_db);
+              result = helper.processQuery(m_inputData,db);
               if(result.toBool())
               {
                 // verify we have only 1 entry in the Patients table
                 helper.setOperation(AccessQueryHelper::Operation::Count);
-                result = helper.processQuery(m_inputData,m_db);
+                result = helper.processQuery(m_inputData,db);
                 if(1 != result.toInt())
                 {
                   qDebug() << "ERROR: configuration failed insert non-unary"
@@ -375,7 +385,7 @@ void TonometerManager::configureProcess()
               else
                 qDebug() << "ERROR: configuration failed during insert query";
             }
-          m_db.close();
+          db.close();
         }
     }
     else
@@ -394,24 +404,25 @@ void TonometerManager::finish()
     {
       return;
     }
-    if(m_db.isValid() && !m_db.isOpen())
-        m_db.open();
-    if(m_db.isOpen())
+    QSqlDatabase db = QSqlDatabase::database("mdb_connection");
+    if(db.isValid() && !db.isOpen())
+        db.open();
+    if(db.isOpen())
     {
       AccessQueryHelper helper;
       helper.setOperation(AccessQueryHelper::Operation::DeleteMeasures);
-      QVariant result = helper.processQuery(m_inputData,m_db);
+      QVariant result = helper.processQuery(m_inputData,db);
       if(!result.toBool())
       {
         qDebug() << "ERROR: finish failed during delete measures query";
       }
       helper.setOperation(AccessQueryHelper::Operation::Delete);
-      result = helper.processQuery(m_inputData,m_db);
+      result = helper.processQuery(m_inputData,db);
       if(!result.toBool())
       {
         qDebug() << "ERROR: finish failed during delete patient query";
       }
-      m_db.close();
+      db.close();
     }
 
     if(QProcess::NotRunning != m_process.state())
@@ -429,7 +440,5 @@ void TonometerManager::finish()
         QFile tempFile(m_temporaryFile);
         tempFile.remove();
         m_temporaryFile.clear();
-    }
-
-    QSqlDatabase::removeDatabase("mdb_connection");
+    }   
 }

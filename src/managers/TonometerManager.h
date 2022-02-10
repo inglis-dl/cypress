@@ -4,7 +4,6 @@
 #include "ManagerBase.h"
 #include "../data/TonometerTest.h"
 #include <QProcess>
-#include <QSqlDatabase>
 
 class TonometerManager : public ManagerBase
 {
@@ -12,6 +11,7 @@ class TonometerManager : public ManagerBase
 
 public:
     explicit TonometerManager(QObject* parent = Q_NULLPTR);
+    ~TonometerManager();
 
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
@@ -88,8 +88,6 @@ private:
     TonometerTest m_test;
 
     void clearData() override;
-
-    QSqlDatabase m_db;
 
     void configureProcess();
 };
