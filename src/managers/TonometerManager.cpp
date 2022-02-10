@@ -275,13 +275,11 @@ void TonometerManager::configureProcess()
         qDebug() << "process working dir: " << m_runnablePath;
 
         // backup the original ora.mdb
-        if(QFileInfo::exists(m_temporaryFile))
+        if(!QFileInfo::exists(m_temporaryFile))
         {
-            QFile tfile(m_temporaryFile);
-            tfile.remove();
+            QFile::copy(m_databaseName, m_temporaryFile);
+            qDebug() << "wrote backup to " << m_temporaryFile;
         }
-        QFile::copy(m_databaseName, m_temporaryFile);
-        qDebug() << "wrote backup to " << m_temporaryFile;
 
         if(!QSqlDatabase::contains("mdb_connection"))
         {
