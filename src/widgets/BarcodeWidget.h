@@ -8,7 +8,7 @@ class BarcodeWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit BarcodeWidget(QWidget *parent = nullptr);
+    explicit BarcodeWidget(QWidget *parent = Q_NULLPTR);
     ~BarcodeWidget();
 
     QString getBarcode();
