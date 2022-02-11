@@ -323,8 +323,8 @@ void TonometerManager::configureProcess()
     // ORA.exe, ora.mdb and input file are present
     //
     QDir working(m_runnablePath);
-    if(isDefined(m_runnableName) &&
-       isDefined(m_databaseName) &&
+    if(isDefined(m_runnableName, FileType::ORAApplication) &&
+       isDefined(m_databaseName, FileType::ORADatabase) &&
        working.exists())
     {
         qDebug() << "OK: configuring command";
