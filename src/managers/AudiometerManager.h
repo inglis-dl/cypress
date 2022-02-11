@@ -30,6 +30,9 @@ public:
     //
     void setInputData(const QMap<QString, QVariant> &) override;
 
+    int getNumberOfModelColumns() const override  { return 2; };
+    int getNumberOfModelRows() const override { return 8; };
+
     void connectUI(QWidget *) override {};
 
 public slots:

@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QHeaderView>
 #include <QStandardItemModel>
+#include "managers/ManagerBase.h"
 
 CypressDialog::CypressDialog(QWidget *parent) : QDialog(parent)
 {
@@ -13,6 +14,7 @@ CypressDialog::CypressDialog(QWidget *parent) : QDialog(parent)
 
 CypressDialog::~CypressDialog()
 {
+    m_tableView.clear();
 }
 
 void CypressDialog::initialize(CypressApplication *app)
@@ -75,27 +77,19 @@ void CypressDialog::initialize(CypressApplication *app)
 
     this->setWindowTitle(ui_title);
 
-    m_status.reset(this->findChild<QStatusBar*>("statusBar"));
-    m_barcodeEdit.reset(this->findChild<QLineEdit*>("barcodeLineEdit"));
     m_tableView.reset(this->findChild<QTableView*>("testdataTableView"));
 
     // all ui frames have a close button and a save button
     //
-    QPushButton* ui_closeButton = this->findChild<QPushButton*>("closeButton");
-    if(nullptr!=ui_closeButton)
-        qDebug() << "found UI element " << ui_closeButton->objectName();
-
-    QPushButton* ui_saveButton = this->findChild<QPushButton*>("saveButton");
-    if(nullptr!=ui_saveButton)
-        qDebug() << "found UI element " << ui_saveButton->objectName();
-
-    connect(ui_closeButton,&QPushButton::clicked,
+    connect(this->findChild<QPushButton*>("closeButton"),
+            &QPushButton::clicked,
             this,[this](){
         qDebug() << "closing the dialog";
         this->accept();
     });
 
-    connect(ui_saveButton,&QPushButton::clicked,
+    connect(this->findChild<QPushButton*>("saveButton"),
+            &QPushButton::clicked,
             app, &CypressApplication::writeOutput);
 
     m_tableView->setModel(app->getModel());
@@ -106,23 +100,38 @@ void CypressDialog::initialize(CypressApplication *app)
     m_tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_tableView->verticalHeader()->hide();
 
+    connect(app->getManager(),&ManagerBase::dataChanged,
+            this,&CypressDialog::updateTableView);
+
     // construct the logic between the manager and the ui
+    app->getManager()->connectUI(this);
 }
 
-void CypressDialog::updateTableView(QStandardItemModel *model)
+void CypressDialog::setStatusMessage(const QString &msg)
 {
-    QHeaderView *h = m_tableView->horizontalHeader();
-    h->setSectionResizeMode(QHeaderView::Fixed);
+    this->findChild<QPushButton*>("statusBar")->setText(msg);
+}
+
+QString CypressDialog::getBarcode() const
+{
+   return m_barcodeEdit->text();
+}
+
+void CypressDialog::updateTableView()
+{
+    auto h = m_tableView->horizontalHeader();
+    h->setSectionResizeMode(QHeaderView::Fixed);    
     QSize ts_pre = m_tableView->size();
     h->resizeSections(QHeaderView::ResizeToContents);
+
     int total_width = m_tableView->autoScrollMargin() + 1;
-    for(int col=0;col<model->columnCount();col++)
+    for(int col=0;col<m_tableView->model()->columnCount();col++)
     {
       m_tableView->setColumnWidth(col,h->sectionSize(col));
       total_width += h->sectionSize(col);
     }
     int total_height = h->height() + 1;
-    for(int row=0;row<model->rowCount();row++)
+    for(int row=0;row<m_tableView->model()->rowCount();row++)
         total_height += m_tableView->rowHeight(row);
 
     m_tableView->resize(total_width, total_height);
@@ -131,14 +140,3 @@ void CypressDialog::updateTableView(QStandardItemModel *model)
     int dy = ts_post.height()-ts_pre.height();
     this->resize(this->width()+dx,this->height()+dy);
 }
-
-QString CypressDialog::getBarcode() const
-{
-   return m_barcodeEdit->text();
-}
-
-void CypressDialog::setStatusMessage(const QString &message)
-{
-  m_status->showMessage(message);
-}
-

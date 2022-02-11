@@ -32,21 +32,21 @@ CypressApplication::CypressApplication(QObject *parent) : QObject(parent),
     m_mode("default"),
     m_verbose(true),
     m_testType(None),
-    m_manager(nullptr)
+    m_manager(Q_NULLPTR)
 {
     m_dialog = new CypressDialog();
     m_model = new QStandardItemModel(this);
 
     // TESTING ONLY
-    m_testType = TestType::Hearing;
-    m_testTypeName = "hearing";
+    m_testType = TestType::BodyComposition;
+    m_testTypeName = "body_composition";
 }
 
 CypressApplication::~CypressApplication()
 {
     delete m_dialog;
     delete m_model;
-    if(nullptr!=m_manager)
+    if(Q_NULLPTR!=m_manager)
         delete m_manager;
 }
 
@@ -66,7 +66,26 @@ QMap<QString,CypressApplication::TestType> CypressApplication::initTestTypeLUT()
     return lut;
 }
 
-void CypressApplication::initialize()
+void CypressApplication::initializeModel()
+{
+    // init the model
+    //
+    qDebug() << "initializing the model";
+    int n_col = m_manager->getNumberOfModelColumns();
+    int n_row = m_manager->getNumberOfModelRows();
+    for(int col=0;col<n_col;col++)
+    {
+      for(int row=0;row<n_row;row++)
+      {
+        QStandardItem* item = new QStandardItem();
+        m_model->setItem(row,col,item);
+      }
+      //if(!titles.empty())
+      //  m_model->setHeaderData(col,Qt::Horizontal,titles.at(col),Qt::DisplayRole);
+    }
+}
+
+void CypressApplication::initializeManager()
 {
     // select the appropriate manager based on test type
     // if the test type was specified as a cli then it will not be None
@@ -91,113 +110,80 @@ void CypressApplication::initialize()
             throw std::runtime_error("FATAL ERROR: no test type specified");
         }
     }
-    int n_col = 1;
-    int n_row = 1;
-    QStringList titles;
     switch(m_testType)
     {
       case TestType::Weight:
         qDebug() << "creating weigh scale manager";
         m_manager = new WeighScaleManager(this);
-        titles << "Weight Results";
-        n_row = 2;
         break;
       case TestType::BodyComposition:
-        qDebug() << "creating boyd composition manager";
+        qDebug() << "creating body composition manager";
         m_manager = new BodyCompositionAnalyzerManager(this);
-        titles << "Body Composition Results";
-        n_row = 8;
         break;
       case TestType::Hearing:
         qDebug() << "creating audiometer manager";
         m_manager = new AudiometerManager(this);
-        titles << "Left Test Results" << "Right Test Results";
-        n_col = 2;
-        n_row = 8;
         break;
       case TestType::ChoiceReaction:
         qDebug() << "creating coginitive test manager";
         m_manager = new ChoiceReactionManager(this);
-        titles << "Left Test Results" << "Right Test Results";
-        n_col = 2;
-        n_row = 8;
         break;
       case TestType::Temperature:
-        qDebug() << "creating BLE manager";
+        qDebug() << "creating BLE thermometer manager";
         m_manager = new BluetoothLEManager(this);
-        titles << "Temperature Results";
-        n_row = 2;
         break;
       case TestType::Frax:
         qDebug() << "creating frax manager";
         m_manager = new FraxManager(this);
-        titles << "10 Year Fracture Risk Probabilities";
-        n_row = 4;
         break;
       case TestType::CDTT:
         qDebug() << "creating CDTT manager";
         m_manager = new CDTTManager(this);
-        titles << "Left Test Results" << "Right Test Results";
-        n_col = 2;
-        n_row = 8;
         break;
       case TestType::Tonometry:
         m_manager = new TonometerManager(this);
         break;
       case TestType::Spirometry:
-        m_manager = nullptr;
+        m_manager = Q_NULLPTR;
         break;
       case TestType::BloodPressure:
-        m_manager = nullptr;
+        m_manager = Q_NULLPTR;
         break;
       case TestType::None:
-        m_manager = nullptr;
+        m_manager = Q_NULLPTR;
         break;
     }
-    if(nullptr==m_manager)
+    if(Q_NULLPTR==m_manager)
         throw std::runtime_error("FATAL ERROR: failed to initialize a manager");
 
     qDebug() << "created manager of class type " << m_manager->metaObject()->className();
-//    for(int i=0;i<m_manager->metaObject()->methodCount();i++)
-//        qDebug() << m_manager->metaObject()->method(i).name();
 
-    m_manager->setVerbose(m_verbose);
-    m_manager->setMode(m_mode);
+}
 
-    // Read the cypress.ini file
-    // Each manager class must create/read/write to its own unique group
-    // withing the cypress.ini file stored on the host
-    //
-    QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("cypress.ini"), QSettings::IniFormat);
-    m_manager->loadSettings(settings);
+void CypressApplication::initializeConnections()
+{
+    connect(m_manager, &ManagerBase::dataChanged, this, [this](){
+        m_manager->buildModel(m_model);
+        m_dialog->updateTableView();
+    });
+}
+
+void CypressApplication::initialize()
+{
+    initializeManager();
+    initializeModel();
+    initializeConnections();
 
     qDebug() << "initializing the dialog to test type " << m_testType;
     m_dialog->initialize(this);
 
     connect(m_dialog, &QDialog::accepted, this, &CypressApplication::finish);
 
-    // init the model
-    //
-    qDebug() << "initializing the model";
-    for(int col=0;col<n_col;col++)
-    {
-      for(int row=0;row<n_row;row++)
-      {
-        QStandardItem* item = new QStandardItem();
-        m_model->setItem(row,col,item);
-      }
-      if(!titles.empty())
-        m_model->setHeaderData(col,Qt::Horizontal,titles.at(col),Qt::DisplayRole);
-    }
-
-    connect(m_manager, &ManagerBase::dataChanged, this, [this](){
-        m_manager->buildModel(m_model);
-        m_dialog->updateTableView(m_model);
-    });
-
-
     m_dialog->setStatusMessage("Ready to roll!!!");
+
+    // Read inputs, such as interview barcode
+    //
+    readInput();
 }
 
 void CypressApplication::show()
@@ -205,11 +191,29 @@ void CypressApplication::show()
     m_dialog->show();
 }
 
+void CypressApplication::run()
+{
+    m_manager->setVerbose(m_verbose);
+    m_manager->setMode(m_mode);
+
+    // Pass the input to the manager for verification
+    //
+    m_manager->setInputData(m_inputData);
+
+    // Read the path to C:\Program Files\Reichert\ora.exe
+    //
+    QDir dir = QCoreApplication::applicationDirPath();
+    QSettings settings(dir.filePath(m_manager->getGroup() + ".ini"), QSettings::IniFormat);
+    m_manager->loadSettings(settings);
+
+    m_manager->start();
+}
+
 void CypressApplication::finish()
 {
     qDebug() << "its closing time!!!";
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath("cypress.ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath(m_manager->getGroup() + ".ini"), QSettings::IniFormat);
     m_manager->saveSettings(&settings);
     m_manager->finish();
 }
@@ -398,7 +402,14 @@ void CypressApplication::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
-        qDebug() << "no input file";
+        if("simulate" == m_mode)
+        {
+            m_inputData["barcode"]="00000000";
+        }
+        else
+        {
+            qDebug() << "ERROR: no input json file";
+        }
         return;
     }
     QFileInfo info(m_inputFileName);
@@ -409,11 +420,9 @@ void CypressApplication::readInput()
       file.open(QIODevice::ReadOnly | QIODevice::Text);
       QString val = file.readAll();
       file.close();
-      qDebug() << val;
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject jsonObj = jsonDoc.object();
-      QMapIterator<QString,QVariant> it(m_inputData);
       QList<QString> keys = jsonObj.keys();
       for(int i=0;i<keys.size();i++)
       {
@@ -433,65 +442,62 @@ void CypressApplication::readInput()
 
 void CypressApplication::writeOutput()
 {
-   if(m_verbose)
-       qDebug() << "begin write process ... ";
+    if (m_verbose)
+        qDebug() << "begin write process ... ";
 
-   QJsonObject jsonObj;
+    QJsonObject jsonObj = m_manager->toJsonObject();
 
-   if(nullptr!=m_manager)
-     jsonObj = m_manager->toJsonObject();
+    QString barcode = m_dialog->getBarcode().simplified().remove(" ");
+    jsonObj.insert("verification_barcode", QJsonValue(barcode));
 
-   QString barcode = m_dialog->getBarcode().simplified().remove(" ");
-   jsonObj.insert("barcode",QJsonValue(barcode));
+    if (m_verbose)
+        qDebug() << "determine file output name ... ";
 
-   if(m_verbose)
-       qDebug() << "determine file output name ... ";
+    QString fileName;
 
-   QString fileName;
+    // Use the output filename if it has a valid path
+    // If the path is invalid, use the directory where the application exe resides
+    // If the output filename is empty default output .json file is of the form
+    // <participant ID>_<now>_<devicename>.json
+    //
+    bool constructDefault = false;
 
-   // Use the output filename if it has a valid path
-   // If the path is invalid, use the directory where the application exe resides
-   // If the output filename is empty default output .json file is of the form
-   // <participant ID>_<now>_<devicename>.json
-   //
-   bool constructDefault = false;
+    // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
+    //
+    if (m_outputFileName.isEmpty())
+        constructDefault = true;
+    else
+    {
+        QFileInfo info(m_outputFileName);
+        QDir dir = info.absoluteDir();
+        if (dir.exists())
+            fileName = m_outputFileName;
+        else
+            constructDefault = true;
+    }
+    if (constructDefault)
+    {
+        QDir dir = QCoreApplication::applicationDirPath();
+        if (m_outputFileName.isEmpty())
+        {
+            QStringList list;
+            list
+              << m_manager->getInputDataValue("barcode").toString()
+              << QDate().currentDate().toString("yyyyMMdd")
+              << m_manager->getGroup()
+              << "test.json";
+            fileName = dir.filePath(list.join("_"));
+        }
+        else
+            fileName = dir.filePath(m_outputFileName);
+    }
 
-   // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
-   //
-   if(m_outputFileName.isEmpty())
-       constructDefault = true;
-   else
-   {
-     QFileInfo info(m_outputFileName);
-     QDir dir = info.absoluteDir();
-     if(dir.exists())
-       fileName = m_outputFileName;
-     else
-       constructDefault = true;
-   }
-   if(constructDefault)
-   {
-       QDir dir = QCoreApplication::applicationDirPath();
-       if(m_outputFileName.isEmpty())
-       {
-         QStringList list;
-         list
-           << barcode
-           << QDate().currentDate().toString("yyyyMMdd")
-           << m_manager->getGroup()
-           << "test.json";
-         fileName = dir.filePath( list.join("_") );
-       }
-       else
-         fileName = dir.filePath( m_outputFileName );
-   }
+    QFile saveFile(fileName);
+    saveFile.open(QIODevice::WriteOnly);
+    saveFile.write(QJsonDocument(jsonObj).toJson());
 
-   QFile saveFile( fileName );
-   saveFile.open(QIODevice::WriteOnly);
-   saveFile.write(QJsonDocument(jsonObj).toJson());
+    if (m_verbose)
+        qDebug() << "wrote to file " << fileName;
 
-   if(m_verbose)
-       qDebug() << "wrote to file " << fileName;
-
-   m_dialog->setStatusMessage("Test data recorded.  Close when ready.");
+    m_dialog->setStatusMessage("Test data recorded.  Close when ready.");
 }

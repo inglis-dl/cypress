@@ -19,6 +19,9 @@ public:
 
     void buildModel(QStandardItemModel *) const override;
 
+    int getNumberOfModelColumns() const override  { return 1; };
+    int getNumberOfModelRows() const override { return 4; };
+
     // is the passed string an executable file
     // with the correct path elements ?
     //

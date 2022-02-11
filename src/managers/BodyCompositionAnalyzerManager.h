@@ -19,6 +19,9 @@ public:
 
     void buildModel(QStandardItemModel *) const override;
 
+    int getNumberOfModelColumns() const override  { return 1; };
+    int getNumberOfModelRows() const override { return 8; };
+
     static QMap<QString,QByteArray> initDefaultLUT();
     static QMap<QByteArray,QString> initCommandLUT();
     static QMap<QByteArray,QString> initIncorrectResponseLUT();

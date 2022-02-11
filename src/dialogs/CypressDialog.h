@@ -8,8 +8,6 @@
 #include <QLineEdit>
 #include <QTableView>
 
-QT_FORWARD_DECLARE_CLASS(QStandardItemModel)
-
 class CypressDialog : public QDialog
 {
     Q_OBJECT
@@ -21,7 +19,7 @@ public:
     void setStatusMessage(const QString &);
     QString getBarcode() const;
 
-    void updateTableView(QStandardItemModel*);
+    void updateTableView();
 
 private:
     QSharedPointer<QStatusBar> m_status;

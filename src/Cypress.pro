@@ -14,6 +14,8 @@ SOURCES += \
     data/TonometerTest.cpp \
     data/BodyCompositionTest.cpp \
     data/CDTTTest.cpp \
+    data/ExcelQueryHelper.cpp \
+    data/AccessQueryHelper.cpp \
     data/FraxTest.cpp \
     data/WeighScaleTest.cpp \
     data/ChoiceReactionTest.cpp \
@@ -47,6 +49,8 @@ HEADERS += \
     data/TonometerTest.h \
     data/BodyCompositionTest.h \
     data/CDTTTest.h \
+    data/ExcelQueryHelper.h \
+    data/AccessQueryHelper.h \
     data/FraxTest.h \
     data/WeighScaleTest.h \
     data/TonometerMeasurement.h \

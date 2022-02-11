@@ -42,6 +42,12 @@ public:
     //
     virtual void buildModel(QStandardItemModel *) const = 0;
 
+    // get the required model columns and rows depending
+    // on test output requirements
+    //
+    virtual int getNumberOfModelColumns() const = 0;
+    virtual int getNumberOfModelRows() const = 0;
+
     virtual void connectUI(QWidget *) = 0;
 
     // Set the input data.

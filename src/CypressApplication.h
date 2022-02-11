@@ -15,7 +15,7 @@ class CypressApplication : public QObject
 {
     Q_OBJECT
 public:
-    explicit CypressApplication(QObject *parent = nullptr);
+    explicit CypressApplication(QObject *parent = Q_NULLPTR);
     ~CypressApplication();
 
     enum CommandLineParseResult {
@@ -55,10 +55,11 @@ public:
     //
     void initialize();
 
+
     // Call after initialize, launch the application and run
     // the device
     //
-    void run(){};
+    void run();
 
     void show();
 
@@ -78,12 +79,17 @@ public:
 
     TestType getTestType() const { return m_testType; }
 
+    ManagerBase* getManager() { return m_manager; }
+
 public slots:
     void writeOutput();
     void finish();
 
 private:
     void readInput();
+    void initializeModel();
+    void initializeManager();
+    void initializeConnections();
 
     static QMap<QString,TestType> testTypeLUT;
 
