@@ -161,19 +161,17 @@ void TonometerManager::select()
     {
       QStringList files = dialog.selectedFiles();
       QString fileName = files.first();
-      TonometerManager::FileType type =
-        (selectingRunnable ? TonometerManager::FileType::ORAApplication : TonometerManager::FileType::ORADatabase);
+      FileType type =
+        (selectingRunnable ? FileType::ORAApplication : FileType::ORADatabase);
       if(isDefined(fileName,type))
       {
         if(selectingRunnable)
         {
-          m_runnableName = fileName;
-          emit runnableSelected();
+          selectRunnable(fileName);
         }
         else
         {
-          m_databaseName = fileName;
-          emit databaseSelected();
+          selectDatabase(fileName);
         }
       }
    }
@@ -181,7 +179,7 @@ void TonometerManager::select()
 
 void TonometerManager::selectRunnable(const QString &exeName)
 {
-    if(isDefined(exeName))
+    if(isDefined(exeName,FileType::ORAApplication))
     {
        QFileInfo info(exeName);
        m_runnableName = exeName;
@@ -195,7 +193,7 @@ void TonometerManager::selectRunnable(const QString &exeName)
 
 void TonometerManager::selectDatabase(const QString &dbName)
 {
-    if(isDefined(dbName))
+    if(isDefined(dbName,FileType::ORADatabase))
     {
        m_databaseName = dbName;
        m_temporaryFile = m_databaseName + ".ORIG";
