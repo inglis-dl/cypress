@@ -168,19 +168,7 @@ void MainWindow::initializeConnections()
     });
 
     connect(ui->openButton, &QPushButton::clicked,
-        this, [this]() {
-            QString fileName =
-                QFileDialog::getOpenFileName(
-                    this, tr("Open File"),
-                    QCoreApplication::applicationDirPath(),
-                    tr("Applications (*.exe, *.mdb)"));
-
-            QFileInfo info(fileName);
-            if("exe" == info.suffix())
-              m_manager.selectRunnable(fileName);
-            else if("mdb" == info.suffix())
-              m_manager.selectDatabase(fileName);
-        });
+            &m_manager, &TonometerManager::select);
 
     connect(&m_manager,&TonometerManager::canSelectDatabase,
             this,[this](){

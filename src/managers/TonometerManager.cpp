@@ -4,6 +4,7 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -113,13 +114,69 @@ QJsonObject TonometerManager::toJsonObject() const
     return json;
 }
 
-bool TonometerManager::isDefined(const QString &fileName) const
+bool TonometerManager::isDefined(const QString &fileName, TonometerManager::FileType type) const
 {
     if("simulate" == m_mode)
     {
        return true;
     }
-    return (!fileName.isEmpty() &&  QFileInfo::exists(fileName));
+    bool ok = false;
+    QFileInfo info(fileName);
+    if(type == TonometerManager::FileType::ORAApplication)
+    {
+        ok = info.isExecutable() && info.exists();
+    }
+    else
+    {
+        ok = info.isFile() && info.exists();
+    }
+    return ok;
+}
+
+void TonometerManager::select()
+{
+    // which do we need to select first ?
+    QString caption;
+    QStringList filters;
+    bool selectingRunnable = false;
+    if(!isDefined(m_runnableName, TonometerManager::FileType::ORAApplication))
+    {
+       filters << "Applications (*.exe)" << "Any files (*)";
+       caption = tr("Select ora.exe File");
+       selectingRunnable = true;
+    }
+    else if(!isDefined(m_databaseName, TonometerManager::FileType::ORADatabase))
+    {
+       filters << "MS Access (*.mdb)" << "Any files (*)";
+       caption = tr("Select ora.mdb File");
+    }
+    else
+      return;
+
+    QFileDialog dialog;
+    dialog.setNameFilters(filters);
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.setWindowTitle(caption);
+    if(dialog.exec() == QDialog::Accepted)
+    {
+      QStringList files = dialog.selectedFiles();
+      QString fileName = files.first();
+      TonometerManager::FileType type =
+        (selectingRunnable ? TonometerManager::FileType::ORAApplication : TonometerManager::FileType::ORADatabase);
+      if(isDefined(fileName,type))
+      {
+        if(selectingRunnable)
+        {
+          m_runnableName = fileName;
+          emit runnableSelected();
+        }
+        else
+        {
+          m_databaseName = fileName;
+          emit databaseSelected();
+        }
+      }
+   }
 }
 
 void TonometerManager::selectRunnable(const QString &exeName)

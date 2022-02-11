@@ -7,6 +7,11 @@
 
 class TonometerManager : public ManagerBase
 {
+    enum FileType {
+        ORAApplication,
+        ORADatabase
+    };
+
 	Q_OBJECT
 
 public:
@@ -23,7 +28,7 @@ public:
     // is the passed string an executable file
     // with the correct path elements ?
     //
-    bool isDefined(const QString &) const;
+    bool isDefined(const QString &, TonometerManager::FileType type = ORAApplication) const;
 
     // Set the input data.
     // The input data is read from the input
@@ -58,6 +63,8 @@ public slots:
     void selectRunnable(const QString &);
 
     void selectDatabase(const QString &);
+
+    void select();
 
     void readOutput();
 

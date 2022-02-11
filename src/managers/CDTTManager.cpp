@@ -19,6 +19,11 @@ CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
     m_inputKeyList << "language";
 }
 
+CDTTManager::~CDTTManager()
+{
+  QSqlDatabase::removeDatabase("xlsx_connection");
+}
+
 void CDTTManager::start()
 {
     // connect signals and slots to QProcess one time only
@@ -211,10 +216,22 @@ void CDTTManager::readOutput()
       //TODO: impl for linux or insert ifdef OS blockers
       //
       QSqlDatabase db;
-      if(!QSqlDatabase::contains("mdb_connection"))
+      if(!QSqlDatabase::contains("xlsx_connection"))
+      {
         db = QSqlDatabase::addDatabase("QODBC", "xlsx_connection");
-      db.setDatabaseName("DRIVER={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};DBQ=" + fileName);
-      if(db.open())
+        db.setDatabaseName(
+          "DRIVER={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};DBQ=" + fileName);
+        if(db.isValid())
+          db.open();
+        else
+          qDebug() << "ERROR: invalid database using" << fileName;
+      }
+      else
+        db = QSqlDatabase::database("xlsx_connection");
+
+      if(db.isValid() && !db.isOpen())
+          db.open();
+      if(db.isOpen())
       {
         m_test.fromDatabase(db);
         m_outputFile.clear();
@@ -226,8 +243,9 @@ void CDTTManager::readOutput()
         }
         else
           qDebug() << "ERROR: input from file produced invalid test results";
+
+        db.close();
       }
-      db.close();
       emit dataChanged();
     }
     else
@@ -285,7 +303,6 @@ void CDTTManager::configureProcess()
         arguments << "-jar"
             << m_runnableName
             << getInputDataValue("barcode").toString();
-
 
         m_process.setProgram(command);
         m_process.setArguments(arguments);

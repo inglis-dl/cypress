@@ -76,7 +76,7 @@ void CDTTTest::simulate(const QString &barcode)
 
 void CDTTTest::fromDatabase(const QSqlDatabase &db)
 {
-  if(db.open())
+  if(db.isOpen())
   {
     reset();
     bool ok = readBarcode(db);
