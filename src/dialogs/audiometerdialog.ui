@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CypressFrame</class>
- <widget class="QFrame" name="CypressFrame">
+ <class>AudiometerDialog</class>
+ <widget class="QDialog" name="AudiometerDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -9,6 +9,9 @@
     <width>561</width>
     <height>541</height>
    </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Hearing Measurement</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -36,16 +39,16 @@
       <item>
        <widget class="QLineEdit" name="barcodeLineEdit">
         <property name="inputMask">
-         <string>0 0 0 0 0 0 0 0;_</string>
+         <string/>
         </property>
         <property name="text">
-         <string>       </string>
+         <string/>
         </property>
         <property name="maxLength">
-         <number>15</number>
+         <number>32767</number>
         </property>
         <property name="cursorPosition">
-         <number>15</number>
+         <number>0</number>
         </property>
         <property name="clearButtonEnabled">
          <bool>true</bool>

@@ -1,30 +1,62 @@
 #ifndef CYPRESSDIALOG_H
 #define CYPRESSDIALOG_H
 
+#include "../managers/ManagerBase.h"
 #include <QDialog>
-#include <QObject>
-#include "../CypressApplication.h"
-#include <QStatusBar>
-#include <QLineEdit>
-#include <QTableView>
+#include <QStandardItemModel>
 
 class CypressDialog : public QDialog
 {
     Q_OBJECT
+
 public:
-    explicit CypressDialog(QWidget *parent = nullptr);
-    ~CypressDialog();
+    CypressDialog(QWidget *parent = Q_NULLPTR);
+    ~CypressDialog() = default;
 
-    void initialize(CypressApplication*);
-    void setStatusMessage(const QString &);
-    QString getBarcode() const;
+    // This method internally calls readInput
+    //
+    void initialize();
 
-    void updateTableView();
+    // Call after initialize, launch the application and run
+    // the device
+    //
+    void run();
+
+    void setInputFileName(const QString& name) { m_inputFileName = name; }
+    QString inputFileName() { return m_inputFileName; }
+
+    void setOutputFileName(const QString& name) { m_outputFileName = name; }
+    QString outputFileName() { return m_outputFileName; }
+
+    void setMode(const QString& mode) { m_mode = mode.toLower(); }
+    QString mode() { return m_mode; }
+
+    void setVerbose(const bool& verbose) { m_verbose = verbose; }
+    bool isVerbose(){ return m_verbose; }
+
+    virtual QString getVerificationBarcode() const = 0;
+
+public slots:
+    void writeOutput();
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
+    ManagerBase *m_manager;
+    QStandardItemModel m_model;
+    QString m_inputFileName;
+    QString m_outputFileName;
+    QString m_mode;
+    bool m_verbose;
+
+    QMap<QString,QVariant> m_inputData;
+    QMap<QString,QVariant> m_outputData;
+    void readInput();
 
 private:
-    QSharedPointer<QStatusBar> m_status;
-    QSharedPointer<QLineEdit> m_barcodeEdit;
-    QSharedPointer<QTableView> m_tableView;
+
+    virtual void initializeModel() = 0;
+    virtual void initializeConnections() = 0;
 };
 
 #endif // CYPRESSDIALOG_H

@@ -1,10 +1,1 @@
-<RCC>
-    <qresource prefix="/dialogs">
-        <file>audiometer.ui</file>
-        <file>bodycomposition.ui</file>
-        <file>choicereaction.ui</file>
-        <file>frax.ui</file>
-        <file>thermometer.ui</file>
-        <file>weighscale.ui</file>
-    </qresource>
-</RCC>
+<RCC/>

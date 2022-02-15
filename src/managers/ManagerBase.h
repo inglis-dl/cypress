@@ -48,8 +48,6 @@ public:
     virtual int getNumberOfModelColumns() const = 0;
     virtual int getNumberOfModelRows() const = 0;
 
-    virtual void connectUI(QWidget *) = 0;
-
     // Set the input data.
     // The input data is read from the input
     // json file to the main application.  This method should be

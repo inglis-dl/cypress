@@ -28,7 +28,6 @@ SOURCES += \
     data/WeightMeasurement.cpp \
     data/ChoiceReactionMeasurement.cpp \
     data/TemperatureMeasurement.cpp \
-    dialogs/CypressDialog.cpp \
     managers/ManagerBase.cpp \
     managers/AudiometerManager.cpp \
     managers/ChoiceReactionManager.cpp \
@@ -38,7 +37,16 @@ SOURCES += \
     managers/TonometerManager.cpp \
     managers/CDTTManager.cpp \
     managers/WeighScaleManager.cpp \
-    managers/BodyCompositionAnalyzerManager.cpp \
+    managers/BodyCompositionAnalyzerManager.cpp \    
+    dialogs/AudiometerDialog.cpp \
+    dialogs/BodyCompositionDialog.cpp \
+    dialogs/CDTTDialog.cpp \
+    dialogs/ChoiceReactionDialog.cpp \
+    dialogs/FraxDialog.cpp \
+    dialogs/ThermometerDialog.cpp \
+    dialogs/TonometerDialog.cpp \
+    dialogs/WeighScaleDialog.cpp \
+    dialogs/CypressDialog.cpp \
     CypressApplication.cpp \
     main.cpp 
 
@@ -63,7 +71,6 @@ HEADERS += \
     data/WeightMeasurement.h \
     data/ChoiceReactionMeasurement.h \
     data/TemperatureMeasurement.h \
-    dialogs/CypressDialog.h \
     managers/ManagerBase.h \
     managers/AudiometerManager.h \
     managers/ChoiceReactionManager.h \
@@ -74,6 +81,15 @@ HEADERS += \
     managers/TonometerManager.h \
     managers/CDTTManager.h \
     managers/WeighScaleManager.h \
+    dialogs/AudiometerDialog.h \
+    dialogs/BodyCompositionDialog.h \
+    dialogs/CDTTDialog.h \
+    dialogs/ChoiceReactionDialog.h \
+    dialogs/FraxDialog.h \
+    dialogs/ThermometerDialog.h \
+    dialogs/TonometerDialog.h \
+    dialogs/WeighScaleDialog.h \
+    dialogs/CypressDialog.h \
     CypressApplication.h
 
 TRANSLATIONS += \
@@ -86,7 +102,14 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-FORMS +=
+FORMS += \
+  dialogs/audiometerdialog.ui \
+  dialogs/bodycompositiondialog.ui \
+  dialogs/cdttdialog.ui \
+  dialogs/choicereactiondialog.ui \
+  dialogs/fraxdialog.ui \
+  dialogs/thermometerdialog.ui \
+  dialogs/tonometerdialog.ui \
+  dialogs/weighscaledialog.ui
 
 RESOURCES += \
-    dialogs/cypress.qrc

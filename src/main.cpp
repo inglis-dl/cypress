@@ -70,8 +70,6 @@ int main(int argc, char *argv[])
                            "<html><head/><body><h2>" + QString(e.what()) + "</h2></body></html>");
       return 0;
     }
-    cypress.show();
-    cypress.run();
 
     return app.exec();
 }

@@ -33,8 +33,6 @@ public:
     int getNumberOfModelColumns() const override  { return 2; };
     int getNumberOfModelRows() const override { return 8; };
 
-    void connectUI(QWidget *) override {};
-
 public slots:
 
     // retrieve a measurement from the device

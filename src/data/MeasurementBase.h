@@ -31,7 +31,7 @@ class MeasurementBase
 {
 public:
     MeasurementBase() = default;
-    ~MeasurementBase() = default;
+    virtual ~MeasurementBase() = default;
     MeasurementBase(const MeasurementBase &other)
     {
         m_characteristicValues = other.m_characteristicValues;

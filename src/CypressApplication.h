@@ -4,12 +4,9 @@
 #include <QObject>
 #include <QCoreApplication>
 #include <QCommandLineParser>
-#include <QMap>
-#include <QVariant>
 
 QT_FORWARD_DECLARE_CLASS(ManagerBase)
 QT_FORWARD_DECLARE_CLASS(CypressDialog)
-QT_FORWARD_DECLARE_CLASS(QStandardItemModel)
 
 class CypressApplication : public QObject
 {
@@ -51,63 +48,24 @@ public:
     CommandLineParseResult parse(const QCoreApplication &, QString *);
     QString helpText(){ return m_parser.helpText(); }
 
-    // This method internally calls readInput
-    //
     void initialize();
-
-
-    // Call after initialize, launch the application and run
-    // the device
-    //
-    void run();
-
-    void show();
-
-    void setInputFileName(const QString& name) { m_inputFileName = name; }
-    QString inputFileName() { return m_inputFileName; }
-
-    void setOutputFileName(const QString& name) { m_outputFileName = name; }
-    QString outputFileName() { return m_outputFileName; }
-
-    void setMode(const QString& mode) { m_mode = mode.toLower(); }
-    QString mode() { return m_mode; }
-
-    void setVerbose(const bool& verbose) { m_verbose = verbose; }
-    bool isVerbose(){ return m_verbose; }
-
-    QStandardItemModel* getModel(){ return m_model; }
 
     TestType getTestType() const { return m_testType; }
 
-    ManagerBase* getManager() { return m_manager; }
-
-public slots:
-    void writeOutput();
-    void finish();
-
 private:
-    void readInput();
-    void initializeModel();
-    void initializeManager();
-    void initializeConnections();
-
     static QMap<QString,TestType> testTypeLUT;
-
     QCommandLineParser m_parser;
-
+    QString m_testTypeName;
     QString m_inputFileName;
     QString m_outputFileName;
+
     QString m_mode;
     bool m_verbose;
     TestType m_testType;
-    QString m_testTypeName;
 
-    QMap<QString,QVariant> m_inputData;
-    QMap<QString,QVariant> m_outputData;
 
     ManagerBase *m_manager;
     CypressDialog *m_dialog;
-    QStandardItemModel *m_model;
 };
 
 #endif // CYPRESSAPPLICATION_H

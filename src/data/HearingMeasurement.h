@@ -10,7 +10,7 @@
  * \sa MeasurementBase, HearingTest
  */
 
-class HearingMeasurement :  public MeasurementBase
+class HearingMeasurement : public MeasurementBase
 {   
 public:
     HearingMeasurement() = default;

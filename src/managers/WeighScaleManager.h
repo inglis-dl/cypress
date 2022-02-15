@@ -30,8 +30,6 @@ public:
     //
     void setInputData(const QMap<QString, QVariant> &) override;
 
-    void connectUI(QWidget *) override {};
-
 public slots:
 
     // connect to the serial port
