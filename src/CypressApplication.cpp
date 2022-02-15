@@ -107,37 +107,30 @@ void CypressApplication::initializeManager()
         }
         else
         {
-            throw std::runtime_error("FATAL ERROR: no test type specified");
+            throw std::runtime_error("FATAL ERROR: invalid type specified");
         }
     }
     switch(m_testType)
     {
       case TestType::Weight:
-        qDebug() << "creating weigh scale manager";
         m_manager = new WeighScaleManager(this);
         break;
       case TestType::BodyComposition:
-        qDebug() << "creating body composition manager";
         m_manager = new BodyCompositionAnalyzerManager(this);
         break;
       case TestType::Hearing:
-        qDebug() << "creating audiometer manager";
         m_manager = new AudiometerManager(this);
         break;
       case TestType::ChoiceReaction:
-        qDebug() << "creating coginitive test manager";
         m_manager = new ChoiceReactionManager(this);
         break;
       case TestType::Temperature:
-        qDebug() << "creating BLE thermometer manager";
         m_manager = new BluetoothLEManager(this);
         break;
       case TestType::Frax:
-        qDebug() << "creating frax manager";
         m_manager = new FraxManager(this);
         break;
       case TestType::CDTT:
-        qDebug() << "creating CDTT manager";
         m_manager = new CDTTManager(this);
         break;
       case TestType::Tonometry:
@@ -211,7 +204,7 @@ void CypressApplication::run()
 
 void CypressApplication::finish()
 {
-    qDebug() << "its closing time!!!";
+    qDebug() << "closing";
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath(m_manager->getGroup() + ".ini"), QSettings::IniFormat);
     m_manager->saveSettings(&settings);
