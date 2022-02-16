@@ -2,11 +2,11 @@
 #define CHOICEREACTIONDIALOG_H
 
 #include "DialogBase.h"
-#include "ui_choicereactiondialog.h"
+#include "ui_runnabledialog.h"
 
 QT_FORWARD_DECLARE_CLASS(ChoiceReactionManager)
 
-class ChoiceReactionDialog : public DialogBase, public Ui::ChoiceReactionDialog
+class ChoiceReactionDialog : public DialogBase, public Ui::RunnableDialog
 {
     Q_OBJECT
 
@@ -20,7 +20,7 @@ private:
     void initializeModel() override;
     void initializeConnections() override;
 
-    Ui::ChoiceReactionDialog *ui { Q_NULLPTR };
+    Ui::RunnableDialog *ui { Q_NULLPTR };
     ChoiceReactionManager *m_child { Q_NULLPTR };
 };
 

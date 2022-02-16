@@ -8,10 +8,11 @@
 
 ChoiceReactionDialog::ChoiceReactionDialog(QWidget *parent)
     : DialogBase(parent)
-    , ui(new Ui::ChoiceReactionDialog)
+    , ui(new Ui::RunnableDialog)
 {
     ui->setupUi(this);
     m_manager.reset(new ChoiceReactionManager(this));
+    this->setWindowTitle("Choice Reaction Test");
 }
 
 ChoiceReactionDialog::~ChoiceReactionDialog()

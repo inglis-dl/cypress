@@ -8,10 +8,11 @@
 
 TonometerDialog::TonometerDialog(QWidget *parent)
     : DialogBase(parent)
-    , ui(new Ui::TonometerDialog)
+    , ui(new Ui::RunnableDialog)
 {
     ui->setupUi(this);
     m_manager.reset(new TonometerManager(this));
+    this->setWindowTitle("Tonometer");
 }
 
 TonometerDialog::~TonometerDialog()

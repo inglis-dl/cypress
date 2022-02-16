@@ -2,11 +2,11 @@
 #define CDTTDIALOG_H
 
 #include "DialogBase.h"
-#include "ui_cdttdialog.h"
+#include "ui_runnabledialog.h"
 
 QT_FORWARD_DECLARE_CLASS(CDTTManager)
 
-class CDTTDialog : public DialogBase, public Ui::CDTTDialog
+class CDTTDialog : public DialogBase, public Ui::RunnableDialog
 {
     Q_OBJECT
 
@@ -20,7 +20,7 @@ private:
     void initializeModel() override;
     void initializeConnections() override;
 
-    Ui::CDTTDialog *ui { Q_NULLPTR };
+    Ui::RunnableDialog *ui { Q_NULLPTR };
     CDTTManager *m_child { Q_NULLPTR };
 };
 

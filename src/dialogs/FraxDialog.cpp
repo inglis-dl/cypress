@@ -8,10 +8,11 @@
 
 FraxDialog::FraxDialog(QWidget *parent)
     : DialogBase(parent)
-    , ui(new Ui::FraxDialog)
+    , ui(new Ui::RunnableDialog)
 {
     ui->setupUi(this);
     m_manager.reset(new FraxManager(this));
+    this->setWindowTitle("Frax Test");
 }
 
 FraxDialog::~FraxDialog()

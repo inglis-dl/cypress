@@ -107,11 +107,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 FORMS += \
   dialogs/audiometerdialog.ui \
   dialogs/bodycompositiondialog.ui \
-  dialogs/cdttdialog.ui \
-  dialogs/choicereactiondialog.ui \
-  dialogs/fraxdialog.ui \
   dialogs/thermometerdialog.ui \
-  dialogs/tonometerdialog.ui \
+  dialogs/runnabledialog.ui \
   dialogs/weighscaledialog.ui
 
 RESOURCES += \

@@ -2,11 +2,11 @@
 #define TONOMETERDIALOG_H
 
 #include "DialogBase.h"
-#include "ui_tonometerdialog.h"
+#include "ui_runnabledialog.h"
 
 QT_FORWARD_DECLARE_CLASS(TonometerManager)
 
-class TonometerDialog : public DialogBase, public Ui::TonometerDialog
+class TonometerDialog : public DialogBase, public Ui::RunnableDialog
 {
     Q_OBJECT
 
@@ -20,7 +20,7 @@ private:
     void initializeModel() override;
     void initializeConnections() override;
 
-    Ui::TonometerDialog *ui { Q_NULLPTR };
+    Ui::RunnableDialog *ui { Q_NULLPTR };
     TonometerManager *m_child { Q_NULLPTR };
 };
 

@@ -8,10 +8,11 @@
 
 CDTTDialog::CDTTDialog(QWidget *parent)
     : DialogBase(parent)
-    , ui(new Ui::CDTTDialog)
+    , ui(new Ui::RunnableDialog)
 {
     ui->setupUi(this);
     m_manager.reset(new CDTTManager(this));
+    this->setWindowTitle("Canadian Digit Triplet Test");
 }
 
 CDTTDialog::~CDTTDialog()

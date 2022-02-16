@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>FraxDialog</class>
- <widget class="QDialog" name="FraxDialog">
+ <class>RunnableDialog</class>
+ <widget class="QDialog" name="RunnableDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Frax</string>
+   <string></string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>

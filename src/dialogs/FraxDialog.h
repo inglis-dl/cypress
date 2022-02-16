@@ -2,11 +2,11 @@
 #define FRAXDIALOG_H
 
 #include "DialogBase.h"
-#include "ui_fraxdialog.h"
+#include "ui_runnabledialog.h"
 
 QT_FORWARD_DECLARE_CLASS(FraxManager)
 
-class FraxDialog : public DialogBase, public Ui::FraxDialog
+class FraxDialog : public DialogBase, public Ui::RunnableDialog
 {
     Q_OBJECT
 
@@ -20,7 +20,7 @@ private:
     void initializeModel() override;
     void initializeConnections() override;
 
-    Ui::FraxDialog *ui { Q_NULLPTR };
+    Ui::RunnableDialog *ui { Q_NULLPTR };
     FraxManager *m_child { Q_NULLPTR };
 };
 
