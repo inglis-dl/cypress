@@ -9,6 +9,7 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    auxiliary/CypressConstants.cpp \
     data/MeasurementBase.cpp \
     data/HearingTest.cpp \
     data/TonometerTest.cpp \
@@ -52,6 +53,7 @@ SOURCES += \
     main.cpp 
 
 HEADERS += \
+    auxiliary/CypressConstants.h \
     data/MeasurementBase.h \
     data/TestBase.h \
     data/HearingTest.h \

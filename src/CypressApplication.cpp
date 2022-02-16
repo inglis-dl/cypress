@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFileInfo>
 
+#include "./auxiliary/CypressConstants.h"
 #include "./dialogs/DialogFactory.h"
 #include "./dialogs/DialogBase.h"
 
@@ -24,7 +25,7 @@ void CypressApplication::initialize()
     DialogFactory *df = DialogFactory::instance();
     m_dialog.reset(df->instantiate(m_testTypeName));
 
-    if(Q_NULLPTR == m_dialog)
+    if(m_dialog.isNull())
         throw std::runtime_error("FATAL ERROR: failed to initialize a dialog");
 
     m_dialog->setInputFileName(m_inputFileName);
@@ -33,8 +34,6 @@ void CypressApplication::initialize()
     m_dialog->setVerbose(m_verbose);
     m_dialog->initialize();
     m_dialog->show();
-
-    df = Q_NULLPTR;
 }
 
 CypressApplication::CommandLineParseResult CypressApplication::parse(const QCoreApplication &app,
@@ -183,7 +182,7 @@ CypressApplication::CommandLineParseResult CypressApplication::parse(const QCore
         QString s = m_parser.value(testOption).toLower();
         qDebug() << "test option parsing " << s;
         // determine which manager and dialog is needed based on test type
-        if(DialogFactory::Type::None != DialogFactory::getType(s))
+        if(CypressConstants::Type::None != CypressConstants::getType(s))
         {
             m_testTypeName = s;
             if(m_verbose)

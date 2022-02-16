@@ -26,77 +26,48 @@ DialogFactory::~DialogFactory()
         pInstance = Q_NULLPTR;
 }
 
-DialogFactory::lutType DialogFactory::initTypeLUT()
-{
-    DialogFactory::lutType lut;
-    lut["weigh_scale"] = Type::WeighScale;
-    lut["audiometer"] = Type::Audiometer;
-    lut["spirometer"] = Type::Spirometer;
-    lut["thermometer"] = Type::Thermometer;
-    lut["frax"] = Type::Frax;
-    lut["body_composition_analyzer"] = Type::BodyCompositionAnalyzer;
-    lut["cdtt"] = Type::CDTT;
-    lut["choice_reaction"] = Type::ChoiceReaction;
-    lut["blood_pressure"] = Type::BloodPressure;
-    lut["tonometer"] = Type::Tonometer;
-    lut["retinal_camera"] = Type::RetinalCamera;
-    lut["ecg"] = Type::ECG;
-    return lut;
-}
-
-DialogFactory::lutType DialogFactory::typeLUT =
-  DialogFactory::initTypeLUT();
-
-DialogFactory::Type DialogFactory::getType(const QString& name)
-{
-  if(typeLUT.contains(name))
-    return typeLUT[name];
-  else
-    return None;
-}
-
-DialogBase* DialogFactory::instantiate(const DialogFactory::Type &type/*, QWidget *parent = Q_NULLPTR*/)
+DialogBase* DialogFactory::instantiate(const CypressConstants::Type &type/*, QWidget *parent = Q_NULLPTR*/)
 {
     DialogBase* dialog = Q_NULLPTR;
     switch(type)
     {
-      case Type::WeighScale:
+      case CypressConstants::Type::WeighScale:
         dialog = new WeighScaleDialog();
         break;
-      case Type::BodyCompositionAnalyzer:
+      case CypressConstants::Type::BodyCompositionAnalyzer:
         dialog = new BodyCompositionDialog();
         break;
-      case Type::Audiometer:
+      case CypressConstants::Type::Audiometer:
         dialog = new AudiometerDialog();
         break;
-      case Type::ChoiceReaction:
+      case CypressConstants::Type::ChoiceReaction:
         dialog = new ChoiceReactionDialog();
         break;
-      case Type::Thermometer:
+      case CypressConstants::Type::Thermometer:
         dialog = new ThermometerDialog();
         break;
-      case Type::Frax:
+      case CypressConstants::Type::Frax:
         dialog = new FraxDialog();
         break;
-      case Type::CDTT:
+      case CypressConstants::Type::CDTT:
         dialog = new CDTTDialog();
         break;
-      case Type::Tonometer:
+      case CypressConstants::Type::Tonometer:
         dialog = new TonometerDialog();
         break;
-      case Type::Spirometer:
+      case CypressConstants::Type::Spirometer:
         //dialog = Q_NULLPTR;
         break;
-      case Type::BloodPressure:
+      case CypressConstants::Type::BloodPressure:
         //dialog = Q_NULLPTR;
         break;
-      case Type::RetinalCamera:
+      case CypressConstants::Type::RetinalCamera:
         //dialog = Q_NULLPTR;
         break;
-      case Type::ECG:
+      case CypressConstants::Type::ECG:
         //dialog = Q_NULLPTR;
         break;
-      case Type::None:
+      case CypressConstants::Type::None:
         //dialog = Q_NULLPTR;
         break;
       default:
@@ -109,5 +80,5 @@ DialogBase* DialogFactory::instantiate(const DialogFactory::Type &type/*, QWidge
 DialogBase* DialogFactory::instantiate(const QString& name)
 {
     qDebug() << "factory making a" << name;
-    return instantiate(getType(name));
+    return instantiate(CypressConstants::getType(name));
 }

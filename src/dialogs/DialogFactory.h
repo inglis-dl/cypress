@@ -1,6 +1,8 @@
 #ifndef DIALOGFACTORY_H
 #define DIALOGFACTORY_H
 
+#include "../auxiliary/CypressConstants.h"
+
 #include <QObject>
 #include <QSharedPointer>
 #include <QMap>
@@ -13,34 +15,12 @@ public:
     static DialogFactory *instance();
     ~DialogFactory();
 
-    enum Type {
-        None,
-        Spirometer,
-        WeighScale,
-        BodyCompositionAnalyzer,
-        Frax,
-        CDTT,
-        BloodPressure,
-        Thermometer,
-        Audiometer,
-        ChoiceReaction,
-        Tonometer,
-        RetinalCamera,
-        ECG
-    };
-
-    DialogBase* instantiate(const Type&);
+    DialogBase* instantiate(const CypressConstants::Type&);
     DialogBase* instantiate(const QString&);
-
-    typedef QMap<QString,DialogFactory::Type> lutType;
-    static lutType initTypeLUT();
-
-    static DialogFactory::Type getType(const QString&);
 
 private:
     DialogFactory() = default;
     static DialogFactory *pInstance;
-    static lutType typeLUT;
 };
 
 #endif // DIALOGFACTORY_H
