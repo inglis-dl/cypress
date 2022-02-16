@@ -18,7 +18,6 @@ CDTTDialog::CDTTDialog(QWidget *parent)
 CDTTDialog::~CDTTDialog()
 {
     delete ui;
-    m_child = Q_NULLPTR;
 }
 
 void CDTTDialog::initializeModel()
@@ -48,7 +47,7 @@ void CDTTDialog::initializeModel()
 //
 void CDTTDialog::initializeConnections()
 {
-  m_child = qobject_cast<CDTTManager*>(m_manager.get());
+  QSharedPointer<CDTTManager> derived = m_manager.staticCast<CDTTManager>();
 
   // Disable all buttons by default
   //
@@ -138,7 +137,7 @@ void CDTTDialog::initializeConnections()
   connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
   timeLine->start();
 
-  connect(m_child,&CDTTManager::canSelectRunnable,
+  connect(derived.get(),&CDTTManager::canSelectRunnable,
             this,[this](){
         for(auto&& x : this->findChildren<QPushButton *>())
             x->setEnabled(false);
@@ -157,14 +156,14 @@ void CDTTDialog::initializeConnections()
     });
 
   connect(ui->openButton, &QPushButton::clicked,
-        this, [this]() {
+        this, [this, derived]() {
             QString fileName =
                 QFileDialog::getOpenFileName(
                     this, tr("Open File"),
                     QCoreApplication::applicationDirPath(),
                     tr("Applications (*.jar, *)"));
 
-            m_child->selectRunnable(fileName);
+            derived->selectRunnable(fileName);
         });
 
   // jar was found or set up successfully
@@ -178,7 +177,7 @@ void CDTTDialog::initializeConnections()
   // Request a measurement from the device (run CDTTStereo.jar)
   //
   connect(ui->measureButton, &QPushButton::clicked,
-        m_child, &CDTTManager::measure);
+        derived.get(), &CDTTManager::measure);
 
   // Update the UI with any data
   //

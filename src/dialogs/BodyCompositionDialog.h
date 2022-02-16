@@ -4,8 +4,6 @@
 #include "DialogBase.h"
 #include "ui_bodycompositiondialog.h"
 
-QT_FORWARD_DECLARE_CLASS(BodyCompositionAnalyzerManager)
-
 class BodyCompositionDialog : public DialogBase, public Ui::BodyCompositionDialog
 {
     Q_OBJECT
@@ -21,7 +19,6 @@ private:
     void initializeConnections() override;
 
     Ui::BodyCompositionDialog *ui { Q_NULLPTR };
-    BodyCompositionAnalyzerManager *m_child { Q_NULLPTR };
 };
 
 #endif // BODYCOMPOSITIONDIALOG_H

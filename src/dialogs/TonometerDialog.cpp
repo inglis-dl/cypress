@@ -18,7 +18,6 @@ TonometerDialog::TonometerDialog(QWidget *parent)
 TonometerDialog::~TonometerDialog()
 {
     delete ui;
-    m_child = Q_NULLPTR;
 }
 
 void TonometerDialog::initializeModel()
@@ -49,7 +48,8 @@ void TonometerDialog::initializeModel()
 //
 void TonometerDialog::initializeConnections()
 {
-  m_child = qobject_cast<TonometerManager*>(m_manager.get());
+  QSharedPointer<TonometerManager> derived =
+    m_manager.staticCast<TonometerManager>();
 
   // Disable all buttons by default
   //
@@ -140,7 +140,7 @@ void TonometerDialog::initializeConnections()
   connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
   timeLine->start();
 
-    connect(m_child,&TonometerManager::canSelectRunnable,
+    connect(derived.get(),&TonometerManager::canSelectRunnable,
             this,[this](){
         for(auto&& x : this->findChildren<QPushButton *>())
             x->setEnabled(false);
@@ -159,9 +159,9 @@ void TonometerDialog::initializeConnections()
     });
 
     connect(ui->openButton, &QPushButton::clicked,
-            m_child, &TonometerManager::select);
+            derived.get(), &TonometerManager::select);
 
-    connect(m_child,&TonometerManager::canSelectDatabase,
+    connect(derived.get(),&TonometerManager::canSelectDatabase,
             this,[this](){
         for(auto&& x : this->findChildren<QPushButton *>())
             x->setEnabled(false);
@@ -190,7 +190,7 @@ void TonometerDialog::initializeConnections()
     // Request a measurement from the device (run ora.exe)
     //
     connect(ui->measureButton, &QPushButton::clicked,
-        m_child, &TonometerManager::measure);
+        derived.get(), &TonometerManager::measure);
 
     // Update the UI with any data
     //

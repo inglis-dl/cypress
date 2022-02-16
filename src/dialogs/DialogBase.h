@@ -42,7 +42,7 @@ public slots:
 protected:
     void closeEvent(QCloseEvent *event) override;
 
-    QScopedPointer<ManagerBase> m_manager;
+    QSharedPointer<ManagerBase> m_manager;
     QStandardItemModel m_model;
     QString m_inputFileName;
     QString m_outputFileName;

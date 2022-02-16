@@ -16,7 +16,6 @@ BodyCompositionDialog::BodyCompositionDialog(QWidget *parent)
 BodyCompositionDialog::~BodyCompositionDialog()
 {
     delete ui;
-    m_child = Q_NULLPTR;
 }
 
 void BodyCompositionDialog::initializeModel()
@@ -42,7 +41,8 @@ void BodyCompositionDialog::initializeModel()
 
 void BodyCompositionDialog::initializeConnections()
 {
-  m_child = qobject_cast<BodyCompositionAnalyzerManager*>(m_manager.get());
+  QSharedPointer<BodyCompositionAnalyzerManager> derived =
+    m_manager.staticCast<BodyCompositionAnalyzerManager>();
 
   // Disable all buttons by default
   //
@@ -134,12 +134,12 @@ void BodyCompositionDialog::initializeConnections()
 
   // Scan for devices
   //
-  connect(m_child, &BodyCompositionAnalyzerManager::scanningDevices,
+  connect(derived.get(), &BodyCompositionAnalyzerManager::scanningDevices,
           ui->deviceComboBox, &QComboBox::clear);
 
   // Update the drop down list as devices are discovered during scanning
   //
-  connect(m_child, &BodyCompositionAnalyzerManager::deviceDiscovered,
+  connect(derived.get(), &BodyCompositionAnalyzerManager::deviceDiscovered,
           this, [this](const QString &label){
       int index = ui->deviceComboBox->findText(label);
       bool oldState = ui->deviceComboBox->blockSignals(true);
@@ -150,7 +150,7 @@ void BodyCompositionDialog::initializeConnections()
       ui->deviceComboBox->blockSignals(oldState);
   });
 
-  connect(m_child, &BodyCompositionAnalyzerManager::deviceSelected,
+  connect(derived.get(), &BodyCompositionAnalyzerManager::deviceSelected,
           this,[this](const QString &label){
       if(label != ui->deviceComboBox->currentText())
       {
@@ -161,7 +161,7 @@ void BodyCompositionDialog::initializeConnections()
   // Prompt user to select a device from the drop down list when previously
   // cached device information in the ini file is unavailable or invalid
   //
-  connect(m_child, &BodyCompositionAnalyzerManager::canSelectDevice,
+  connect(derived.get(), &BodyCompositionAnalyzerManager::canSelectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to select...");
       QMessageBox::warning(
@@ -174,18 +174,18 @@ void BodyCompositionDialog::initializeConnections()
   // Select a device (serial port) from drop down list
   //
   connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
-          m_child,&BodyCompositionAnalyzerManager::selectDevice);
+          derived.get(),&BodyCompositionAnalyzerManager::selectDevice);
 
   // Select a device (serial port) from drop down list
   //
   connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::activated),
-    this,[this](int index){
-      m_child->selectDevice(ui->deviceComboBox->itemText(index));
+    this,[this,derived](int index){
+      derived->selectDevice(ui->deviceComboBox->itemText(index));
   });
 
   // Ready to connect device
   //
-  connect(m_child, &BodyCompositionAnalyzerManager::canConnectDevice,
+  connect(derived.get(), &BodyCompositionAnalyzerManager::canConnectDevice,
           this,[this](){
       ui->connectButton->setEnabled(true);
       ui->disconnectButton->setEnabled(false);
@@ -199,7 +199,7 @@ void BodyCompositionDialog::initializeConnections()
   // Connect to device
   //
   connect(ui->connectButton, &QPushButton::clicked,
-          m_child, &BodyCompositionAnalyzerManager::connectDevice);
+          derived.get(), &BodyCompositionAnalyzerManager::connectDevice);
 
   // Connection is established, inputs are set and confirmed: enable measurement requests
   //
@@ -216,7 +216,7 @@ void BodyCompositionDialog::initializeConnections()
 
   // Connection is established and a successful reset was done
   //
-  connect(m_child, &BodyCompositionAnalyzerManager::canInput,
+  connect(derived.get(), &BodyCompositionAnalyzerManager::canInput,
           this,[this](){
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
@@ -229,7 +229,7 @@ void BodyCompositionDialog::initializeConnections()
 
   // A successful confirmation of all inputs was done
   //
-  connect(m_child, &BodyCompositionAnalyzerManager::canConfirm,
+  connect(derived.get(), &BodyCompositionAnalyzerManager::canConfirm,
           this,[this](){
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
@@ -243,12 +243,12 @@ void BodyCompositionDialog::initializeConnections()
   // Disconnect from device
   //
   connect(ui->disconnectButton, &QPushButton::clicked,
-          m_child, &BodyCompositionAnalyzerManager::disconnectDevice);
+          derived.get(), &BodyCompositionAnalyzerManager::disconnectDevice);
 
   // Reset the device (clear all input settings)
   //
   connect(ui->resetButton, &QPushButton::clicked,
-        m_child, &BodyCompositionAnalyzerManager::resetDevice);
+        derived.get(), &BodyCompositionAnalyzerManager::resetDevice);
 
   // Set the inputs to the analyzer
   //
@@ -290,12 +290,12 @@ void BodyCompositionDialog::initializeConnections()
   // Confirm inputs and check if measurement can proceed
   //
   connect(ui->confirmButton, &QPushButton::clicked,
-        m_child, &BodyCompositionAnalyzerManager::confirmSettings);
+        derived.get(), &BodyCompositionAnalyzerManager::confirmSettings);
 
   // Request a measurement from the device
   //
   connect(ui->measureButton, &QPushButton::clicked,
-        m_child, &BodyCompositionAnalyzerManager::measure);
+        derived.get(), &BodyCompositionAnalyzerManager::measure);
 
   // Update the UI with any data
   //
@@ -354,7 +354,7 @@ void BodyCompositionDialog::initializeConnections()
      }
   });
 
-  connect(m_child, &BodyCompositionAnalyzerManager::error,
+  connect(derived.get(), &BodyCompositionAnalyzerManager::error,
           this, [this](const QString &error){
       ui->statusBar->showMessage(error);
       QMessageBox::warning(

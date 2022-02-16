@@ -4,8 +4,6 @@
 #include "DialogBase.h"
 #include "ui_audiometerdialog.h"
 
-QT_FORWARD_DECLARE_CLASS(AudiometerManager)
-
 class AudiometerDialog : public DialogBase, public Ui::AudiometerDialog
 {
     Q_OBJECT
@@ -21,7 +19,6 @@ private:
     void initializeConnections() override;
 
     Ui::AudiometerDialog *ui { Q_NULLPTR };
-    AudiometerManager* m_child { Q_NULLPTR };
 };
 
 #endif // AUDIOMETERDIALOG_H

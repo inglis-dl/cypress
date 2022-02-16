@@ -16,7 +16,6 @@ WeighScaleDialog::WeighScaleDialog(QWidget *parent)
 WeighScaleDialog::~WeighScaleDialog()
 {
     delete ui;
-    m_child = Q_NULLPTR;
 }
 
 void WeighScaleDialog::initializeModel()
@@ -42,7 +41,8 @@ void WeighScaleDialog::initializeModel()
 
 void WeighScaleDialog::initializeConnections()
 {
-  m_child = qobject_cast<WeighScaleManager*>(m_manager.get());
+  QSharedPointer<WeighScaleManager> derived =
+    m_manager.staticCast<WeighScaleManager>();
 
   // Disable all buttons by default
   //
@@ -133,12 +133,12 @@ void WeighScaleDialog::initializeConnections()
 
   // Scan for devices
   //
-  connect(m_child, &WeighScaleManager::scanningDevices,
+  connect(derived.get(), &WeighScaleManager::scanningDevices,
           ui->deviceComboBox, &QComboBox::clear);
 
   // Update the drop down list as devices are discovered during scanning
   //
-  connect(m_child, &WeighScaleManager::deviceDiscovered,
+  connect(derived.get(), &WeighScaleManager::deviceDiscovered,
           this, [this](const QString &label){
       int index = ui->deviceComboBox->findText(label);
       bool oldState = ui->deviceComboBox->blockSignals(true);
@@ -149,7 +149,7 @@ void WeighScaleDialog::initializeConnections()
       ui->deviceComboBox->blockSignals(oldState);
   });
 
-  connect(m_child, &WeighScaleManager::deviceSelected,
+  connect(derived.get(), &WeighScaleManager::deviceSelected,
           this,[this](const QString &label){
       if(label!=ui->deviceComboBox->currentText())
       {
@@ -160,7 +160,7 @@ void WeighScaleDialog::initializeConnections()
   // Prompt user to select a device from the drop down list when previously
   // cached device information in the ini file is unavailable or invalid
   //
-  connect(m_child, &WeighScaleManager::canSelectDevice,
+  connect(derived.get(), &WeighScaleManager::canSelectDevice,
           this,[this](){
       QMessageBox::warning(
         this, QApplication::applicationName(),
@@ -172,18 +172,18 @@ void WeighScaleDialog::initializeConnections()
   // Select a device (serial port) from drop down list
   //
   connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
-          m_child,&WeighScaleManager::selectDevice);
+          derived.get(),&WeighScaleManager::selectDevice);
 
   // Select a device (serial port) from drop down list
   //
   connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::activated),
-    this,[this](int index){
-      m_child->selectDevice(ui->deviceComboBox->itemText(index));
+    this,[this,derived](int index){
+      derived->selectDevice(ui->deviceComboBox->itemText(index));
   });
 
   // Ready to connect device
   //
-  connect(m_child, &WeighScaleManager::canConnectDevice,
+  connect(derived.get(), &WeighScaleManager::canConnectDevice,
           this,[this](){
       ui->connectButton->setEnabled(true);
       ui->zeroButton->setEnabled(false);
@@ -195,7 +195,7 @@ void WeighScaleDialog::initializeConnections()
   // Connect to device
   //
   connect(ui->connectButton, &QPushButton::clicked,
-          m_child, &WeighScaleManager::connectDevice);
+          derived.get(), &WeighScaleManager::connectDevice);
 
   // Connection is established: enable measurement requests
   //
@@ -211,17 +211,17 @@ void WeighScaleDialog::initializeConnections()
   // Disconnect from device
   //
   connect(ui->disconnectButton, &QPushButton::clicked,
-          m_child, &WeighScaleManager::disconnectDevice);
+          derived.get(), &WeighScaleManager::disconnectDevice);
 
   // Zero the scale
   //
   connect(ui->zeroButton, &QPushButton::clicked,
-        m_child, &WeighScaleManager::zeroDevice);
+        derived.get(), &WeighScaleManager::zeroDevice);
 
   // Request a measurement from the device
   //
   connect(ui->measureButton, &QPushButton::clicked,
-        m_child, &WeighScaleManager::measure);
+        derived.get(), &WeighScaleManager::measure);
 
   // Update the UI with any data
   //

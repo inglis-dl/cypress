@@ -16,7 +16,6 @@ AudiometerDialog::AudiometerDialog(QWidget *parent)
 AudiometerDialog::~AudiometerDialog()
 {
     delete ui;
-    m_child = Q_NULLPTR;
 }
 
 void AudiometerDialog::initializeModel()
@@ -44,7 +43,7 @@ void AudiometerDialog::initializeModel()
 //
 void AudiometerDialog::initializeConnections()
 {
-  m_child = qobject_cast<AudiometerManager*>(m_manager.get());
+  QSharedPointer<AudiometerManager> derived = m_manager.staticCast<AudiometerManager>();
 
   // Disable all buttons by default
   //
@@ -136,12 +135,12 @@ void AudiometerDialog::initializeConnections()
 
   // Scan for devices
   //
-  connect(m_child, &AudiometerManager::scanningDevices,
+  connect(derived.get(), &AudiometerManager::scanningDevices,
           ui->deviceComboBox, &QComboBox::clear);
 
   // Update the drop down list as devices are discovered during scanning
   //
-  connect(m_child, &AudiometerManager::deviceDiscovered,
+  connect(derived.get(), &AudiometerManager::deviceDiscovered,
           this,[this](const QString &label){
       int index = ui->deviceComboBox->findText(label);
       bool oldState = ui->deviceComboBox->blockSignals(true);
@@ -152,7 +151,7 @@ void AudiometerDialog::initializeConnections()
       ui->deviceComboBox->blockSignals(oldState);
   });
 
-  connect(m_child, &AudiometerManager::deviceSelected,
+  connect(derived.get(), &AudiometerManager::deviceSelected,
           this,[this](const QString &label){
       if(label!=ui->deviceComboBox->currentText())
       {
@@ -163,7 +162,7 @@ void AudiometerDialog::initializeConnections()
   // Prompt user to select a device from the drop down list when previously
   // cached device information in the ini file is unavailable or invalid
   //
-  connect(m_child, &AudiometerManager::canSelectDevice,
+  connect(derived.get(), &AudiometerManager::canSelectDevice,
           this,[this](){
       QMessageBox::warning(
         this, QApplication::applicationName(),
@@ -175,18 +174,18 @@ void AudiometerDialog::initializeConnections()
   // Select a device (serial port) from drop down list
   //
   connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
-          m_child,&AudiometerManager::selectDevice);
+          derived.get(),&AudiometerManager::selectDevice);
 
   // Select a device (serial port) from drop down list
   //
   connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::activated),
-    this,[this](int index){
-      m_child->selectDevice(ui->deviceComboBox->itemText(index));
+    this,[this, derived](int index){
+      derived->selectDevice(ui->deviceComboBox->itemText(index));
   });
 
   // Ready to connect device
   //
-  connect(m_child, &AudiometerManager::canConnectDevice,
+  connect(derived.get(), &AudiometerManager::canConnectDevice,
           this,[this](){
       ui->connectButton->setEnabled(true);
       ui->disconnectButton->setEnabled(false);
@@ -197,7 +196,7 @@ void AudiometerDialog::initializeConnections()
   // Connect to device
   //
   connect(ui->connectButton, &QPushButton::clicked,
-          m_child, &AudiometerManager::connectDevice);
+          derived.get(), &AudiometerManager::connectDevice);
 
   // Connection is established: enable measurement requests
   //
@@ -212,12 +211,12 @@ void AudiometerDialog::initializeConnections()
   // Disconnect from device
   //
   connect(ui->disconnectButton, &QPushButton::clicked,
-          m_child, &AudiometerManager::disconnectDevice);
+          derived.get(), &AudiometerManager::disconnectDevice);
 
   // Request a measurement from the device
   //
   connect(ui->measureButton, &QPushButton::clicked,
-        m_child, &AudiometerManager::measure);
+        derived.get(), &AudiometerManager::measure);
 
   // Update the UI with any data
   //

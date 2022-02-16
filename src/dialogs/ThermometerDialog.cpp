@@ -16,7 +16,6 @@ ThermometerDialog::ThermometerDialog(QWidget *parent)
 ThermometerDialog::~ThermometerDialog()
 {
     delete ui;
-    m_child = Q_NULLPTR;
 }
 
 void ThermometerDialog::initializeModel()
@@ -42,7 +41,8 @@ void ThermometerDialog::initializeModel()
 //
 void ThermometerDialog::initializeConnections()
 {
-  m_child = qobject_cast<BluetoothLEManager*>(m_manager.get());
+  QSharedPointer<BluetoothLEManager> derived =
+    m_manager.staticCast<BluetoothLEManager>();
 
   // Disable all buttons by default
   //
@@ -137,14 +137,14 @@ void ThermometerDialog::initializeConnections()
     ui->scanButton->setEnabled(true);
 
     connect(ui->scanButton, &QPushButton::clicked,
-            m_child, &BluetoothLEManager::start);
+            derived.get(), &BluetoothLEManager::start);
 
-    connect(m_child, &BluetoothLEManager::scanningDevices,
+    connect(derived.get(), &BluetoothLEManager::scanningDevices,
             ui->deviceComboBox, &QComboBox::clear);
 
     // Update the drop down list as devices are discovered during scanning
     //
-    connect(m_child, &BluetoothLEManager::deviceDiscovered,
+    connect(derived.get(), &BluetoothLEManager::deviceDiscovered,
             this, [this](const QString &label){
         int index = ui->deviceComboBox->findText(label);
         bool oldState = ui->deviceComboBox->blockSignals(true);
@@ -155,7 +155,7 @@ void ThermometerDialog::initializeConnections()
         ui->deviceComboBox->blockSignals(oldState);
     });
 
-    connect(m_child, &BluetoothLEManager::deviceSelected,
+    connect(derived.get(), &BluetoothLEManager::deviceSelected,
             this,[this](const QString &label){
         if(label!=ui->deviceComboBox->currentText())
         {
@@ -166,7 +166,7 @@ void ThermometerDialog::initializeConnections()
     // Prompt user to select a device from the drop down list when previously
     // cached device information in the ini file is unavailable or invalid
     //
-    connect(m_child, &BluetoothLEManager::canSelectDevice,
+    connect(derived.get(), &BluetoothLEManager::canSelectDevice,
             this,[this](){
         QMessageBox::warning(
           this, QApplication::applicationName(),
@@ -178,18 +178,18 @@ void ThermometerDialog::initializeConnections()
     // Select a bluetooth low energy device from the drop down list
     //
     connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
-            m_child,&BluetoothLEManager::selectDevice);
+            derived.get(),&BluetoothLEManager::selectDevice);
 
     // Select a device (serial port) from drop down list
     //
     connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::activated),
-      this,[this](int index){
-        m_child->selectDevice(ui->deviceComboBox->itemText(index));
+      this,[this,derived](int index){
+        derived->selectDevice(ui->deviceComboBox->itemText(index));
     });
 
     // Ready to connect device
     //
-    connect(m_child, &BluetoothLEManager::canConnectDevice,
+    connect(derived.get(), &BluetoothLEManager::canConnectDevice,
             this,[this](){
         ui->connectButton->setEnabled(true);
         ui->disconnectButton->setEnabled(false);
@@ -200,7 +200,7 @@ void ThermometerDialog::initializeConnections()
     // Connect to device
     //
     connect(ui->connectButton, &QPushButton::clicked,
-          m_child, &BluetoothLEManager::connectDevice);
+          derived.get(), &BluetoothLEManager::connectDevice);
 
     // Connection is established: enable measurement requests
     //
@@ -215,12 +215,12 @@ void ThermometerDialog::initializeConnections()
     // Disconnect from device
     //
     connect(ui->disconnectButton, &QPushButton::clicked,
-            m_child, &BluetoothLEManager::disconnectDevice);
+            derived.get(), &BluetoothLEManager::disconnectDevice);
 
     // Request a measurement from the device
     //
     connect(ui->measureButton, &QPushButton::clicked,
-          m_child, &BluetoothLEManager::measure);
+          derived.get(), &BluetoothLEManager::measure);
 
     // Update the UI with any data
     //

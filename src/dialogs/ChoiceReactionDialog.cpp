@@ -18,7 +18,6 @@ ChoiceReactionDialog::ChoiceReactionDialog(QWidget *parent)
 ChoiceReactionDialog::~ChoiceReactionDialog()
 {
     delete ui;
-    m_child = Q_NULLPTR;
 }
 
 void ChoiceReactionDialog::initializeModel()
@@ -46,7 +45,8 @@ void ChoiceReactionDialog::initializeModel()
 //
 void ChoiceReactionDialog::initializeConnections()
 {
-  m_child = qobject_cast<ChoiceReactionManager*>(m_manager.get());
+  QSharedPointer<ChoiceReactionManager> derived =
+    m_manager.staticCast<ChoiceReactionManager>();
 
   // Disable all buttons by default
   //
@@ -136,7 +136,7 @@ void ChoiceReactionDialog::initializeConnections()
   connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
   timeLine->start();
 
-  connect(m_child,&ChoiceReactionManager::canSelectRunnable,
+  connect(derived.get(),&ChoiceReactionManager::canSelectRunnable,
             this,[this](){
         for(auto&& x : this->findChildren<QPushButton *>())
             x->setEnabled(false);
@@ -155,14 +155,14 @@ void ChoiceReactionDialog::initializeConnections()
     });
 
   connect(ui->openButton, &QPushButton::clicked,
-        this, [this]() {
+        this, [this,derived]() {
             QString fileName =
                 QFileDialog::getOpenFileName(
                     this, tr("Open File"),
                     QCoreApplication::applicationDirPath(),
                     tr("Applications (*.exe, *)"));
 
-            m_child->selectRunnable(fileName);
+            derived->selectRunnable(fileName);
         });
 
   // CCB.exe was found or set up successfully
@@ -176,7 +176,7 @@ void ChoiceReactionDialog::initializeConnections()
   // Request a measurement from the device (run CCB.exe)
   //
   connect(ui->measureButton, &QPushButton::clicked,
-          m_child, &ChoiceReactionManager::measure);
+          derived.get(), &ChoiceReactionManager::measure);
 
   // Update the UI with any data
   //

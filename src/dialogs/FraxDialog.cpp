@@ -18,7 +18,6 @@ FraxDialog::FraxDialog(QWidget *parent)
 FraxDialog::~FraxDialog()
 {
     delete ui;
-    m_child = Q_NULLPTR;
 }
 
 void FraxDialog::initializeModel()
@@ -45,7 +44,7 @@ void FraxDialog::initializeModel()
 //
 void FraxDialog::initializeConnections()
 {
-  m_child = qobject_cast<FraxManager*>(m_manager.get());
+  QSharedPointer<FraxManager> derived = m_manager.staticCast<FraxManager>();
 
   // Disable all buttons by default
   //
@@ -135,7 +134,7 @@ void FraxDialog::initializeConnections()
   connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
   timeLine->start();
 
-  connect(m_child,&FraxManager::canSelectRunnable,
+  connect(derived.get(),&FraxManager::canSelectRunnable,
             this,[this](){
         for(auto&& x : this->findChildren<QPushButton *>())
             x->setEnabled(false);
@@ -154,14 +153,14 @@ void FraxDialog::initializeConnections()
     });
 
   connect(ui->openButton, &QPushButton::clicked,
-        this, [this]() {
+        this, [this, derived]() {
             QString fileName =
                 QFileDialog::getOpenFileName(
                     this, tr("Open File"),
                     QCoreApplication::applicationDirPath(),
                     tr("Applications (*.exe, *)"));
 
-            m_child->selectRunnable(fileName);
+            derived->selectRunnable(fileName);
         });
 
   // blackbox.exe was found and inputs valid
@@ -175,7 +174,7 @@ void FraxDialog::initializeConnections()
   // Request a measurement from the device (run blackbox.exe)
   //
   connect(ui->measureButton, &QPushButton::clicked,
-        m_child, &FraxManager::measure);
+        derived.get(), &FraxManager::measure);
 
   // Update the UI with any data
   //
