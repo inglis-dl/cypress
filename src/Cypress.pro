@@ -46,7 +46,8 @@ SOURCES += \
     dialogs/ThermometerDialog.cpp \
     dialogs/TonometerDialog.cpp \
     dialogs/WeighScaleDialog.cpp \
-    dialogs/CypressDialog.cpp \
+    dialogs/DialogBase.cpp \
+    dialogs/DialogFactory.cpp \
     CypressApplication.cpp \
     main.cpp 
 
@@ -89,7 +90,8 @@ HEADERS += \
     dialogs/ThermometerDialog.h \
     dialogs/TonometerDialog.h \
     dialogs/WeighScaleDialog.h \
-    dialogs/CypressDialog.h \
+    dialogs/DialogBase.h \
+    dialogs/DialogFactory.h \
     CypressApplication.h
 
 TRANSLATIONS += \

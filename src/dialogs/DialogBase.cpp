@@ -1,4 +1,5 @@
-#include "CypressDialog.h"
+#include "DialogBase.h"
+#include "./managers/ManagerBase.h"
 
 #include <QCoreApplication>
 #include <QCloseEvent>
@@ -8,13 +9,13 @@
 #include <QJsonDocument>
 #include <QSettings>
 
-CypressDialog::CypressDialog(QWidget *parent)
+DialogBase::DialogBase(QWidget *parent)
     : QDialog(parent)
     , m_verbose(false)
 {
 }
 
-void CypressDialog::initialize()
+void DialogBase::initialize()
 {
   initializeModel();
   initializeConnections();
@@ -22,7 +23,7 @@ void CypressDialog::initialize()
 
 // run should only be called AFTER the user inputs a valid barcode
 //
-void CypressDialog::run()
+void DialogBase::run()
 {
     m_manager->setVerbose(m_verbose);
     m_manager->setMode(m_mode);
@@ -40,7 +41,7 @@ void CypressDialog::run()
     m_manager->start();
 }
 
-void CypressDialog::closeEvent(QCloseEvent *event)
+void DialogBase::closeEvent(QCloseEvent *event)
 {
     if(m_verbose)
         qDebug() << "close event called";
@@ -51,7 +52,7 @@ void CypressDialog::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
-void CypressDialog::readInput()
+void DialogBase::readInput()
 {
     // TODO: if the run mode is not debug, an input file name is mandatory, throw an error
     //
@@ -95,7 +96,7 @@ void CypressDialog::readInput()
         qDebug() << m_inputFileName << " file does not exist";
 }
 
-void CypressDialog::writeOutput()
+void DialogBase::writeOutput()
 {
    if(m_verbose)
        qDebug() << "begin write process ... ";

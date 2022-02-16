@@ -7,19 +7,17 @@
 #include <QTimeLine>
 
 ChoiceReactionDialog::ChoiceReactionDialog(QWidget *parent)
-    : CypressDialog(parent)
+    : DialogBase(parent)
     , ui(new Ui::ChoiceReactionDialog)
 {
     ui->setupUi(this);
-    m_manager = new ChoiceReactionManager(this);
-    m_child = qobject_cast<ChoiceReactionManager*>(m_manager);
+    m_manager.reset(new ChoiceReactionManager(this));
 }
 
 ChoiceReactionDialog::~ChoiceReactionDialog()
 {
     delete ui;
     m_child = Q_NULLPTR;
-    delete m_manager;
 }
 
 void ChoiceReactionDialog::initializeModel()
@@ -47,6 +45,8 @@ void ChoiceReactionDialog::initializeModel()
 //
 void ChoiceReactionDialog::initializeConnections()
 {
+  m_child = qobject_cast<ChoiceReactionManager*>(m_manager.get());
+
   // Disable all buttons by default
   //
   for(auto&& x : this->findChildren<QPushButton *>())
@@ -65,7 +65,7 @@ void ChoiceReactionDialog::initializeConnections()
 
   // Relay messages from the manager to the status bar
   //
-  connect(m_manager,&ManagerBase::message,
+  connect(m_manager.get(),&ManagerBase::message,
           ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
   // Every instrument stage launched by an interviewer requires input
@@ -166,7 +166,7 @@ void ChoiceReactionDialog::initializeConnections()
 
   // CCB.exe was found or set up successfully
   //
-  connect(m_manager, &ChoiceReactionManager::canMeasure,
+  connect(m_manager.get(), &ChoiceReactionManager::canMeasure,
             this,[this](){
         ui->measureButton->setEnabled(true);
         ui->saveButton->setEnabled(false);
@@ -179,7 +179,7 @@ void ChoiceReactionDialog::initializeConnections()
 
   // Update the UI with any data
   //
-  connect(m_manager, &ChoiceReactionManager::dataChanged,
+  connect(m_manager.get(), &ChoiceReactionManager::dataChanged,
             this,[this](){
         auto h = ui->testdataTableView->horizontalHeader();
         h->setSectionResizeMode(QHeaderView::Fixed);
@@ -203,7 +203,7 @@ void ChoiceReactionDialog::initializeConnections()
 
   // All measurements received: enable write test results
   //
-  connect(m_manager, &ChoiceReactionManager::canWrite,
+  connect(m_manager.get(), &ChoiceReactionManager::canWrite,
             this,[this](){
         ui->saveButton->setEnabled(true);
     });

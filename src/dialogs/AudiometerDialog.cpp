@@ -6,19 +6,17 @@
 #include <QTimeLine>
 
 AudiometerDialog::AudiometerDialog(QWidget *parent)
-    : CypressDialog(parent)
+    : DialogBase(parent)
     , ui(new Ui::AudiometerDialog)
 {
     ui->setupUi(this);
-    m_manager = new AudiometerManager(this);
-    m_child = qobject_cast<AudiometerManager*>(m_manager);
+    m_manager.reset(new AudiometerManager(this));
 }
 
 AudiometerDialog::~AudiometerDialog()
 {
     delete ui;
     m_child = Q_NULLPTR;
-    delete m_manager;
 }
 
 void AudiometerDialog::initializeModel()
@@ -46,6 +44,8 @@ void AudiometerDialog::initializeModel()
 //
 void AudiometerDialog::initializeConnections()
 {
+  m_child = qobject_cast<AudiometerManager*>(m_manager.get());
+
   // Disable all buttons by default
   //
   for(auto&& x : this->findChildren<QPushButton *>())
@@ -64,7 +64,7 @@ void AudiometerDialog::initializeConnections()
 
   // Relay messages from the manager to the status bar
   //
-  connect(m_manager,&ManagerBase::message,
+  connect(m_manager.get(),&ManagerBase::message,
           ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
   // Every instrument stage launched by an interviewer requires input
@@ -201,7 +201,7 @@ void AudiometerDialog::initializeConnections()
 
   // Connection is established: enable measurement requests
   //
-  connect(m_manager, &AudiometerManager::canMeasure,
+  connect(m_manager.get(), &AudiometerManager::canMeasure,
           this,[this](){
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
@@ -221,7 +221,7 @@ void AudiometerDialog::initializeConnections()
 
   // Update the UI with any data
   //
-  connect(m_manager, &AudiometerManager::dataChanged,
+  connect(m_manager.get(), &AudiometerManager::dataChanged,
           this,[this](){
       m_manager->buildModel(&m_model);
 
@@ -242,7 +242,7 @@ void AudiometerDialog::initializeConnections()
 
   // All measurements received: enable write test results
   //
-  connect(m_manager, &AudiometerManager::canWrite,
+  connect(m_manager.get(), &AudiometerManager::canWrite,
           this,[this](){
       ui->saveButton->setEnabled(true);
   });

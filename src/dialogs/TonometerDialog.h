@@ -1,12 +1,12 @@
 #ifndef TONOMETERDIALOG_H
 #define TONOMETERDIALOG_H
 
-#include "CypressDialog.h"
+#include "DialogBase.h"
 #include "ui_tonometerdialog.h"
 
 QT_FORWARD_DECLARE_CLASS(TonometerManager)
 
-class TonometerDialog : public CypressDialog, public Ui::TonometerDialog
+class TonometerDialog : public DialogBase, public Ui::TonometerDialog
 {
     Q_OBJECT
 
@@ -21,7 +21,7 @@ private:
     void initializeConnections() override;
 
     Ui::TonometerDialog *ui { Q_NULLPTR };
-    TonometerManager* m_child { Q_NULLPTR };
+    TonometerManager *m_child { Q_NULLPTR };
 };
 
 #endif // TONOMETERDIALOG_H

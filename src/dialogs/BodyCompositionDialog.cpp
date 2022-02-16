@@ -6,19 +6,17 @@
 #include <QTimeLine>
 
 BodyCompositionDialog::BodyCompositionDialog(QWidget *parent)
-    : CypressDialog(parent)
+    : DialogBase(parent)
     , ui(new Ui::BodyCompositionDialog)
 {
     ui->setupUi(this);
-    m_manager = new BodyCompositionAnalyzerManager(this);
-    m_child = qobject_cast<BodyCompositionAnalyzerManager*>(m_manager);
+    m_manager.reset(new BodyCompositionAnalyzerManager(this));
 }
 
 BodyCompositionDialog::~BodyCompositionDialog()
 {
     delete ui;
     m_child = Q_NULLPTR;
-    delete m_manager;
 }
 
 void BodyCompositionDialog::initializeModel()
@@ -44,6 +42,8 @@ void BodyCompositionDialog::initializeModel()
 
 void BodyCompositionDialog::initializeConnections()
 {
+  m_child = qobject_cast<BodyCompositionAnalyzerManager*>(m_manager.get());
+
   // Disable all buttons by default
   //
   for(auto&& x : this->findChildren<QPushButton *>())
@@ -62,7 +62,7 @@ void BodyCompositionDialog::initializeConnections()
 
   // Relay messages from the manager to the status bar
   //
-  connect(m_manager,&ManagerBase::message,
+  connect(m_manager.get(),&ManagerBase::message,
           ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
   // Every instrument stage launched by an interviewer requires input
@@ -203,7 +203,7 @@ void BodyCompositionDialog::initializeConnections()
 
   // Connection is established, inputs are set and confirmed: enable measurement requests
   //
-  connect(m_manager, &BodyCompositionAnalyzerManager::canMeasure,
+  connect(m_manager.get(), &BodyCompositionAnalyzerManager::canMeasure,
           this,[this](){
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
@@ -299,7 +299,7 @@ void BodyCompositionDialog::initializeConnections()
 
   // Update the UI with any data
   //
-  connect(m_manager, &BodyCompositionAnalyzerManager::dataChanged,
+  connect(m_manager.get(), &BodyCompositionAnalyzerManager::dataChanged,
           this,[this](){
       m_manager->buildModel(&m_model);
       int nrow = m_model.rowCount();
@@ -317,7 +317,7 @@ void BodyCompositionDialog::initializeConnections()
 
   // All measurements received: enable write test results
   //
-  connect(m_manager, &BodyCompositionAnalyzerManager::canWrite,
+  connect(m_manager.get(), &BodyCompositionAnalyzerManager::canWrite,
           this,[this](){
       ui->statusBar->showMessage("Ready to save results...");
       ui->saveButton->setEnabled(true);

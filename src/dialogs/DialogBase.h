@@ -1,17 +1,17 @@
-#ifndef CYPRESSDIALOG_H
-#define CYPRESSDIALOG_H
+#ifndef DIALOGBASE_H
+#define DIALOGBASE_H
 
-#include "../managers/ManagerBase.h"
 #include <QDialog>
 #include <QStandardItemModel>
+#include "../managers/ManagerBase.h"
 
-class CypressDialog : public QDialog
+class DialogBase : public QDialog
 {
     Q_OBJECT
 
 public:
-    CypressDialog(QWidget *parent = Q_NULLPTR);
-    ~CypressDialog() = default;
+    DialogBase(QWidget *parent = Q_NULLPTR);
+    ~DialogBase() = default;
 
     // This method internally calls readInput
     //
@@ -42,7 +42,7 @@ public slots:
 protected:
     void closeEvent(QCloseEvent *event) override;
 
-    ManagerBase *m_manager;
+    QScopedPointer<ManagerBase> m_manager;
     QStandardItemModel m_model;
     QString m_inputFileName;
     QString m_outputFileName;
@@ -54,9 +54,8 @@ protected:
     void readInput();
 
 private:
-
     virtual void initializeModel() = 0;
     virtual void initializeConnections() = 0;
 };
 
-#endif // CYPRESSDIALOG_H
+#endif // DIALOGBASE_H

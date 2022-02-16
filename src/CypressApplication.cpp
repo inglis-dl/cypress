@@ -3,136 +3,38 @@
 #include <QCommandLineOption>
 #include <QDebug>
 #include <QDir>
-#include <QDate>
 #include <QFileInfo>
-#include <QJsonObject>
-#include <QJsonDocument>
-#include <QMessageBox>
-#include <QMetaMethod>
-#include <QSettings>
-#include <QStandardItemModel>
-#include <QFormBuilder>
-#include <QVBoxLayout>
 
-#include "./dialogs/AudiometerDialog.h"
-#include "./dialogs/BodyCompositionDialog.h"
-#include "./dialogs/CDTTDialog.h"
-#include "./dialogs/ChoiceReactionDialog.h"
-#include "./dialogs/FraxDialog.h"
-#include "./dialogs/ThermometerDialog.h"
-#include "./dialogs/TonometerDialog.h"
-#include "./dialogs/WeighScaleDialog.h"
+#include "./dialogs/DialogFactory.h"
+#include "./dialogs/DialogBase.h"
 
-#include "./managers/ManagerBase.h"
-#include "./managers/AudiometerManager.h"
-#include "./managers/BluetoothLEManager.h"
-#include "./managers/CDTTManager.h"
-#include "./managers/ChoiceReactionManager.h"
-#include "./managers/FraxManager.h"
-#include "./managers/BodyCompositionAnalyzerManager.h"
-#include "./managers/TonometerManager.h"
-#include "./managers/WeighScaleManager.h"
-
-QMap<QString,CypressApplication::TestType> CypressApplication::testTypeLUT =
-        CypressApplication::initTestTypeLUT();
-
-CypressApplication::CypressApplication(QObject *parent) : QObject(parent),
-    m_mode("default"),
-    m_verbose(true),
-    m_testType(None),
-    m_manager(Q_NULLPTR)
+CypressApplication::CypressApplication(QObject *parent) : QObject(parent)
+    , m_mode("default")
+    , m_verbose(true)
 {
-    // TESTING ONLY
-    m_testType = TestType::Hearing;
-    m_testTypeName = "hearing";
+  m_testTypeName = "weigh_scale";
 }
 
 CypressApplication::~CypressApplication()
 {
-    delete m_dialog;
-    delete m_manager;
-}
-
-QMap<QString,CypressApplication::TestType> CypressApplication::initTestTypeLUT()
-{
-    QMap<QString,CypressApplication::TestType> lut;
-    lut["weight"] = TestType::Weight;
-    lut["hearing"] = TestType::Hearing;
-    lut["spirometry"] = TestType::Spirometry;
-    lut["temperature"] = TestType::Temperature;
-    lut["frax"] = TestType::Frax;
-    lut["body_composition"] = TestType::BodyComposition;
-    lut["cdtt"] = TestType::CDTT;
-    lut["choice_reaction"] = TestType::ChoiceReaction;
-    lut["blood_pressure"] = TestType::BloodPressure;
-    lut["tonometry"] = TestType::Tonometry;
-    return lut;
 }
 
 void CypressApplication::initialize()
 {
-    // select the appropriate manager based on test type
-    // if the test type was specified as a cli then it will not be None
-    // if it is, then it must be specified in the input data read from the input file
-    //
-    switch(m_testType)
-    {
-      case TestType::Weight:
-        m_manager = new WeighScaleManager(this);
-        m_dialog = new WeighScaleDialog();
-        break;
-      case TestType::BodyComposition:
-        m_manager = new BodyCompositionAnalyzerManager(this);
-        m_dialog = new BodyCompositionDialog();
-        break;
-      case TestType::Hearing:
-        m_manager = new AudiometerManager(this);
-        m_dialog = new AudiometerDialog();
-        break;
-      case TestType::ChoiceReaction:
-        m_manager = new ChoiceReactionManager(this);
-        m_dialog = new ChoiceReactionDialog();
-        break;
-      case TestType::Temperature:
-        m_manager = new BluetoothLEManager(this);
-        m_dialog = new ThermometerDialog();
-        break;
-      case TestType::Frax:
-        m_manager = new FraxManager(this);
-        m_dialog = new FraxDialog();
-        break;
-      case TestType::CDTT:
-        m_manager = new CDTTManager(this);
-        m_dialog = new CDTTDialog();
-        break;
-      case TestType::Tonometry:
-        m_manager = new TonometerManager(this);
-        m_dialog = new TonometerDialog();
-        break;
-      case TestType::Spirometry:
-        m_manager = Q_NULLPTR;
-        break;
-      case TestType::BloodPressure:
-        m_manager = Q_NULLPTR;
-        break;
-      case TestType::None:
-        m_manager = Q_NULLPTR;
-        break;
-    }
-    if(Q_NULLPTR == m_manager)
-        throw std::runtime_error("FATAL ERROR: failed to initialize a manager");
+    DialogFactory *df = DialogFactory::instance();
+    m_dialog.reset(df->instantiate(m_testTypeName));
+
     if(Q_NULLPTR == m_dialog)
         throw std::runtime_error("FATAL ERROR: failed to initialize a dialog");
-
-    qDebug() << "created manager of class type " << m_manager->metaObject()->className();
 
     m_dialog->setInputFileName(m_inputFileName);
     m_dialog->setOutputFileName(m_outputFileName);
     m_dialog->setMode(m_mode);
     m_dialog->setVerbose(m_verbose);
-
-    m_dialog->show();
     m_dialog->initialize();
+    m_dialog->show();
+
+    df = Q_NULLPTR;
 }
 
 CypressApplication::CommandLineParseResult CypressApplication::parse(const QCoreApplication &app,
@@ -281,12 +183,11 @@ CypressApplication::CommandLineParseResult CypressApplication::parse(const QCore
         QString s = m_parser.value(testOption).toLower();
         qDebug() << "test option parsing " << s;
         // determine which manager and dialog is needed based on test type
-        if(CypressApplication::testTypeLUT.contains(s))
+        if(DialogFactory::Type::None != DialogFactory::getType(s))
         {
-            m_testType = CypressApplication::testTypeLUT[s];
             m_testTypeName = s;
             if(m_verbose)
-              qDebug() << "in test option set with " << s << m_testType;
+              qDebug() << "in test option set with " << s;
         }
         else
         {

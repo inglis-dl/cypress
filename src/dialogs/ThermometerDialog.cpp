@@ -6,19 +6,17 @@
 #include <QTimeLine>
 
 ThermometerDialog::ThermometerDialog(QWidget *parent)
-    : CypressDialog(parent)
+    : DialogBase(parent)
     , ui(new Ui::ThermometerDialog)
 {
     ui->setupUi(this);
-    m_manager = new BluetoothLEManager(this);
-    m_child = qobject_cast<BluetoothLEManager*>(m_manager);
+    m_manager.reset(new BluetoothLEManager(this));
 }
 
 ThermometerDialog::~ThermometerDialog()
 {
     delete ui;
     m_child = Q_NULLPTR;
-    delete m_manager;
 }
 
 void ThermometerDialog::initializeModel()
@@ -44,6 +42,8 @@ void ThermometerDialog::initializeModel()
 //
 void ThermometerDialog::initializeConnections()
 {
+  m_child = qobject_cast<BluetoothLEManager*>(m_manager.get());
+
   // Disable all buttons by default
   //
   for(auto&& x : this->findChildren<QPushButton *>())
@@ -62,7 +62,7 @@ void ThermometerDialog::initializeConnections()
 
   // Relay messages from the manager to the status bar
   //
-  connect(m_manager,&ManagerBase::message,
+  connect(m_manager.get(),&ManagerBase::message,
           ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
   // Every instrument stage launched by an interviewer requires input
@@ -204,7 +204,7 @@ void ThermometerDialog::initializeConnections()
 
     // Connection is established: enable measurement requests
     //
-    connect(m_manager, &BluetoothLEManager::canMeasure,
+    connect(m_manager.get(), &BluetoothLEManager::canMeasure,
             this,[this](){
         ui->connectButton->setEnabled(false);
         ui->disconnectButton->setEnabled(true);
@@ -224,7 +224,7 @@ void ThermometerDialog::initializeConnections()
 
     // Update the UI with any data
     //
-    connect(m_manager, &BluetoothLEManager::dataChanged,
+    connect(m_manager.get(), &BluetoothLEManager::dataChanged,
             this,[this](){
         m_manager->buildModel(&m_model);
 
@@ -242,7 +242,7 @@ void ThermometerDialog::initializeConnections()
 
     // All measurements received: enable write test results
     //
-    connect(m_manager, &BluetoothLEManager::canWrite,
+    connect(m_manager.get(), &BluetoothLEManager::canWrite,
             this,[this](){
        ui->saveButton->setEnabled(true);
     });

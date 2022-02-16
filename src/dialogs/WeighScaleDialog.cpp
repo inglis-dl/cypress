@@ -6,23 +6,22 @@
 #include <QTimeLine>
 
 WeighScaleDialog::WeighScaleDialog(QWidget *parent)
-    : CypressDialog(parent)
+    : DialogBase(parent)
     , ui(new Ui::WeighScaleDialog)
 {
     ui->setupUi(this);
-    m_manager = new WeighScaleManager(this);
-    m_child = qobject_cast<WeighScaleManager*>(m_manager);
+    m_manager.reset(new WeighScaleManager(this));
 }
 
 WeighScaleDialog::~WeighScaleDialog()
 {
     delete ui;
     m_child = Q_NULLPTR;
-    delete m_manager;
 }
 
 void WeighScaleDialog::initializeModel()
 {
+    qDebug() <<"weigh scale dialog init model";
     // allocate 1 column x 2 rows of weight measurement items
     //
     for(int row=0;row<2;row++)
@@ -37,10 +36,14 @@ void WeighScaleDialog::initializeModel()
     ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->verticalHeader()->hide();
+    qDebug() <<"weigh scale dialog init model finished";
+
 }
 
 void WeighScaleDialog::initializeConnections()
 {
+  m_child = qobject_cast<WeighScaleManager*>(m_manager.get());
+
   // Disable all buttons by default
   //
   for(auto&& x : this->findChildren<QPushButton *>())
@@ -59,7 +62,7 @@ void WeighScaleDialog::initializeConnections()
 
   // Relay messages from the manager to the status bar
   //
-  connect(m_manager,&ManagerBase::message,
+  connect(m_manager.get(),&ManagerBase::message,
           ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
   // Every instrument stage launched by an interviewer requires input
@@ -196,7 +199,7 @@ void WeighScaleDialog::initializeConnections()
 
   // Connection is established: enable measurement requests
   //
-  connect(m_manager, &WeighScaleManager::canMeasure,
+  connect(m_manager.get(), &WeighScaleManager::canMeasure,
           this,[this](){
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
@@ -222,7 +225,7 @@ void WeighScaleDialog::initializeConnections()
 
   // Update the UI with any data
   //
-  connect(m_manager, &WeighScaleManager::dataChanged,
+  connect(m_manager.get(), &WeighScaleManager::dataChanged,
           this,[this](){
       m_manager->buildModel(&m_model);
 
@@ -240,7 +243,7 @@ void WeighScaleDialog::initializeConnections()
 
   // All measurements received: enable write test results
   //
-  connect(m_manager, &WeighScaleManager::canWrite,
+  connect(m_manager.get(), &WeighScaleManager::canWrite,
           this,[this](){
       ui->saveButton->setEnabled(true);
   });

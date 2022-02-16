@@ -1,12 +1,12 @@
 #ifndef WEIGHSCALEDIALOG_H
 #define WEIGHSCALEDIALOG_H
 
-#include "CypressDialog.h"
+#include "DialogBase.h"
 #include "ui_weighscaledialog.h"
 
 QT_FORWARD_DECLARE_CLASS(WeighScaleManager)
 
-class WeighScaleDialog : public CypressDialog, public Ui::WeighScaleDialog
+class WeighScaleDialog : public DialogBase, public Ui::WeighScaleDialog
 {
     Q_OBJECT
 
@@ -21,7 +21,7 @@ private:
     void initializeConnections() override;
 
     Ui::WeighScaleDialog *ui { Q_NULLPTR };
-    WeighScaleManager* m_child { Q_NULLPTR };
+    WeighScaleManager *m_child { Q_NULLPTR };
 };
 
 #endif // WEIGHSCALEDIALOG_H

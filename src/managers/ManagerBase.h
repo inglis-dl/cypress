@@ -15,7 +15,7 @@ class ManagerBase : public QObject
 
 public:
     explicit ManagerBase(QObject *parent = Q_NULLPTR);
-    ~ManagerBase() { if(!p_widget.isNull()) p_widget.clear(); };
+    ~ManagerBase() = default;
 
     // load and save device, paths and other constant settings to .ini
     //
@@ -114,8 +114,6 @@ protected:
     // such as when multiple measurements are separately acquired.
     //
     virtual void clearData() = 0;
-
-    QSharedPointer<QWidget> p_widget;
 
     // key value pairs sorted by key
     //

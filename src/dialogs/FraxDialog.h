@@ -1,12 +1,12 @@
 #ifndef FRAXDIALOG_H
 #define FRAXDIALOG_H
 
-#include "CypressDialog.h"
+#include "DialogBase.h"
 #include "ui_fraxdialog.h"
 
 QT_FORWARD_DECLARE_CLASS(FraxManager)
 
-class FraxDialog : public CypressDialog, public Ui::FraxDialog
+class FraxDialog : public DialogBase, public Ui::FraxDialog
 {
     Q_OBJECT
 
@@ -20,8 +20,8 @@ private:
     void initializeModel() override;
     void initializeConnections() override;
 
-    Ui::FraxDialog *ui = { Q_NULLPTR };
-    FraxManager *m_child = { Q_NULLPTR };
+    Ui::FraxDialog *ui { Q_NULLPTR };
+    FraxManager *m_child { Q_NULLPTR };
 };
 
 #endif // FRAXDIALOG_H

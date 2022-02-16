@@ -1,12 +1,12 @@
 #ifndef AUDIOMETERDIALOG_H
 #define AUDIOMETERDIALOG_H
 
-#include "CypressDialog.h"
+#include "DialogBase.h"
 #include "ui_audiometerdialog.h"
 
 QT_FORWARD_DECLARE_CLASS(AudiometerManager)
 
-class AudiometerDialog : public CypressDialog, public Ui::AudiometerDialog
+class AudiometerDialog : public DialogBase, public Ui::AudiometerDialog
 {
     Q_OBJECT
 

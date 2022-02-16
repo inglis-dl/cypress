@@ -1,12 +1,12 @@
 #ifndef BODYCOMPOSITIONDIALOG_H
 #define BODYCOMPOSITIONDIALOG_H
 
-#include "CypressDialog.h"
+#include "DialogBase.h"
 #include "ui_bodycompositiondialog.h"
 
 QT_FORWARD_DECLARE_CLASS(BodyCompositionAnalyzerManager)
 
-class BodyCompositionDialog : public CypressDialog, public Ui::BodyCompositionDialog
+class BodyCompositionDialog : public DialogBase, public Ui::BodyCompositionDialog
 {
     Q_OBJECT
 

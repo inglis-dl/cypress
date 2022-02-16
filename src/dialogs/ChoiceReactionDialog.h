@@ -1,12 +1,12 @@
 #ifndef CHOICEREACTIONDIALOG_H
 #define CHOICEREACTIONDIALOG_H
 
-#include "CypressDialog.h"
+#include "DialogBase.h"
 #include "ui_choicereactiondialog.h"
 
 QT_FORWARD_DECLARE_CLASS(ChoiceReactionManager)
 
-class ChoiceReactionDialog : public CypressDialog, public Ui::ChoiceReactionDialog
+class ChoiceReactionDialog : public DialogBase, public Ui::ChoiceReactionDialog
 {
     Q_OBJECT
 

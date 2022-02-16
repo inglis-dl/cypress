@@ -7,19 +7,17 @@
 #include <QTimeLine>
 
 TonometerDialog::TonometerDialog(QWidget *parent)
-    : CypressDialog(parent)
+    : DialogBase(parent)
     , ui(new Ui::TonometerDialog)
 {
     ui->setupUi(this);
-    m_manager = new TonometerManager(this);
-    m_child = qobject_cast<TonometerManager*>(m_manager);
+    m_manager.reset(new TonometerManager(this));
 }
 
 TonometerDialog::~TonometerDialog()
 {
     delete ui;
     m_child = Q_NULLPTR;
-    delete m_manager;
 }
 
 void TonometerDialog::initializeModel()
@@ -50,6 +48,8 @@ void TonometerDialog::initializeModel()
 //
 void TonometerDialog::initializeConnections()
 {
+  m_child = qobject_cast<TonometerManager*>(m_manager.get());
+
   // Disable all buttons by default
   //
   for(auto&& x : this->findChildren<QPushButton *>())
@@ -68,7 +68,7 @@ void TonometerDialog::initializeConnections()
 
   // Relay messages from the manager to the status bar
   //
-  connect(m_manager,&ManagerBase::message,
+  connect(m_manager.get(),&ManagerBase::message,
           ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
   // Every instrument stage launched by an interviewer requires input
@@ -180,7 +180,7 @@ void TonometerDialog::initializeConnections()
 
     // ora.exe was found or set up successfully
     //
-    connect(m_manager, &TonometerManager::canMeasure,
+    connect(m_manager.get(), &TonometerManager::canMeasure,
         this, [this]() {
             ui->measureButton->setEnabled(true);
             ui->saveButton->setEnabled(false);
@@ -193,7 +193,7 @@ void TonometerDialog::initializeConnections()
 
     // Update the UI with any data
     //
-    connect(m_manager, &TonometerManager::dataChanged,
+    connect(m_manager.get(), &TonometerManager::dataChanged,
         this, [this]() {
       auto h = ui->testdataTableView->horizontalHeader();
       h->setSectionResizeMode(QHeaderView::Fixed);
@@ -216,7 +216,7 @@ void TonometerDialog::initializeConnections()
 
     // All measurements received: enable write test results
     //
-    connect(m_manager, &TonometerManager::canWrite,
+    connect(m_manager.get(), &TonometerManager::canWrite,
         this, [this]() {
             ui->saveButton->setEnabled(true);
         });

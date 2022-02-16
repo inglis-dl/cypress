@@ -7,19 +7,17 @@
 #include <QTimeLine>
 
 CDTTDialog::CDTTDialog(QWidget *parent)
-    : CypressDialog(parent)
+    : DialogBase(parent)
     , ui(new Ui::CDTTDialog)
 {
     ui->setupUi(this);
-    m_manager = new CDTTManager(this);
-    m_child = qobject_cast<CDTTManager*>(m_manager);
+    m_manager.reset(new CDTTManager(this));
 }
 
 CDTTDialog::~CDTTDialog()
 {
     delete ui;
     m_child = Q_NULLPTR;
-    delete m_manager;
 }
 
 void CDTTDialog::initializeModel()
@@ -49,6 +47,8 @@ void CDTTDialog::initializeModel()
 //
 void CDTTDialog::initializeConnections()
 {
+  m_child = qobject_cast<CDTTManager*>(m_manager.get());
+
   // Disable all buttons by default
   //
   for(auto&& x : this->findChildren<QPushButton *>())
@@ -67,7 +67,7 @@ void CDTTDialog::initializeConnections()
 
   // Relay messages from the manager to the status bar
   //
-  connect(m_manager,&ManagerBase::message,
+  connect(m_manager.get(),&ManagerBase::message,
           ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
   // Every instrument stage launched by an interviewer requires input
@@ -168,7 +168,7 @@ void CDTTDialog::initializeConnections()
 
   // jar was found or set up successfully
   //
-  connect(m_manager, &CDTTManager::canMeasure,
+  connect(m_manager.get(), &CDTTManager::canMeasure,
         this, [this]() {
             ui->measureButton->setEnabled(true);
             ui->saveButton->setEnabled(false);
@@ -181,7 +181,7 @@ void CDTTDialog::initializeConnections()
 
   // Update the UI with any data
   //
-  connect(m_manager, &CDTTManager::dataChanged,
+  connect(m_manager.get(), &CDTTManager::dataChanged,
         this, [this]() {
             auto h = ui->testdataTableView->horizontalHeader();
             h->setSectionResizeMode(QHeaderView::Fixed);
@@ -204,7 +204,7 @@ void CDTTDialog::initializeConnections()
 
   // All measurements received: enable write test results
   //
-  connect(m_manager, &CDTTManager::canWrite,
+  connect(m_manager.get(), &CDTTManager::canWrite,
       this, [this]() {
           ui->saveButton->setEnabled(true);
       });

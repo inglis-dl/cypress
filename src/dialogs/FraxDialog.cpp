@@ -7,19 +7,17 @@
 #include <QTimeLine>
 
 FraxDialog::FraxDialog(QWidget *parent)
-    : CypressDialog(parent)
+    : DialogBase(parent)
     , ui(new Ui::FraxDialog)
 {
     ui->setupUi(this);
-    m_manager = new FraxManager(this);
-    m_child = qobject_cast<FraxManager*>(m_manager);  
+    m_manager.reset(new FraxManager(this));
 }
 
 FraxDialog::~FraxDialog()
 {
     delete ui;
     m_child = Q_NULLPTR;
-    delete m_manager;
 }
 
 void FraxDialog::initializeModel()
@@ -46,6 +44,8 @@ void FraxDialog::initializeModel()
 //
 void FraxDialog::initializeConnections()
 {
+  m_child = qobject_cast<FraxManager*>(m_manager.get());
+
   // Disable all buttons by default
   //
   for(auto&& x : this->findChildren<QPushButton *>())
@@ -64,7 +64,7 @@ void FraxDialog::initializeConnections()
 
   // Relay messages from the manager to the status bar
   //
-  connect(m_manager,&ManagerBase::message,
+  connect(m_manager.get(),&ManagerBase::message,
           ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
   // Every instrument stage launched by an interviewer requires input
@@ -165,7 +165,7 @@ void FraxDialog::initializeConnections()
 
   // blackbox.exe was found and inputs valid
   //
-  connect(m_manager, &FraxManager::canMeasure,
+  connect(m_manager.get(), &FraxManager::canMeasure,
         this, [this]() {
             ui->measureButton->setEnabled(true);
             ui->saveButton->setEnabled(false);
@@ -178,7 +178,7 @@ void FraxDialog::initializeConnections()
 
   // Update the UI with any data
   //
-  connect(m_manager, &FraxManager::dataChanged,
+  connect(m_manager.get(), &FraxManager::dataChanged,
         this, [this]() {
       auto h = ui->testdataTableView->horizontalHeader();
       h->setSectionResizeMode(QHeaderView::Fixed);
@@ -200,7 +200,7 @@ void FraxDialog::initializeConnections()
 
   // All measurements received: enable write test results
   //
-  connect(m_manager, &FraxManager::canWrite,
+  connect(m_manager.get(), &FraxManager::canWrite,
         this, [this]() {
             ui->saveButton->setEnabled(true);
         });

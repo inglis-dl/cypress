@@ -1,12 +1,12 @@
 #ifndef CDTTDIALOG_H
 #define CDTTDIALOG_H
 
-#include "CypressDialog.h"
+#include "DialogBase.h"
 #include "ui_cdttdialog.h"
 
 QT_FORWARD_DECLARE_CLASS(CDTTManager)
 
-class CDTTDialog : public CypressDialog, public Ui::CDTTDialog
+class CDTTDialog : public DialogBase, public Ui::CDTTDialog
 {
     Q_OBJECT
 
