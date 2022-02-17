@@ -30,7 +30,8 @@ public slots:
 		//if (connected) emit StartMeasurement(); // TODO: REMOVE THIS
 		emit ConnectionStatusReady(connected);
 	}
-	void MeasurementReceived(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done) { MeasurementReady(sbp, dbp, pulse, isAverage, done); }
+	void MeasurementReceived(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start,
+		const QDateTime& end, const int& readingNum, const bool& isAverage, const bool& done) { MeasurementReady(sbp, dbp, pulse, start, end, readingNum, isAverage, done); }
 	void AbortComplete(bool successful);
 signals:
 	// Signals to comm
@@ -40,9 +41,8 @@ signals:
 
 	// signals to manager
 	void ConnectionStatusReady(bool connected);
-	void MeasurementReady(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done);
-
-	void AskForThreadId();
+	void MeasurementReady(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start,
+		const QDateTime& end, const int& readingNum, const bool& isAverage, const bool& done);
 private:
 	BPMCommunication* comm;
 	bool ConnectionInfoSet();

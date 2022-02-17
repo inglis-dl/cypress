@@ -44,7 +44,7 @@ public slots:
     void finish() override;
 
     // slot for signals coming from bpm200
-    void measurementAvailable(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done);
+    void measurementAvailable(const int &sbp, const int &dbp, const int &pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum, const bool &isAverage, const bool &done);
     void connectionStatusAvailable(const bool connected);
 protected:
     void clearData() override;

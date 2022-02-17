@@ -62,18 +62,59 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
     {
         model->setRowCount(n_row);
     }
-    int row_left = 0;
+    
+    // Add first measurement
+    int row = 0;
+    QString firstMeasurement = m_test.firstMeasurementToString();
+    if ("" != firstMeasurement) {
+        QStandardItem* firstItem = model->item(row);
+        if (Q_NULLPTR == firstItem)
+        {
+            firstItem = new QStandardItem();
+            model->setItem(row, 0, firstItem);
+        }
+        firstItem->setData(firstMeasurement, Qt::DisplayRole);
+        row++;
+    }
+    
+
     for (int i = 0; i < n_total; i++)
     {
         BloodPressureMeasurement measurement = m_test.getMeasurement(i);
         QString measurementStr = measurement.isValid() ? measurement.toString() : "NA";
-        QStandardItem* item = model->item(i);
+        QStandardItem* item = model->item(row);
         if (Q_NULLPTR == item)
         {
             item = new QStandardItem();
-            model->setItem(i, 0, item);
+            model->setItem(row, 0, item);
         }
         item->setData(measurementStr, Qt::DisplayRole);
+        row++;
+    }
+
+    // Add avg measurement
+    QString avgMeasurement = m_test.avgMeasurementToString();
+    if ("" != avgMeasurement) {
+        QStandardItem* avgItem = model->item(row);
+        if (Q_NULLPTR == avgItem)
+        {
+            avgItem = new QStandardItem();
+            model->setItem(row, 0, avgItem);
+        }
+        avgItem->setData(avgMeasurement, Qt::DisplayRole);
+        row++;
+    }
+
+    // Add all avg measurement
+    QString allAvgMeasurement = m_test.allAvgMeasurementToString();
+    if ("" != avgMeasurement) {
+        QStandardItem* allAvgItem = model->item(row);
+        if (Q_NULLPTR == allAvgItem)
+        {
+            allAvgItem = new QStandardItem();
+            model->setItem(row, 0, allAvgItem);
+        }
+        allAvgItem->setData(allAvgMeasurement, Qt::DisplayRole);
     }
 }
 
@@ -139,18 +180,26 @@ void BloodPressureManager::finish()
     m_test.reset();
 }
 
-void BloodPressureManager::measurementAvailable(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done)
+void BloodPressureManager::measurementAvailable(const int &sbp, const int& dbp, const int& pulse, const const QDateTime& start, 
+    const QDateTime& end, const int& readingNum, const bool &isAverage, const bool &done)
 {
     if (done) {
-        // TODO: Show results on screen
-        bool reviewDataVerified = m_test.verifyReviewData(sbp, dbp, pulse, isAverage);
+        bool reviewDataVerified = false;
+        if (isAverage) {
+            reviewDataVerified = m_test.verifyReviewData(sbp, dbp, pulse);
+        }
+
         if (reviewDataVerified) {
             emit canWrite();
             return;
         }
+        else {
+            emit canMeasure();
+            return;
+        }
     }
 
-    m_test.addMeasurement(sbp, dbp, pulse, isAverage);
+    m_test.addMeasurement(sbp, dbp, pulse, start, end, readingNum, isAverage);
     emit dataChanged();
 }
 

@@ -2,6 +2,7 @@
 #define BPMCOMMUNICATION_H
 
 #include <QObject>
+#include <QDateTime>
 #include <QHidDevice>
 #include <QString>
 #include <QQueue>
@@ -25,7 +26,10 @@ public slots:
 signals:
 	void ConnectionStatus(const bool connected);
 	void VersionInfoAvailable(const QString version);
-	void MeasurementReady(const int sbp, const int dbp, const int pulse, const bool isAverage, const bool done);
+	void MeasurementReady(const int& sbp, const int& dbp, const int& pulse, const QDateTime& start, const QDateTime& end, const int& readingNum, 
+		const bool& isAverage = false, const bool& done = false);
+	void AverageReady(const int& sbp, const int& dbp, const int& pulse);
+	void FinalReviewReady(const int& sbp, const int& dbp, const int& pulse);
 	void MeasurementFailed();
 	void ConnectionLost();
 	void AbortFinished(bool successful);
@@ -44,6 +48,7 @@ private:
 	bool TimedLoop(const int timeout, const function<bool()> func, const QString debugName = "");
 	bool TimedReadLoop(const int timeout, const function<bool()> func, const QString debugName = "");
 	bool AckCheck(const int expectedData0, const QString logName);
+	void resetValues();
 
 	QHidDevice* m_bpm200;
 	QQueue<BPMMessage>* m_msgQueue;
@@ -51,6 +56,10 @@ private:
 	// The vid and pid for connecting to the bpm
 	int m_vid = -1;
 	int m_pid = -1;
+
+	void startReading();
+	void endReading(const int& sbp, const int& dbp, const int& pulse);
+	QDateTime m_readingStartTime = QDateTime::fromMSecsSinceEpoch(0);
 
 
 	// The last reported cycle time
@@ -60,10 +69,11 @@ private:
 	int m_cuffPressure = -1;
 
 	// The last reported reading number
-	int m_readingNumber = -1;
+	//int m_readingNumber = -1;
+	int m_readingNumberCalc = 0;
 
 	// The last result code
-	int m_resultCode = -1;
+	//int m_resultCode = -1;
 
 	// True if the bpm is currently taking measurements
 	bool m_measuring = false;

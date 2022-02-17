@@ -36,13 +36,11 @@ void BPMCommunication::Connect(int vid, int pid) {
 */
 void BPMCommunication::Measure() {
 	qDebug() << "BPMComm: Measurement signal recieved. Preparing to measure";
+	resetValues();
 
 	// Stop just incase it was running
-	bool stopSuccessful = Stop();
-	if (stopSuccessful == false) {
-		emit MeasurementFailed();
-		return;
-	}
+	// NOTE: if already stopped then the BPM will not respond to stop request
+	Stop();
 
 	// Clear old data
 	bool clearSuccessful = Clear();
@@ -144,59 +142,70 @@ bool BPMCommunication::Start()
 			BPMMessage msg = m_msgQueue->dequeue();
 			quint8 msgId = msg.GetMsgId();
 			quint8 data0 = msg.GetData0();
-			if (msgId == 0x52) {
+			if (0x52 == msgId) {
 				int sbp = msg.GetData1();
 				int dbp = msg.GetData2();
 				int pulse = msg.GetData3();
-				bool isAverage = data0 == 0;
-				qDebug() << "Review (Done measuring). SBP = " << sbp << " DBP = " << dbp << "Pulse = " << pulse << endl;
-				emit MeasurementReady(sbp, dbp, pulse, isAverage, true);
-				m_measuring = false;
-				return true;
+				bool isAverage = 0 == data0;
+				qDebug() << QString("Review (%1). SBP = %2 DBP = %3 pulse = %4").arg(isAverage ? "Done measuring": "Measurement").arg(sbp).arg(dbp).arg(pulse);
+				if (isAverage) {
+					emit MeasurementReady(sbp, dbp, pulse, m_readingStartTime, QDateTime::currentDateTime(), 0, isAverage, true);
+					m_measuring = false;
+					return true;
+				}
 			}
-			// else if Start acknowledgment...
-			else if (msgId == 0x06 && data0 == 0x04) {
-				qDebug() << "Ack received for start: " << msg.GetAsQString() << endl;
+			// else if acknowledgment...
+			else if (0x06 == msgId) {
 				m_cycleTime = msg.GetData1();
-				m_readingNumber = msg.GetData2();
-				m_measuring = true;
+				//m_readingNumber = msg.GetData2();
+				if (0x04 == data0) {
+					qDebug() << "Ack received for start: " << msg.GetAsQString() << endl;
+					m_measuring = true;
+				}
+				else if (0x02 == data0) {
+					qDebug() << "Ack received for review: " << msg.GetAsQString() << endl;
+					//m_resultCode = msg.GetData3();
+				}
 			}
 			// else if inflating ...
-			else if (msgId == 0x49) {
+			else if (0x49 == msgId) {
 				m_cuffPressure = data0 + msg.GetData1();
 				qDebug() << "Cuff pressure = " << m_cuffPressure << " (Inflating)" << endl;
+				if (QDateTime::fromMSecsSinceEpoch(0) == m_readingStartTime) {
+					startReading();
+				}
 			}
 			// else if deflating ...
-			else if (msgId == 0x44) {
+			else if (0x44 == msgId) {
 				m_cuffPressure = data0 + msg.GetData1();
 				qDebug() << "Cuff pressure = " << m_cuffPressure << " (Deflating)" << endl;
 			}
 			// else if bp average recieved ...
-			else if (msgId == 0x41) {
+			else if (0x41 == msgId) {
 				int sbp = msg.GetData1();
 				int dbp = msg.GetData2();
 				int pulse = msg.GetData3();
-				qDebug() << "Average Recieved. Count = " << data0 << " SBP = " << sbp << " DBP = " << dbp << "Pulse = " << pulse << endl;
-				emit MeasurementReady(sbp, dbp, pulse, true, false);
+				qDebug() << QString("Average Recieved. Count = %1 SBP = %2 DBP = %3 pulse = %4").arg(data0).arg(sbp).arg(dbp).arg(pulse);
+				// TODO: Make average signal
+				emit MeasurementReady(sbp, dbp, pulse, QDateTime::currentDateTime(), QDateTime::currentDateTime(), m_readingNumberCalc, true, false);
 			}
 			// else if bp result recieved ...
-			else if (msgId == 0x42 && data0 == 0x00) {
-				// TODO: Send signal with results
+			else if (0x42 == msgId && 0x00 == data0) {
 				int sbp = msg.GetData1();
 				int dbp = msg.GetData2();
 				int pulse = msg.GetData3();
-				qDebug() << "Result Recieved. SBP = " << sbp << " DBP = " << dbp << "Pulse = " << pulse << endl;
-				emit MeasurementReady(sbp, dbp, pulse, false, false);
+				qDebug() << QString("Result Recieved. SBP = %1 DBP = %2 pulse = %3").arg(sbp).arg(dbp).arg(pulse);
+				endReading(sbp, dbp, pulse);
 			}
 			// else if bp error recieved ...
-			else if (msgId == 0x42 && data0 != 0x00) {
+			else if (0x42 == msgId && 0x00 != data0) {
 				// TODO: have an error signal to manager. Probably abort measurement
 				qDebug() << "Error occured from BPM" << endl;
 			}
 			// else if review button clicked ...
 			// NOTE: This gets called once by bpm even if 
 			// the physical button is not clicked
-			else if (msgId == 0x55 && data0 == 0x02) {
+			else if (0x55 == msgId && 0x02 == data0) {
 				qDebug() << "Review initiated" << endl;
 			}
 			else {
@@ -313,8 +322,8 @@ bool BPMCommunication::Review()
 			if (nextMessage.GetMsgId() == 6 && nextMessage.GetData0() == 2) { // Non generic condition
 				qDebug() << "Ack received for review: " << nextMessage.GetAsQString() << endl;
 				m_cycleTime = nextMessage.GetData1();
-				m_readingNumber = nextMessage.GetData2();
-				m_resultCode = nextMessage.GetData3();
+				//m_readingNumber = nextMessage.GetData2();
+				//m_resultCode = nextMessage.GetData3();
 				return true;
 			}
 			else {
@@ -508,6 +517,33 @@ bool BPMCommunication::AckCheck(int expectedData0, QString logName)
 		qDebug() << "WARNING: Expected a " << logName << " ack. But got- " << nextMessage.GetAsQString() << endl;
 		return false;
 	}
+}
+
+void BPMCommunication::resetValues()
+{
+	m_cycleTime = -1;
+	m_cuffPressure = -1;
+	m_readingNumberCalc = 0;
+	m_measuring = false;
+	m_aborted = false;
+	m_readingStartTime = QDateTime::fromMSecsSinceEpoch(0);
+}
+
+void BPMCommunication::startReading()
+{
+	if (QDateTime::fromMSecsSinceEpoch(0) == m_readingStartTime) {
+		m_readingNumberCalc++;
+		m_readingStartTime = QDateTime::currentDateTime();
+	}
+}
+
+void BPMCommunication::endReading(const int& sbp, const int& dbp, const int& pulse)
+{
+	if (QDateTime::fromMSecsSinceEpoch(0) != m_readingStartTime) {
+		emit MeasurementReady(sbp, dbp, pulse, m_readingStartTime, QDateTime::currentDateTime(), m_readingNumberCalc);
+		m_readingStartTime = QDateTime::fromMSecsSinceEpoch(0);
+	}
+	
 }
 
 
