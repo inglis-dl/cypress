@@ -116,7 +116,7 @@ QJsonObject TonometerManager::toJsonObject() const
 
 bool TonometerManager::isDefined(const QString &fileName, TonometerManager::FileType type) const
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
        return true;
     }
@@ -206,7 +206,7 @@ void TonometerManager::selectDatabase(const QString &dbName)
 
 void TonometerManager::measure()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         readOutput();
         return;
@@ -219,7 +219,7 @@ void TonometerManager::measure()
 
 void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -260,7 +260,7 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
 
 void TonometerManager::readOutput()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_test.simulate(m_inputData);
         if(m_test.isValid())
@@ -313,7 +313,7 @@ void TonometerManager::configureProcess()
 {
     if(m_inputData.isEmpty()) return;
 
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         emit message(tr("Ready to measure..."));
         emit canMeasure();
@@ -455,7 +455,7 @@ void TonometerManager::clearData()
 
 void TonometerManager::finish()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
       return;
     }

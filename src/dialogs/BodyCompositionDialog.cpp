@@ -76,7 +76,7 @@ void BodyCompositionDialog::initializeConnections()
   // TODO: for DCS interviews, the first digit corresponds the the wave rank
   // for inhome interviews there is a host dependent prefix before the barcode
   //
-  if("simulate"==m_mode)
+  if(CypressConstants::Mode::Simulate == m_mode)
   {
     ui->barcodeLineEdit->setText("00000000");
   }

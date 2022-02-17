@@ -3,10 +3,6 @@
 
 #include "../auxiliary/CypressConstants.h"
 
-#include <QObject>
-#include <QSharedPointer>
-#include <QMap>
-
 QT_FORWARD_DECLARE_CLASS(DialogBase)
 
 class DialogFactory

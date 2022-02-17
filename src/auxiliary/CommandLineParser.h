@@ -3,6 +3,7 @@
 
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QVariant>
 
 class CommandLineParser : QObject
 {
@@ -17,6 +18,7 @@ public:
         CommandLineModeError,
         CommandLineInputFileError,
         CommandLineOutputPathError,
+        CommandLineTypeError,
         CommandLineVersionRequested,
         CommandLineHelpRequested
     };
@@ -26,17 +28,11 @@ public:
 
     CommandLineParseResult parseCommandLine( const QCoreApplication &, QString *);
 
-    QString getInputFilename() const {return m_inputFilename;}
-    QString getOutputFilename() const {return m_outputFilename;}
-    QString getMode() const {return m_mode;}
-    bool getVerbose() const {return m_verbose;}
+    QMap<QString,QVariant> getArgs(){ return m_args; }
 
 private:
     QCommandLineParser m_parser;
-    QString m_inputFilename;
-    QString m_outputFilename;
-    QString m_mode;
-    bool m_verbose;
+    QMap<QString,QVariant> m_args;
 };
 
 #endif // COMMANDLINEPARSER_H

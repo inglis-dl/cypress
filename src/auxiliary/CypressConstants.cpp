@@ -28,3 +28,15 @@ CypressConstants::Type CypressConstants::getType(const QString& name)
   else
     return None;
 }
+
+CypressConstants::Mode CypressConstants::getMode(const QString& name)
+{
+  if("default" == name)
+    return Mode::Default;
+  else if("simulate"==name)
+    return Mode::Simulate;
+  else if("live"==name)
+    return Mode::Live;
+  else
+    return Mode::Unknown;
+}

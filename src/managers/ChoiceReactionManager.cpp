@@ -90,7 +90,7 @@ void ChoiceReactionManager::buildModel(QStandardItemModel *model) const
 
 bool ChoiceReactionManager::isDefined(const QString &exeName) const
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
        return true;
     }
@@ -138,7 +138,7 @@ void ChoiceReactionManager::selectRunnable(const QString &exeName)
 
 void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -193,7 +193,7 @@ void ChoiceReactionManager::clearData()
 
 void ChoiceReactionManager::configureProcess()
 {
-    if("simulate" == m_mode &&
+    if(CypressConstants::Mode::Simulate == m_mode &&
        !m_inputData.isEmpty())
     {
         emit message(tr("Ready to measure..."));
@@ -252,7 +252,7 @@ void ChoiceReactionManager::configureProcess()
 
 void ChoiceReactionManager::readOutput()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         qDebug() << "simulating read out";
         m_test.addMetaDataCharacteristic("start_datetime",QDateTime::currentDateTime());
@@ -322,7 +322,7 @@ void ChoiceReactionManager::readOutput()
 
 void ChoiceReactionManager::measure()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         readOutput();
         return;
@@ -352,7 +352,7 @@ void ChoiceReactionManager::finish()
 QJsonObject ChoiceReactionManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if("simulate" != m_mode)
+    if(CypressConstants::Mode::Simulate != m_mode)
     {
       QFile ofile(m_outputFile);
       ofile.open(QIODevice::ReadOnly);

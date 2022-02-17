@@ -79,7 +79,7 @@ void CDTTManager::saveSettings(QSettings* settings) const
 QJsonObject CDTTManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if("simulate" != m_mode)
+    if(CypressConstants::Mode::Simulate != m_mode)
     {
         QFile ofile(m_outputFile);
         ofile.open(QIODevice::ReadOnly);
@@ -152,7 +152,7 @@ void CDTTManager::selectRunnable(const QString &runnableName)
 void CDTTManager::measure()
 {
     clearData();
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         readOutput();
         return;
@@ -164,7 +164,7 @@ void CDTTManager::measure()
 
 void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -187,7 +187,7 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
 
 void CDTTManager::readOutput()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_test.simulate(m_inputData["barcode"].toString());
         if(m_test.isValid())
@@ -261,7 +261,7 @@ void CDTTManager::clearData()
 void CDTTManager::finish()
 {
     m_test.reset();
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         return;
     }
@@ -279,7 +279,7 @@ void CDTTManager::finish()
 
 void CDTTManager::configureProcess()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         if(!m_inputData.isEmpty())
         {

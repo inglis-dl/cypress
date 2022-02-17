@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     auxiliary/CypressConstants.cpp \
+    auxiliary/CommandLineParser.cpp \
     data/MeasurementBase.cpp \
     data/HearingTest.cpp \
     data/TonometerTest.cpp \
@@ -54,6 +55,7 @@ SOURCES += \
 
 HEADERS += \
     auxiliary/CypressConstants.h \
+    auxiliary/CommandLineParser.h \
     data/MeasurementBase.h \
     data/TestBase.h \
     data/HearingTest.h \

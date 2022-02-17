@@ -328,7 +328,7 @@ bool BodyCompositionAnalyzerManager::hasEndCode(const QByteArray &arr) const
 
 void BodyCompositionAnalyzerManager::connectDevice()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         return;
     }
@@ -404,7 +404,7 @@ void BodyCompositionAnalyzerManager::measure()
 //
 void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -750,7 +750,7 @@ void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, 
 
 void BodyCompositionAnalyzerManager::readDevice()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         // parent SerialPortManager class calls
         // readDevice for the current request

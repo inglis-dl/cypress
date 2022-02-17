@@ -49,7 +49,7 @@ void BluetoothLEManager::buildModel(QStandardItemModel *model) const
 
 void BluetoothLEManager::setLocalDevice(const QString &address)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         return;
     }
@@ -139,7 +139,7 @@ void BluetoothLEManager::saveSettings(QSettings *settings) const
 
 void BluetoothLEManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -162,7 +162,7 @@ void BluetoothLEManager::setInputData(const QMap<QString, QVariant> &input)
 
 bool BluetoothLEManager::lowEnergyEnabled() const
 {
-  if("simulate" == m_mode)
+  if(CypressConstants::Mode::Simulate == m_mode)
   {
       return true;
   }
@@ -173,7 +173,7 @@ bool BluetoothLEManager::lowEnergyEnabled() const
 bool BluetoothLEManager::localDeviceEnabled() const
 {
     bool enabled = true;
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         return enabled;
     }
@@ -190,7 +190,7 @@ void BluetoothLEManager::scanDevices()
     if(m_verbose)
       qDebug() << "start scanning for devices ....";
 
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
       QBluetoothAddress address("89:CC:44:EB:03:14");
       QString name = "simulated_device";
@@ -416,7 +416,7 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
 {
     clearData();
 
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
        // get the device data
        m_deviceData.setCharacteristic("device name", info.name());
@@ -495,7 +495,7 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
 
 void BluetoothLEManager::connectDevice()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         emit message(tr("Ready to measure..."));
         emit canMeasure();
@@ -579,7 +579,7 @@ void BluetoothLEManager::serviceDiscoveryComplete()
 
 void BluetoothLEManager::measure()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_deviceData.setCharacteristic("device firmware revision", "1.0.0");
         m_deviceData.setCharacteristic("device software revision", "1.0.0");
@@ -689,7 +689,7 @@ void BluetoothLEManager::thermoServiceStateChanged(QLowEnergyService::ServiceSta
 
 void BluetoothLEManager::disconnectDevice()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         emit message("Ready to connect...");
         emit canConnectDevice();

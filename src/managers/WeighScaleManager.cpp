@@ -61,7 +61,7 @@ void WeighScaleManager::saveSettings(QSettings *settings) const
 
 void WeighScaleManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -101,7 +101,7 @@ void WeighScaleManager::connectDevice()
 {
     clearData();
 
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_request = QByteArray("i");
         writeDevice();
@@ -160,7 +160,7 @@ void WeighScaleManager::measure()
 
 void WeighScaleManager::readDevice()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         QString simdata;
         if("i" == QString(m_request))
@@ -228,7 +228,7 @@ void WeighScaleManager::writeDevice()
     //
     m_buffer.clear();
 
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         if(m_verbose)
           qDebug() << "in simulate mode writeDevice with request " << QString(m_request);

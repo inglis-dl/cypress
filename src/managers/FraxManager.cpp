@@ -105,7 +105,7 @@ void FraxManager::saveSettings(QSettings* settings) const
 QJsonObject FraxManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if("simulate" != m_mode)
+    if(CypressConstants::Mode::Simulate != m_mode)
     {
       QFile ofile(m_outputFile);
       ofile.open(QIODevice::ReadOnly);
@@ -126,7 +126,7 @@ QJsonObject FraxManager::toJsonObject() const
 
 bool FraxManager::isDefined(const QString &exeName) const
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
        return true;
     }
@@ -162,7 +162,7 @@ void FraxManager::selectRunnable(const QString &runnableName)
 
 void FraxManager::measure()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         readOutput();
         return;
@@ -175,7 +175,7 @@ void FraxManager::measure()
 
 void FraxManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -246,7 +246,7 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
 
 void FraxManager::readOutput()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         qDebug() << "simulating read out";
 
@@ -301,7 +301,7 @@ void FraxManager::readOutput()
 
 void FraxManager::configureProcess()
 {
-    if("simulate" == m_mode &&
+    if(CypressConstants::Mode::Simulate == m_mode &&
        !m_inputData.isEmpty())
     {
         emit message(tr("Ready to measure..."));

@@ -36,7 +36,7 @@ void SerialPortManager::start()
 
 bool SerialPortManager::isDefined(const QString &label) const
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
        return true;
     }
@@ -57,7 +57,7 @@ void SerialPortManager::scanDevices()
     if(m_verbose)
       qDebug() << "start scanning for devices ....";
 
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
       QSerialPortInfo info;
       QString label = m_deviceName.isEmpty() ? "simulated_device" : m_deviceName;
@@ -148,7 +148,7 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
 {
     m_deviceData.reset();
 
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
        // get the device data
        m_deviceData.setCharacteristic("port product ID", "simulated");
@@ -202,7 +202,7 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
 
 void SerialPortManager::connectDevice()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
         emit message(tr("Ready to measure..."));
         emit canMeasure();
@@ -230,7 +230,7 @@ void SerialPortManager::disconnectDevice()
 {
     emit message(tr("Ready to connect..."));
     emit canConnectDevice();
-    if("simulate" == m_mode)
+    if(CypressConstants::Mode::Simulate == m_mode)
     {
        return;
     }

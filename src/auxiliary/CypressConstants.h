@@ -8,6 +8,13 @@ class CypressConstants
 {
 public:
 
+    enum Mode {
+        Unknown,
+        Live,
+        Simulate,
+        Default
+    };
+
     enum Type {
         None,
         Spirometer,
@@ -28,11 +35,15 @@ public:
     static lutType initTypeLUT();
 
     static CypressConstants::Type getType(const QString&);
+    static CypressConstants::Mode getMode(const QString&);
 
 private:
     CypressConstants() = default;
     static lutType typeLUT;
 
 };
+
+Q_DECLARE_METATYPE(CypressConstants::Mode)
+Q_DECLARE_METATYPE(CypressConstants::Type)
 
 #endif // CYPRESSCONSTANTS_H

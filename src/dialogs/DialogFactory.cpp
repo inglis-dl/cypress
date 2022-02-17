@@ -26,7 +26,7 @@ DialogFactory::~DialogFactory()
         pInstance = Q_NULLPTR;
 }
 
-DialogBase* DialogFactory::instantiate(const CypressConstants::Type &type/*, QWidget *parent = Q_NULLPTR*/)
+DialogBase* DialogFactory::instantiate(const CypressConstants::Type &type)
 {
     DialogBase* dialog = Q_NULLPTR;
     switch(type)

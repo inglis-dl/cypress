@@ -1,9 +1,7 @@
 #include "ManagerBase.h"
 #include <QDebug>
 
-ManagerBase::ManagerBase(QObject *parent) : QObject(parent),
-    m_verbose(false),
-    m_mode("default")
+ManagerBase::ManagerBase(QObject *parent) : QObject(parent)
 {
 }
 
