@@ -9,23 +9,20 @@ BloodPressureTest::BloodPressureTest()
     m_outputKeyList << "user id";
 }
 
-void BloodPressureTest::addMeasurement(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum, const bool& isAverage)
+void BloodPressureTest::addMeasurement(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum)
 {
-    if (isAverage) {
-        storeAverageMetaData(sbp, dbp, pulse);
-    }
-    else if (readingNum == 1) {
+    if (readingNum == 1) {
         addMetaDataCharacteristic("first start time", start);
         addMetaDataCharacteristic("first end time", end);
         addMetaDataCharacteristic("first systolic", sbp);
         addMetaDataCharacteristic("first diastolic", dbp);
         addMetaDataCharacteristic("first pulse", pulse);
+        return;
     }
-    else {
-        BloodPressureMeasurement measurement;
-        measurement.storeData(sbp, dbp, pulse, start, end, readingNum);
-        m_measurementList.append(measurement);
-    }
+
+    BloodPressureMeasurement measurement;
+    measurement.storeData(sbp, dbp, pulse, start, end, readingNum);
+    m_measurementList.append(measurement);
 }
 
 // String representation for debug and GUI display purposes
@@ -113,7 +110,7 @@ bool BloodPressureTest::verifyReviewData(const int sbp, const int dbp, const int
     return dataMatches;
 }
 
-void BloodPressureTest::storeAverageMetaData(const int& sbpAvg, const int& dbpAvg, const int& pulseAvg)
+void BloodPressureTest::addAverageMeasurement(const int& sbpAvg, const int& dbpAvg, const int& pulseAvg)
 {
     int sbpTotal = 0;
     int dbpTotal = 0;

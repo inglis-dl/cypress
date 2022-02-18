@@ -9,7 +9,7 @@
 #include <QStandardItemModel>
 
 BloodPressureManager::BloodPressureManager(QObject* parent) 
-    : ManagerBase(parent), bpm(new BPM200())
+    : ManagerBase(parent), m_bpm(new BPM200())
 {
     setGroup("bloodpressure");
     m_inputKeyList << "barcode";
@@ -19,16 +19,7 @@ BloodPressureManager::BloodPressureManager(QObject* parent)
 
 void BloodPressureManager::start()
 {
-    bpm.Connect();
-    // TODO: MOve this to a slot
-    //if (connected) {
-    //    emit canMeasure();
-    //    qDebug() << "Manager: calling Cycle";
-    //    bpm.Cycle();
-    //    /*qDebug() << "Manager: calling Start";
-    //    bpm.Start();*/
-    //}
-   
+    m_bpm.connectToBpm();
     emit dataChanged();
 }
 
@@ -36,7 +27,7 @@ void BloodPressureManager::loadSettings(const QSettings& settings)
 {
     int vid = settings.value(getGroup() + "/client/vid").toInt();
     int pid = settings.value(getGroup() + "/client/pid").toInt();
-    bpm.SetConnectionInfo(vid, pid);
+    m_bpm.SetConnectionInfo(vid, pid);
 }
 
 void BloodPressureManager::saveSettings(QSettings* settings) const
@@ -128,7 +119,7 @@ void BloodPressureManager::measure()
     clearData();
     // launch the process
     qDebug() << "starting process from measure";
-    bpm.Measure();
+    m_bpm.measure();
 }
 
 void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
@@ -157,11 +148,13 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
 
 void BloodPressureManager::SetupConnections()
 {
-    connect(&bpm, &BPM200::ConnectionStatusReady, this, &BloodPressureManager::connectionStatusAvailable);
-    connect(&bpm, &BPM200::MeasurementReady, this, &BloodPressureManager::measurementAvailable);
+    connect(&m_bpm, &BPM200::connectionStatusReady, this, &BloodPressureManager::connectionStatusAvailable);
+    connect(&m_bpm, &BPM200::measurementReady, this, &BloodPressureManager::measurementAvailable);
+    connect(&m_bpm, &BPM200::averageReady, this, &BloodPressureManager::averageAvailable);
+    connect(&m_bpm, &BPM200::finalReviewReady, this, &BloodPressureManager::finalReviewAvailable);
     
     // Setup Connections for bpm200
-    bpm.SetupConnections();
+    m_bpm.setupConnections();
 }
 
 void BloodPressureManager::clearData()
@@ -176,31 +169,35 @@ void BloodPressureManager::connectUI(QWidget*)
 
 void BloodPressureManager::finish()
 {
-    bpm.Disconnect();
+    m_bpm.disconnect();
     m_test.reset();
 }
 
 void BloodPressureManager::measurementAvailable(const int &sbp, const int& dbp, const int& pulse, const const QDateTime& start, 
-    const QDateTime& end, const int& readingNum, const bool &isAverage, const bool &done)
+    const QDateTime& end, const int& readingNum)
 {
-    if (done) {
-        bool reviewDataVerified = false;
-        if (isAverage) {
-            reviewDataVerified = m_test.verifyReviewData(sbp, dbp, pulse);
-        }
-
-        if (reviewDataVerified) {
-            emit canWrite();
-            return;
-        }
-        else {
-            emit canMeasure();
-            return;
-        }
-    }
-
-    m_test.addMeasurement(sbp, dbp, pulse, start, end, readingNum, isAverage);
+    m_test.addMeasurement(sbp, dbp, pulse, start, end, readingNum);
     emit dataChanged();
+}
+
+void BloodPressureManager::averageAvailable(const int& sbp, const int& dbp, const int& pulse)
+{
+    m_test.addAverageMeasurement(sbp, dbp, pulse);
+    emit dataChanged();
+}
+
+void BloodPressureManager::finalReviewAvailable(const int& sbp, const int& dbp, const int& pulse)
+{
+    bool reviewDataVerified = m_test.verifyReviewData(sbp, dbp, pulse);
+    if (reviewDataVerified) {
+        emit canWrite();
+        return;
+    }
+    else {
+        // Error message on failure
+        emit canMeasure();
+        return;
+    }
 }
 
 void BloodPressureManager::connectionStatusAvailable(const bool connected)

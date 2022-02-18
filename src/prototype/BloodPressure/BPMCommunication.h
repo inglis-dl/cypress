@@ -19,36 +19,37 @@ class BPMCommunication: public QObject
 public:
 	explicit BPMCommunication(QObject* parent = Q_NULLPTR);
 public slots:
-	void Connect(const int vid, const int pid);
-	void Measure();
-	void Abort(QThread* uiThread);
+	void connectToBpm(const int vid, const int pid);
+	void measure();
+	void abort(QThread* uiThread);
 
 signals:
-	void ConnectionStatus(const bool connected);
-	void VersionInfoAvailable(const QString version);
-	void MeasurementReady(const int& sbp, const int& dbp, const int& pulse, const QDateTime& start, const QDateTime& end, const int& readingNum, 
-		const bool& isAverage = false, const bool& done = false);
-	void AverageReady(const int& sbp, const int& dbp, const int& pulse);
-	void FinalReviewReady(const int& sbp, const int& dbp, const int& pulse);
-	void MeasurementFailed();
-	void ConnectionLost();
-	void AbortFinished(bool successful);
+	void connectionStatus(const bool connected);
+	void versionInfoAvailable(const QString version);
+	void measurementReady(const int& sbp, const int& dbp, const int& pulse, const QDateTime& start, const QDateTime& end, const int& readingNum);
+	void averageReady(const int& sbp, const int& dbp, const int& pulse);
+	void finalReviewReady(const int& sbp, const int& dbp, const int& pulse);
+	void measurementFailed(); // TODO: hookup
+	void connectionLost(); // TODO: hookup
+	void abortFinished(bool successful);
 
 private:
-	bool ConnectToBpm();
-	bool Start();
-	bool Stop();
-	bool Cycle();
-	bool Clear();
-	bool Review();
-	bool Handshake();
-	bool TimedWrite(const quint8 msgId, const quint8 data0, const quint8 data1 = 0x00, const quint8 data2 = 0x00, const quint8 data3 = 0x00);
-	void Read();
+	bool attemptConnectionToBpm();
+	bool startBpm();
+	bool stopBpm();
+	bool cycleBpm();
+	bool clearBpm();
+	bool reviewBpm();
+	bool handshakeBpm();
+	bool timedWriteBpm(const quint8 msgId, const quint8 data0, const quint8 data1 = 0x00, const quint8 data2 = 0x00, const quint8 data3 = 0x00);
+	void readFromBpm();
 
-	bool TimedLoop(const int timeout, const function<bool()> func, const QString debugName = "");
-	bool TimedReadLoop(const int timeout, const function<bool()> func, const QString debugName = "");
-	bool AckCheck(const int expectedData0, const QString logName);
+	bool timedLoop(const int timeout, const function<bool()> func, const QString debugName = "");
+	bool timedReadLoop(const int timeout, const function<bool()> func, const QString debugName = "");
+	bool ackCheck(const int expectedData0, const QString logName);
 	void resetValues();
+
+
 
 	QHidDevice* m_bpm200;
 	QQueue<BPMMessage>* m_msgQueue;

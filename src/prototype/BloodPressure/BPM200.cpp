@@ -7,17 +7,19 @@ BPM200::BPM200(QObject* parent) : comm( new BPMCommunication()){}
 /*
 * Setup signal/slot connections between BPM200 and BPMCommunication
 */
-void BPM200::SetupConnections()
+void BPM200::setupConnections()
 {
     // Connection bpm200 signals with comm slots
-    connect(this, &BPM200::AttemptConnection, comm, &BPMCommunication::Connect);
-    connect(this, &BPM200::StartMeasurement, comm, &BPMCommunication::Measure);
-    connect(this, &BPM200::AbortMeasurement, comm, &BPMCommunication::Abort);
+    connect(this, &BPM200::attemptConnection, comm, &BPMCommunication::connectToBpm);
+    connect(this, &BPM200::startMeasurement, comm, &BPMCommunication::measure);
+    connect(this, &BPM200::abortMeasurement, comm, &BPMCommunication::abort);
 
     // Connection comm signals with bpm200 slots
-    connect(comm, &BPMCommunication::AbortFinished, this, &BPM200::AbortComplete);
-    connect(comm, &BPMCommunication::ConnectionStatus, this, &BPM200::ConnectionStatusReceived);
-    connect(comm, &BPMCommunication::MeasurementReady, this, &BPM200::MeasurementReceived);
+    connect(comm, &BPMCommunication::abortFinished, this, &BPM200::abortComplete);
+    connect(comm, &BPMCommunication::connectionStatus, this, &BPM200::connectionStatusReceived);
+    connect(comm, &BPMCommunication::measurementReady, this, &BPM200::measurementReceived);
+    connect(comm, &BPMCommunication::averageReady, this, &BPM200::averageRecieved);
+    connect(comm, &BPMCommunication::finalReviewReady, this, &BPM200::finalReviewRecieved);
 
     // Set connections set to true
     m_connectionsSet = true;
@@ -29,18 +31,18 @@ void BPM200::SetupConnections()
 * the device was already connected
 * and false otherwise
 */
-void BPM200::Connect()
+void BPM200::connectToBpm()
 {
     // Do not attempt connection unless the required 
     // connection info has not been set
-    if (ConnectionInfoSet() == false) {
+    if (connectionInfoSet() == false) {
         qDebug() << "Connection info has not been set";
         return;
     }
 
     // Setup connections if they are not already set
     if (m_connectionsSet == false) {
-        SetupConnections();
+        setupConnections();
     }
 
     // Move comm to comm thread and start comm thread
@@ -50,16 +52,16 @@ void BPM200::Connect()
     }
 
     // Attempt to connect to bpm
-    emit AttemptConnection(m_vid, m_pid);
+    emit attemptConnection(m_vid, m_pid);
 }
 
 /*
 * Attempts to disconnect from the blood pressure monitor
 */
-void BPM200::Disconnect()
+void BPM200::disconnect()
 {
     qDebug() << "BPM200: Disconnect called, terminating thread with bpm";
-    emit AbortMeasurement(QThread::currentThread());
+    emit abortMeasurement(QThread::currentThread());
     while (m_aborted == false) {
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }
@@ -71,7 +73,7 @@ void BPM200::Disconnect()
 * Then this will close the comm thread and set a bool to notify 
 * that the abort has completed
 */
-void BPM200::AbortComplete(bool successful) {
+void BPM200::abortComplete(bool successful) {
     qDebug() << "BPM200: Abort complete";
     CommThread.quit();
     CommThread.wait();
@@ -82,7 +84,7 @@ void BPM200::AbortComplete(bool successful) {
 * True if the vid and pid values have been set
 * and false otherwise
 */
-bool BPM200::ConnectionInfoSet()
+bool BPM200::connectionInfoSet()
 {
     return m_vid > 0 && m_pid > 0;
 }

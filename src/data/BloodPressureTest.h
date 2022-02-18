@@ -16,7 +16,8 @@ public:
     BloodPressureTest();
     ~BloodPressureTest() = default;
 
-    void addMeasurement(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum, const bool& isAverage);
+    void addMeasurement(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum);
+    void addAverageMeasurement(const int& sbpAvg, const int& dbpAvg, const int& pulseAvg);
 
     // String representation for debug and GUI display purposes
     //
@@ -36,7 +37,6 @@ public:
 
 private:
     QList<QString> m_outputKeyList;
-    void storeAverageMetaData(const int& sbpAvg, const int& dbpAvg, const int& pulseAvg);
     void storeAllAverageMetaData(int sbpTotal, int dbpTotal, int pulseTotal);
     bool hasFirstMeasurementData() const;
     bool hasAvgMeasurementData() const;

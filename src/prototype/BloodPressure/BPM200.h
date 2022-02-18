@@ -16,36 +16,39 @@ class BPM200: public QObject
 	QThread CommThread;
 public:
 	explicit BPM200(QObject* parent = Q_NULLPTR);
-	void SetupConnections();
+	void setupConnections();
 
 	void SetConnectionInfo(int vid, int pid) { m_vid = vid; m_pid = pid; };
 
-	void Connect();
-	void Measure() { emit StartMeasurement(); };
-	void Disconnect();
+	void connectToBpm();
+	void measure() { emit startMeasurement(); };
+	void disconnect();
 	
 public slots:
 	// slots for comm
-	void ConnectionStatusReceived(bool connected) {
+	void connectionStatusReceived(bool connected) {
 		//if (connected) emit StartMeasurement(); // TODO: REMOVE THIS
-		emit ConnectionStatusReady(connected);
+		emit connectionStatusReady(connected);
 	}
-	void MeasurementReceived(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start,
-		const QDateTime& end, const int& readingNum, const bool& isAverage, const bool& done) { MeasurementReady(sbp, dbp, pulse, start, end, readingNum, isAverage, done); }
-	void AbortComplete(bool successful);
+	void measurementReceived(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, 
+		const QDateTime& end, const int& readingNum) { measurementReady(sbp, dbp, pulse, start, end, readingNum); }
+	void averageRecieved(const int& sbp, const int& dbp, const int& pulse) { averageReady(sbp, dbp, pulse); }
+	void finalReviewRecieved(const int& sbp, const int& dbp, const int& pulse) { finalReviewReady(sbp, dbp, pulse); }
+	void abortComplete(bool successful);
 signals:
 	// Signals to comm
-	void AttemptConnection(const int vid, const int pid);
-	void StartMeasurement();
-	void AbortMeasurement(QThread* uiThread);
+	void attemptConnection(const int vid, const int pid);
+	void startMeasurement();
+	void abortMeasurement(QThread* uiThread);
 
 	// signals to manager
-	void ConnectionStatusReady(bool connected);
-	void MeasurementReady(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start,
-		const QDateTime& end, const int& readingNum, const bool& isAverage, const bool& done);
+	void connectionStatusReady(bool connected);
+	void measurementReady(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum);
+	void averageReady(const int& sbp, const int& dbp, const int& pulse);
+	void finalReviewReady(const int& sbp, const int& dbp, const int& pulse);
 private:
 	BPMCommunication* comm;
-	bool ConnectionInfoSet();
+	bool connectionInfoSet();
 	int m_vid = 0;
 	int m_pid = 0;
 	bool m_aborted = false;

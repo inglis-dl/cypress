@@ -44,13 +44,15 @@ public slots:
     void finish() override;
 
     // slot for signals coming from bpm200
-    void measurementAvailable(const int &sbp, const int &dbp, const int &pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum, const bool &isAverage, const bool &done);
+    void measurementAvailable(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum);
+    void averageAvailable(const int& sbp, const int& dbp, const int& pulse);
+    void finalReviewAvailable(const int &sbp, const int &dbp, const int &pulse);
     void connectionStatusAvailable(const bool connected);
 protected:
     void clearData() override;
 
 private:
-    BPM200 bpm;
+    BPM200 m_bpm;
     BloodPressureTest m_test;
 };
 
