@@ -10,6 +10,10 @@ class BloodPressureManager : public ManagerBase
 public:
     explicit BloodPressureManager(QObject* parent = Q_NULLPTR);
 
+    // TODO: make this private. This is public so that it can send a signal 
+    // to mainwindow since bloodPressureManager cannot have its own signals
+    BPM200 m_bpm;
+
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
 
@@ -30,6 +34,14 @@ public:
     void setInputData(const QMap<QString, QVariant>&);
 
     void SetupConnections();
+
+    void setArmBandSize(const QString& size) { m_test.setArmBandSize(size); }
+    void setArm(const QString& arm) { m_test.setArm(arm); }
+    bool armInformationSet() const { return m_test.armInformationSet(); }
+
+    void connectToBpm() {
+        m_bpm.connectToBpm();
+    }
 public slots:
 
     void start() override;
@@ -52,7 +64,6 @@ protected:
     void clearData() override;
 
 private:
-    BPM200 m_bpm;
     BloodPressureTest m_test;
 };
 

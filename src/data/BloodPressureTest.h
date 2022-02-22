@@ -35,6 +35,10 @@ public:
     QString avgMeasurementToString() const;
     QString allAvgMeasurementToString() const;
 
+    void setArmBandSize(const QString& size) { addMetaDataCharacteristic("arm band size", size); }
+    void setArm(const QString& arm) { addMetaDataCharacteristic("arm used", arm); }
+    bool armInformationSet() const;
+
 private:
     QList<QString> m_outputKeyList;
     void storeAllAverageMetaData(int sbpTotal, int dbpTotal, int pulseTotal);

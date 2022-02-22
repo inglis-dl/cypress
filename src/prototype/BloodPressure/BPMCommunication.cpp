@@ -46,7 +46,7 @@ void BPMCommunication::measure() {
 	bool clearSuccessful = clearBpm();
 	qDebug() << "BPMComm: Clear data on bpm: " << (clearSuccessful ? "Successful" : "Failed");
 	if (clearSuccessful == false) {
-		emit measurementFailed();
+		emit connectionStatus(false);
 		return;
 	}
 
@@ -65,14 +65,14 @@ void BPMCommunication::measure() {
 			return false;
 		});
 	if (cycleSetToOne == false) {
-		emit measurementFailed();
+		emit connectionStatus(false);
 		return;
 	}
 
 	// Start Measuring
 	bool measurementSuccessful = startBpm();
 	if (measurementSuccessful == false) {
-		emit measurementFailed();
+		emit connectionStatus(false);
 		return;
 	}
 }
@@ -158,14 +158,12 @@ bool BPMCommunication::startBpm()
 			// else if acknowledgment...
 			else if (0x06 == msgId) {
 				m_cycleTime = msg.GetData1();
-				//m_readingNumber = msg.GetData2();
 				if (0x04 == data0) {
 					qDebug() << "Ack received for start: " << msg.GetAsQString() << endl;
 					m_measuring = true;
 				}
 				else if (0x02 == data0) {
 					qDebug() << "Ack received for review: " << msg.GetAsQString() << endl;
-					//m_resultCode = msg.GetData3();
 				}
 			}
 			// else if inflating ...
@@ -386,7 +384,7 @@ bool BPMCommunication::timedWriteBpm(quint8 msgId, quint8 data0, quint8 data1, q
 			return false;
 		});
 	if (successful == false) {
-		emit connectionLost();
+		emit connectionStatus(false);
 	}
 	return successful;
 }
@@ -543,7 +541,6 @@ void BPMCommunication::endReading(const int& sbp, const int& dbp, const int& pul
 		emit measurementReady(sbp, dbp, pulse, m_readingStartTime, QDateTime::currentDateTime(), m_readingNumberCalc);
 		m_readingStartTime = QDateTime::fromMSecsSinceEpoch(0);
 	}
-	
 }
 
 

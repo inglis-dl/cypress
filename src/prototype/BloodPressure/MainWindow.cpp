@@ -43,6 +43,7 @@ void MainWindow::initialize()
 {
     setupConnections();
     initializeButtonState();
+    initializeArmBandDropDowns();
 
     m_manager.setVerbose(m_verbose);
     m_manager.setMode(m_mode);
@@ -72,6 +73,41 @@ void MainWindow::setupConnections()
         this, [this]() {
             ui->measureButton->setEnabled(true);
             ui->saveButton->setEnabled(false);
+            ui->connectButton->setEnabled(false);
+            ui->statusBar->showMessage("Connected: Ready to measure blood pressure");
+        });
+
+    // Connect to the device (bpm)
+    //
+    connect(ui->connectButton, &QPushButton::clicked,
+        this, [this]() {
+            if (m_manager.armInformationSet()) {
+                m_manager.connectToBpm();
+                // Remove blank enty from selection, so that user cannot change answer to blank
+                // The user will still be able to change there selection if they make a mistake
+                // But they will be foreced to chose a valid option
+                QComboBox* armBandSizeCB = ui->armBandSizeComboBox;
+                for (int i = 0; i < armBandSizeCB->count(); i++) {
+                    if ("" == armBandSizeCB->itemText(i)) {
+                        armBandSizeCB->removeItem(i);
+                    }
+                }
+                QComboBox* armUsedCB = ui->armComboBox;
+                for (int i = 0; i < armUsedCB->count(); i++) {
+                    if ("" == armUsedCB->itemText(i)) {
+                        armUsedCB->removeItem(i);
+                    }
+                }
+            }
+            else {
+                // this warning message should never be reached. The user should not have 
+                // the option to connect until choosing arm band size and arm used.
+                // It is here as an added precaution incase the user somehow is able to 
+                // click connect before intended
+                QMessageBox::warning(
+                    this, QApplication::applicationName(),
+                    tr("Please select arm band size and arm used before trying to connect"));
+            }
         });
 
     // Request a measurement from the device (bpm)
@@ -107,6 +143,7 @@ void MainWindow::setupConnections()
     connect(&m_manager, &BloodPressureManager::canWrite,
         this, [this]() {
             ui->saveButton->setEnabled(true);
+            ui->statusBar->showMessage("Done Measuring: Blood pressure data ready to be saved");
         });
 
     // Write test data to output
@@ -118,6 +155,28 @@ void MainWindow::setupConnections()
     //
     connect(ui->closeButton, &QPushButton::clicked,
         this, &MainWindow::close);
+
+    // Update arm band size selected by user
+    //
+    connect(ui->armBandSizeComboBox, &QComboBox::currentTextChanged, 
+        this, [this](const QString &size) {
+            m_manager.setArmBandSize(size);
+            if (m_manager.armInformationSet()) {
+                ui->connectButton->setEnabled(true);
+            }
+        });
+    // Update arm used selected by user
+    //
+    connect(ui->armComboBox, &QComboBox::currentTextChanged,
+        this, [this](const QString& arm) {
+            m_manager.setArm(arm);
+            if (m_manager.armInformationSet()) {
+                ui->connectButton->setEnabled(true);
+            }
+        });
+
+    connect(&m_manager.m_bpm, &BPM200::connectionStatusReady,
+        this, &MainWindow::bpmDisconnected);
 
     // Setup Connections for manager
     m_manager.SetupConnections();
@@ -133,6 +192,26 @@ void MainWindow::initializeButtonState()
     // Close the application
     //
     ui->closeButton->setEnabled(true);
+    if (m_manager.armInformationSet()) {
+        ui->connectButton->setEnabled(true);
+    }
+}
+
+void MainWindow::initializeArmBandDropDowns()
+{
+    // The qcombobox automatically selects the first item in the list. So a blank entry is
+    // added to display that an option has not been picked yet. The blank entry is treated 
+    // as not being a valid option by the rest of this code. If there was no blank entry, then 
+    // another option would be set by default and users may forget to change the default option
+    ui->armBandSizeComboBox->addItem("");
+    ui->armBandSizeComboBox->addItem("Small");
+    ui->armBandSizeComboBox->addItem("Medium");
+    ui->armBandSizeComboBox->addItem("Large");
+    ui->armBandSizeComboBox->addItem("X-Large");
+
+    ui->armComboBox->addItem("");
+    ui->armComboBox->addItem("Left");
+    ui->armComboBox->addItem("Right");
 }
 
 void MainWindow::populateBarcodeDisplay()
@@ -165,6 +244,17 @@ void MainWindow::validateRunnablePresense()
 void MainWindow::run()
 {
     m_manager.start();
+}
+
+void MainWindow::bpmDisconnected(const bool &connected)
+{
+    if (connected == false) {
+        initializeButtonState();
+        ui->statusBar->showMessage("ERROR: Cannot connect to blood pressure monitor");
+        QMessageBox::warning(
+            this, QApplication::applicationName(),
+            tr("ERROR: Cannot connect to blood pressure monitor. Please ensure that the blood pressure monitor is plugged in, turned on and connected to the computer"));
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)

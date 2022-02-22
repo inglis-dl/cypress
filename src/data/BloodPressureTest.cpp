@@ -53,9 +53,7 @@ bool BloodPressureTest::isValid() const
     bool okMeta = hasFirstMeasurementData()
         && hasAvgMeasurementData()
         && hasAllAvgMeasurementData()
-        // TODO: implement arm band meta data
-        /*&&hasMetaDataCharacteristic("arm band size")
-          && hasMetaDataCharacteristic("arm used")*/;
+        && armInformationSet();
 
     if (okMeta == false) {
         return false;
@@ -233,4 +231,12 @@ QString BloodPressureTest::allAvgMeasurementToString() const
         .arg(getMetaDataCharacteristic("all avg systolic").toInt())
         .arg(getMetaDataCharacteristic("all avg diastolic").toInt())
         .arg(getMetaDataCharacteristic("all avg pulse").toInt());
+}
+
+bool BloodPressureTest::armInformationSet() const
+{
+    return hasMetaDataCharacteristic("arm band size")
+        && hasMetaDataCharacteristic("arm used")
+        && getMetaDataCharacteristic("arm band size") != ""
+        && getMetaDataCharacteristic("arm used") != "";
 }

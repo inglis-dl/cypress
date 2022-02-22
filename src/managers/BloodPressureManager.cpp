@@ -19,7 +19,6 @@ BloodPressureManager::BloodPressureManager(QObject* parent)
 
 void BloodPressureManager::start()
 {
-    m_bpm.connectToBpm();
     emit dataChanged();
 }
 
@@ -206,6 +205,7 @@ void BloodPressureManager::connectionStatusAvailable(const bool connected)
         emit canMeasure();
     }
     else {
+        //emit connectionFailure();
         // TODO: Show the following message to user 
         //       "There was a problem connecting to the Blood Pressure Monitor.
         //        Please ensure that the bpm is plugged in, turned on and connected 

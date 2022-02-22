@@ -30,7 +30,6 @@ signals:
 	void averageReady(const int& sbp, const int& dbp, const int& pulse);
 	void finalReviewReady(const int& sbp, const int& dbp, const int& pulse);
 	void measurementFailed(); // TODO: hookup
-	void connectionLost(); // TODO: hookup
 	void abortFinished(bool successful);
 
 private:

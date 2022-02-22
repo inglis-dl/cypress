@@ -41,6 +41,7 @@ public:
 
 public slots:
     void writeOutput();
+    void bpmDisconnected(const bool &connected);
 
 protected:
     void closeEvent(QCloseEvent*) override;
@@ -48,6 +49,7 @@ protected:
 private:
     void setupConnections();
     void initializeButtonState();
+    void initializeArmBandDropDowns();
     void readInput();
     void populateBarcodeDisplay();
     void validateRunnablePresense();

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
+    <width>411</width>
     <height>389</height>
    </rect>
   </property>
@@ -78,6 +78,41 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="armBandGroupBox">
+     <property name="title">
+      <string>arm band information</string>
+     </property>
+     <layout class="QHBoxLayout" name="armBandHorizontalLayout">
+      <item>
+       <widget class="QLabel" name="armBandSizeLabel">
+        <property name="text">
+         <string>Arm band size:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="armBandSizeComboBox"/>
+      </item>
+      <item>
+       <widget class="QLabel" name="armLabel">
+        <property name="text">
+         <string>Arm used:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="armComboBox"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="pathGroupBox">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -86,7 +121,7 @@
       </sizepolicy>
      </property>
      <property name="title">
-      <string>executable</string>
+      <string>connection ids</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
@@ -120,6 +155,13 @@
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QPushButton" name="connectButton">
+          <property name="text">
+           <string>Connect</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QPushButton" name="measureButton">
           <property name="text">
