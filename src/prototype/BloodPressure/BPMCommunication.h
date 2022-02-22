@@ -81,6 +81,8 @@ private:
 	bool m_aborted = false;
 
 	bool m_stopUnexpectedRecieved = false;
+
+	QTime m_lastBpmMessageTime = QTime::currentTime();
 };
 
 #endif //BPMCOMMUNICATION_H

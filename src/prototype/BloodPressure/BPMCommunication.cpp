@@ -490,7 +490,7 @@ bool BPMCommunication::timedReadLoop(int timeout, function<bool()> func, QString
 	if (connected == false) {
 		return false;
 	}
-
+	m_lastBpmMessageTime = QTime::currentTime();
 	bool successful = timedLoop(timeout, 
 		[this, func]() -> bool {
 			if (m_aborted) {
@@ -500,10 +500,19 @@ bool BPMCommunication::timedReadLoop(int timeout, function<bool()> func, QString
 
 			readFromBpm();
 			if(m_msgQueue->isEmpty() == false) {
+				m_lastBpmMessageTime = QTime::currentTime();
 				bool successful = func();
 				if (successful) {
 					return true;
 				}
+			}
+			QTime tooLongSinceLastReadTime = m_lastBpmMessageTime.addSecs(45);
+			if (tooLongSinceLastReadTime < QTime::currentTime()) {
+				QString errorMessage = 
+					"There has been a large pause since the last communication from the bpm. Connection status being considered interupted";
+				qDebug() << errorMessage;
+				emit measurementError(errorMessage);
+				return true;
 			}
 			return false;
 		}, debugName);

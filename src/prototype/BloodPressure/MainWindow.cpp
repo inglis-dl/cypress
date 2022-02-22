@@ -187,12 +187,18 @@ void MainWindow::setupConnections()
         this, &MainWindow::bpmDisconnected);
     connect(&m_manager.m_bpm, &BPM200::sendError,
         this, [this](const QString& error) {
-            // TODO: Show error that is passe in 
             ui->statusBar->showMessage("ERROR: Blood Pressure device error.");
             m_manager.finish();
-            QMessageBox::warning(
-                this, QApplication::applicationName(),
-                tr("ERROR: Blood Pressure device error"));
+            if (error.isEmpty()) {
+                QMessageBox::warning(
+                    this, QApplication::applicationName(),
+                    tr("ERROR: Blood Pressure device error"));
+            }
+            else {
+                QMessageBox::warning(
+                    this, QApplication::applicationName(),
+                    tr(error.toLocal8Bit().data()));
+            }
             initializeButtonState();
         });
 
