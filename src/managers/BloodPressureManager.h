@@ -60,6 +60,7 @@ public slots:
     void averageAvailable(const int& sbp, const int& dbp, const int& pulse);
     void finalReviewAvailable(const int &sbp, const int &dbp, const int &pulse);
     void connectionStatusAvailable(const bool connected);
+    void errorOccured(const QString& error);
 protected:
     void clearData() override;
 

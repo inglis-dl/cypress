@@ -29,7 +29,7 @@ signals:
 	void measurementReady(const int& sbp, const int& dbp, const int& pulse, const QDateTime& start, const QDateTime& end, const int& readingNum);
 	void averageReady(const int& sbp, const int& dbp, const int& pulse);
 	void finalReviewReady(const int& sbp, const int& dbp, const int& pulse);
-	void measurementFailed(); // TODO: hookup
+	void measurementError(const QString& error);
 	void abortFinished(bool successful);
 
 private:
@@ -79,6 +79,8 @@ private:
 	bool m_measuring = false;
 
 	bool m_aborted = false;
+
+	bool m_stopUnexpectedRecieved = false;
 };
 
 #endif //BPMCOMMUNICATION_H

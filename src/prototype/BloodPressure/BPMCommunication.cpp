@@ -83,7 +83,12 @@ void BPMCommunication::measure() {
 void BPMCommunication::abort(QThread* uiThread) {
 	bool connected = attemptConnectionToBpm();
 	if (connected && m_measuring) {
-		stopBpm();
+		bool stopAckRecieved = stopBpm();
+		if (m_stopUnexpectedRecieved && false == stopAckRecieved) {
+			// try to stop again. When error occurs, the first stop 
+			// typically doesn't work, but the second does
+			stopBpm();
+		}
 		m_aborted = true;
 	}
 	qDebug() << "BPM comm: abort on thread: " << QThread::currentThreadId();
@@ -119,7 +124,7 @@ bool BPMCommunication::attemptConnectionToBpm()
 * Calls start on the bpm and handles communication with the bpm until one of 
 * the following conditions is met:
 * 1. A review message is recieved from the bpm signifying the measurement is complete
-* 2. TODO: error handling
+* 2. error handling
 * 3. Communication with the bpm times out
 * 
 * If completing according to case 1 then,
@@ -197,8 +202,10 @@ bool BPMCommunication::startBpm()
 			}
 			// else if bp error recieved ...
 			else if (0x42 == msgId && 0x00 != data0) {
-				// TODO: have an error signal to manager. Probably abort measurement
+				// TODO: Possibly get specific and interpret the error as a string to tell user
+				emit measurementError("");
 				qDebug() << "Error occured from BPM" << endl;
+				return true;
 			}
 			// else if review button clicked ...
 			// NOTE: This gets called once by bpm even if 
@@ -222,6 +229,7 @@ bool BPMCommunication::startBpm()
 */
 bool BPMCommunication::stopBpm()
 {
+	m_stopUnexpectedRecieved = false;
     qDebug() << "BPMComm: Stop";
 	bool writeCompleted = timedWriteBpm(0x11, 0x01);
 	if (writeCompleted == false) {
@@ -232,7 +240,11 @@ bool BPMCommunication::stopBpm()
 	// Wait up to 30 seconds before giving up
 	bool stopAckRecieved = timedReadLoop(5,
 		[this]() -> bool {
-			return ackCheck(1, "Stop");
+			bool stopAckRecieved = ackCheck(1, "Stop");
+			if (false == stopAckRecieved) {
+				m_stopUnexpectedRecieved = true;
+			}
+			return stopAckRecieved;
 		}, "Stop");
 	// Set measuring false is stop ack sucessfully recieved
 	if (stopAckRecieved) {

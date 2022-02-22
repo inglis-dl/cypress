@@ -42,8 +42,8 @@ MainWindow::~MainWindow()
 void MainWindow::initialize()
 {
     setupConnections();
-    initializeButtonState();
     initializeArmBandDropDowns();
+    initializeButtonState();
 
     m_manager.setVerbose(m_verbose);
     m_manager.setMode(m_mode);
@@ -113,7 +113,14 @@ void MainWindow::setupConnections()
     // Request a measurement from the device (bpm)
     //
     connect(ui->measureButton, &QPushButton::clicked,
-        &m_manager, &BloodPressureManager::measure);
+        this, [this]() {
+            ui->statusBar->showMessage("Measuring blood pressure");
+            ui->measureButton->setEnabled(false);
+            m_manager.measure();
+        });
+
+   /* connect(ui->measureButton, &QPushButton::clicked,
+        &m_manager, &BloodPressureManager::measure);*/
 
     // Update the UI with any data
     //
@@ -175,8 +182,19 @@ void MainWindow::setupConnections()
             }
         });
 
+    // TODO figure out how manager can create its own signals
     connect(&m_manager.m_bpm, &BPM200::connectionStatusReady,
         this, &MainWindow::bpmDisconnected);
+    connect(&m_manager.m_bpm, &BPM200::sendError,
+        this, [this](const QString& error) {
+            // TODO: Show error that is passe in 
+            ui->statusBar->showMessage("ERROR: Blood Pressure device error.");
+            m_manager.finish();
+            QMessageBox::warning(
+                this, QApplication::applicationName(),
+                tr("ERROR: Blood Pressure device error"));
+            initializeButtonState();
+        });
 
     // Setup Connections for manager
     m_manager.SetupConnections();
@@ -192,6 +210,23 @@ void MainWindow::initializeButtonState()
     // Close the application
     //
     ui->closeButton->setEnabled(true);
+
+    // Set the selected arm band size if it has already been selected
+    // NOTE: It may have already been set if there is an error while measuring
+    QString selectedArmBandSize = ui->armBandSizeComboBox->currentText();
+    if ("" != selectedArmBandSize) {
+        m_manager.setArmBandSize(selectedArmBandSize);
+    }
+
+    // Set the selected arm used if it has already been selected
+    // NOTE: It may have already been set if there is an error while measuring
+    QString selectedArmUsed = ui->armComboBox->currentText();
+    if ("" != selectedArmUsed) {
+        m_manager.setArm(selectedArmUsed);
+    }
+
+    // Enable the connect button if the arm information has been set
+    // NOTE: It may have already been set if there is an error while measuring
     if (m_manager.armInformationSet()) {
         ui->connectButton->setEnabled(true);
     }

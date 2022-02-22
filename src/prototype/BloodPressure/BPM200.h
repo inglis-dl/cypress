@@ -31,10 +31,11 @@ public slots:
 		emit connectionStatusReady(connected);
 	}
 	void measurementReceived(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, 
-		const QDateTime& end, const int& readingNum) { measurementReady(sbp, dbp, pulse, start, end, readingNum); }
-	void averageRecieved(const int& sbp, const int& dbp, const int& pulse) { averageReady(sbp, dbp, pulse); }
-	void finalReviewRecieved(const int& sbp, const int& dbp, const int& pulse) { finalReviewReady(sbp, dbp, pulse); }
+		const QDateTime& end, const int& readingNum) { emit measurementReady(sbp, dbp, pulse, start, end, readingNum); }
+	void averageRecieved(const int& sbp, const int& dbp, const int& pulse) { emit averageReady(sbp, dbp, pulse); }
+	void finalReviewRecieved(const int& sbp, const int& dbp, const int& pulse) { emit finalReviewReady(sbp, dbp, pulse); }
 	void abortComplete(bool successful);
+	void errorRecieved(const QString& error) { emit sendError(error); }
 signals:
 	// Signals to comm
 	void attemptConnection(const int vid, const int pid);
@@ -46,6 +47,7 @@ signals:
 	void measurementReady(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum);
 	void averageReady(const int& sbp, const int& dbp, const int& pulse);
 	void finalReviewReady(const int& sbp, const int& dbp, const int& pulse);
+	void sendError(const QString& error);
 private:
 	BPMCommunication* comm;
 	bool connectionInfoSet();

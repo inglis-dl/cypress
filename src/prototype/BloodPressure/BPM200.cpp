@@ -20,6 +20,7 @@ void BPM200::setupConnections()
     connect(comm, &BPMCommunication::measurementReady, this, &BPM200::measurementReceived);
     connect(comm, &BPMCommunication::averageReady, this, &BPM200::averageRecieved);
     connect(comm, &BPMCommunication::finalReviewReady, this, &BPM200::finalReviewRecieved);
+    connect(comm, &BPMCommunication::measurementError, this, &BPM200::errorRecieved);
 
     // Set connections set to true
     m_connectionsSet = true;
