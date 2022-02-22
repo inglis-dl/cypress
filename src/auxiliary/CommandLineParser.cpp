@@ -9,13 +9,13 @@
 CommandLineParser::CommandLineParser(QObject* parent) : QObject(parent)
 {
    m_args["verbose"] = QVariant(true);
-   m_args["mode"] = QVariant(CypressConstants::Mode::Default);
+   m_args["runMode"] = QVariant::fromValue(CypressConstants::RunMode::Unknown);
    m_args["inputFileName"] = QVariant();
    m_args["outputFileName"] = QVariant();
-   m_args["type"] = QVariant(CypressConstants::Type::None);
+   m_args["measureType"] = QVariant::fromValue(CypressConstants::MeasureType::None);
 }
 
-CommandLineParser::CommandLineParseResult CommandLineParser::parseCommandLine(
+CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
         const QCoreApplication &app,
          QString *errMessage)
 {
@@ -43,11 +43,11 @@ CommandLineParser::CommandLineParseResult CommandLineParser::parseCommandLine(
         "main", "Write json output to <file>"),"file");
     m_parser.addOption(outputOption);
 
-    QCommandLineOption testOption(
-      QStringList() << "t" << "test",
+    QCommandLineOption typeOption(
+      QStringList() << "t" << "type",
       QCoreApplication::translate(
-        "main", "Test <type>"),"test","type");
-    m_parser.addOption(testOption);
+        "main", "Measure type <type>"),"type","none");
+    m_parser.addOption(typeOption);
 
     QCommandLineOption modeOption(
       QStringList() << "m" << "mode",
@@ -64,10 +64,10 @@ CommandLineParser::CommandLineParseResult CommandLineParser::parseCommandLine(
     m_parser.process(app);
 
     if (m_parser.isSet(versionOption))
-        return CommandLineVersionRequested;
+        return VersionRequested;
 
     if (m_parser.isSet(helpOption))
-        return CommandLineHelpRequested;
+        return HelpRequested;
 
     // Default when not run from command line we assume verbose is desired
     //
@@ -80,7 +80,7 @@ CommandLineParser::CommandLineParseResult CommandLineParser::parseCommandLine(
 
     // Catch the first parser error
     //
-    CommandLineParseResult result = CommandLineOk;
+    ParseResult result = Ok;
 
     // Default mode is "default"
     // - simulate runs the app with GUI interaction but without
@@ -97,25 +97,25 @@ CommandLineParser::CommandLineParseResult CommandLineParser::parseCommandLine(
     if(m_parser.isSet(modeOption))
     {
         QString s = m_parser.value(modeOption).toLower();
-        QStringList l;
-        l << "default" << "simulate" << "live";
-        if(l.contains(s))
+        s.replace(0,1,s[0].toUpper());
+        CypressConstants::RunMode runMode = CypressConstants::getRunMode(s);
+        if(CypressConstants::RunMode::Unknown != runMode)
         {
-          m_args["mode"] = CypressConstants::getMode(s);
+          m_args["runMode"] = QVariant::fromValue(runMode);
           if(m_args["verbose"].toBool())
-            qDebug() << "mode option set with " << s;
+            qDebug() << "Run mode option set with " << s;
         }
         else
         {
-          result = CommandLineModeError;
-          *errMessage = "Invalid mode: " + s;
+          result = RunModeError;
+          *errMessage = "Invalid run mode: " + s;
         }
     }
 
     bool hasValidInput = false;
     bool hasValidOutput = false;
 
-    if(m_parser.isSet(inputOption) && CommandLineOk==result)
+    if(m_parser.isSet(inputOption) && Ok == result)
     {
         QString s = m_parser.value(inputOption);
         QFileInfo info(s);
@@ -124,12 +124,12 @@ CommandLineParser::CommandLineParseResult CommandLineParser::parseCommandLine(
             hasValidInput = true;
             m_args["inputFileName"] = s;
             if(m_args["verbose"].toBool())
-              qDebug() << "in file option set with " << s;
+              qDebug() << "Input file option set with " << s;
         }
         else
         {
             qDebug() << "ERROR: input file does not exist: " <<  s;
-            result = CommandLineInputFileError;
+            result = InputFileError;
             *errMessage = "Invalid input file " + s;
         }
     }
@@ -137,7 +137,7 @@ CommandLineParser::CommandLineParseResult CommandLineParser::parseCommandLine(
     // if command line parsing determined an error do not continue
     // and report on the next potential error
     //
-    if(m_parser.isSet(outputOption) && CommandLineOk==result)
+    if(m_parser.isSet(outputOption) && Ok == result)
     {
         QString s = m_parser.value(outputOption);
         QFileInfo info(s);
@@ -146,43 +146,45 @@ CommandLineParser::CommandLineParseResult CommandLineParser::parseCommandLine(
             hasValidOutput = true;
             m_args["outputFileName"] = s;
             if(m_args["verbose"].toBool())
-              qDebug() << "out file option set with " << s;
+              qDebug() << "Output file option set with " << s;
         }
         else
         {
             qDebug() << "ERROR: output file path does not exist: " <<  info.dir().canonicalPath();
-            result = CommandLineOutputPathError;
+            result = OutputPathError;
             *errMessage = "Invalid output file path " + info.dir().canonicalPath();
         }
     }
 
-    if(m_parser.isSet(testOption) && CommandLineOk==result)
+    if(m_parser.isSet(typeOption) && Ok == result)
     {
-        QString s = m_parser.value(testOption).toLower();
-        qDebug() << "test option parsing " << s;
-        // determine which manager and dialog is needed based on test type
-        if(CypressConstants::Type::None != CypressConstants::getType(s))
+        QString s = m_parser.value(typeOption);
+        qDebug() << "Measure type option parsing " << s;
+        // determine which manager and dialog is needed based on measure type
+        //
+        CypressConstants::MeasureType measureType = CypressConstants::getMeasureType(s);
+        if(CypressConstants::MeasureType::None != measureType)
         {
-            m_args["type"] = QVariant::fromValue(CypressConstants::getType(s));
+            m_args["measureType"] = QVariant::fromValue(measureType);
             if(m_args["verbose"].toBool())
-              qDebug() << "in test option set with " << s;
+              qDebug() << "Measure type option set with " << s;
         }
         else
         {
-            qDebug() << "ERROR: input test does not exist: " <<  s;
-            result = CommandLineTypeError;
-            *errMessage = "Invalid input test " + s;
+            qDebug() << "ERROR: input measure type does not exist: " <<  s;
+            result = MeasureTypeError;
+            *errMessage = "Invalid input measure type " + s;
         }
     }
-    else {qDebug() << "test option not set";}
+    else {qDebug() << "measure type option not set";}
 
-    if(CommandLineOk == result)
+    if(Ok == result)
     {
-        if(CypressConstants::Mode::Live == m_args["mode"].value<CypressConstants::Mode>())
+        if(CypressConstants::RunMode::Live == m_args["runMode"].value<CypressConstants::RunMode>())
         {
             if(!(hasValidInput && hasValidOutput))
             {
-               result = CommandLineError;
+               result = Error;
                *errMessage = "One or more expected arguments are missng";
             }
         }

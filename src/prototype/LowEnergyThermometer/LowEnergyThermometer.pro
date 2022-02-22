@@ -26,6 +26,7 @@ CONFIG += c++11 console
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
     ../../auxiliary/BluetoothUtil.cpp \
     ../../data/MeasurementBase.cpp \
     ../../data/TemperatureMeasurement.cpp \
@@ -37,6 +38,7 @@ SOURCES += \
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../auxiliary/BluetoothUtil.h \
     ../../data/MeasurementBase.h \
     ../../data/TemperatureMeasurement.h \

@@ -7,6 +7,8 @@
 #include <QMessageBox>
 #include <QDebug>
 
+#include "./auxiliary/CypressConstants.h"
+
 int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName("CLSA");
@@ -32,24 +34,24 @@ int main(int argc, char *argv[])
   QString errMessage;
   switch(parser.parseCommandLine(app,&errMessage))
   {
-    case CommandLineParser::CommandLineHelpRequested:
+    case CommandLineParser::HelpRequested:
       QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
                                "<html><head/><body><pre>"
                                + parser.helpText() + "</pre></body></html>");
       return 0;
-    case  CommandLineParser::CommandLineVersionRequested:
+    case CommandLineParser::VersionRequested:
       QMessageBox::information(0, QGuiApplication::applicationDisplayName(),
                                QGuiApplication::applicationDisplayName() + ' '
                                + QCoreApplication::applicationVersion());
       return 0;
-    case CommandLineParser::CommandLineOk:
+    case CommandLineParser::Ok:
       break;
-    case CommandLineParser::CommandLineError:
-    case CommandLineParser::CommandLineInputFileError:
-    case CommandLineParser::CommandLineOutputPathError:
-    case CommandLineParser::CommandLineMissingArg:
-    case CommandLineParser::CommandLineTypeError:
-    case CommandLineParser::CommandLineModeError:
+    case CommandLineParser::Error:
+    case CommandLineParser::InputFileError:
+    case CommandLineParser::OutputPathError:
+    case CommandLineParser::MissingArg:
+    case CommandLineParser::MeasureTypeError:
+    case CommandLineParser::RunModeError:
         QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
                              "<html><head/><body><h2>" + errMessage + "</h2><pre>"
                              + parser.helpText() + "</pre></body></html>");
@@ -61,10 +63,8 @@ int main(int argc, char *argv[])
   {
       qDebug() << "initialize start";
       cypress.setArgs(parser.getArgs());
-      qDebug() << CypressApplication::staticMetaObject.className();
       cypress.initialize();
       qDebug() << "initialize end";
-
   }
   catch (std::exception& e)
   {

@@ -29,8 +29,8 @@ public:
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
     QString outputFileName() { return m_outputFileName; }
 
-    void setMode(const CypressConstants::Mode& mode) { m_mode = mode; }
-    CypressConstants::Mode mode() { return m_mode; }
+    void setRunMode(const CypressConstants::RunMode& mode) { m_mode = mode; }
+    CypressConstants::RunMode runMode() { return m_mode; }
 
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose(){ return m_verbose; }
@@ -47,7 +47,7 @@ protected:
     QStandardItemModel m_model;
     QString m_inputFileName;
     QString m_outputFileName;
-    CypressConstants::Mode m_mode;
+    CypressConstants::RunMode m_mode;
     bool m_verbose;
 
     QMap<QString,QVariant> m_inputData;

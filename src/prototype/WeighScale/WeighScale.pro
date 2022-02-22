@@ -26,6 +26,7 @@ CONFIG += c++11 console
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
     ../../data/WeighScaleTest.cpp \
     ../../data/WeightMeasurement.cpp \
     ../../data/MeasurementBase.cpp \
@@ -37,6 +38,7 @@ SOURCES += \
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../data/MeasurementBase.h \
     ../../data/WeighScaleTest.h \
     ../../data/WeightMeasurement.h \

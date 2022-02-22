@@ -20,8 +20,8 @@ public:
 private:
     QString m_inputFileName;
     QString m_outputFileName;
-    CypressConstants::Mode m_mode { CypressConstants::Mode::Unknown };
-    CypressConstants::Type m_type { CypressConstants::Type::None };
+    CypressConstants::RunMode m_mode { CypressConstants::RunMode::Unknown };
+    CypressConstants::MeasureType m_type { CypressConstants::MeasureType::None };
     bool m_verbose;
 
     QScopedPointer<DialogBase> m_dialog;

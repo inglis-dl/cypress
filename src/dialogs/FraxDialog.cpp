@@ -78,7 +78,7 @@ void FraxDialog::initializeConnections()
   // TODO: for DCS interviews, the first digit corresponds the the wave rank
   // for inhome interviews there is a host dependent prefix before the barcode
   //
-  if(CypressConstants::Mode::Simulate == m_mode)
+  if(CypressConstants::RunMode::Simulate == m_mode)
   {
     ui->barcodeLineEdit->setText("00000000");
   }

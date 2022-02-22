@@ -26,6 +26,7 @@ CONFIG += c++11 console
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
     ../../data/BodyCompositionMeasurement.cpp \
     ../../data/BodyCompositionTest.cpp \
     ../../data/MeasurementBase.cpp \
@@ -37,6 +38,7 @@ SOURCES += \
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../data/BodyCompositionMeasurement.h \
     ../../data/BodyCompositionTest.h \
     ../../data/MeasurementBase.h \

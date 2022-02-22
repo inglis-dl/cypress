@@ -26,6 +26,7 @@ CONFIG += c++11 console
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../data/FraxMeasurement.h \
     ../../data/FraxTest.h \
     ../../data/MeasurementBase.h \
@@ -36,6 +37,7 @@ HEADERS += \
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+        ../../auxiliary/CypressConstants.cpp \
     ../../data/FraxMeasurement.cpp \
     ../../data/FraxTest.cpp \
     ../../data/MeasurementBase.cpp \

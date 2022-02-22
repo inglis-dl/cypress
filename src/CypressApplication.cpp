@@ -22,25 +22,25 @@ void CypressApplication::setArgs(const QMap<QString, QVariant> &args)
       m_inputFileName = args["inputFileName"].toString();
     if(args.contains("outputFileName"))
       m_outputFileName = args["outputFileName"].toString();
-    if(args.contains("type"))
-      m_type = args["type"].value<CypressConstants::Type>();
-    if(args.contains("mode"))
-      m_mode = args["mode"].value<CypressConstants::Mode>();
+    if(args.contains("measureType"))
+      m_type = args["measureType"].value<CypressConstants::MeasureType>();
+    if(args.contains("runMode"))
+      m_mode = args["runMode"].value<CypressConstants::RunMode>();
     if(args.contains("verbose"))
       m_verbose = args["verbose"].toBool();
 }
 
 void CypressApplication::initialize()
 {
-    DialogFactory *df = DialogFactory::instance();
-    m_dialog.reset(df->instantiate(m_type));
+    DialogFactory *factory = DialogFactory::instance();
+    m_dialog.reset(factory->instantiate(m_type));
 
     if(m_dialog.isNull())
         throw std::runtime_error("FATAL ERROR: failed to initialize a dialog");
 
     m_dialog->setInputFileName(m_inputFileName);
     m_dialog->setOutputFileName(m_outputFileName);
-    m_dialog->setMode(m_mode);
+    m_dialog->setRunMode(m_mode);
     m_dialog->setVerbose(m_verbose);
     m_dialog->initialize();
     m_dialog->show();

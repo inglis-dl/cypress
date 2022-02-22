@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "ui_MainWindow.h"
 
 #include <QCloseEvent>
 #include <QDate>
@@ -87,7 +88,7 @@ void MainWindow::initializeConnections()
   // TODO: for DCS interviews, the first digit corresponds the the wave rank
   // for inhome interviews there is a host dependent prefix before the barcode
   //
-  if("simulate"==m_mode)
+  if(CypressConstants::RunMode::Simulate == m_mode)
   {
     ui->barcodeLineEdit->setText("00000000");
   }
@@ -233,7 +234,7 @@ void MainWindow::initializeConnections()
 void MainWindow::run()
 {
     m_manager.setVerbose(m_verbose);
-    m_manager.setMode(m_mode);
+    m_manager.setRunMode(m_mode);
 
     // read the path to C:\Users\clsa\Documents\CDTT-2018-07-22\CDTTstereo.jar
     //
@@ -265,7 +266,7 @@ void MainWindow::readInput()
     //
     if (m_inputFileName.isEmpty())
     {
-        if("simulate" == m_mode)
+        if(CypressConstants::RunMode::Simulate == m_mode)
         {
             m_inputData["barcode"] = "00000000";
             m_inputData["language"] = "english";

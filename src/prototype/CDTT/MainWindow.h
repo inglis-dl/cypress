@@ -1,8 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "ui_MainWindow.h"
 #include "../../managers/CDTTManager.h"
+#include "../../auxiliary/CypressConstants.h"
+#include <QDialog>
 #include <QStandardItemModel>
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
@@ -34,8 +35,8 @@ public:
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
     QString outputFileName() { return m_outputFileName; }
 
-    void setMode(const QString& mode) { m_mode = mode.toLower(); }
-    QString mode() { return m_mode; }
+    void setRunMode(const CypressConstants::RunMode& mode) { m_mode = mode; }
+    CypressConstants::RunMode runMode() const { return m_mode; }
 
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() { return m_verbose; }
@@ -54,7 +55,7 @@ private:
     Ui::MainWindow* ui;
     QString m_inputFileName;
     QString m_outputFileName;
-    QString m_mode;
+    CypressConstants::RunMode m_mode;
     bool m_verbose;
 
     QMap<QString,QVariant> m_inputData;

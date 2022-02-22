@@ -11,22 +11,22 @@ class CommandLineParser : QObject
 public:
     explicit CommandLineParser(QObject* parent = Q_NULLPTR);
 
-    enum CommandLineParseResult {
-        CommandLineOk,
-        CommandLineError,
-        CommandLineMissingArg,
-        CommandLineModeError,
-        CommandLineInputFileError,
-        CommandLineOutputPathError,
-        CommandLineTypeError,
-        CommandLineVersionRequested,
-        CommandLineHelpRequested
+    enum ParseResult {
+        Ok,
+        Error,
+        MissingArg,
+        RunModeError,
+        InputFileError,
+        OutputPathError,
+        MeasureTypeError,
+        VersionRequested,
+        HelpRequested
     };
-    Q_ENUM(CommandLineParseResult)
+    Q_ENUM(ParseResult)
 
     QString helpText(){ return m_parser.helpText(); }
 
-    CommandLineParseResult parseCommandLine( const QCoreApplication &, QString *);
+    ParseResult parseCommandLine( const QCoreApplication&, QString*);
 
     QMap<QString,QVariant> getArgs(){ return m_args; }
 

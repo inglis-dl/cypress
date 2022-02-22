@@ -11,7 +11,7 @@ public:
     static DialogFactory *instance();
     ~DialogFactory();
 
-    DialogBase* instantiate(const CypressConstants::Type&);
+    DialogBase* instantiate(const CypressConstants::MeasureType&);
     DialogBase* instantiate(const QString&);
 
 private:

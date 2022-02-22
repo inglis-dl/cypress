@@ -1,42 +1,28 @@
 #include "CypressConstants.h"
+#include <QMetaEnum>
 
-CypressConstants::lutType CypressConstants::initTypeLUT()
+CypressConstants::MeasureType CypressConstants::getMeasureType(const QString& name)
 {
-    CypressConstants::lutType lut;
-    lut["weigh_scale"] = Type::WeighScale;
-    lut["audiometer"] = Type::Audiometer;
-    lut["spirometer"] = Type::Spirometer;
-    lut["thermometer"] = Type::Thermometer;
-    lut["frax"] = Type::Frax;
-    lut["body_composition_analyzer"] = Type::BodyCompositionAnalyzer;
-    lut["cdtt"] = Type::CDTT;
-    lut["choice_reaction"] = Type::ChoiceReaction;
-    lut["blood_pressure"] = Type::BloodPressure;
-    lut["tonometer"] = Type::Tonometer;
-    lut["retinal_camera"] = Type::RetinalCamera;
-    lut["ecg"] = Type::ECG;
-    return lut;
+  QMetaEnum meta = QMetaEnum::fromType<MeasureType>();
+  int result = meta.keyToValue(name.toStdString().c_str());
+  return -1 == result ? CypressConstants::MeasureType::None : static_cast<CypressConstants::MeasureType>(result);
 }
 
-CypressConstants::lutType CypressConstants::typeLUT =
-  CypressConstants::initTypeLUT();
-
-CypressConstants::Type CypressConstants::getType(const QString& name)
+CypressConstants::RunMode CypressConstants::getRunMode(const QString& name)
 {
-  if(typeLUT.contains(name))
-    return typeLUT[name];
-  else
-    return None;
+  QMetaEnum meta = QMetaEnum::fromType<RunMode>();
+  int result = meta.keyToValue(name.toStdString().c_str());
+  return -1 == result ? CypressConstants::RunMode::Unknown : static_cast<CypressConstants::RunMode>(result);
 }
 
-CypressConstants::Mode CypressConstants::getMode(const QString& name)
+QString CypressConstants::getMeasureTypeName(const CypressConstants::MeasureType &type)
 {
-  if("default" == name)
-    return Mode::Default;
-  else if("simulate"==name)
-    return Mode::Simulate;
-  else if("live"==name)
-    return Mode::Live;
-  else
-    return Mode::Unknown;
+  QMetaEnum meta = QMetaEnum::fromType<MeasureType>();
+  return QString(meta.valueToKey(type));
+}
+
+QString CypressConstants::getRunModeName(const CypressConstants::RunMode &mode)
+{
+  QMetaEnum meta = QMetaEnum::fromType<RunMode>();
+  return QString(meta.valueToKey(mode));
 }

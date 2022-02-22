@@ -31,12 +31,14 @@ HEADERS += \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../managers/ManagerBase.h \
     ../../managers/CDTTManager.h \
     MainWindow.h
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
     ../../data/CDTTMeasurement.cpp \
     ../../data/CDTTTest.cpp \
     ../../data/ExcelQueryHelper.cpp \

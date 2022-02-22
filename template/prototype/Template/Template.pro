@@ -28,7 +28,7 @@ HEADERS += ./MainWindow.h \
     ../../../src/data/MeasurementBase.h \
     ../../../src/data/TestBase.h \
     ../../../src/auxiliary/CommandLineParser.h \
-    ../../../src/widgets/BarcodeWidget.h \
+    ../../../src/auxiliary/CypressConstants.h \
     ../../../src/managers/ManagerBase.h \
     ../../data/TemplateMeasurement.h \
     ../../data/TemplateTest.h \
@@ -37,9 +37,9 @@ HEADERS += ./MainWindow.h \
 SOURCES += ./MainWindow.cpp \
     ./main.cpp \
     ../../../src/auxiliary/CommandLineParser.cpp \
+    ../../../src/auxiliary/CypressConstants.cpp \
     ../../../src/data/MeasurementBase.cpp \
     ../../../src/managers/ManagerBase.cpp \
-    ../../../src/widgets/BarcodeWidget.cpp \
     ../../data/TemplateMeasurement.cpp \
     ../../data/TemplateTest.cpp \
     ../../managers/TemplateManager.cpp

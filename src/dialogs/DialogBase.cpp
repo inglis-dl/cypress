@@ -26,7 +26,7 @@ void DialogBase::initialize()
 void DialogBase::run()
 {
     m_manager->setVerbose(m_verbose);
-    m_manager->setMode(m_mode);
+    m_manager->setRunMode(m_mode);
 
     // Read the .ini file for cached device data
     //
@@ -58,7 +58,7 @@ void DialogBase::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
-        if(CypressConstants::Mode::Simulate == m_mode)
+        if(CypressConstants::RunMode::Simulate == m_mode)
         {
             m_inputData["barcode"]="00000000";
         }

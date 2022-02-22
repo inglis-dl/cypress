@@ -73,7 +73,7 @@ void AudiometerManager::saveSettings(QSettings *settings) const
 
 void AudiometerManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if(CypressConstants::Mode::Simulate == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -116,7 +116,7 @@ bool AudiometerManager::hasEndCode(const QByteArray &arr)
 
 void AudiometerManager::readDevice()
 {
-   if(CypressConstants::Mode::Simulate == m_mode)
+   if(CypressConstants::RunMode::Simulate == m_mode)
     {
         QString sim;
         QDateTime now = QDateTime::currentDateTime();
@@ -171,7 +171,7 @@ void AudiometerManager::writeDevice()
     //
     m_buffer.clear();
 
-    if(CypressConstants::Mode::Simulate == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         if(m_verbose)
           qDebug() << "in simulate mode writeDevice with request " << QString(m_request);

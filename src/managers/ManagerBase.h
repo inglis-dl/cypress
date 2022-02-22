@@ -31,8 +31,8 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() const { return m_verbose; }
 
-    void setMode(const CypressConstants::Mode& mode) { m_mode = mode; }
-    CypressConstants::Mode mode() const { return m_mode; }
+    void setRunMode(const CypressConstants::RunMode& mode) { m_mode = mode; }
+    CypressConstants::RunMode runMode() const { return m_mode; }
 
     // collate test results and device and other meta data
     // for the main application to write to .json
@@ -106,7 +106,7 @@ protected:
     // device and test data
     // - "live" - production mode
     //
-    CypressConstants::Mode m_mode { CypressConstants::Mode::Unknown };
+    CypressConstants::RunMode m_mode { CypressConstants::RunMode::Unknown };
 
     // Context dependent clear test data and possibly device data (eg., serial port info)
     // SerialPortManager class clears device data during setDevice() while

@@ -2,48 +2,43 @@
 #define CYPRESSCONSTANTS_H
 
 #include <QObject>
-#include <QMap>
 
 class CypressConstants
 {
+   Q_GADGET
+
 public:
 
-    enum Mode {
+    enum RunMode {
         Unknown,
+        Default,
         Live,
-        Simulate,
-        Default
+        Simulate
     };
+    Q_ENUM(RunMode)
 
-    enum Type {
+    enum MeasureType {
         None,
-        Spirometer,
-        WeighScale,
-        BodyCompositionAnalyzer,
-        Frax,
-        CDTT,
-        BloodPressure,
-        Thermometer,
         Audiometer,
+        BloodPressure,
+        BodyCompositionAnalyzer,
+        CDTT,
         ChoiceReaction,
-        Tonometer,
+        ECG,
+        Frax,
         RetinalCamera,
-        ECG
+        Spirometer,
+        Thermometer,
+        Tonometer,
+        WeighScale
     };
+    Q_ENUM(MeasureType)
 
-    typedef QMap<QString,CypressConstants::Type> lutType;
-    static lutType initTypeLUT();
+    static MeasureType getMeasureType(const QString&);
+    static RunMode getRunMode(const QString&);
 
-    static CypressConstants::Type getType(const QString&);
-    static CypressConstants::Mode getMode(const QString&);
-
-private:
-    CypressConstants() = default;
-    static lutType typeLUT;
-
+    static QString getMeasureTypeName(const MeasureType&);
+    static QString getRunModeName(const RunMode&);
 };
-
-Q_DECLARE_METATYPE(CypressConstants::Mode)
-Q_DECLARE_METATYPE(CypressConstants::Type)
 
 #endif // CYPRESSCONSTANTS_H
