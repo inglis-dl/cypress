@@ -33,7 +33,7 @@ public:
     //
     void setInputData(const QMap<QString, QVariant>&);
 
-    void SetupConnections();
+    void setupConnections();
 
     void setArmBandSize(const QString& size) { m_test.setArmBandSize(size); }
     void setArm(const QString& arm) { m_test.setArm(arm); }
@@ -42,6 +42,9 @@ public:
     void connectToBpm() {
         m_bpm.connectToBpm();
     }
+    int getPid() const { return m_bpm.getPid(); }
+    int getVid() const { return m_bpm.getVid(); }
+    bool connectionInfoSet() const { return m_bpm.connectionInfoSet(); }
 public slots:
 
     void start() override;

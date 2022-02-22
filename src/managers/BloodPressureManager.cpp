@@ -24,13 +24,21 @@ void BloodPressureManager::start()
 
 void BloodPressureManager::loadSettings(const QSettings& settings)
 {
-    int vid = settings.value(getGroup() + "/client/vid").toInt();
     int pid = settings.value(getGroup() + "/client/pid").toInt();
-    m_bpm.SetConnectionInfo(vid, pid);
+    m_bpm.setConnectionInfo(pid);
 }
 
 void BloodPressureManager::saveSettings(QSettings* settings) const
 {
+    int pid = getPid();
+    if (0 != pid)
+    {
+        settings->beginGroup(getGroup());
+        settings->setValue("client/pid", pid);
+        settings->endGroup();
+        if (m_verbose)
+            qDebug() << "wrote pid to settings file";
+    }
 }
 
 QJsonObject BloodPressureManager::toJsonObject() const
@@ -123,29 +131,27 @@ void BloodPressureManager::measure()
 
 void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    //if ("simulate" == m_mode)
-    //{
-    //    m_inputData["barcode"] = 12345678;
-    //    return;
-    //}
-    //bool ok = true;
-    //for (auto&& x : m_inputKeyList)
-    //{
-    //    if (!input.contains(x))
-    //    {
-    //        ok = false;
-    //        break;
-    //    }
-    //    else
-    //        m_inputData[x] = input[x];
-    //}
-    //if (!ok)
-    //    m_inputData.clear();
-    ////else
-    //    // DO SOMETHING
+    if ("simulate" == m_mode)
+    {
+        m_inputData["barcode"] = 12345678;
+        return;
+    }
+    bool ok = true;
+    for (auto&& x : m_inputKeyList)
+    {
+        if (!input.contains(x))
+        {
+            ok = false;
+            break;
+        }
+        else
+            m_inputData[x] = input[x];
+    }
+    if (!ok)
+        m_inputData.clear();
 }
 
-void BloodPressureManager::SetupConnections()
+void BloodPressureManager::setupConnections()
 {
     connect(&m_bpm, &BPM200::connectionStatusReady, this, &BloodPressureManager::connectionStatusAvailable);
     connect(&m_bpm, &BPM200::measurementReady, this, &BloodPressureManager::measurementAvailable);

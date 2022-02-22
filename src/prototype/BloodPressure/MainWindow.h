@@ -50,9 +50,10 @@ private:
     void setupConnections();
     void initializeButtonState();
     void initializeArmBandDropDowns();
+    void initializeConnectionIdsUi();
     void readInput();
     void populateBarcodeDisplay();
-    void validateRunnablePresense();
+    void updatePossiblePidOptions();
 
     Ui::MainWindow* ui;
     QString m_inputFileName;

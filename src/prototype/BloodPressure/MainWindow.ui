@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>411</width>
+    <width>423</width>
     <height>389</height>
    </rect>
   </property>
@@ -125,24 +125,48 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QPushButton" name="openButton">
+       <widget class="QLabel" name="vidLabel">
         <property name="text">
-         <string>Open</string>
+         <string>Vid: 0</string>
         </property>
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+       <widget class="QLabel" name="currentPidLabel">
+        <property name="text">
+         <string>Current Pid: 0</string>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>469</width>
-          <height>20</height>
-         </size>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="newPidLabel">
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
         </property>
-       </spacer>
+        <property name="text">
+         <string>New Pid:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="newPidComboBox"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="refreshButton">
+        <property name="text">
+         <string>Refresh</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="selectButton">
+        <property name="text">
+         <string>Select</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

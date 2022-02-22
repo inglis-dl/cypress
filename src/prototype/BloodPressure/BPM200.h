@@ -3,9 +3,12 @@
 
 #include <QObject>
 #include <QHidDevice>
+#include <QUsbDevice>
+#include <QUsb>
 #include <QDebug>
 #include <QThread>
 #include <QString>
+#include <QList>
 
 #include "BPMMessage.h"
 #include "BPMCommunication.h"
@@ -14,15 +17,22 @@ class BPM200: public QObject
 {
 	Q_OBJECT
 	QThread CommThread;
+private:
+	const int m_vid = 4279;
 public:
 	explicit BPM200(QObject* parent = Q_NULLPTR);
 	void setupConnections();
 
-	void SetConnectionInfo(int vid, int pid) { m_vid = vid; m_pid = pid; };
+	void setConnectionInfo(int pid) { m_pid = pid; };
 
 	void connectToBpm();
 	void measure() { emit startMeasurement(); };
 	void disconnect();
+
+	QList<int> findAllPids();
+	bool connectionInfoSet() const { return m_pid > 0; }
+	int getPid() const { return m_pid; }
+	int getVid() const { return m_vid; }
 	
 public slots:
 	// slots for comm
@@ -50,11 +60,10 @@ signals:
 	void sendError(const QString& error);
 private:
 	BPMCommunication* comm;
-	bool connectionInfoSet();
-	int m_vid = 0;
 	int m_pid = 0;
 	bool m_aborted = false;
 	bool m_connectionsSet = false;
+	QUsb m_usb;
 };
 
 #endif //BPM200_H

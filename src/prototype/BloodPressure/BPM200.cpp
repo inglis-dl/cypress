@@ -69,6 +69,25 @@ void BPM200::disconnect()
     qDebug() << "BPM200: Finished";
 }
 
+QList<int> BPM200::findAllPids()
+{
+    QUsb::IdList usbDeviceList = m_usb.devices();
+    
+    QList<int> matchingPids;
+    for each (auto entry in usbDeviceList)
+    {
+        qDebug() << entry;
+        if (entry.vid == m_vid) {
+            int pid = entry.pid;
+            qDebug() << "found one with pid = " << pid;
+            if (matchingPids.contains(pid) == false) {
+                matchingPids.append(pid);
+            }
+        }
+    }
+    return matchingPids;
+}
+
 /*
 * This gets called once the abort has completed on the comm thread
 * Then this will close the comm thread and set a bool to notify 
@@ -79,14 +98,5 @@ void BPM200::abortComplete(bool successful) {
     CommThread.quit();
     CommThread.wait();
     m_aborted = true;
-}
-
-/*
-* True if the vid and pid values have been set
-* and false otherwise
-*/
-bool BPM200::connectionInfoSet()
-{
-    return m_vid > 0 && m_pid > 0;
 }
 
