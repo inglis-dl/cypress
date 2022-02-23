@@ -3,7 +3,6 @@
 
 #include <QDebug>
 #include <QMessageBox>
-#include <QTimeLine>
 
 AudiometerDialog::AudiometerDialog(QWidget *parent)
     : DialogBase(parent)
@@ -20,9 +19,9 @@ AudiometerDialog::~AudiometerDialog()
 
 void AudiometerDialog::initializeModel()
 {
-    for(int col=0;col<m_manager->getNumberOfModelColumns();col++)
+    for(int col = 0; col < m_manager->getNumberOfModelColumns(); col++)
     {
-      for(int row=0;row<m_manager->getNumberOfModelRows();row++)
+      for(int row = 0; row < m_manager->getNumberOfModelRows(); row++)
       {
         QStandardItem* item = new QStandardItem();
         m_model.setItem(row,col,item);
@@ -79,35 +78,14 @@ void AudiometerDialog::initializeConnections()
   //
   if(CypressConstants::RunMode::Simulate == m_mode)
   {
-    ui->barcodeLineEdit->setText("00000000");
+    ui->barcodeWidget->setBarcode("00000000");
   }
 
-  //TODO: handle the case for in home DCS visits where
-  // the barcode is prefixed with a host name code
-  //
-  QRegExp rx("\\d{8}");
-  QRegExpValidator *v_barcode = new QRegExpValidator(rx);
-  ui->barcodeLineEdit->setValidator(v_barcode);
-
-  connect(ui->barcodeLineEdit, &QLineEdit::returnPressed,
-          this,[this](){
-      bool valid = false;
-      if(m_inputData.contains("barcode"))
-      {
-          QString str = ui->barcodeLineEdit->text().simplified();
-          str.replace(" ","");
-          valid = str == m_inputData["barcode"].toString();
-      }
-      auto p = this->findChild<QTimeLine *>("timer");
+  connect(ui->barcodeWidget,&BarcodeWidget::validated,
+          this,[this](const bool& valid)
+    {
       if(valid)
       {
-          p->stop();
-          p->setCurrentTime(0);
-          auto p = ui->barcodeLineEdit->palette();
-          p.setBrush(QPalette::Base,QBrush(QColor(0,255,0,128)));
-          ui->barcodeLineEdit->setPalette(p);
-          ui->barcodeLineEdit->repaint();
-
           // launch the manager
           //
           this->run();
@@ -119,19 +97,6 @@ void AudiometerDialog::initializeConnections()
             tr("The input does not match the expected barcode for this participant."));
       }
   });
-
-  auto timeLine = new QTimeLine(2000,this);
-  timeLine->setFrameRange(0,255);
-  timeLine->setLoopCount(0);
-  timeLine->setObjectName("timer");
-  connect(timeLine, &QTimeLine::frameChanged,
-          this,[this](int frame){
-      auto p = ui->barcodeLineEdit->palette();
-      p.setBrush(QPalette::Base,QBrush(QColor(255,255,0,frame)));
-      ui->barcodeLineEdit->setPalette(p);
-  });
-  connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
-  timeLine->start();
 
   // Scan for devices
   //
@@ -263,5 +228,10 @@ void AudiometerDialog::initializeConnections()
 
 QString AudiometerDialog::getVerificationBarcode() const
 {
-  return ui->barcodeLineEdit->text().simplified().remove(" ");
+  return ui->barcodeWidget->barcode();
+}
+
+void AudiometerDialog::setVerificationBarcode(const QString &barcode)
+{
+    ui->barcodeWidget->setBarcode(barcode);
 }

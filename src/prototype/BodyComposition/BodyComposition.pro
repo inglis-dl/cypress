@@ -33,6 +33,7 @@ SOURCES += \
     ../../managers/BodyCompositionAnalyzerManager.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     main.cpp \
     MainWindow.cpp
 
@@ -46,9 +47,11 @@ HEADERS += \
     ../../managers/BodyCompositionAnalyzerManager.h \
     ../../managers/ManagerBase.h \
     ../../managers/SerialPortManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

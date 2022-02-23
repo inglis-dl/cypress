@@ -36,6 +36,7 @@ public:
     bool isVerbose(){ return m_verbose; }
 
     virtual QString getVerificationBarcode() const = 0;
+    virtual void setVerificationBarcode(const QString&) = 0;
 
 public slots:
     void writeOutput();

@@ -27,33 +27,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QLabel" name="iDlabel">
-        <property name="text">
-         <string>Participant ID:</string>
-        </property>
-        <property name="buddy">
-         <cstring>barcodeLineEdit</cstring>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="barcodeLineEdit">
-        <property name="inputMask">
-         <string/>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="maxLength">
-         <number>32767</number>
-        </property>
-        <property name="cursorPosition">
-         <number>0</number>
-        </property>
-        <property name="clearButtonEnabled">
-         <bool>true</bool>
-        </property>
-       </widget>
+       <widget class="BarcodeWidget" name="barcodeWidget" native="true"/>
       </item>
      </layout>
     </widget>
@@ -167,6 +141,17 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BarcodeWidget</class>
+   <extends>QWidget</extends>
+   <header>../../widgets/BarcodeWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <includes>
+  <include location="local">../../widgets/BarcodeWidget.h</include>
+ </includes>
  <resources/>
  <connections/>
 </ui>

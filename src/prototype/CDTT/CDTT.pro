@@ -34,6 +34,7 @@ HEADERS += \
     ../../auxiliary/CypressConstants.h \
     ../../managers/ManagerBase.h \
     ../../managers/CDTTManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 SOURCES += \
@@ -45,10 +46,12 @@ SOURCES += \
     ../../data/MeasurementBase.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/CDTTManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     MainWindow.cpp \
     main.cpp
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

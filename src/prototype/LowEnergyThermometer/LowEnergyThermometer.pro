@@ -33,6 +33,7 @@ SOURCES += \
     ../../data/TemperatureTest.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/BluetoothLEManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     MainWindow.cpp \
     main.cpp
 
@@ -46,9 +47,11 @@ HEADERS += \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
     ../../managers/BluetoothLEManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

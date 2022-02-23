@@ -39,7 +39,8 @@ SOURCES += \
     managers/TonometerManager.cpp \
     managers/CDTTManager.cpp \
     managers/WeighScaleManager.cpp \
-    managers/BodyCompositionAnalyzerManager.cpp \    
+    managers/BodyCompositionAnalyzerManager.cpp \
+    widgets/BarcodeWidget.cpp \
     dialogs/AudiometerDialog.cpp \
     dialogs/BodyCompositionDialog.cpp \
     dialogs/CDTTDialog.cpp \
@@ -86,6 +87,7 @@ HEADERS += \
     managers/TonometerManager.h \
     managers/CDTTManager.h \
     managers/WeighScaleManager.h \
+    widgets/BarcodeWidget.h \
     dialogs/AudiometerDialog.h \
     dialogs/BodyCompositionDialog.h \
     dialogs/CDTTDialog.h \
@@ -109,6 +111,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 FORMS += \
+  widgets/barcodewidget.ui \
   dialogs/audiometerdialog.ui \
   dialogs/bodycompositiondialog.ui \
   dialogs/thermometerdialog.ui \

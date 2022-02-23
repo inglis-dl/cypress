@@ -13,6 +13,7 @@ public:
     ~BodyCompositionDialog();
  
     QString getVerificationBarcode() const override;
+    void setVerificationBarcode(const QString&) override;
 
 private:
     void initializeModel() override;

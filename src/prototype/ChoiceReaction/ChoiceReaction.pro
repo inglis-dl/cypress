@@ -33,6 +33,7 @@ HEADERS += \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
     ../../managers/ChoiceReactionManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 SOURCES += \
@@ -43,10 +44,12 @@ SOURCES += \
     ../../data/ChoiceReactionTest.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/ChoiceReactionManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     MainWindow.cpp \
     main.cpp
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

@@ -91,6 +91,8 @@ void DialogBase::readInput()
               qDebug() << keys[i] << v.toVariant();
           }
       }
+      if(m_inputData.contains("barcode"))
+          this->setVerificationBarcode(m_inputData["barcode"].toString());
     }
     else
         qDebug() << m_inputFileName << " file does not exist";
@@ -103,7 +105,7 @@ void DialogBase::writeOutput()
 
    QJsonObject jsonObj = m_manager->toJsonObject();
 
-   QString barcode = getVerificationBarcode();
+   QString barcode = this->getVerificationBarcode();
    jsonObj.insert("verification_barcode",QJsonValue(barcode));
 
    if(m_verbose)
