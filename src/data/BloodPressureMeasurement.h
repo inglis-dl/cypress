@@ -19,13 +19,17 @@ public:
     BloodPressureMeasurement() = default;
     ~BloodPressureMeasurement() = default;
 
-    void fromString(const QString&);
+    void storeData(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum);
 
     bool isValid() const override;
 
     QString toString() const override;
 
     static BloodPressureMeasurement simulate();
+
+    int getSbp() const { return getCharacteristic("systolic").toInt(); }
+    int getDbp() const { return getCharacteristic("diastolic").toInt(); }
+    int getPulse() const { return getCharacteristic("pulse").toInt(); }
 };
 
 Q_DECLARE_METATYPE(BloodPressureMeasurement);

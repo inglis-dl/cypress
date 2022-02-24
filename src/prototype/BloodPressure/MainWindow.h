@@ -1,10 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-
 #include "ui_MainWindow.h"
-//#include "../../managers/BloodPressureManager.h"
+#include "../../managers/BloodPressureManager.h"
 #include <QStandardItemModel>
+
+QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,19 +29,20 @@ public:
     void run();
 
     void setInputFileName(const QString& name) { m_inputFileName = name; }
-    QString inputFileName() { return m_inputFileName; }
+    QString getInputFileName() const { return m_inputFileName; }
 
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
-    QString outputFileName() { return m_outputFileName; }
+    QString getOutputFileName() const { return m_outputFileName; }
 
-    void setMode(const QString& mode) { m_mode = mode.toLower(); }
-    QString mode() { return m_mode; }
+    void setMode(const QString& getMode) { m_mode = getMode.toLower(); }
+    QString getMode() const { return m_mode; }
 
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() { return m_verbose; }
 
 public slots:
     void writeOutput();
+    void bpmDisconnected(const bool &connected);
 
 protected:
     void closeEvent(QCloseEvent*) override;
@@ -48,9 +50,11 @@ protected:
 private:
     void setupConnections();
     void initializeButtonState();
+    void initializeArmBandDropDowns();
+    void initializeConnectionIdsUi();
     void readInput();
     void populateBarcodeDisplay();
-    void validateRunnablePresense();
+    void updatePossiblePidOptions();
 
     Ui::MainWindow* ui;
     QString m_inputFileName;
@@ -61,7 +65,7 @@ private:
     QMap<QString, QVariant> m_inputData;
     QMap<QString, QVariant> m_outputData;
 
-    //BloodPressureManager m_manager;
+    BloodPressureManager m_manager;
 
     QStandardItemModel m_model;
 };
