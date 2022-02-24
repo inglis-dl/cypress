@@ -26,25 +26,30 @@ CONFIG += c++11 console
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../data/FraxMeasurement.h \
     ../../data/FraxTest.h \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
     ../../managers/FraxManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+        ../../auxiliary/CypressConstants.cpp \
     ../../data/FraxMeasurement.cpp \
     ../../data/FraxTest.cpp \
     ../../data/MeasurementBase.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/FraxManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     MainWindow.cpp \
     main.cpp
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

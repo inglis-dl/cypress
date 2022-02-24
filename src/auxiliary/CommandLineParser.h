@@ -3,6 +3,7 @@
 
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QVariant>
 
 class CommandLineParser : QObject
 {
@@ -10,33 +11,28 @@ class CommandLineParser : QObject
 public:
     explicit CommandLineParser(QObject* parent = Q_NULLPTR);
 
-    enum CommandLineParseResult {
-        CommandLineOk,
-        CommandLineError,
-        CommandLineMissingArg,
-        CommandLineModeError,
-        CommandLineInputFileError,
-        CommandLineOutputPathError,
-        CommandLineVersionRequested,
-        CommandLineHelpRequested
+    enum ParseResult {
+        Ok,
+        Error,
+        MissingArg,
+        RunModeError,
+        InputFileError,
+        OutputPathError,
+        MeasureTypeError,
+        VersionRequested,
+        HelpRequested
     };
-    Q_ENUM(CommandLineParseResult)
+    Q_ENUM(ParseResult)
 
     QString helpText(){ return m_parser.helpText(); }
 
-    CommandLineParseResult parseCommandLine( const QCoreApplication &, QString *);
+    ParseResult parseCommandLine( const QCoreApplication&, QString*);
 
-    QString getInputFilename() const {return m_inputFilename;}
-    QString getOutputFilename() const {return m_outputFilename;}
-    QString getMode() const {return m_mode;}
-    bool getVerbose() const {return m_verbose;}
+    QMap<QString,QVariant> getArgs(){ return m_args; }
 
 private:
     QCommandLineParser m_parser;
-    QString m_inputFilename;
-    QString m_outputFilename;
-    QString m_mode;
-    bool m_verbose;
+    QMap<QString,QVariant> m_args;
 };
 
 #endif // COMMANDLINEPARSER_H

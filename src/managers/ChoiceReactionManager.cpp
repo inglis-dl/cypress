@@ -16,6 +16,8 @@ ChoiceReactionManager::ChoiceReactionManager(QObject *parent) :
     ManagerBase(parent)
 {
     setGroup("choice_reaction");
+    m_col = 2;
+    m_row = 8;
 
     // all managers must check for barcode and language input values
     //
@@ -23,11 +25,36 @@ ChoiceReactionManager::ChoiceReactionManager(QObject *parent) :
     m_inputKeyList << "language";
 
     //TODO:
-    // use the "clinic" CCB arg for the site identification
+    // use the "clinic" CCB arg for the site identification ?
 }
 
 void ChoiceReactionManager::start()
 {
+    // connect signals and slots to QProcess one time only
+    //
+    connect(&m_process, &QProcess::started,
+        this, [this]() {
+            qDebug() << "process started: " << m_process.arguments().join(" ");
+        });
+
+    connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+        this, &ChoiceReactionManager::readOutput);
+
+    connect(&m_process, &QProcess::errorOccurred,
+        this, [](QProcess::ProcessError error)
+        {
+            QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
+        });
+
+    connect(&m_process, &QProcess::stateChanged,
+        this, [](QProcess::ProcessState state) {
+            QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "process state: " << s.join(" ").toLower();
+        });
+
+    m_process.setProcessChannelMode(QProcess::ForwardedChannels);
+
     configureProcess();
     emit dataChanged();
 }
@@ -65,7 +92,7 @@ void ChoiceReactionManager::buildModel(QStandardItemModel *model) const
 
 bool ChoiceReactionManager::isDefined(const QString &exeName) const
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
        return true;
     }
@@ -104,6 +131,7 @@ void ChoiceReactionManager::selectRunnable(const QString &exeName)
        QDir dir = QDir::cleanPath(m_runnablePath + QDir::separator() + "results");
        m_outputPath = dir.path();
 
+       emit runnableSelected();
        configureProcess();
     }
     else
@@ -112,7 +140,7 @@ void ChoiceReactionManager::selectRunnable(const QString &exeName)
 
 void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -167,9 +195,10 @@ void ChoiceReactionManager::clearData()
 
 void ChoiceReactionManager::configureProcess()
 {
-    if("simulate" == m_mode &&
+    if(CypressConstants::RunMode::Simulate == m_mode &&
        !m_inputData.isEmpty())
     {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
         return;
     }
@@ -209,7 +238,6 @@ void ChoiceReactionManager::configureProcess()
         command << "/l" + QString(s.at(0));
       }
 
-      m_process.setProcessChannelMode(QProcess::ForwardedChannels);
       m_process.setProgram(m_runnableName);
       m_process.setArguments(command);
       m_process.setWorkingDirectory(m_runnablePath);
@@ -217,28 +245,7 @@ void ChoiceReactionManager::configureProcess()
       qDebug() << "process config args: " << m_process.arguments().join(" ");
       qDebug() << "process working dir: " << m_runnablePath;
 
-      connect(&m_process,&QProcess::started,
-              this,[this](){
-          qDebug() << "process started: " << m_process.arguments().join(" ");
-      });
-
-      connect(&m_process,QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-              this, &ChoiceReactionManager::readOutput);
-
-      connect(&m_process,&QProcess::errorOccurred,
-              this, [](QProcess::ProcessError error)
-      {
-          QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"),Qt::SkipEmptyParts);
-          qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
-      });
-
-      connect(&m_process,&QProcess::stateChanged,
-              this,[](QProcess::ProcessState state){
-          QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"),Qt::SkipEmptyParts);
-          qDebug() << "process state: " << s.join(" ").toLower();
-
-      });
-
+      emit message(tr("Ready to measure..."));
       emit canMeasure();
     }
     else
@@ -247,7 +254,7 @@ void ChoiceReactionManager::configureProcess()
 
 void ChoiceReactionManager::readOutput()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         qDebug() << "simulating read out";
         m_test.addMetaDataCharacteristic("start_datetime",QDateTime::currentDateTime());
@@ -261,6 +268,8 @@ void ChoiceReactionManager::readOutput()
         m_test.addMetaDataCharacteristic("interviewer_id","simulated");
         m_test.addMetaDataCharacteristic("end_datetime",QDateTime::currentDateTime());
         m_test.addMetaDataCharacteristic("number_of_measurements",60);
+
+        emit message(tr("Ready to save results..."));
         emit canWrite();
         emit dataChanged();
         return;
@@ -295,6 +304,7 @@ void ChoiceReactionManager::readOutput()
         m_outputFile.clear();
         if(m_test.isValid())
         {
+            emit message(tr("Ready to save results..."));
             emit canWrite();
             m_outputFile = fileName;
         }
@@ -314,12 +324,7 @@ void ChoiceReactionManager::readOutput()
 
 void ChoiceReactionManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         readOutput();
         return;
@@ -349,7 +354,7 @@ void ChoiceReactionManager::finish()
 QJsonObject ChoiceReactionManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if("simulate" != m_mode)
+    if(CypressConstants::RunMode::Simulate != m_mode)
     {
       QFile ofile(m_outputFile);
       ofile.open(QIODevice::ReadOnly);

@@ -26,25 +26,30 @@ CONFIG += c++11 console
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../data/ChoiceReactionMeasurement.h \
     ../../data/ChoiceReactionTest.h \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
     ../../managers/ChoiceReactionManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
     ../../data/MeasurementBase.cpp \
     ../../data/ChoiceReactionMeasurement.cpp \
     ../../data/ChoiceReactionTest.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/ChoiceReactionManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     MainWindow.cpp \
     main.cpp
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

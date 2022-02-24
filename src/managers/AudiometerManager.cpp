@@ -19,10 +19,12 @@ QByteArray AudiometerManager::initEndCode()
     return QByteArray(data);
 }
 
-AudiometerManager::AudiometerManager(QObject *parent) : SerialPortManager(parent)
+AudiometerManager::AudiometerManager(QObject *parent)
+    : SerialPortManager(parent)
 {
     setGroup("audiometer");
-
+    m_col = 2;
+    m_row = 8;
     // all managers must check for barcode and language input values
     //
     m_inputKeyList << "barcode";
@@ -36,7 +38,7 @@ void AudiometerManager::buildModel(QStandardItemModel* model) const
     {
       int i_freq = 0;
       int col = "left" == side ? 0 : 1;
-      for(int row=0;row<8;row++)
+      for(int row = 0; row < m_row; row++)
       {
         HearingMeasurement m = m_test.getMeasurement(side,i_freq);
         if(!m.isValid())
@@ -73,7 +75,7 @@ void AudiometerManager::saveSettings(QSettings *settings) const
 
 void AudiometerManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -116,7 +118,7 @@ bool AudiometerManager::hasEndCode(const QByteArray &arr)
 
 void AudiometerManager::readDevice()
 {
-   if("simulate" == m_mode)
+   if(CypressConstants::RunMode::Simulate == m_mode)
     {
         QString sim;
         QDateTime now = QDateTime::currentDateTime();
@@ -128,7 +130,7 @@ void AudiometerManager::readDevice()
         char buffer[20];
         sprintf(buffer,"%02d/%02d/%d%02d:%02d:00",m,d,y,h,i);
         QTextStream(&sim)
-          << "\u00010\u0002012340000      "
+          << "\u00010\u0002000000000      "
           << "00055801011124431"
           << buffer
           << "04/01/20000000000       "
@@ -149,6 +151,7 @@ void AudiometerManager::readDevice()
         if(m_test.isValid())
         {
             // emit the can write signal
+            emit message(tr("Ready to save results..."));
             emit canWrite();
         }
 
@@ -158,11 +161,6 @@ void AudiometerManager::readDevice()
 
 void AudiometerManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
     clearData();
     const char cmd[] = {0x05,'4',0x0d};
     m_request = QByteArray::fromRawData(cmd,3);
@@ -175,7 +173,7 @@ void AudiometerManager::writeDevice()
     //
     m_buffer.clear();
 
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         if(m_verbose)
           qDebug() << "in simulate mode writeDevice with request " << QString(m_request);

@@ -11,6 +11,8 @@ FraxManager::FraxManager(QObject* parent):
     ManagerBase(parent)
 {
     setGroup("frax");
+    m_col = 1;
+    m_row = 4;
 
     // all managers must check for barcode and language input values
     //
@@ -36,6 +38,31 @@ FraxManager::FraxManager(QObject* parent):
 
 void FraxManager::start()
 {
+    // connect signals and slots to QProcess one time only
+    //
+    connect(&m_process, &QProcess::started,
+        this, [this]() {
+            qDebug() << "process started: " << m_process.arguments().join(" ");
+        });
+
+    connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+        this, &FraxManager::readOutput);
+
+    connect(&m_process, &QProcess::errorOccurred,
+        this, [](QProcess::ProcessError error)
+        {
+            QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
+        });
+
+    connect(&m_process, &QProcess::stateChanged,
+        this, [](QProcess::ProcessState state) {
+            QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "process state: " << s.join(" ").toLower();
+        });
+
+    m_process.setProcessChannelMode(QProcess::ForwardedChannels);
+
     configureProcess();
     emit dataChanged();
 }
@@ -44,15 +71,15 @@ void FraxManager::buildModel(QStandardItemModel *model) const
 {
     // add the four probability measurements
     //
-    for(int i = 0; i < m_test.getNumberOfMeasurements(); i++)
+    for(int row = 0; row < m_test.getNumberOfMeasurements(); row++)
     {
-        QStandardItem* item = model->item(i, 0);
-        if (Q_NULLPTR == item)
+        QStandardItem* item = model->item(row, 0);
+        if(Q_NULLPTR == item)
         {
             item = new QStandardItem();
-            model->setItem(i, 0, item);
+            model->setItem(row, 0, item);
         }
-        item->setData(m_test.getMeasurement(i).toString(), Qt::DisplayRole);
+        item->setData(m_test.getMeasurement(row).toString(), Qt::DisplayRole);
     }
 }
 
@@ -67,7 +94,7 @@ void FraxManager::loadSettings(const QSettings& settings)
 
 void FraxManager::saveSettings(QSettings* settings) const
 {
-    if (!m_runnableName.isEmpty())
+    if(!m_runnableName.isEmpty())
     {
         settings->beginGroup(getGroup());
         settings->setValue("client/exe", m_runnableName);
@@ -80,7 +107,7 @@ void FraxManager::saveSettings(QSettings* settings) const
 QJsonObject FraxManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if("simulate" != m_mode)
+    if(CypressConstants::RunMode::Simulate != m_mode)
     {
       QFile ofile(m_outputFile);
       ofile.open(QIODevice::ReadOnly);
@@ -101,7 +128,7 @@ QJsonObject FraxManager::toJsonObject() const
 
 bool FraxManager::isDefined(const QString &exeName) const
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
        return true;
     }
@@ -128,6 +155,7 @@ void FraxManager::selectRunnable(const QString &runnableName)
         m_inputFile =  QDir(m_runnablePath).filePath("input.txt");
         m_temporaryFile = QDir(m_runnablePath).filePath("input_ORIG.txt");
 
+        emit runnableSelected();
         configureProcess();
     }
     else
@@ -136,12 +164,7 @@ void FraxManager::selectRunnable(const QString &runnableName)
 
 void FraxManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         readOutput();
         return;
@@ -154,7 +177,7 @@ void FraxManager::measure()
 
 void FraxManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -169,20 +192,52 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
         m_inputData["current_smoker"] = 0;
         m_inputData["gluccocorticoid"] = 0;
         m_inputData["rheumatoid_arthritis"] = 0;
-        m_inputData["secondary osteoporosis"] = 0;
+        m_inputData["secondary_osteoporosis"] = 0;
         m_inputData["alcohol"] = 0;
         m_inputData["femoral_neck_bmd"] = -1.1;
         return;
     }
     bool ok = true;
     m_inputData = input;
+    QStringList intKeys = {
+        "sex","previous_fracture","parent_hip_fracture",
+        "current_smoker","gluccocorticoid","rheumatoid_arthritis",
+        "secondary_osteoporosis","alcohol"};
+    QStringList doubleKeys = {"age","bmi","femoral_neck_bmd"};
     for(auto&& x : m_inputKeyList)
     {
-        if(!input.contains(x))
+        if(m_inputData.contains(x))
         {
-            ok = false;
-            qDebug() << "ERROR: missing expected input " << x;
-            break;
+            if("barcode" == x || "language" == x) continue;
+            QVariant value = m_inputData[x];
+            bool valueOk = true;
+            if(intKeys.contains(x))
+            {
+              if((valueOk = value.canConvert(QMetaType::Int)))
+              {
+                int v = value.toInt();
+                if(!(1 == v || 0 == v))
+                {
+                    valueOk = false;
+                }
+              }
+            }
+            else if(doubleKeys.contains(x))
+            {
+              valueOk = value.canConvert(QMetaType::Double);
+            }
+            if(!valueOk)
+            {
+              ok = false;
+              qDebug() << "ERROR: invalid input" << x << value.toString();
+              break;
+            }
+        }
+        else
+        {
+          ok = false;
+          qDebug() << "ERROR: missing expected input " << x;
+          break;
         }
     }
     if(!ok)
@@ -193,7 +248,7 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
 
 void FraxManager::readOutput()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         qDebug() << "simulating read out";
 
@@ -213,6 +268,7 @@ void FraxManager::readOutput()
         {
           m_test.addMetaDataCharacteristic(x.first,x.second);
         }
+        emit message(tr("Ready to save results..."));
         emit canWrite();
         emit dataChanged();
 
@@ -233,6 +289,7 @@ void FraxManager::readOutput()
         m_test.fromFile(m_outputFile);
         if(m_test.isValid())
         {
+            emit message(tr("Ready to save results..."));
             emit canWrite();
         }
         else
@@ -246,30 +303,29 @@ void FraxManager::readOutput()
 
 void FraxManager::configureProcess()
 {
-    if("simulate" == m_mode &&
+    if(CypressConstants::RunMode::Simulate == m_mode &&
        !m_inputData.isEmpty())
     {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
         return;
     }
 
     // blackbox.exe and input.txt file are present
     //
-    QFileInfo info(m_runnableName);
     QDir working(m_runnablePath);
-    if (info.exists() && info.isExecutable() &&
-        working.exists() && QFileInfo::exists(m_inputFile) &&
+    if(isDefined(m_runnableName) &&
+       working.exists() && QFileInfo::exists(m_inputFile) &&
        !m_inputData.isEmpty())
     {
         qDebug() << "OK: configuring command";
 
-        m_process.setProcessChannelMode(QProcess::ForwardedChannels);
         m_process.setProgram(m_runnableName);
         m_process.setWorkingDirectory(m_runnablePath);
 
         qDebug() << "process working dir: " << m_runnablePath;
 
-        // backup the original intput.txt
+        // backup original intput.txt
         //
         if(!QFileInfo::exists(m_temporaryFile))
         {
@@ -278,14 +334,13 @@ void FraxManager::configureProcess()
           else
               qDebug() << "ERROR: failed to backup default " << m_inputFile;
         }
-        // generate the input.txt file content
-        // exclude the interview barcode and language
+        // generate input.txt file content
+        // exclude interview barcode and language
         //
         QStringList list;
         for(auto&& x : m_inputKeyList)
         {
-            if("barcode"==x) continue;
-            if("language"==x) continue;
+            if("barcode" == x || "language" == x) continue;
             if(m_inputData.contains(x))
               list << m_inputData[x].toString();
         }
@@ -296,8 +351,8 @@ void FraxManager::configureProcess()
             QTextStream stream(&ofile);
             stream << line << Qt::endl;
             ofile.close();
-            qDebug() << "populated the input.txt file " << m_inputFile;
-            qDebug() << "content should be " << line;
+            qDebug() << "populated input.txt file " << m_inputFile;
+            qDebug() << "content = " << line;
         }
         else
         {
@@ -305,27 +360,7 @@ void FraxManager::configureProcess()
             return;
         }
 
-        connect(&m_process, &QProcess::started,
-          this, [this]() {
-              qDebug() << "process started: " << m_process.arguments().join(" ");
-          });
-
-        connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-          this, &FraxManager::readOutput);
-
-        connect(&m_process, &QProcess::errorOccurred,
-          this, [](QProcess::ProcessError error)
-          {
-              QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
-              qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
-          });
-
-        connect(&m_process, &QProcess::stateChanged,
-          this, [](QProcess::ProcessState state) {
-              QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
-              qDebug() << "process state: " << s.join(" ").toLower();
-          });
-
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
     }
     else

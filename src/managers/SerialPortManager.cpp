@@ -10,13 +10,33 @@ SerialPortManager::SerialPortManager(QObject *parent) : ManagerBase(parent)
 
 void SerialPortManager::start()
 {
+    connect(&m_port, &QSerialPort::readyRead,
+             this, &SerialPortManager::readDevice);
+
+    connect(&m_port, &QSerialPort::errorOccurred,
+            this,[this](QSerialPort::SerialPortError error){
+            if(error == QSerialPort::NoError)
+               return;
+             qDebug() << "ERROR: serial port " << m_port.errorString();
+            });
+
+    connect(&m_port, &QSerialPort::dataTerminalReadyChanged,
+            this,[](bool set){
+        qDebug() << "data terminal ready DTR changed to " << (set?"high":"low");
+    });
+
+    connect(&m_port, &QSerialPort::requestToSendChanged,
+            this,[](bool set){
+        qDebug() << "request to send RTS changed to " << (set?"high":"low");
+    });
+
   scanDevices();
   emit dataChanged();
 }
 
 bool SerialPortManager::isDefined(const QString &label) const
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
        return true;
     }
@@ -29,24 +49,15 @@ bool SerialPortManager::isDefined(const QString &label) const
     return defined;
 }
 
-bool SerialPortManager::devicesAvailable() const
-{
-    if("simulate" == m_mode)
-    {
-        return true;
-    }
-    QList<QSerialPortInfo> list = QSerialPortInfo::availablePorts();
-    return !list.empty();
-}
-
 void SerialPortManager::scanDevices()
 {
     m_deviceList.clear();
+    emit message(tr("Discovering serial ports..."));
     emit scanningDevices();
     if(m_verbose)
       qDebug() << "start scanning for devices ....";
 
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
       QSerialPortInfo info;
       QString label = m_deviceName.isEmpty() ? "simulated_device" : m_deviceName;
@@ -116,6 +127,7 @@ void SerialPortManager::scanDevices()
     {
       // select a serial port from the list of scanned ports
       //
+      emit message(tr("Ready to select..."));
       emit canSelectDevice();
     }
 }
@@ -136,7 +148,7 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
 {
     m_deviceData.reset();
 
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
        // get the device data
        m_deviceData.setCharacteristic("port product ID", "simulated");
@@ -146,6 +158,7 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
        m_deviceData.setCharacteristic("port serial number", "simulated");
        m_deviceData.setCharacteristic("port system location", "simulated");
        m_deviceData.setCharacteristic("port description", "simulated");
+       emit message(tr("Ready to connect..."));
        emit canConnectDevice();
        return;
     }
@@ -181,6 +194,7 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
       // signal the GUI that the port is connectable so that
       // the connect button can be clicked
       //
+      emit message(tr("Ready to connect..."));
       emit canConnectDevice();
     }
     m_port.close();
@@ -188,8 +202,9 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
 
 void SerialPortManager::connectDevice()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
         return;
     }
@@ -204,36 +219,18 @@ void SerialPortManager::connectDevice()
       m_port.setStopBits(QSerialPort::OneStop);
       m_port.setBaudRate(QSerialPort::Baud9600);
 
-      connect(&m_port, &QSerialPort::readyRead,
-               this, &SerialPortManager::readDevice);
-
-      connect(&m_port, &QSerialPort::errorOccurred,
-              this,[this](QSerialPort::SerialPortError error){
-              if(error == QSerialPort::NoError)
-                return;
-                  qDebug() << "ERROR: serial port " << m_port.errorString();
-              });
-
-      connect(&m_port, &QSerialPort::dataTerminalReadyChanged,
-              this,[](bool set){
-          qDebug() << "data terminal ready DTR changed to " << (set?"high":"low");
-      });
-
-      connect(&m_port, &QSerialPort::requestToSendChanged,
-              this,[](bool set){
-          qDebug() << "request to send RTS changed to " << (set?"high":"low");
-      });
-
       // signal the GUI that the measure button can be clicked
       //
+      emit message(tr("Ready to measure..."));
       emit canMeasure();
     }
 }
 
 void SerialPortManager::disconnectDevice()
 {
+    emit message(tr("Ready to connect..."));
     emit canConnectDevice();
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
        return;
     }

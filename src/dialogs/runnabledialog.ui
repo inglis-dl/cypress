@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CypressFrame</class>
- <widget class="QFrame" name="CypressFrame">
+ <class>RunnableDialog</class>
+ <widget class="QDialog" name="RunnableDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Choice Reaction Test</string>
+   <string/>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -33,52 +33,13 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QLabel" name="iDlabel">
-        <property name="text">
-         <string>Participant ID:</string>
-        </property>
-        <property name="buddy">
-         <cstring>barcodeLineEdit</cstring>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="barcodeLineEdit">
-        <property name="inputMask">
-         <string>0 0 0 0 0 0 0 0;_</string>
-        </property>
-        <property name="text">
-         <string>       </string>
-        </property>
-        <property name="maxLength">
-         <number>15</number>
-        </property>
-        <property name="cursorPosition">
-         <number>15</number>
-        </property>
-        <property name="clearButtonEnabled">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>80</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
+       <widget class="BarcodeWidget" name="barcodeWidget" native="true"/>
       </item>
      </layout>
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="pathGgroupBox">
+    <widget class="QGroupBox" name="pathGroupBox">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
        <horstretch>0</horstretch>
@@ -167,6 +128,17 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BarcodeWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/BarcodeWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <includes>
+  <include location="local">widgets/BarcodeWidget.h</include>
+ </includes>
  <resources/>
  <connections/>
 </ui>

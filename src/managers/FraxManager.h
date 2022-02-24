@@ -33,8 +33,6 @@ public:
     //
     void setInputData(const QMap<QString, QVariant> &) override;
 
-    void connectUI(QWidget *) override {};
-
 public slots:
 
     // what the manager does in response to the main application

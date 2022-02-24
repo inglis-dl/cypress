@@ -103,8 +103,6 @@ public slots:
 
     void finish() override;
 
-    void connectUI(QWidget *) override {};
-
 private slots:
 
     // QBluetoothDeviceDiscoveryAgent signal receptors

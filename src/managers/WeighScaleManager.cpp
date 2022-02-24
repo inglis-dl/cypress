@@ -14,18 +14,20 @@
 WeighScaleManager::WeighScaleManager(QObject *parent) : SerialPortManager(parent)
 {
   setGroup("weigh_scale");
+  m_col = 1;
+  m_row = 2;
 
   // all managers must check for barcode and language input values
   //
   m_inputKeyList << "barcode";
   m_inputKeyList << "language";
 
-  m_test.setMaximumNumberOfMeasurements(2);
+  m_test.setMaximumNumberOfMeasurements(m_row);
 }
 
 void WeighScaleManager::buildModel(QStandardItemModel* model) const
 {
-    for(int row = 0; row < m_test.getMaximumNumberOfMeasurements(); row++)
+    for(int row = 0; row < m_row; row++)
     {
         QString s = "NA";
         WeightMeasurement m = m_test.getMeasurement(row);
@@ -61,7 +63,7 @@ void WeighScaleManager::saveSettings(QSettings *settings) const
 
 void WeighScaleManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -101,7 +103,7 @@ void WeighScaleManager::connectDevice()
 {
     clearData();
 
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         m_request = QByteArray("i");
         writeDevice();
@@ -154,18 +156,13 @@ void WeighScaleManager::zeroDevice()
 
 void WeighScaleManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
     m_request = QByteArray("p");
     writeDevice();
 }
 
 void WeighScaleManager::readDevice()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         QString simdata;
         if("i" == QString(m_request))
@@ -195,6 +192,9 @@ void WeighScaleManager::readDevice()
       if("i" == QString(m_request))
       {
         m_deviceData.setCharacteristic("software ID", QString(m_buffer.simplified()));
+        // signal the GUI that the measure button can be clicked
+        //
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
       }
       else if("p" == QString(m_request))
@@ -202,8 +202,9 @@ void WeighScaleManager::readDevice()
          m_test.fromArray(m_buffer);
          if(m_test.isValid())
          {
-             // emit the can write signal
-             emit canWrite();
+           // emit the can write signal
+           emit message(tr("Ready to save results..."));
+           emit canWrite();
          }
       }
       else if("z" == QString(m_request))
@@ -211,7 +212,12 @@ void WeighScaleManager::readDevice()
           WeightMeasurement m;
           m.fromArray(m_buffer);
           if(m.isZero())
+          {
+            // signal the GUI that the measure button can be clicked
+            //
+            emit message(tr("Ready to measure..."));
             emit canMeasure();
+          }
       }
 
       emit dataChanged();
@@ -224,7 +230,7 @@ void WeighScaleManager::writeDevice()
     //
     m_buffer.clear();
 
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         if(m_verbose)
           qDebug() << "in simulate mode writeDevice with request " << QString(m_request);

@@ -6,11 +6,14 @@
 #include <QJsonObject>
 #include <QProcess>
 #include <QSettings>
+#include <QSqlDatabase>
 #include <QStandardItemModel>
 
 CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
 {
     setGroup("cdtt");
+    m_col = 1;
+    m_row = 8;
 
     // all managers must check for barcode and language input values
     //
@@ -18,8 +21,38 @@ CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
     m_inputKeyList << "language";
 }
 
+CDTTManager::~CDTTManager()
+{
+  QSqlDatabase::removeDatabase("xlsx_connection");
+}
+
 void CDTTManager::start()
 {
+    // connect signals and slots to QProcess one time only
+    //
+    connect(&m_process, &QProcess::started,
+        this, [this]() {
+            qDebug() << "process started: " << m_process.arguments().join(" ");
+        });
+
+    connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+        this, &CDTTManager::readOutput);
+
+    connect(&m_process, &QProcess::errorOccurred,
+        this, [](QProcess::ProcessError error)
+        {
+            QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
+        });
+
+    connect(&m_process, &QProcess::stateChanged,
+        this, [](QProcess::ProcessState state) {
+            QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "process state: " << s.join(" ").toLower();
+        });
+
+    m_process.setProcessChannelMode(QProcess::ForwardedChannels);
+
     configureProcess();
     emit dataChanged();
 }
@@ -35,7 +68,7 @@ void CDTTManager::loadSettings(const QSettings& settings)
 
 void CDTTManager::saveSettings(QSettings* settings) const
 {
-    if (!m_runnableName.isEmpty())
+    if(!m_runnableName.isEmpty())
     {
         settings->beginGroup(getGroup());
         settings->setValue("client/jar", m_runnableName);
@@ -48,44 +81,28 @@ void CDTTManager::saveSettings(QSettings* settings) const
 QJsonObject CDTTManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if ("simulate" != m_mode)
+    if(CypressConstants::RunMode::Simulate != m_mode)
     {
         QFile ofile(m_outputFile);
         ofile.open(QIODevice::ReadOnly);
         QByteArray buffer = ofile.readAll();
         json.insert("test_output_file", QString(buffer.toBase64()));
-        json.insert("test_output_file_mime_type", "csv");
+        json.insert("test_output_file_mime_type", "xlsx");
     }
     return json;
 }
 
 void CDTTManager::buildModel(QStandardItemModel* model) const
 {
-    // add measurements one row of two columns at a time
-    //
-    int n_total = m_test.getNumberOfMeasurements();
-    int n_row = qMax(1, n_total / 2);
-    if (n_row != model->rowCount())
+    for(int row = 0; row < m_test.getNumberOfMeasurements(); row++)
     {
-        model->setRowCount(n_row);
-    }
-    int row_left = 0;
-    int row_right = 0;
-    for (int i = 0; i < n_total; i++)
-    {
-        CDTTMeasurement measurement = m_test.getMeasurement(i);
-        QString measurementStr = measurement.isValid() ? measurement.toString() : "NA";
-
-        int col = i%2;
-        int* row = col == 0 ? &row_left : &row_right;
-        QStandardItem* item = model->item(*row, col);
-        if (Q_NULLPTR == item)
+        QStandardItem* item = model->item(row, 0);
+        if(Q_NULLPTR == item)
         {
             item = new QStandardItem();
-            model->setItem(*row, col, item);
+            model->setItem(row, 0, item);
         }
-        item->setData(measurementStr, Qt::DisplayRole);
-        (*row)++;
+        item->setData(m_test.getMeasurement(row).toString(), Qt::DisplayRole);
     }
 }
 
@@ -127,6 +144,7 @@ void CDTTManager::selectRunnable(const QString &runnableName)
         QDir dir = QDir::cleanPath(m_runnablePath + QDir::separator() + "applicationFiles" + QDir::separator() + "Results");
         m_outputPath = dir.path();
 
+        emit runnableSelected();
         configureProcess();
     }
     else
@@ -135,18 +153,12 @@ void CDTTManager::selectRunnable(const QString &runnableName)
 
 void CDTTManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
-    if("simulate" == m_mode)
+    clearData();
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         readOutput();
         return;
     }
-
-    clearData();
     // launch the process
     qDebug() << "starting process from measure";
     m_process.start();
@@ -154,17 +166,16 @@ void CDTTManager::measure()
 
 void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
-        return;
     }
     bool ok = true;
     m_inputData = input;
     for(auto&& x : m_inputKeyList)
     {
-        if (!input.contains(x))
+        if(!input.contains(x))
         {
             ok = false;
             break;
@@ -178,9 +189,15 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
 
 void CDTTManager::readOutput()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
-        // TODO: Implement simulate mode
+        m_test.simulate(m_inputData["barcode"].toString());
+        if(m_test.isValid())
+        {
+          emit message(tr("Ready to save results..."));
+          emit canWrite();
+        }
+        emit dataChanged();
         return;
     }
 
@@ -196,21 +213,45 @@ void CDTTManager::readOutput()
     QString fileName = dir.filePath(QString("Results-%0.xlsx").arg(getInputDataValue("barcode").toString()));
     if(QFileInfo::exists(fileName))
     {
-        qDebug() << "found output xlsx file " << fileName;
-        m_test.fromFile(fileName);
+      qDebug() << "found output xlsx file " << fileName;
+
+      //TODO: impl for linux or insert ifdef OS blockers
+      //
+      QSqlDatabase db;
+      if(!QSqlDatabase::contains("xlsx_connection"))
+      {
+        db = QSqlDatabase::addDatabase("QODBC", "xlsx_connection");
+        db.setDatabaseName(
+          "DRIVER={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};DBQ=" + fileName);
+        if(db.isValid())
+          db.open();
+        else
+          qDebug() << "ERROR: invalid database using" << fileName;
+      }
+      else
+        db = QSqlDatabase::database("xlsx_connection");
+
+      if(db.isValid() && !db.isOpen())
+          db.open();
+      if(db.isOpen())
+      {
+        m_test.fromDatabase(db);
         m_outputFile.clear();
         if(m_test.isValid())
         {
-            emit canWrite();
-            m_outputFile = fileName;
+          emit message(tr("Ready to save results..."));
+          emit canWrite();
+          m_outputFile = fileName;
         }
         else
-            qDebug() << "ERROR: input from file produced invalid test results";
+          qDebug() << "ERROR: input from file produced invalid test results";
 
-        emit dataChanged();
+        db.close();
+      }
+      emit dataChanged();
     }
     else
-        qDebug() << "ERROR: no output csv file found";
+        qDebug() << "ERROR: no output xlsx file found"<<fileName;
 }
 
 void CDTTManager::clearData()
@@ -222,6 +263,10 @@ void CDTTManager::clearData()
 void CDTTManager::finish()
 {
     m_test.reset();
+    if(CypressConstants::RunMode::Simulate == m_mode)
+    {
+        return;
+    }
     if(QProcess::NotRunning != m_process.state())
     {
         m_process.close();
@@ -236,18 +281,20 @@ void CDTTManager::finish()
 
 void CDTTManager::configureProcess()
 {
-    if("simulate" == m_mode &&
-       !m_inputData.isEmpty())
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
-        emit canMeasure();
+        if(!m_inputData.isEmpty())
+        {
+          emit message(tr("Ready to measure..."));
+          emit canMeasure();
+        }
         return;
     }
-    // the exe is present
-    QFileInfo info(m_runnableName);
+
     QDir working(m_runnablePath);
     QDir out(m_outputPath);
-    if (info.exists() && "jar" == info.completeSuffix() &&
-        working.exists() && out.exists() &&
+    if(isDefined(m_runnableName) &&
+       working.exists() && out.exists() &&
        !m_inputData.isEmpty())
     {
         qDebug() << "OK: configuring command";
@@ -256,10 +303,9 @@ void CDTTManager::configureProcess()
         QString command = "java";
         QStringList arguments;
         arguments << "-jar"
-            << info.fileName()
+            << m_runnableName
             << getInputDataValue("barcode").toString();
 
-        m_process.setProcessChannelMode(QProcess::ForwardedChannels);
         m_process.setProgram(command);
         m_process.setArguments(arguments);
         m_process.setWorkingDirectory(working.absolutePath());
@@ -267,28 +313,7 @@ void CDTTManager::configureProcess()
         qDebug() << "process config args: " << m_process.arguments().join(" ");
         qDebug() << "process working dir: " << working.absolutePath();
 
-        connect(&m_process, &QProcess::started,
-            this, [this]() {
-                qDebug() << "process started: " << m_process.arguments().join(" ");
-            });
-
-        connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, &CDTTManager::readOutput);
-
-        connect(&m_process, &QProcess::errorOccurred,
-            this, [](QProcess::ProcessError error)
-            {
-                QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
-                qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
-            });
-
-        connect(&m_process, &QProcess::stateChanged,
-            this, [](QProcess::ProcessState state) {
-                QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
-                qDebug() << "process state: " << s.join(" ").toLower();
-
-            });
-
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
     }
     else

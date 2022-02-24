@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "../../managers/FraxManager.h"
+#include "../../auxiliary/CypressConstants.h"
 #include <QDialog>
 #include <QStandardItemModel>
 
@@ -34,8 +35,8 @@ public:
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
     QString outputFileName() { return m_outputFileName; }
 
-    void setMode(const QString& mode) { m_mode = mode.toLower(); }
-    QString mode() { return m_mode; }
+    void setRunMode(const CypressConstants::RunMode& mode) { m_mode = mode; }
+    CypressConstants::RunMode runMode() const { return m_mode; }
 
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() { return m_verbose; }
@@ -54,7 +55,7 @@ private:
     Ui::MainWindow *ui;
     QString m_inputFileName;
     QString m_outputFileName;
-    QString m_mode;
+    CypressConstants::RunMode m_mode;
     bool m_verbose;
 
     QMap<QString,QVariant> m_inputData;

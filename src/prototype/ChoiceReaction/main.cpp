@@ -25,43 +25,45 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Need to pull changes from development branch to get all features of commandLineParser
+    // process command line args
+    //
     CommandLineParser parser;
     QString errMessage;
-    switch (parser.parseCommandLine(app, &errMessage))
+    switch(parser.parseCommandLine(app,&errMessage))
     {
-    case CommandLineParser::CommandLineHelpRequested:
+      case CommandLineParser::HelpRequested:
         QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
-            "<html><head/><body><pre>"
-            + parser.helpText() + "</pre></body></html>");
+                                 "<html><head/><body><pre>"
+                                 + parser.helpText() + "</pre></body></html>");
         return 0;
-    case  CommandLineParser::CommandLineVersionRequested:
+      case  CommandLineParser::VersionRequested:
         QMessageBox::information(0, QGuiApplication::applicationDisplayName(),
-            QGuiApplication::applicationDisplayName() + ' '
-            + QCoreApplication::applicationVersion());
+                                 QGuiApplication::applicationDisplayName() + ' '
+                                 + QCoreApplication::applicationVersion());
         return 0;
-    case CommandLineParser::CommandLineOk:
+      case CommandLineParser::Ok:
         break;
-    case CommandLineParser::CommandLineError:
-    case CommandLineParser::CommandLineInputFileError:
-    case CommandLineParser::CommandLineOutputPathError:
-    case CommandLineParser::CommandLineMissingArg:
-    case CommandLineParser::CommandLineModeError:
+      case CommandLineParser::Error:
+      case CommandLineParser::InputFileError:
+      case CommandLineParser::OutputPathError:
+      case CommandLineParser::MissingArg:
+      case CommandLineParser::MeasureTypeError:
+      case CommandLineParser::RunModeError:
         QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
-            "<html><head/><body><h2>" + errMessage + "</h2><pre>"
-            + parser.helpText() + "</pre></body></html>");
+                             "<html><head/><body><h2>" + errMessage + "</h2><pre>"
+                             + parser.helpText() + "</pre></body></html>");
         return 1;
     }
 
     MainWindow window;
-    window.setInputFileName(parser.getInputFilename());
-    window.setOutputFileName(parser.getOutputFilename());
-    window.setMode(parser.getMode());
-    window.setVerbose(parser.getVerbose());
+    QMap<QString,QVariant> args = parser.getArgs();
+    window.setInputFileName(args["inputFileName"].toString());
+    window.setOutputFileName(args["outputFileName"].toString());
+    window.setRunMode(args["runMode"].value<CypressConstants::RunMode>());
+    window.setVerbose(args["verbose"].toBool());
 
     window.show();
     window.initialize();
-    window.run();
 
     return app.exec();
 }

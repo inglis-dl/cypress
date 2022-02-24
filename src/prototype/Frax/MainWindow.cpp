@@ -35,10 +35,10 @@ void MainWindow::initializeModel()
 {
     // allocate 1 columns x 4 rows of frax measurement items
     //
-    for(int i = 0; i < 4; i++)
+    for(int row=0; row<m_manager.getNumberOfModelRows(); row++)
     {
       QStandardItem* item = new QStandardItem();
-      m_model.setItem(i, 0, item);
+      m_model.setItem(row, 0, item);
     }
 
     m_model.setHeaderData(0, Qt::Horizontal, "Frax 10 Year Fracture Risk Probabilities", Qt::DisplayRole);
@@ -50,52 +50,64 @@ void MainWindow::initializeModel()
     ui->testdataTableView->verticalHeader()->hide();
 }
 
+// set up signal slot connections between GUI front end
+// and device management back end
+//
 void MainWindow::initializeConnections()
 {
-    // Disable all buttons by default
-    //
-    for(auto&& x : this->findChildren<QPushButton *>())
-        x->setEnabled(false);
+  // Disable all buttons by default
+  //
+  for(auto&& x : this->findChildren<QPushButton *>())
+  {
+      x->setEnabled(false);
 
-    // Close the application
-    //
-    ui->closeButton->setEnabled(true);
+      // disable enter key press event passing onto auto focus buttons
+      //
+      x->setDefault(false);
+      x->setAutoDefault(false);
+  }
 
-    // Every instrument stage launched by an interviewer requires input
-    // of the interview barcode that accompanies a participant.
-    // The expected barcode is passed from upstream via .json file.
-    // In simulate mode this value is ignored and a default barcode "00000000" is
-    // assigned instead.
-    // In production mode the input to the barcodeLineEdit is verified against
-    // the content held by the manager and a message or exception is thrown accordingly
-    //
-    // TODO: for DCS interviews, the first digit corresponds the the wave rank
-    // for inhome interviews there is a host dependent prefix before the barcode
-    //
-    if("simulate"==m_mode)
+  // Close the application
+  //
+  ui->closeButton->setEnabled(true);
+
+  // Relay messages from the manager to the status bar
+  //
+  connect(&m_manager,&ManagerBase::message,
+          ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
+
+  // Every instrument stage launched by an interviewer requires input
+  // of the interview barcode that accompanies a participant.
+  // The expected barcode is passed from upstream via .json file.
+  // In simulate mode this value is ignored and a default barcode "00000000" is
+  // assigned instead.
+  // In production mode the input to the barcodeLineEdit is verified against
+  // the content held by the manager and a message or exception is thrown accordingly
+  //
+  // TODO: for DCS interviews, the first digit corresponds the the wave rank
+  // for inhome interviews there is a host dependent prefix before the barcode
+  //
+  if(CypressConstants::RunMode::Simulate == m_mode)
+  {
+    ui->barcodeWidget->setBarcode("00000000");
+  }
+
+  connect(ui->barcodeWidget,&BarcodeWidget::validated,
+          this,[this](const bool& valid)
     {
-      ui->barcodeLineEdit->setText("00000000");
-    }
-
-    QRegExp rx("\\d{8}");
-    QRegExpValidator *v_barcode = new QRegExpValidator(rx);
-    ui->barcodeLineEdit->setValidator(v_barcode);
-
-    connect(ui->barcodeLineEdit, &QLineEdit::editingFinished,
-            this,[this](){
-        if(m_manager.verifyBarcode(ui->barcodeLineEdit->text()))
-        {
-           qDebug() << "OK: valid interview barcode";
-        }
-        else
-        {
-            // TODO: consider throwing exception and killing the application
-            //
-            QMessageBox::critical(
+      if(valid)
+      {
+          // launch the manager
+          //
+          this->run();
+      }
+      else
+      {
+          QMessageBox::critical(
             this, QApplication::applicationName(),
             tr("The input does not match the expected barcode for this participant."));
-        }
-    });
+      }
+  });
 
     connect(&m_manager,&FraxManager::canSelectRunnable,
             this,[this](){
@@ -130,7 +142,6 @@ void MainWindow::initializeConnections()
     //
     connect(&m_manager, &FraxManager::canMeasure,
         this, [this]() {
-            ui->statusBar->showMessage("Ready to measure...");
             ui->measureButton->setEnabled(true);
             ui->saveButton->setEnabled(false);
         });
@@ -144,7 +155,7 @@ void MainWindow::initializeConnections()
     //
     connect(&m_manager, &FraxManager::dataChanged,
         this, [this]() {
-      QHeaderView *h = ui->testdataTableView->horizontalHeader();
+      auto h = ui->testdataTableView->horizontalHeader();
       h->setSectionResizeMode(QHeaderView::Fixed);
 
       m_manager.buildModel(&m_model);
@@ -166,7 +177,6 @@ void MainWindow::initializeConnections()
     //
     connect(&m_manager, &FraxManager::canWrite,
         this, [this]() {
-            ui->statusBar->showMessage("Ready to save results...");
             ui->saveButton->setEnabled(true);
         });
 
@@ -179,23 +189,22 @@ void MainWindow::initializeConnections()
     //
     connect(ui->closeButton, &QPushButton::clicked,
         this, &MainWindow::close);
+
+    // Read inputs required to launch frax test
+    //
+    readInput();
 }
 
 void MainWindow::run()
 {
     m_manager.setVerbose(m_verbose);
-    m_manager.setMode(m_mode);
+    m_manager.setRunMode(m_mode);
 
      // read the path to blackbox.exe
     //
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
     m_manager.loadSettings(settings);
-
-    // Read inputs required to launch frax test
-    // In simulate mode the barcode is always populated with a default of "00000000"
-    //
-    readInput();
 
     // Pass the input to the manager for verification
     //
@@ -222,9 +231,10 @@ void MainWindow::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
-        if("simulate" == m_mode)
+        if(CypressConstants::RunMode::Simulate == m_mode)
         {
-            m_inputData["barcode"]="00000000";
+            m_inputData["barcode"] = "00000000";
+            m_inputData["language"] = "english";
         }
         else
         {
@@ -243,7 +253,6 @@ void MainWindow::readInput()
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject jsonObj = jsonDoc.object();
-      QMapIterator<QString,QVariant> it(m_inputData);
       QList<QString> keys = jsonObj.keys();
       for(int i=0;i<keys.size();i++)
       {
@@ -256,6 +265,8 @@ void MainWindow::readInput()
               qDebug() << keys[i] << v.toVariant();
           }
       }
+      if(m_inputData.contains("barcode"))
+          ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }
     else
         qDebug() << m_inputFileName << " file does not exist";
@@ -268,8 +279,8 @@ void MainWindow::writeOutput()
 
     QJsonObject jsonObj = m_manager.toJsonObject();
 
-    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
-    jsonObj.insert("barcode",QJsonValue(barcode));
+    QString barcode = ui->barcodeWidget->barcode();
+    jsonObj.insert("verification_barcode",QJsonValue(barcode));
 
     if (m_verbose)
         qDebug() << "determine file output name ... ";

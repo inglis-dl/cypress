@@ -33,11 +33,12 @@ void MainWindow::initialize()
 
 void MainWindow::initializeModel()
 {
-    // allocate 2 columns (left eye, right eye) x 8 rows of tonometer measurement items
+    // allocate 2 columns (left eye, right eye) x 14 rows of tonometer measurement items
+    // do not display applanation, pressure, indexes strings
     //
-    for(int col = 0; col < 2; col++)
+    for(int col = 0; col < m_manager.getNumberOfModelColumns(); col++)
     {
-      for(int row = 0; row < 8; row++)
+      for(int row = 0; row < m_manager.getNumberOfModelRows(); row++)
       {
         QStandardItem* item = new QStandardItem();
         m_model.setItem(row, col, item);
@@ -58,50 +59,59 @@ void MainWindow::initializeModel()
 //
 void MainWindow::initializeConnections()
 {
-    // disable all buttons by default
-    //
-    for(auto&& x : this->findChildren<QPushButton *>())
-        x->setEnabled(false);
+  // Disable all buttons by default
+  //
+  for(auto&& x : this->findChildren<QPushButton *>())
+  {
+      x->setEnabled(false);
 
-    // Close the application
-    //
-    ui->closeButton->setEnabled(true);
+      // disable enter key press event passing onto auto focus buttons
+      //
+      x->setDefault(false);
+      x->setAutoDefault(false);
+  }
 
-    // Every instrument stage launched by an interviewer requires input
-    // of the interview barcode that accompanies a participant.
-    // The expected barcode is passed from upstream via .json file.
-    // In simulate mode this value is ignored and a default barcode "00000000" is
-    // assigned instead.
-    // In production mode the input to the barcodeLineEdit is verified against
-    // the content held by the manager and a message or exception is thrown accordingly
-    //
-    // TODO: for DCS interviews, the first digit corresponds the the wave rank
-    // for inhome interviews there is a host dependent prefix before the barcode
-    //
-    if("simulate"==m_mode)
+  // Close the application
+  //
+  ui->closeButton->setEnabled(true);
+
+  // Relay messages from the manager to the status bar
+  //
+  connect(&m_manager,&ManagerBase::message,
+          ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
+
+  // Every instrument stage launched by an interviewer requires input
+  // of the interview barcode that accompanies a participant.
+  // The expected barcode is passed from upstream via .json file.
+  // In simulate mode this value is ignored and a default barcode "00000000" is
+  // assigned instead.
+  // In production mode the input to the barcodeLineEdit is verified against
+  // the content held by the manager and a message or exception is thrown accordingly
+  //
+  // TODO: for DCS interviews, the first digit corresponds the the wave rank
+  // for inhome interviews there is a host dependent prefix before the barcode
+  //
+  if(CypressConstants::RunMode::Simulate == m_mode)
+  {
+    ui->barcodeWidget->setBarcode("00000000");
+  }
+
+  connect(ui->barcodeWidget,&BarcodeWidget::validated,
+          this,[this](const bool& valid)
     {
-      ui->barcodeLineEdit->setText("00000000");
-    }
-
-    QRegExp rx("\\d{8}");
-    QRegExpValidator *v_barcode = new QRegExpValidator(rx);
-    ui->barcodeLineEdit->setValidator(v_barcode);
-
-    connect(ui->barcodeLineEdit, &QLineEdit::editingFinished,
-            this,[this](){
-        if(m_manager.verifyBarcode(ui->barcodeLineEdit->text()))
-        {
-           qDebug() << "OK: valid interview barcode";
-        }
-        else
-        {
-            // TODO: consider throwing exception and killing the application
-            //
-            QMessageBox::critical(
+      if(valid)
+      {
+          // launch the manager
+          //
+          this->run();
+      }
+      else
+      {
+          QMessageBox::critical(
             this, QApplication::applicationName(),
             tr("The input does not match the expected barcode for this participant."));
-        }
-    });
+      }
+  });
 
     connect(&m_manager,&TonometerManager::canSelectRunnable,
             this,[this](){
@@ -122,21 +132,30 @@ void MainWindow::initializeConnections()
     });
 
     connect(ui->openButton, &QPushButton::clicked,
-        this, [this]() {
-            QString fileName =
-                QFileDialog::getOpenFileName(
-                    this, tr("Open File"),
-                    QCoreApplication::applicationDirPath(),
-                    tr("Applications (*.exe, *)"));
+            &m_manager, &TonometerManager::select);
 
-            m_manager.selectRunnable(fileName);
-        });
+    connect(&m_manager,&TonometerManager::canSelectDatabase,
+            this,[this](){
+        for(auto&& x : this->findChildren<QPushButton *>())
+            x->setEnabled(false);
+        ui->closeButton->setEnabled(true);
+        ui->openButton->setEnabled(true);
+        static bool warn = true;
+        if(warn)
+        {
+            QMessageBox::warning(
+            this, QApplication::applicationName(),
+            tr("Select the database by clicking Open and browsing to the "
+            "required file (ora.mdb) and selecting the file.  If the database "
+            "is valid click the Run button to start the test otherwise check the installation."));
+            warn = false;
+        }
+    });
 
     // ora.exe was found or set up successfully
     //
     connect(&m_manager, &TonometerManager::canMeasure,
         this, [this]() {
-            ui->statusBar->showMessage("Ready to measure...");
             ui->measureButton->setEnabled(true);
             ui->saveButton->setEnabled(false);
         });
@@ -150,7 +169,7 @@ void MainWindow::initializeConnections()
     //
     connect(&m_manager, &TonometerManager::dataChanged,
         this, [this]() {
-      QHeaderView *h = ui->testdataTableView->horizontalHeader();
+      auto h = ui->testdataTableView->horizontalHeader();
       h->setSectionResizeMode(QHeaderView::Fixed);
 
       m_manager.buildModel(&m_model);
@@ -173,7 +192,6 @@ void MainWindow::initializeConnections()
     //
     connect(&m_manager, &TonometerManager::canWrite,
         this, [this]() {
-            ui->statusBar->showMessage("Ready to save results...");
             ui->saveButton->setEnabled(true);
         });
 
@@ -186,26 +204,26 @@ void MainWindow::initializeConnections()
     //
     connect(ui->closeButton, &QPushButton::clicked,
         this, &MainWindow::close);
+
+    // Read inputs, such as interview barcode
+    //
+    readInput();
 }
 
 void MainWindow::run()
 {
     m_manager.setVerbose(m_verbose);
-    m_manager.setMode(m_mode);
+    m_manager.setRunMode(m_mode);
+
+    // Pass the input to the manager for verification
+    //
+    m_manager.setInputData(m_inputData);
 
     // Read the path to C:\Program Files\Reichert\ora.exe
     //
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
     m_manager.loadSettings(settings);
-
-    // Read inputs, such as interview barcode
-    //
-    readInput();
-
-    // Pass the input to the manager for verification
-    //
-    m_manager.setInputData(m_inputData);
 
     m_manager.start();
 }
@@ -228,7 +246,7 @@ void MainWindow::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
-        if("simulate" == m_mode)
+        if(CypressConstants::RunMode::Simulate == m_mode)
         {
             m_inputData["barcode"]="00000000";
         }
@@ -246,11 +264,9 @@ void MainWindow::readInput()
       file.open(QIODevice::ReadOnly | QIODevice::Text);
       QString val = file.readAll();
       file.close();
-      qDebug() << val;
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject jsonObj = jsonDoc.object();
-      QMapIterator<QString,QVariant> it(m_inputData);
       QList<QString> keys = jsonObj.keys();
       for(int i=0;i<keys.size();i++)
       {
@@ -263,6 +279,8 @@ void MainWindow::readInput()
               qDebug() << keys[i] << v.toVariant();
           }
       }
+      if(m_inputData.contains("barcode"))
+          ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }
     else
         qDebug() << m_inputFileName << " file does not exist";
@@ -275,8 +293,8 @@ void MainWindow::writeOutput()
 
     QJsonObject jsonObj = m_manager.toJsonObject();
 
-    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
-    jsonObj.insert("barcode", QJsonValue(barcode));
+    QString barcode = ui->barcodeWidget->barcode();
+    jsonObj.insert("verification_barcode", QJsonValue(barcode));
 
     if (m_verbose)
         qDebug() << "determine file output name ... ";

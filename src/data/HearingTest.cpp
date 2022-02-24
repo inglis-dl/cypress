@@ -6,13 +6,26 @@
 #include <QJsonArray>
 #include <QStringBuilder>
 
+HearingTest::HearingTest()
+{
+  m_outputKeyList << "patient_id";
+  m_outputKeyList << "test_datetime";
+  m_outputKeyList << "last_calibration_date";
+  m_outputKeyList << "test_id";
+}
+
 bool HearingTest::isValid() const
 {
-    bool okMeta =
-      hasMetaDataCharacteristic("patient_id") &&
-      hasMetaDataCharacteristic("test_datetime") &&
-      hasMetaDataCharacteristic("last_calibration_date") &&
-      hasMetaDataCharacteristic("test_id");
+    bool okMeta = true;
+    for(auto&& x : m_outputKeyList)
+    {
+      if(!hasMetaDataCharacteristic(x))
+      {
+         okMeta = false;
+         qDebug() << "ERROR: missing test meta data " << x;
+         break;
+       }
+    }
 
     bool okTest = 16 == getNumberOfMeasurements();
     if(okTest)

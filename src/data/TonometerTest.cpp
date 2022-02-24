@@ -4,112 +4,302 @@
 #include <QDebug>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QFile>
+#include <QRandomGenerator>
+#include <algorithm>
 
+#define interp(MU, A, B) ((1.0 - (MU))*(A) + (MU)*(B))
 
-/**
- * sample contents of output.txt from blackbox.exe
- *
- * t,19,50.2,0,21.60494,1,0,1,0,0,0, 0, -1.1, 6.37,1.17,4.47,0.34
- *
- * 0 1  2  3 4        5 6 7 8 9 10 11 12 13   14   15   16
- * 0 : t or z (score input for field at position 12)
- * 1 : country code (19 = Canada)
- * 2 : Age in years (positive real number, can have decimals) Age should be 40-90.
- * 3 : Sex (0 : men, 1 : women)
- * 4 : BMI kg/m2 (positive real number, can have decimals)
- * 5 : Previous fracture (0 : no, 1 : yes)
- * 6 : Parental history of hip fracture (0 : no, 1 : yes)
- * 7 : Current smoker (0 : no, 1 : yes)
- * 8 : Gluccocorticoid (0 : no, 1 : yes)
- * 9 : Rheumatoid Arthritis (0 : no, 1 : yes)
- * 10: Secondary osteoporosis (0 : no, 1 : yes)
- * 11: Alcohol more than two drinks a day (0 : no, 1 : yes)
- * 12: Femoral neck BMD (real number, can have decimals). There are two inputs possible, T-score or Z-score
- * 13: 10 year probability (x 100) of osteoporotic fracture, calculated without knowing BMD (positive real number with decimals)
- * 14: 10 year probability (x 100) of hip fracture, calculated without knowing BMD (positive real number with decimals)
- * 15: 10 year probability (x 100) of osteoporotic fracture, calculated knowing BMD (real number with decimals)
- * 16: 10 year probability (x 100) of hip fracture, calculated knowing BMD (real number with decimals)
- *
- */
+QMap<QString,QString> TonometerTest::variableLUT = TonometerTest::initVariableLUT();
+QMap<QString,QString> TonometerTest::metaLUT = TonometerTest::initMetaLUT();
+QMap<QString,QString> TonometerTest::unitsLUT = TonometerTest::initUnitsLUT();
+
+QMap<QString,QString> TonometerTest::initVariableLUT()
+{
+  QMap<QString,QString> map;
+
+  map["measure_id"] = "MeasureID";
+  map["measure_datetime"] = "MeasureDate";
+  map["side"] = "Eye";
+  map["iopg"] = "IOPG";
+  map["iopcc"] = "IOPCC";
+  map["crf"] = "CRF";
+  map["cct_avg"] = "CCTAvg";
+  map["cct_lowest"] = "CCTLowest";
+  map["cct_sd"] = "CCTSD";
+  map["ch"] = "CH";
+  map["tear_film_value"] = "TearFilmValue";
+  map["pressure"] = "Pressure";
+  map["applanation"] = "Applanation";
+  map["time_in"] = "TimeIn";
+  map["time_out"] = "TimeOut";
+  map["quality_index"] = "QualityIndex";
+  map["indexes"] = "Indexes";
+
+  return map;
+}
+
+QMap<QString,QString> TonometerTest::initMetaLUT()
+{
+  QMap<QString,QString> map;
+
+  map["id"] = "ID";
+  map["date_of_birth"] = "BirthDate";
+  map["sex"] = "Sex";
+  map["measure_number"] = "MeasureNumber";
+  map["session_datetime"] = "SessionDate";
+  map["patient_id"] = "PatientID";
+  map["ora_serial_number"] = "ORASerialNmber";
+  map["ora_software"] = "ORASoftware";
+  map["pc_software"] = "PCSoftware";
+  map["meds"] = "Meds";
+  map["conditions"] = "Conditions";
+  map["notes_1"] = "Notes1";
+  map["notes_2"] = "Notes2";
+  map["notes_3"] = "Notes3";
+  map["m_g2"] = "m_G2";
+  map["b_g2"] = "b_G2";
+  map["m_g3"] = "m_G3";
+  map["b_g3"] = "b_G3";
+  map["iop_cc_coef"] = "iop_cc_coef";
+  map["crf_coef"] = "crf_coef";
+  map["m_abc"] = "m_ABC";
+  map["b_abc"] = "b_ABC";
+  map["b_pp"] = "b_PP";
+  map["best_weighted"] = "BestWeighted";
+
+  return map;
+}
+
+QMap<QString,QString> TonometerTest::initUnitsLUT()
+{
+  QMap<QString,QString> map;
+
+  map["iopg"] = "mmHg";
+  map["iopcc"] = "mmHg";
+  map["crf"] = "mmHg";
+  map["ch"] = "mmHg";
+  map["cct_avg"] = "um";
+  map["cct_avg"] = "um";
+  map["cct_avg"] = "um";
+  map["time_in"] = "ms";
+  map["time_out"] = "ms";
+
+  return map;
+}
 
 TonometerTest::TonometerTest()
 {
-    m_outputKeyList << "type";
-    m_outputKeyList << "country code";
-    m_outputKeyList << "age";
-    m_outputKeyList << "sex";
-    m_outputKeyList << "bmi";
-    m_outputKeyList << "previous fracture";
-    m_outputKeyList << "parent hip fracture";
-    m_outputKeyList << "current smoker";
-    m_outputKeyList << "gluccocorticoid";
-    m_outputKeyList << "rheumatoid arthritis";
-    m_outputKeyList << "secondary osteoporosis";
-    m_outputKeyList << "alcohol";
-    m_outputKeyList << "femoral neck bmd";
+    // exam meta data
+    m_outputKeyList << "id"; // in "ID" from Patients table
+    m_outputKeyList << "date_of_birth"; // in "BirthDate" from Patients table
+    m_outputKeyList << "sex"; // in "Sex" from Patients table
+
+    m_outputKeyList << "measure_number"; // int "MeasureNumber"
+    m_outputKeyList << "session_datetime";   // datetime "SessionDate"
+    m_outputKeyList << "patient_id";     //  int "PatientID" primary key in Patients table
+    m_outputKeyList << "ora_serial_number"; // string (unique to site) "ORASerialNmber"
+    m_outputKeyList << "ora_software";      // string "ORASoftware"
+    m_outputKeyList << "pc_software";       // string "PCSoftware"
+    m_outputKeyList << "meds";            // string (not applicable? never used) "Meds"
+    m_outputKeyList << "conditions";      // string (not applicable? never used) "Conditions"
+    m_outputKeyList << "notes_1";         // string (not applicable? never used) "Notes1"
+    m_outputKeyList << "notes_2";         // string (not applicable? never used) "Notes2"
+    m_outputKeyList << "notes_3";         // string (not applicable? never used) "Notes3"
+    m_outputKeyList << "m_g2";            // double (not applicable? always 6.711 for both eyes) "m_G2"
+    m_outputKeyList << "b_g2";            // double (not applicable? always 68) "b_G2"
+    m_outputKeyList << "m_g3";            // double (not applicable? always 4.444) "m_G3"
+    m_outputKeyList << "b_g3";            // double (not applicable? always -22.9) "b_G3"
+    m_outputKeyList << "iop_cc_coef";     // double (not applicable? always 0.43) "iop_cc_coef"
+    m_outputKeyList << "crf_coef";        // double (not applicable? always 0.7) "crf_coef"
+    m_outputKeyList << "m_abc";           // double (range 1.03 - 1.09) "m_ABC"
+    m_outputKeyList << "b_abc";           // double (range -23.85 - -3.42) "b_ABC"
+    m_outputKeyList << "b_pp";            // double (not applicable? always 6.12) "b_PP"
+    m_outputKeyList << "best_weighted";   // uint (not applicable? always 0 or false) "BestWeighted"
+
+    // data per eye
+    m_outputKeyList << "measure_id";      // int (range 1 - 3) "MeasureID" primary key in Measures table
+    m_outputKeyList << "measure_datetime";    // datetime "MeasureDate"
+    m_outputKeyList << "side";            // string (L,R) "Eye" (convert to {left,right}
+    m_outputKeyList << "iopg";            // double (range 5.6 - 28.3) mmHg "IOPG" : IOP = Goldmann-correlated intraocular pressure (IOP)
+    m_outputKeyList << "iopcc";           // double (range 0.8 - 34.8) mmHg "IOPCC" : corneal-compensated IOP
+    m_outputKeyList << "crf";             // double (range 0.45 - 18.3) mmHg "CRF" : corneal resistance factor
+    m_outputKeyList << "cct_avg";         // double (not applicable? always 0) um "CCTAvg" : CCT = central corneal thickness
+    m_outputKeyList << "cct_lowest";      // double (not applicable? always 0) um "CCTLowest"
+    m_outputKeyList << "cct_sd";           // double (not applicable? always 0) um "CCTSD"
+    m_outputKeyList << "ch";              // double (range 4.3 - 17.5) mmHg "CH" : corneal hysteresis
+    m_outputKeyList << "tear_film_value"; // double (range -14 - 31.4) "TearFilmValue"
+    m_outputKeyList << "pressure";        // string comma delim int vector "Pressure"
+    m_outputKeyList << "applanation";     // string comma delim int vector "Applanation"
+    m_outputKeyList << "time_in";         // double (range 5.7 - 9.8) msec "TimeIn"
+    m_outputKeyList << "time_out";        // double (16.4 - 21.3) msec "TimeOut"
+    m_outputKeyList << "quality_index";   // double (range 0 - 10) "QualityIndex" : waveform score
+    m_outputKeyList << "indexes";         // string comma delim double vector "Indexes"
 }
 
-void TonometerTest::fromFile(const QString &fileName)
+void TonometerTest::fromJson(const QJsonArray &json)
 {
-    QFile ifile(fileName);
-    if(ifile.open(QIODevice::ReadOnly))
+    // expecting an array of json objects,
+    // one for each row of the ORA mdb Measures table
+    //
+    if(0 == json.size()) return;
+
+    // check if there are multiple session dates and retain
+    // data from the most recent
+    //
+    QList<QDateTime> dateList;
+    for(auto&& x : json)
     {
-        qDebug() << "OK, reading input file " << fileName;
-
-        QTextStream instream(&ifile);
-        QString line = instream.readLine();
-        if(false == instream.atEnd())
+        QJsonObject obj = x.toObject();
+        if(obj.contains("SessionDate"))
         {
-            qDebug() << "Tonometer: More lines of content than expected";
+          QDateTime t = obj["SessionDate"].toVariant().toDateTime();
+          if(!dateList.contains(t))
+            dateList.push_back(t);
         }
-        ifile.close();        
-        reset();
+    }
 
-        QStringList list = line.split(",");
-        if(17 == list.size())
+    std::sort(dateList.begin(),dateList.end());
+    for(auto&& x : dateList)
+    {
+      qDebug() << "sorted session" << x.toString();
+    }
+    QDateTime lastSession = dateList.last();
+
+    bool meta = false;
+    for(auto&& x : json)
+    {
+        QJsonObject obj = x.toObject();
+        if(obj.contains("SessionDate") && obj.contains("Eye"))
         {
-           TonometerMeasurement m;
-           m.setCharacteristic("type","osteoporotic fracture");
-           m.setCharacteristic("probability", list.at(13).toDouble());
-           m.setCharacteristic("units","%");
-           addMeasurement(m);
-           m.setCharacteristic("type","hip fracture");
-           m.setCharacteristic("probability", list.at(14).toDouble());
-           addMeasurement(m);
-           m.setCharacteristic("type","osteoporotic fracture bmd");
-           m.setCharacteristic("probability", list.at(15).toDouble());
-           addMeasurement(m);
-           m.setCharacteristic("type","hip fracture bmd");
-           m.setCharacteristic("probability", list.at(16).toDouble());
-           addMeasurement(m);
+          QDateTime t = obj["SessionDate"].toVariant().toDateTime();
+          if(lastSession == t)
+          {
+            // all sessions on one date share the same meta data
+            //
+            if(!meta)
+            {
+               QMap<QString,QString>::const_iterator it = TonometerTest::metaLUT.constBegin();
+               while(it != TonometerTest::metaLUT.constEnd())
+               {
+                  if(obj.contains(it.value()))
+                    addMetaDataCharacteristic(it.key(),obj[it.value()].toVariant());
+                  ++it;
+               }
+               meta = true;
+            }
 
-           addMetaDataCharacteristic("type",list.at(0).toLower());
-           addMetaDataCharacteristic("country code",list.at(1).toUInt());
-           addMetaDataCharacteristic("age",list.at(2).toDouble());
-           addMetaDataCharacteristic("sex",list.at(3).toUInt());
-           addMetaDataCharacteristic("bmi",list.at(4).toDouble());
-           addMetaDataCharacteristic("previous fracture",list.at(5).toUInt());
-           addMetaDataCharacteristic("parent hip fracture",list.at(6).toUInt());
-           addMetaDataCharacteristic("current smoker",list.at(7).toUInt());
-           addMetaDataCharacteristic("gluccocorticoid",list.at(8).toUInt());
-           addMetaDataCharacteristic("rheumatoid arthritis",list.at(9).toUInt());
-           addMetaDataCharacteristic("secondary osteoporosis",list.at(10).toUInt());
-           addMetaDataCharacteristic("alcohol",list.at(11).toUInt());
-           addMetaDataCharacteristic("femoral neck bmd",list.at(12).toDouble());
+            QString side = "L" == obj["Eye"].toVariant().toString() ? "left" : "right";
+            QMap<QString,QString>::const_iterator it = TonometerTest::variableLUT.constBegin();
+            while(it != TonometerTest::variableLUT.constEnd())
+            {
+               QString key = it.key();
+               if("side" != key && obj.contains(it.value()))
+               {
+                 TonometerMeasurement m;
+                 m.setCharacteristic("name", key);
+                 m.setCharacteristic("value", obj[it.value()].toVariant());
+                 m.setCharacteristic("side",side);
+                 m.setCharacteristic("units",
+                   TonometerTest::unitsLUT.contains(key) ? TonometerTest::unitsLUT[key] : QVariant());
+
+                 addMeasurement(m);
+               }
+               ++it;
+            }
+          }
         }
     }
 }
 
-// String representation for debug and GUI display purposes
+QStringList TonometerTest::getMeasurementStrings(const QString &side) const
+{
+    QStringList list;
+    if(isValid())
+    {
+      for(auto&& x : m_measurementList)
+      {
+        if(side == x.getCharacteristic("side").toString())
+        {
+          list.push_back(x.toString());
+        }
+      }
+    }
+    return list;
+}
+
+void TonometerTest::simulate(const QMap<QString, QVariant> &input)
+{
+    reset();
+    qDebug() << "generating simulated data";
+    addMetaDataCharacteristic("id",input["barcode"]);
+    addMetaDataCharacteristic("sex",input["sex"]);
+    addMetaDataCharacteristic("date_of_birth",input["date_of_birth"].toDateTime());
+
+    double mu = QRandomGenerator::global()->generateDouble();
+
+    addMetaDataCharacteristic("measure_number",1);
+    addMetaDataCharacteristic("session_datetime",QDateTime::currentDateTime());
+    addMetaDataCharacteristic("patient_id",1234);
+    addMetaDataCharacteristic("ora_serial_number","000073158");
+    addMetaDataCharacteristic("ora_software","2.11");
+    addMetaDataCharacteristic("pc_software","3.01");
+    addMetaDataCharacteristic("meds",QString(""));
+    addMetaDataCharacteristic("conditions",QString(""));
+    addMetaDataCharacteristic("notes_1",QString(""));
+    addMetaDataCharacteristic("notes_2",QString(""));
+    addMetaDataCharacteristic("notes_3",QString(""));
+    addMetaDataCharacteristic("m_g2",6.711f);
+    addMetaDataCharacteristic("b_g2",68.0f);
+    addMetaDataCharacteristic("m_g3",4.444f);
+    addMetaDataCharacteristic("b_g3",-22.9f);
+    addMetaDataCharacteristic("iop_cc_coef",0.43f);
+    addMetaDataCharacteristic("crf_coef",0.7f);
+    addMetaDataCharacteristic("m_abc",interp(mu,1.03,1.09));
+    addMetaDataCharacteristic("b_abc",interp(mu,-23.85,-3.42));
+    addMetaDataCharacteristic("b_pp",6.12f);
+    addMetaDataCharacteristic("best_weighted",0);
+
+    QStringList sides = {"left","right"};
+
+    for(auto&& side : sides)
+    {
+        qDebug() << "simulating side" << side;
+        for(auto&& key : TonometerTest::variableLUT.keys())
+        {
+          if("side" == key) continue;
+          TonometerMeasurement m;
+          m.setCharacteristic("name", key);
+          QVariant value;
+          if(key.endsWith("datetime"))
+              value = QDateTime::currentDateTime();
+          else if(key.startsWith("cct_"))
+              value = 0.0f;
+          else if("pressure"==key || "applanation" == key || "indexes" == key)
+              value = QString("1,2,3,4,5,6");
+          else
+              value = 1.0f;
+
+          m.setCharacteristic("name",key);
+          m.setCharacteristic("value",value);
+          m.setCharacteristic("side",side);
+          m.setCharacteristic("units",
+            TonometerTest::unitsLUT.contains(key) ? TonometerTest::unitsLUT[key] : QVariant());
+
+          qDebug() << "adding" << key<<m.toString()<<(m.isValid()?"VALID":"INVALID");
+          addMeasurement(m);
+        }
+    }
+}
+
+// String representation for debug purposes
 //
 QString TonometerTest::toString() const
 {
     QString outStr;
-    if (isValid())
+    if(isValid())
     {
         QStringList tempList;
-        for (auto&& measurement : m_measurementList)
+        for(auto&& measurement : m_measurementList)
         {
             tempList << measurement.toString();
         }
@@ -123,6 +313,7 @@ bool TonometerTest::isValid() const
     bool okMeta = true;
     for(auto&& x : m_outputKeyList)
     {
+      if(!TonometerTest::metaLUT.contains(x)) continue;
       if(!hasMetaDataCharacteristic(x))
       {
          okMeta = false;
@@ -130,7 +321,7 @@ bool TonometerTest::isValid() const
          break;
        }
     }
-    bool okTest = 4 == getNumberOfMeasurements();
+    bool okTest = (2*(TonometerTest::variableLUT.size()-1)) == getNumberOfMeasurements();
     if(okTest)
     {
       for(auto&& x : m_measurementList)
@@ -143,6 +334,9 @@ bool TonometerTest::isValid() const
         }
       }
     }
+    else
+        qDebug() <<"ERROR: wrong number of measurements"<<QString::number(TonometerTest::variableLUT.size())<<
+                   QString::number(getNumberOfMeasurements());
 
     return okMeta && okTest;
 }

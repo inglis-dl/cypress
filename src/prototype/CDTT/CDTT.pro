@@ -27,24 +27,31 @@ CONFIG += c++11 console
 HEADERS += \
     ../../data/CDTTMeasurement.h \
     ../../data/CDTTTest.h \
+    ../../data/ExcelQueryHelper.h \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../managers/ManagerBase.h \
     ../../managers/CDTTManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
     ../../data/CDTTMeasurement.cpp \
     ../../data/CDTTTest.cpp \
+    ../../data/ExcelQueryHelper.cpp \
     ../../data/MeasurementBase.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/CDTTManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     MainWindow.cpp \
     main.cpp
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

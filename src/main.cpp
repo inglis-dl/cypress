@@ -1,16 +1,19 @@
 #include "CypressApplication.h"
 
+#include "./auxiliary/CommandLineParser.h"
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
 #include <QMessageBox>
 #include <QDebug>
 
+#include "./auxiliary/CypressConstants.h"
+
 int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName("CLSA");
     QCoreApplication::setOrganizationDomain("clsa-elcv.ca");
-    QCoreApplication::setApplicationName("WeighScale");
+    QCoreApplication::setApplicationName("Cypress");
     QCoreApplication::setApplicationVersion("1.0.0");
 
     QApplication app(argc, argv);
@@ -18,60 +21,58 @@ int main(int argc, char *argv[])
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
     for (const QString &locale : uiLanguages) {
-        const QString baseName = "weighscale_" + QLocale(locale).name();
+        const QString baseName = "cypress_" + QLocale(locale).name();
         if (translator.load(":/i18n/" + baseName)) {
             app.installTranslator(&translator);
             break;
         }
     }
 
-    // process command line args
-    //
-    CypressApplication cypress;
-    QString errMessage;
-    switch(cypress.parse(app,&errMessage))
-    {
-      case CypressApplication::CommandLineHelpRequested:
-        QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
-                                 "<html><head/><body><pre>"
-                                 + cypress.helpText() + "</pre></body></html>");
-        return 0;
-      case  CypressApplication::CommandLineVersionRequested:
-        QMessageBox::information(0, QGuiApplication::applicationDisplayName(),
-                                 QGuiApplication::applicationDisplayName() + ' '
-                                 + QCoreApplication::applicationVersion());
-        return 0;
-      case CypressApplication::CommandLineOk:
-        break;
-      case CypressApplication::CommandLineError:
-      case CypressApplication::CommandLineInputFileError:
-      case CypressApplication::CommandLineOutputPathError:
-      case CypressApplication::CommandLineMissingArg:
-      case CypressApplication::CommandLineTestTypeError:
-      case CypressApplication::CommandLineModeError:
+  // process command line args
+  //
+  CommandLineParser parser;
+  QString errMessage;
+  switch(parser.parseCommandLine(app,&errMessage))
+  {
+    case CommandLineParser::HelpRequested:
+      QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
+                               "<html><head/><body><pre>"
+                               + parser.helpText() + "</pre></body></html>");
+      return 0;
+    case CommandLineParser::VersionRequested:
+      QMessageBox::information(0, QGuiApplication::applicationDisplayName(),
+                               QGuiApplication::applicationDisplayName() + ' '
+                               + QCoreApplication::applicationVersion());
+      return 0;
+    case CommandLineParser::Ok:
+      break;
+    case CommandLineParser::Error:
+    case CommandLineParser::InputFileError:
+    case CommandLineParser::OutputPathError:
+    case CommandLineParser::MissingArg:
+    case CommandLineParser::MeasureTypeError:
+    case CommandLineParser::RunModeError:
         QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
                              "<html><head/><body><h2>" + errMessage + "</h2><pre>"
-                             + cypress.helpText() + "</pre></body></html>");
-        return 1;
-    }
+                             + parser.helpText() + "</pre></body></html>");
+    return EXIT_SUCCESS;
+  }
 
-    try
-    {
+  CypressApplication cypress;
+  try
+  {
       qDebug() << "initialize start";
-      qDebug() << CypressApplication::staticMetaObject.className();
+      cypress.setArgs(parser.getArgs());
       cypress.initialize();
       qDebug() << "initialize end";
-
-    }
-    catch (std::exception& e)
-    {
+  }
+  catch (std::exception& e)
+  {
       qDebug() << e.what();
       QMessageBox::critical(0, QGuiApplication::applicationDisplayName(),
                            "<html><head/><body><h2>" + QString(e.what()) + "</h2></body></html>");
-      return 0;
-    }
-    cypress.show();
-    cypress.run();
+      return EXIT_FAILURE;
+  }
 
-    return app.exec();
+  return app.exec();
 }

@@ -31,14 +31,17 @@ class MeasurementBase
 {
 public:
     MeasurementBase() = default;
-    ~MeasurementBase() = default;
+    virtual ~MeasurementBase() = default;
     MeasurementBase(const MeasurementBase &other)
     {
         m_characteristicValues = other.m_characteristicValues;
     }
-    MeasurementBase operator=(const MeasurementBase &other)
+    MeasurementBase& operator=(const MeasurementBase &other)
     {
-        m_characteristicValues = other.m_characteristicValues;
+        if(this != &other)
+        {
+          m_characteristicValues = other.m_characteristicValues;
+        }
         return *this;
     }
 

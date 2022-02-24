@@ -26,17 +26,20 @@ CONFIG += c++11 console
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
     ../../data/HearingMeasurement.cpp \
     ../../data/HearingTest.cpp \
     ../../data/MeasurementBase.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
     ../../managers/AudiometerManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     main.cpp \
     MainWindow.cpp
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../data/HearingTest.h \
     ../../data/MeasurementBase.h \
     ../../data/HearingMeasurement.h \
@@ -44,9 +47,11 @@ HEADERS += \
     ../../managers/ManagerBase.h \
     ../../managers/SerialPortManager.h \
     ../../managers/AudiometerManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

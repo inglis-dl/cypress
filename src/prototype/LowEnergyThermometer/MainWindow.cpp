@@ -36,7 +36,7 @@ void MainWindow::initializeModel()
 {
     // allocate 1 column x 1 rows of temperature measurement items
     //
-    for(int row = 0; row < 2; row++)
+    for(int row = 0; row < m_manager.getNumberOfModelRows(); row++)
     {
       QStandardItem* item = new QStandardItem();
       m_model.setItem(row,0,item);
@@ -50,32 +50,74 @@ void MainWindow::initializeModel()
     ui->testdataTableView->verticalHeader()->hide();
 }
 
+// set up signal slot connections between GUI front end
+// and device management back end
+//
 void MainWindow::initializeConnections()
 {
-    // Disable all buttons by default
-    //
-    for(auto&& x : this->findChildren<QPushButton *>())
-        x->setEnabled(false);
+  // Disable all buttons by default
+  //
+  for(auto&& x : this->findChildren<QPushButton *>())
+  {
+      x->setEnabled(false);
 
-    // Close the application
-    //
-    ui->closeButton->setEnabled(true);
+      // disable enter key press event passing onto auto focus buttons
+      //
+      x->setDefault(false);
+      x->setAutoDefault(false);
+  }
+
+  // Close the application
+  //
+  ui->closeButton->setEnabled(true);
+
+  // Relay messages from the manager to the status bar
+  //
+  connect(&m_manager,&ManagerBase::message,
+          ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
+
+  // Every instrument stage launched by an interviewer requires input
+  // of the interview barcode that accompanies a participant.
+  // The expected barcode is passed from upstream via .json file.
+  // In simulate mode this value is ignored and a default barcode "00000000" is
+  // assigned instead.
+  // In production mode the input to the barcodeLineEdit is verified against
+  // the content held by the manager and a message or exception is thrown accordingly
+  //
+  // TODO: for DCS interviews, the first digit corresponds the the wave rank
+  // for inhome interviews there is a host dependent prefix before the barcode
+  //
+  if(CypressConstants::RunMode::Simulate == m_mode)
+  {
+    ui->barcodeWidget->setBarcode("00000000");
+  }
+
+  connect(ui->barcodeWidget,&BarcodeWidget::validated,
+          this,[this](const bool& valid)
+    {
+      if(valid)
+      {
+          // launch the manager
+          //
+          this->run();
+      }
+      else
+      {
+          QMessageBox::critical(
+            this, QApplication::applicationName(),
+            tr("The input does not match the expected barcode for this participant."));
+      }
+  });
 
     // Scan for bluetooth low energy peripheral devices
     //
     ui->scanButton->setEnabled(true);
 
-
     connect(ui->scanButton, &QPushButton::clicked,
             &m_manager, &BluetoothLEManager::start);
 
     connect(&m_manager, &BluetoothLEManager::scanningDevices,
-            this,[this]()
-      {
-        ui->deviceComboBox->clear();
-        ui->statusBar->showMessage("Discovering devices ... please wait");
-      }
-    );
+            ui->deviceComboBox, &QComboBox::clear);
 
     // Update the drop down list as devices are discovered during scanning
     //
@@ -98,9 +140,11 @@ void MainWindow::initializeConnections()
         }
     });
 
+    // Prompt user to select a device from the drop down list when previously
+    // cached device information in the ini file is unavailable or invalid
+    //
     connect(&m_manager, &BluetoothLEManager::canSelectDevice,
             this,[this](){
-        ui->statusBar->showMessage("Ready to select1...");
         QMessageBox::warning(
           this, QApplication::applicationName(),
           tr("Double click the bluetooth thermometer from the list.  If the device "
@@ -124,8 +168,6 @@ void MainWindow::initializeConnections()
     //
     connect(&m_manager, &BluetoothLEManager::canConnectDevice,
             this,[this](){
-        qDebug() << "ready to connect";
-        ui->statusBar->showMessage("Ready to connect...");
         ui->connectButton->setEnabled(true);
         ui->disconnectButton->setEnabled(false);
         ui->measureButton->setEnabled(false);
@@ -141,7 +183,6 @@ void MainWindow::initializeConnections()
     //
     connect(&m_manager, &BluetoothLEManager::canMeasure,
             this,[this](){
-        ui->statusBar->showMessage("Ready to measure...");
         ui->connectButton->setEnabled(false);
         ui->disconnectButton->setEnabled(true);
         ui->measureButton->setEnabled(true);
@@ -180,7 +221,6 @@ void MainWindow::initializeConnections()
     //
     connect(&m_manager, &BluetoothLEManager::canWrite,
             this,[this](){
-       ui->statusBar->showMessage("Ready to save results...");
        ui->saveButton->setEnabled(true);
     });
 
@@ -193,12 +233,16 @@ void MainWindow::initializeConnections()
     //
     connect(ui->closeButton, &QPushButton::clicked,
             this, &MainWindow::close);
+
+    // Read inputs, such as interview barcode
+    //
+    readInput();
 }
 
 void MainWindow::run()
 {
     m_manager.setVerbose(m_verbose);
-    m_manager.setMode(m_mode);
+    m_manager.setRunMode(m_mode);
 
     // Read the .ini file for cached local and peripheral device addresses
     //
@@ -234,11 +278,6 @@ void MainWindow::run()
       close();
     }
 
-
-    // Read inputs, such as interview barcode
-    //
-    readInput();
-
     // Pass the input to the manager for verification
     //
     m_manager.setInputData(m_inputData);
@@ -263,7 +302,7 @@ void MainWindow::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
-        if("simulate" == m_mode)
+        if(CypressConstants::RunMode::Simulate == m_mode)
         {
             m_inputData["barcode"]="00000000";
         }
@@ -281,11 +320,9 @@ void MainWindow::readInput()
       file.open(QIODevice::ReadOnly | QIODevice::Text);
       QString val = file.readAll();
       file.close();
-      qDebug() << val;
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject jsonObj = jsonDoc.object();
-      QMapIterator<QString,QVariant> it(m_inputData);
       QList<QString> keys = jsonObj.keys();
       for(int i=0;i<keys.size();i++)
       {
@@ -298,6 +335,8 @@ void MainWindow::readInput()
               qDebug() << keys[i] << v.toVariant();
           }
       }
+      if(m_inputData.contains("barcode"))
+          ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }
     else
         qDebug() << m_inputFileName << " file does not exist";
@@ -310,8 +349,8 @@ void MainWindow::writeOutput()
 
     QJsonObject jsonObj = m_manager.toJsonObject();
 
-    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
-    jsonObj.insert("barcode",QJsonValue(barcode));
+    QString barcode = ui->barcodeWidget->barcode();
+    jsonObj.insert("verification_barcode",QJsonValue(barcode));
 
     if(m_verbose)
         qDebug() << "determine file output name ... ";

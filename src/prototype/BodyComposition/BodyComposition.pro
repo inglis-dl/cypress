@@ -26,17 +26,20 @@ CONFIG += c++11 console
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
     ../../data/BodyCompositionMeasurement.cpp \
     ../../data/BodyCompositionTest.cpp \
     ../../data/MeasurementBase.cpp \
     ../../managers/BodyCompositionAnalyzerManager.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     main.cpp \
     MainWindow.cpp
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../data/BodyCompositionMeasurement.h \
     ../../data/BodyCompositionTest.h \
     ../../data/MeasurementBase.h \
@@ -44,9 +47,11 @@ HEADERS += \
     ../../managers/BodyCompositionAnalyzerManager.h \
     ../../managers/ManagerBase.h \
     ../../managers/SerialPortManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

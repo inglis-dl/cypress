@@ -26,25 +26,32 @@ CONFIG += c++11 console
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
+    ../../data/AccessQueryHelper.h \
     ../../data/TonometerMeasurement.h \
     ../../data/TonometerTest.h \
     ../../data/MeasurementBase.h \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
     ../../managers/TonometerManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
+    ../../data/AccessQueryHelper.cpp \
     ../../data/TonometerMeasurement.cpp \
     ../../data/TonometerTest.cpp \
     ../../data/MeasurementBase.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/TonometerManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     MainWindow.cpp \
     main.cpp
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

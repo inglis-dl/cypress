@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CypressFrame</class>
- <widget class="QFrame" name="CypressFrame">
+ <class>WeighScaleDialog</class>
+ <widget class="QDialog" name="WeighScaleDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -9,6 +9,9 @@
     <width>561</width>
     <height>541</height>
    </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Weight Measurement</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -24,46 +27,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QLabel" name="iDlabel">
-        <property name="text">
-         <string>Participant ID:</string>
-        </property>
-        <property name="buddy">
-         <cstring>barcodeLineEdit</cstring>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="barcodeLineEdit">
-        <property name="inputMask">
-         <string>0 0 0 0 0 0 0 0;_</string>
-        </property>
-        <property name="text">
-         <string>       </string>
-        </property>
-        <property name="maxLength">
-         <number>15</number>
-        </property>
-        <property name="cursorPosition">
-         <number>15</number>
-        </property>
-        <property name="clearButtonEnabled">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>80</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
+       <widget class="BarcodeWidget" name="barcodeWidget" native="true"/>
       </item>
      </layout>
     </widget>
@@ -90,14 +54,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="deviceComboBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>1</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
+         <widget class="QComboBox" name="deviceComboBox"/>
         </item>
         <item>
          <widget class="QPushButton" name="connectButton">
@@ -132,6 +89,13 @@
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
        <layout class="QHBoxLayout" name="measurmentControlHhorizontalLayout">
+        <item>
+         <widget class="QPushButton" name="zeroButton">
+          <property name="text">
+           <string>Zero</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QPushButton" name="measureButton">
           <property name="text">
@@ -178,11 +142,20 @@
        <layout class="QHBoxLayout" name="measurementTableHorizontalLayout">
         <item>
          <widget class="QTableView" name="testdataTableView">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="verticalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="sizeAdjustPolicy">
+           <enum>QAbstractScrollArea::AdjustToContents</enum>
           </property>
           <property name="autoScroll">
            <bool>false</bool>
@@ -207,14 +180,21 @@
     </widget>
    </item>
    <item>
-    <widget class="QStatusBar" name="statusBar">
-     <property name="sizeGripEnabled">
-      <bool>false</bool>
-     </property>
-    </widget>
+    <widget class="QStatusBar" name="statusBar"/>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BarcodeWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/BarcodeWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <includes>
+  <include location="local">widgets/BarcodeWidget.h</include>
+ </includes>
  <resources/>
  <connections/>
 </ui>

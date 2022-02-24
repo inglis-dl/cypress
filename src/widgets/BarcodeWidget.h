@@ -2,26 +2,34 @@
 #define BARCODEWIDGET_H
 
 #include <QWidget>
-#include <QLineEdit>
+#include "ui_barcodewidget.h"
 
-class BarcodeWidget : public QWidget
+QT_FORWARD_DECLARE_CLASS(QLineEdit)
+QT_FORWARD_DECLARE_CLASS(QTimeLine)
+
+class BarcodeWidget : public QWidget, public Ui::BarcodeWidget
 {
     Q_OBJECT
+
 public:
-    explicit BarcodeWidget(QWidget *parent = nullptr);
+    explicit BarcodeWidget(QWidget *parent = Q_NULLPTR);
     ~BarcodeWidget();
 
-    QString getBarcode();
-
-signals:
-    void barcodeChanged(const QString &);
+    QString barcode() const;
 
 public slots:
     void setBarcode(const QString &);
 
-private:
-    QLineEdit *m_edit;
+signals:
+    void validated(const bool&);
 
+private:
+    QLineEdit *m_lineEdit { Q_NULLPTR };
+    QTimeLine *m_timeLine { Q_NULLPTR };
+    QString m_barcode;
+    Ui::BarcodeWidget *ui { Q_NULLPTR };
+
+    bool isValid() const;
 };
 
 #endif // BARCODEWIDGET_H

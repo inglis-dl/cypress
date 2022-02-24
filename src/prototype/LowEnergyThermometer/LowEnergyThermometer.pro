@@ -26,17 +26,20 @@ CONFIG += c++11 console
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
     ../../auxiliary/BluetoothUtil.cpp \
     ../../data/MeasurementBase.cpp \
     ../../data/TemperatureMeasurement.cpp \
     ../../data/TemperatureTest.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/BluetoothLEManager.cpp \
+    ../../widgets/BarcodeWidget.cpp \
     MainWindow.cpp \
     main.cpp
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
     ../../auxiliary/BluetoothUtil.h \
     ../../data/MeasurementBase.h \
     ../../data/TemperatureMeasurement.h \
@@ -44,9 +47,11 @@ HEADERS += \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
     ../../managers/BluetoothLEManager.h \
+    ../../widgets/BarcodeWidget.h \
     MainWindow.h
 
 FORMS += \
+    ../../widgets/barcodewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

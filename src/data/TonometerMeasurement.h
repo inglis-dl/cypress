@@ -19,8 +19,6 @@ public:
     TonometerMeasurement() = default;
     ~TonometerMeasurement() = default;
 
-    void fromString(const QString &);
-
     bool isValid() const override;
 
     QString toString() const override;

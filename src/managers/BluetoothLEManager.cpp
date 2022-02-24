@@ -19,13 +19,15 @@
 BluetoothLEManager::BluetoothLEManager(QObject *parent) : ManagerBase(parent)
 {
     setGroup("thermometer");
+    m_col = 1;
+    m_row = 2;
 
     // all managers must check for barcode and language input values
     //
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
 
-    m_test.setMaximumNumberOfMeasurements(2);
+    m_test.setMaximumNumberOfMeasurements(m_row);
 }
 
 void BluetoothLEManager::start()
@@ -36,7 +38,7 @@ void BluetoothLEManager::start()
 
 void BluetoothLEManager::buildModel(QStandardItemModel *model) const
 {
-    for(int row = 0; row < m_test.getMaximumNumberOfMeasurements(); row++)
+    for(int row = 0; row < m_row; row++)
     {
         QString s = "NA";
         TemperatureMeasurement m = m_test.getMeasurement(row);
@@ -49,7 +51,7 @@ void BluetoothLEManager::buildModel(QStandardItemModel *model) const
 
 void BluetoothLEManager::setLocalDevice(const QString &address)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         return;
     }
@@ -139,7 +141,7 @@ void BluetoothLEManager::saveSettings(QSettings *settings) const
 
 void BluetoothLEManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -162,7 +164,7 @@ void BluetoothLEManager::setInputData(const QMap<QString, QVariant> &input)
 
 bool BluetoothLEManager::lowEnergyEnabled() const
 {
-  if("simulate" == m_mode)
+  if(CypressConstants::RunMode::Simulate == m_mode)
   {
       return true;
   }
@@ -173,7 +175,7 @@ bool BluetoothLEManager::lowEnergyEnabled() const
 bool BluetoothLEManager::localDeviceEnabled() const
 {
     bool enabled = true;
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         return enabled;
     }
@@ -190,7 +192,7 @@ void BluetoothLEManager::scanDevices()
     if(m_verbose)
       qDebug() << "start scanning for devices ....";
 
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
       QBluetoothAddress address("89:CC:44:EB:03:14");
       QString name = "simulated_device";
@@ -360,6 +362,7 @@ void BluetoothLEManager::discoveryCompleteInternal()
     else
     {
         // select a peripheral from the list of scanned devices
+        emit message(tr("Ready to select..."));
         emit canSelectDevice();
     }
 }
@@ -415,7 +418,7 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
 {
     clearData();
 
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
        // get the device data
        m_deviceData.setCharacteristic("device name", info.name());
@@ -454,6 +457,7 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
       this,[this](){
         if(m_verbose)
             qDebug() << "controller disconnected from " << m_controller->remoteName();
+        emit message(tr("Ready to connect..."));
         emit canConnectDevice();
       }
     );
@@ -487,13 +491,15 @@ void BluetoothLEManager::setDevice(const QBluetoothDeviceInfo &info)
         m_controller->discoverServices();
     });
 
+    emit message(tr("Ready to connect..."));
     emit canConnectDevice();
 }
 
 void BluetoothLEManager::connectDevice()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
         return;
     }
@@ -575,18 +581,14 @@ void BluetoothLEManager::serviceDiscoveryComplete()
 
 void BluetoothLEManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         m_deviceData.setCharacteristic("device firmware revision", "1.0.0");
         m_deviceData.setCharacteristic("device software revision", "1.0.0");
         m_test.addMeasurement(TemperatureMeasurement::simulate());
         if(m_test.isValid())
         {
+          emit message(tr("Ready to save results..."));
           emit canWrite();
         }
         emit dataChanged();
@@ -661,7 +663,10 @@ void BluetoothLEManager::infoServiceStateChanged(QLowEnergyService::ServiceState
     // if both services have been discovered emit the canMeasure signal
     //
     if(QLowEnergyService::ServiceDiscovered == m_thermo_service->state())
+    {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
+    }
 }
 
 void BluetoothLEManager::thermoServiceStateChanged(QLowEnergyService::ServiceState state)
@@ -678,13 +683,17 @@ void BluetoothLEManager::thermoServiceStateChanged(QLowEnergyService::ServiceSta
     // if both services have been discovered emit the canMeasure signal
     //
     if(QLowEnergyService::ServiceDiscovered == m_info_service->state())
+    {
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
+    }
 }
 
 void BluetoothLEManager::disconnectDevice()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
+        emit message("Ready to connect...");
         emit canConnectDevice();
         return;
     }
@@ -732,6 +741,7 @@ void BluetoothLEManager::updateTemperatureData(const QLowEnergyCharacteristic &c
    m_test.fromArray(arr);
    if(m_test.isValid())
    {
+     emit message(tr("Ready to save results..."));
      emit canWrite();
    }
    emit dataChanged();

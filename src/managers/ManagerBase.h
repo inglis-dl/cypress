@@ -1,6 +1,7 @@
 #ifndef MANAGERBASE_H
 #define MANAGERBASE_H
 
+#include "../auxiliary/CypressConstants.h"
 #include <QObject>
 #include <QWidget>
 #include <QMap>
@@ -15,7 +16,7 @@ class ManagerBase : public QObject
 
 public:
     explicit ManagerBase(QObject *parent = Q_NULLPTR);
-    ~ManagerBase() { if(!p_widget.isNull()) p_widget.clear(); };
+    ~ManagerBase() = default;
 
     // load and save device, paths and other constant settings to .ini
     //
@@ -30,8 +31,8 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() const { return m_verbose; }
 
-    void setMode(const QString& getMode) { m_mode = getMode; }
-    QString getMode() const { return m_mode; }
+    void setRunMode(const CypressConstants::RunMode& mode) { m_mode = mode; }
+    CypressConstants::RunMode getRunMode() const { return m_mode; }
 
     // collate test results and device and other meta data
     // for the main application to write to .json
@@ -42,7 +43,11 @@ public:
     //
     virtual void buildModel(QStandardItemModel *) const = 0;
 
-    virtual void connectUI(QWidget *) = 0;
+    // get the required model columns and rows depending
+    // on test output requirements
+    //
+    int getNumberOfModelColumns() const { return m_col; }
+    int getNumberOfModelRows() const { return m_row; }
 
     // Set the input data.
     // The input data is read from the input
@@ -65,15 +70,11 @@ public slots:
     // actual measure will only execute if the barcode has been
     // verified.  Subclasses must reimplement accordingly.
     //
-    virtual void measure() { if(!m_validBarcode) return; }
+    virtual void measure() = 0;
 
     // subclasses call methods just prior to main close event
     //
     virtual void finish() = 0;
-
-    // verify a barcode against the value held in m_inputData
-    //
-    bool verifyBarcode(const QString &);
 
 signals:
 
@@ -91,9 +92,13 @@ signals:
     //
     void canWrite();
 
+    // send a message to the UI status bar
+    //
+    void message(const QString &, const int &timeOut=0);
+
 protected:
 
-    bool m_verbose;
+    bool m_verbose { true };
 
     // mode of operation
     // - "simulate" - no devices are connected and the manager
@@ -101,11 +106,7 @@ protected:
     // device and test data
     // - "live" - production mode
     //
-    QString m_mode;
-
-    // locking mechanism: barcode must be verified before measuring
-    //
-    bool m_validBarcode;
+    CypressConstants::RunMode m_mode { CypressConstants::RunMode::Unknown };
 
     // Context dependent clear test data and possibly device data (eg., serial port info)
     // SerialPortManager class clears device data during setDevice() while
@@ -115,8 +116,6 @@ protected:
     //
     virtual void clearData() = 0;
 
-    QSharedPointer<QWidget> p_widget;
-
     // key value pairs sorted by key
     //
     QMap<QString,QVariant> m_inputData;
@@ -124,6 +123,9 @@ protected:
     // an ordered set of input keys
     //
     QList<QString> m_inputKeyList;
+
+    int m_row { 0 };
+    int m_col { 0 };
 
 private:
 

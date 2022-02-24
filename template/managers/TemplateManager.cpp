@@ -34,7 +34,7 @@ void TemplateManager::saveSettings(QSettings* settings) const
 QJsonObject TemplateManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if("simulate" != m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         // Simulate mode code
     }
@@ -81,12 +81,7 @@ void TemplateManager::buildModel(QStandardItemModel* model) const
 
 void TemplateManager::measure()
 {
-    if(!m_validBarcode)
-    {
-        qDebug() << "ERROR: barcode has not been validated";
-        return;
-    }
-    if ("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         readOutput();
         return;
@@ -99,7 +94,7 @@ void TemplateManager::measure()
 
 void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -125,7 +120,7 @@ void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
 
 void TemplateManager::readOutput()
 {
-    if("simulate" == m_mode)
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         // TODO: Implement simulate mode
         return;

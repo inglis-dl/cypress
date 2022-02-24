@@ -9,11 +9,15 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    auxiliary/CypressConstants.cpp \
+    auxiliary/CommandLineParser.cpp \
     data/MeasurementBase.cpp \
     data/HearingTest.cpp \
     data/TonometerTest.cpp \
     data/BodyCompositionTest.cpp \
     data/CDTTTest.cpp \
+    data/ExcelQueryHelper.cpp \
+    data/AccessQueryHelper.cpp \
     data/FraxTest.cpp \
     data/WeighScaleTest.cpp \
     data/ChoiceReactionTest.cpp \
@@ -26,7 +30,6 @@ SOURCES += \
     data/WeightMeasurement.cpp \
     data/ChoiceReactionMeasurement.cpp \
     data/TemperatureMeasurement.cpp \
-    dialogs/CypressDialog.cpp \
     managers/ManagerBase.cpp \
     managers/AudiometerManager.cpp \
     managers/ChoiceReactionManager.cpp \
@@ -37,16 +40,31 @@ SOURCES += \
     managers/CDTTManager.cpp \
     managers/WeighScaleManager.cpp \
     managers/BodyCompositionAnalyzerManager.cpp \
+    widgets/BarcodeWidget.cpp \
+    dialogs/AudiometerDialog.cpp \
+    dialogs/BodyCompositionDialog.cpp \
+    dialogs/CDTTDialog.cpp \
+    dialogs/ChoiceReactionDialog.cpp \
+    dialogs/FraxDialog.cpp \
+    dialogs/ThermometerDialog.cpp \
+    dialogs/TonometerDialog.cpp \
+    dialogs/WeighScaleDialog.cpp \
+    dialogs/DialogBase.cpp \
+    dialogs/DialogFactory.cpp \
     CypressApplication.cpp \
     main.cpp 
 
 HEADERS += \
+    auxiliary/CypressConstants.h \
+    auxiliary/CommandLineParser.h \
     data/MeasurementBase.h \
     data/TestBase.h \
     data/HearingTest.h \
     data/TonometerTest.h \
     data/BodyCompositionTest.h \
     data/CDTTTest.h \
+    data/ExcelQueryHelper.h \
+    data/AccessQueryHelper.h \
     data/FraxTest.h \
     data/WeighScaleTest.h \
     data/TonometerMeasurement.h \
@@ -59,7 +77,6 @@ HEADERS += \
     data/WeightMeasurement.h \
     data/ChoiceReactionMeasurement.h \
     data/TemperatureMeasurement.h \
-    dialogs/CypressDialog.h \
     managers/ManagerBase.h \
     managers/AudiometerManager.h \
     managers/ChoiceReactionManager.h \
@@ -70,6 +87,17 @@ HEADERS += \
     managers/TonometerManager.h \
     managers/CDTTManager.h \
     managers/WeighScaleManager.h \
+    widgets/BarcodeWidget.h \
+    dialogs/AudiometerDialog.h \
+    dialogs/BodyCompositionDialog.h \
+    dialogs/CDTTDialog.h \
+    dialogs/ChoiceReactionDialog.h \
+    dialogs/FraxDialog.h \
+    dialogs/ThermometerDialog.h \
+    dialogs/TonometerDialog.h \
+    dialogs/WeighScaleDialog.h \
+    dialogs/DialogBase.h \
+    dialogs/DialogFactory.h \
     CypressApplication.h
 
 TRANSLATIONS += \
@@ -82,7 +110,12 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-FORMS +=
+FORMS += \
+  widgets/barcodewidget.ui \
+  dialogs/audiometerdialog.ui \
+  dialogs/bodycompositiondialog.ui \
+  dialogs/thermometerdialog.ui \
+  dialogs/runnabledialog.ui \
+  dialogs/weighscaledialog.ui
 
 RESOURCES += \
-    dialogs/cypress.qrc

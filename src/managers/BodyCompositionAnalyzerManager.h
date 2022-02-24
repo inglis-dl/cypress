@@ -26,8 +26,6 @@ public:
 
     void setInputData(const QMap<QString,QVariant> &) override;
 
-    void connectUI(QWidget *) override;
-
     static int AGE_MIN;
     static int AGE_MAX;
     static int HEIGHT_MIN_METRIC;
@@ -98,8 +96,6 @@ private:
 
     QVector<QByteArray> m_cache;
     QQueue<QByteArray> m_queue;
-
-//    QSharedPointer<QWidget> p_widget;
 };
 
 #endif // BODYCOMPOSITIONANALYZERMANAGER_H
