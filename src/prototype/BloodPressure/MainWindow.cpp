@@ -48,7 +48,7 @@ void MainWindow::initialize()
     initializeButtonState();
 
     m_manager.setVerbose(m_verbose);
-    m_manager.setMode(m_mode);
+    m_manager.setRunMode(m_mode);
 
     readInput();
 

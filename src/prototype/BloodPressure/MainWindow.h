@@ -3,6 +3,7 @@
 
 #include "ui_MainWindow.h"
 #include "../../managers/BloodPressureManager.h"
+#include "../../auxiliary/CypressConstants.h"
 #include <QStandardItemModel>
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
@@ -34,8 +35,8 @@ public:
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
     QString getOutputFileName() const { return m_outputFileName; }
 
-    void setMode(const QString& getMode) { m_mode = getMode.toLower(); }
-    QString getMode() const { return m_mode; }
+    void setRunMode(const CypressConstants::RunMode& getRunMode) { m_mode = getRunMode; }
+    CypressConstants::RunMode getRunMode() const { return m_mode; }
 
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() { return m_verbose; }
@@ -59,7 +60,7 @@ private:
     Ui::MainWindow* ui;
     QString m_inputFileName;
     QString m_outputFileName;
-    QString m_mode;
+    CypressConstants::RunMode m_mode;
     bool m_verbose;
 
     QMap<QString, QVariant> m_inputData;

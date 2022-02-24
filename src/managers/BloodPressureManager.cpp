@@ -44,7 +44,7 @@ void BloodPressureManager::saveSettings(QSettings* settings) const
 QJsonObject BloodPressureManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if ("simulate" != m_mode)
+    if (CypressConstants::RunMode::Simulate != m_mode)
     {
     }
     return json;
@@ -118,7 +118,7 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
 
 void BloodPressureManager::measure()
 {
-    if ("simulate" == m_mode)
+    if (CypressConstants::RunMode::Simulate == m_mode)
     {
         return;
     }
@@ -131,7 +131,7 @@ void BloodPressureManager::measure()
 
 void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    if ("simulate" == m_mode)
+    if (CypressConstants::RunMode::Simulate == m_mode)
     {
         m_inputData["barcode"] = 12345678;
         return;
@@ -166,10 +166,6 @@ void BloodPressureManager::clearData()
 {
     m_test.reset();
     emit dataChanged();
-}
-
-void BloodPressureManager::connectUI(QWidget*)
-{
 }
 
 void BloodPressureManager::finish()
