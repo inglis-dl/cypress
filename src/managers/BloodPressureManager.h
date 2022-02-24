@@ -21,9 +21,6 @@ public:
 
     void buildModel(QStandardItemModel*) const override;
 
-    // Inherited via ManagerBase
-    void connectUI(QWidget*) override;
-
     // Set the input data.
     // The input data is read from the input
     // json file to the main application.  This method should be
