@@ -56,7 +56,7 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
     //
     int n_total = m_test.getNumberOfMeasurements();
     int n_row = qMax(1, n_total);
-    if (n_row != model->rowCount())
+    if (model->rowCount() != n_row)
     {
         model->setRowCount(n_row);
     }

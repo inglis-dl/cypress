@@ -2,21 +2,16 @@
 #define BPM200_H
 
 #include <QObject>
-#include <QHidDevice>
-#include <QUsbDevice>
-#include <QUsb>
-#include <QDebug>
 #include <QThread>
-#include <QString>
+#include <QUsb>
 #include <QList>
 
-#include "BPMMessage.h"
-#include "BPMCommunication.h"
+QT_FORWARD_DECLARE_CLASS(BPMCommunication)
 
 class BPM200: public QObject
 {
 	Q_OBJECT
-	QThread CommThread;
+	QThread m_commThread;
 private:
 	const int m_vid = 4279;
 public:
@@ -59,7 +54,7 @@ signals:
 	void finalReviewReady(const int& sbp, const int& dbp, const int& pulse);
 	void sendError(const QString& error);
 private:
-	BPMCommunication* comm;
+	BPMCommunication* m_comm;
 	int m_pid = 0;
 	bool m_aborted = false;
 	bool m_connectionsSet = false;

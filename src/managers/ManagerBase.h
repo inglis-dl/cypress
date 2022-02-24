@@ -30,8 +30,8 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() const { return m_verbose; }
 
-    void setMode(const QString& mode) { m_mode = mode; }
-    QString mode() const { return m_mode; }
+    void setMode(const QString& getMode) { m_mode = getMode; }
+    QString getMode() const { return m_mode; }
 
     // collate test results and device and other meta data
     // for the main application to write to .json

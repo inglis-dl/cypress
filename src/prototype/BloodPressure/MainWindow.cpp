@@ -10,6 +10,7 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QSettings>
+#include <QCloseEvent>
 
 MainWindow::MainWindow(QWidget *parent)
     : QDialog(parent)
@@ -281,7 +282,7 @@ void MainWindow::initializeConnectionIdsUi()
     int vid = m_manager.getVid();
     ui->currentPidLabel->setText(QString("Current pid: %1").arg(pid));
     ui->vidLabel->setText(QString("Vid: %1").arg(vid));
-    if (m_manager.connectionInfoSet() == false) {
+    if (false == m_manager.connectionInfoSet()) {
         ui->selectButton->setEnabled(true);
         ui->refreshButton->setEnabled(true);
         updatePossiblePidOptions();

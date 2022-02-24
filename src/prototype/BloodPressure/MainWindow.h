@@ -4,7 +4,8 @@
 #include "ui_MainWindow.h"
 #include "../../managers/BloodPressureManager.h"
 #include <QStandardItemModel>
-#include <QCloseEvent>
+
+QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,13 +29,13 @@ public:
     void run();
 
     void setInputFileName(const QString& name) { m_inputFileName = name; }
-    QString inputFileName() { return m_inputFileName; }
+    QString getInputFileName() const { return m_inputFileName; }
 
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
-    QString outputFileName() { return m_outputFileName; }
+    QString getOutputFileName() const { return m_outputFileName; }
 
-    void setMode(const QString& mode) { m_mode = mode.toLower(); }
-    QString mode() { return m_mode; }
+    void setMode(const QString& getMode) { m_mode = getMode.toLower(); }
+    QString getMode() const { return m_mode; }
 
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() { return m_verbose; }

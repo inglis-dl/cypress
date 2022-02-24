@@ -1,6 +1,9 @@
 #include "BloodPressureTest.h"
 
-#include <QString>
+#include <QDateTime>
+#include <QJsonArray>
+#include <QFileInfo>
+#include <QDebug>
 
 // the minimum output data keys required from a successful a test
 //
@@ -55,19 +58,19 @@ bool BloodPressureTest::isValid() const
         && hasAllAvgMeasurementData()
         && armInformationSet();
 
-    if (okMeta == false) {
+    if (false == okMeta) {
         return false;
     }
 
     // Check number of measurements is correct
     bool okTest = 5 == getNumberOfMeasurements();
-    if (okTest == false) {
+    if (false == okTest) {
         return false;
     }
 
     for (auto&& measurement : m_measurementList)
     {
-        if (measurement.isValid() == false) {
+        if (false == measurement.isValid()) {
             return false;
         }
     }
@@ -197,7 +200,7 @@ bool BloodPressureTest::hasAllAvgMeasurementData() const
 
 QString BloodPressureTest::firstMeasurementToString() const
 {
-    if (hasFirstMeasurementData() == false) {
+    if (false == hasFirstMeasurementData()) {
         return "";
     }
 
@@ -211,7 +214,7 @@ QString BloodPressureTest::firstMeasurementToString() const
 
 QString BloodPressureTest::avgMeasurementToString() const
 {
-    if (hasAvgMeasurementData() == false) {
+    if (false == hasAvgMeasurementData()) {
         return "";
     }
 
@@ -223,7 +226,7 @@ QString BloodPressureTest::avgMeasurementToString() const
 
 QString BloodPressureTest::allAvgMeasurementToString() const
 {
-    if (hasAllAvgMeasurementData() == false) {
+    if (false == hasAllAvgMeasurementData()) {
         return "";
     }
 

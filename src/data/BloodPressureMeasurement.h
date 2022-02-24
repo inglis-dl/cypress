@@ -3,8 +3,6 @@
 
 #include "MeasurementBase.h"
 
-#include <QDateTime>
-
 /*!
 * \class BloodPressureMeasurement
 * \brief A BloodPressureMeasurement class

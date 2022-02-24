@@ -4,11 +4,9 @@
 #include "TestBase.h"
 #include "BloodPressureMeasurement.h"
 
-#include <QDateTime>
-#include <QDebug>
+#include <QList>
+#include <QString>
 #include <QJsonObject>
-#include <QJsonArray>
-#include <QFileInfo>
 
 class BloodPressureTest : public TestBase<BloodPressureMeasurement>
 {

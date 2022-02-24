@@ -3,15 +3,14 @@
 
 #include <QObject>
 #include <QDateTime>
-#include <QHidDevice>
-#include <QString>
+#include <QTime>
 #include <QQueue>
-#include <functional>
-#include <iostream>
-#include <QThread>
-using namespace std;
 
 #include "BPMMessage.h"
+
+using namespace std;
+
+QT_FORWARD_DECLARE_CLASS(QHidDevice)
 
 class BPMCommunication: public QObject
 {

@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QRandomGenerator>
+#include <QDateTime>
 
 /**
  * sample input
@@ -27,7 +28,7 @@ bool BloodPressureMeasurement::isValid() const
         && hasCharacteristic("start time")
         && hasCharacteristic("end time")
         && hasCharacteristic("reading number");
-    if (hasAllRequiredCharacteristics == false) {
+    if (false == hasAllRequiredCharacteristics) {
             return false;
     }
 
