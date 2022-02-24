@@ -19,7 +19,9 @@ public:
     BloodPressureMeasurement() = default;
     ~BloodPressureMeasurement() = default;
 
-    void storeData(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum);
+    void storeData(const int& sbp, const int& dbp,
+                   const int& pulse, const QDateTime& start,
+                   const QDateTime& end, const int& readingNum);
 
     bool isValid() const override;
 

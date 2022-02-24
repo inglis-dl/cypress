@@ -49,13 +49,12 @@ protected:
     void closeEvent(QCloseEvent*) override;
 
 private:
-    void setupConnections();
-    void initializeButtonState();
-    void initializeArmBandDropDowns();
-    void initializeConnectionIdsUi();
     void readInput();
-    void populateBarcodeDisplay();
-    void updatePossiblePidOptions();
+    void initializeModel();
+    void initializeConnections();
+
+    void initializeButtonState();
+    void initializeConnectionIdsUi();
 
     Ui::MainWindow* ui;
     QString m_inputFileName;
@@ -71,4 +70,4 @@ private:
     QStandardItemModel m_model;
 };
 
-#endif MAINWINDOW_H
+#endif // MAINWINDOW_H

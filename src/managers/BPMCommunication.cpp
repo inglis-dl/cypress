@@ -1,5 +1,6 @@
 #include "BPMCommunication.h"
 
+#include "BPMMessage.h"
 #include <QCoreApplication>
 #include <QEventLoop>
 #include <QThread>
@@ -10,8 +11,8 @@
 //#include <functional>
 //#include <iostream>
 
-BPMCommunication::BPMCommunication(QObject* parent) 
-	: m_bpm200(new QHidDevice())
+BPMCommunication::BPMCommunication(QObject* parent) : QObject(parent)
+    , m_bpm200(new QHidDevice())
 	, m_msgQueue(new QQueue<BPMMessage>())
 {
 }
@@ -19,11 +20,13 @@ BPMCommunication::BPMCommunication(QObject* parent)
 /*
 * Connect to the device
 */
-void BPMCommunication::connectToBpm(int vid, int pid) {
+void BPMCommunication::connectToBpm(const int& vid, const int& pid)
+{
 	m_vid = vid;
 	m_pid = pid;
 	bool connectionSuccessful = attemptConnectionToBpm();
-	if (connectionSuccessful) {
+    if(connectionSuccessful)
+    {
 		// Preform handshake and update connection status
 		// Assumes that bpm isn't actually connected if the handshake fails
 		// NOTE: Will emit a VersionInfoAvailable signal if successful
@@ -40,8 +43,9 @@ void BPMCommunication::connectToBpm(int vid, int pid) {
 *	and the measurement process is complete
 * - emits the MeasurementFailed signal if something goes wrong
 */
-void BPMCommunication::measure() {
-	qDebug() << "BPMComm: Measurement signal recieved. Preparing to measure";
+void BPMCommunication::measure()
+{
+	qDebug() << "BPMComm: Measurement signal received. Preparing to measure";
 	resetValues();
 
 	// Stop just incase it was running
@@ -51,7 +55,8 @@ void BPMCommunication::measure() {
 	// Clear old data
 	bool clearSuccessful = clearBpm();
 	qDebug() << "BPMComm: Clear data on bpm: " << (clearSuccessful ? "Successful" : "Failed");
-	if (false == clearSuccessful) {
+    if(!clearSuccessful)
+    {
 		emit connectionStatus(false);
 		return;
 	}
@@ -64,20 +69,23 @@ void BPMCommunication::measure() {
 	m_cycleTime = -1;
 	bool cycleSetToOne = timedLoop(5,
 		[this]() -> bool {
-			if (m_cycleTime == 1) {
+            if(1 == m_cycleTime)
+            {
 				return true;
 			}
 			cycleBpm();
 			return false;
 		});
-	if (false == cycleSetToOne) {
+    if(!cycleSetToOne)
+    {
 		emit connectionStatus(false);
 		return;
 	}
 
 	// Start Measuring
 	bool measurementSuccessful = startBpm();
-	if (false == measurementSuccessful) {
+    if(!measurementSuccessful)
+    {
 		emit connectionStatus(false);
 		return;
 	}
@@ -86,11 +94,14 @@ void BPMCommunication::measure() {
 /*
 * If measuring, stop the measurement and turn off bpm.
 */
-void BPMCommunication::abort(QThread* uiThread) {
+void BPMCommunication::abort(QThread* uiThread)
+{
 	bool connected = attemptConnectionToBpm();
-	if (connected && m_measuring) {
-		bool stopAckRecieved = stopBpm();
-		if (m_stopUnexpectedRecieved && false == stopAckRecieved) {
+    if(connected && m_measuring)
+    {
+		bool stopAckReceived = stopBpm();
+        if (m_stopUnexpectedReceived && !stopAckReceived)
+        {
 			// try to stop again. When error occurs, the first stop 
 			// typically doesn't work, but the second does
 			stopBpm();
@@ -110,12 +121,14 @@ void BPMCommunication::abort(QThread* uiThread) {
 bool BPMCommunication::attemptConnectionToBpm()
 {
 	// Return false if connection values not set
-	if (-1 == m_vid || -1 == m_pid) {
+    if(-1 == m_vid || -1 == m_pid)
+    {
 		return false;
 	}
 
 	// Check if bpm is already connected
-	if (m_bpm200->isOpen()) {
+    if(m_bpm200->isOpen())
+    {
 		qDebug() << "Already connected";
 		return true;
 	}
@@ -129,7 +142,7 @@ bool BPMCommunication::attemptConnectionToBpm()
 /*
 * Calls start on the bpm and handles communication with the bpm until one of 
 * the following conditions is met:
-* 1. A review message is recieved from the bpm signifying the measurement is complete
+* 1. A review message is received from the bpm signifying the measurement is complete
 * 2. error handling
 * 3. Communication with the bpm times out
 * 
@@ -142,7 +155,8 @@ bool BPMCommunication::startBpm()
 {
     qDebug() << "BPMComm: Start";
 	bool writeCompleted = timedWriteBpm(0x11, 0x04);
-	if (false == writeCompleted) {
+    if(!writeCompleted)
+    {
 		return false;
 	}
 
@@ -153,74 +167,87 @@ bool BPMCommunication::startBpm()
 			BPMMessage msg = m_msgQueue->dequeue();
 			quint8 msgId = msg.getMsgId();
 			quint8 data0 = msg.getData0();
-			// If review data is recieved
-			if (0x52 == msgId) {
+			// If review data is received
+            if(0x52 == msgId)
+            {
 				int sbp = msg.getData1();
 				int dbp = msg.getData2();
 				int pulse = msg.getData3();
 				bool isAverage = 0 == data0;
 				qDebug() << QString("Review (%1). SBP = %2 DBP = %3 pulse = %4").arg(isAverage ? "Done measuring": "Measurement").arg(sbp).arg(dbp).arg(pulse);
-				if (isAverage) {
+                if(isAverage)
+                {
 					emit finalReviewReady(sbp, dbp, pulse);
 					m_measuring = false;
 					return true;
 				}
 			}
 			// else if acknowledgment...
-			else if (0x06 == msgId) {
+            else if(0x06 == msgId)
+            {
 				m_cycleTime = msg.getData1();
-				if (0x04 == data0) {
-					qDebug() << "Ack received for start: " << msg.getAsQString() << endl;
+                if(0x04 == data0)
+                {
+                    qDebug() << "Ack received for start: " << msg.getAsQString() << Qt::endl;
 					m_measuring = true;
 				}
-				else if (0x02 == data0) {
-					qDebug() << "Ack received for review: " << msg.getAsQString() << endl;
+                else if(0x02 == data0)
+                {
+                    qDebug() << "Ack received for review: " << msg.getAsQString() << Qt::endl;
 				}
 			}
 			// else if inflating ...
-			else if (0x49 == msgId) {
+            else if(0x49 == msgId)
+            {
 				m_cuffPressure = data0 + msg.getData1();
-				qDebug() << "Cuff pressure = " << m_cuffPressure << " (Inflating)" << endl;
-				if (QDateTime::fromMSecsSinceEpoch(0) == m_readingStartTime) {
+                qDebug() << "Cuff pressure = " << m_cuffPressure << " (Inflating)" << Qt::endl;
+                if(QDateTime::fromMSecsSinceEpoch(0) == m_readingStartTime)
+                {
 					startReading();
 				}
 			}
 			// else if deflating ...
-			else if (0x44 == msgId) {
+            else if(0x44 == msgId)
+            {
 				m_cuffPressure = data0 + msg.getData1();
-				qDebug() << "Cuff pressure = " << m_cuffPressure << " (Deflating)" << endl;
+                qDebug() << "Cuff pressure = " << m_cuffPressure << " (Deflating)" << Qt::endl;
 			}
-			// else if bp average recieved ...
-			else if (0x41 == msgId) {
+			// else if bp average received ...
+            else if(0x41 == msgId)
+            {
 				int sbp = msg.getData1();
 				int dbp = msg.getData2();
 				int pulse = msg.getData3();
-				qDebug() << QString("Average Recieved. Count = %1 SBP = %2 DBP = %3 pulse = %4").arg(data0).arg(sbp).arg(dbp).arg(pulse);
+				qDebug() << QString("Average Received. Count = %1 SBP = %2 DBP = %3 pulse = %4").arg(data0).arg(sbp).arg(dbp).arg(pulse);
 				emit averageReady(sbp, dbp, pulse);
 			}
-			// else if bp result recieved ...
-			else if (0x42 == msgId && 0x00 == data0) {
+			// else if bp result received ...
+            else if(0x42 == msgId && 0x00 == data0)
+            {
 				int sbp = msg.getData1();
 				int dbp = msg.getData2();
 				int pulse = msg.getData3();
-				qDebug() << QString("Result Recieved. SBP = %1 DBP = %2 pulse = %3").arg(sbp).arg(dbp).arg(pulse);
+				qDebug() << QString("Result Received. SBP = %1 DBP = %2 pulse = %3").arg(sbp).arg(dbp).arg(pulse);
 				endReading(sbp, dbp, pulse);
 			}
-			// else if bp error recieved ...
-			else if (0x42 == msgId && 0x00 != data0) {
+			// else if bp error received ...
+            else if(0x42 == msgId && 0x00 != data0)
+            {
 				// TODO: Possibly get specific and interpret the error as a string to tell user
 				emit measurementError("");
-				qDebug() << "Error occured from BPM" << endl;
+                qDebug() << "Error occured from BPM" << Qt::endl;
 				return true;
 			}
 			// else if review button clicked ...
 			// NOTE: This gets called once by bpm even if 
 			// the physical button is not clicked
-			else if (0x55 == msgId && 0x02 == data0) {
-				qDebug() << "Review initiated" << endl;
+            else if(0x55 == msgId && 0x02 == data0)
+            {
+                qDebug() << "Review initiated" << Qt::endl;
 			}
-			else {
-				qDebug() << "WARNING: Recieved unexpected communication while preforming start: " << msg.getAsQString() << endl;	
+            else
+            {
+                qDebug() << "WARNING: Received unexpected communication while preforming start: " << msg.getAsQString() << Qt::endl;
 			}
 			return false;
 		}, "Start");
@@ -230,46 +257,50 @@ bool BPMCommunication::startBpm()
 /*
 * Calls stop on the bpm and handles communication with the bpm until one of
 * the following conditions is met:
-* 1. An acknowledgment of the stop request is recieved from the bpm
+* 1. An acknowledgment of the stop request is received from the bpm
 * 2. Communication with the bpm times out
 */
 bool BPMCommunication::stopBpm()
 {
-	m_stopUnexpectedRecieved = false;
+    m_stopUnexpectedReceived = false;
     qDebug() << "BPMComm: Stop";
 	bool writeCompleted = timedWriteBpm(0x11, 0x01);
-	if (false == writeCompleted) {
+    if(!writeCompleted)
+    {
 		return false;
 	}
 
 	// Read output from BPM looking for a stop acknolegment
 	// Wait up to 30 seconds before giving up
-	bool stopAckRecieved = timedReadLoop(5,
+	bool stopAckReceived = timedReadLoop(5,
 		[this]() -> bool {
-			bool stopAckRecieved = ackCheck(1, "Stop");
-			if (false == stopAckRecieved) {
-				m_stopUnexpectedRecieved = true;
+			bool stopAckReceived = ackCheck(1, "Stop");
+            if(!stopAckReceived)
+            {
+                m_stopUnexpectedReceived = true;
 			}
-			return stopAckRecieved;
+			return stopAckReceived;
 		}, "Stop");
-	// Set measuring false is stop ack sucessfully recieved
-	if (stopAckRecieved) {
+	// Set measuring false is stop ack sucessfully received
+    if(stopAckReceived)
+    {
 		m_measuring = false;
 	}
-	return stopAckRecieved;
+	return stopAckReceived;
 }
 
 /*
 * Calls cycle on the bpm and handles communication with the bpm until one of
 * the following conditions is met:
-* 1. An acknowledgment of the cycle request is recieved from the bpm
+* 1. An acknowledgment of the cycle request is received from the bpm
 * 2. Communication with the bpm times out
 */
 bool BPMCommunication::cycleBpm()
 {
 	qDebug() << "BPMComm: Cycle";
 	bool writeCompleted = timedWriteBpm(0x11, 0x03);
-	if (writeCompleted == false) {
+    if(!writeCompleted)
+    {
 		return false;
 	}
 
@@ -278,13 +309,15 @@ bool BPMCommunication::cycleBpm()
 	bool result = timedReadLoop(5,
 		[this]() -> bool {
 			BPMMessage nextMessage = m_msgQueue->dequeue();
-			if (nextMessage.getMsgId() == 6 && nextMessage.getData0() == 3) {
+            if(nextMessage.getMsgId() == 6 && nextMessage.getData0() == 3)
+            {
 				m_cycleTime = nextMessage.getData1();
-				qDebug() << "Ack received for cycle. Cycle Time set to " << m_cycleTime << endl;
+                qDebug() << "Ack received for cycle. Cycle Time set to " << m_cycleTime << Qt::endl;
 				return true;
 			}
-			else {
-				qDebug() << "WARNING: Expected a cycle ack. But got- " << nextMessage.getAsQString() << endl;
+            else
+            {
+                qDebug() << "WARNING: Expected a cycle ack. But got- " << nextMessage.getAsQString() << Qt::endl;
 				return false;
 			}
 		});
@@ -294,14 +327,15 @@ bool BPMCommunication::cycleBpm()
 /*
 * Calls clear on the bpm and handles communication with the bpm until one of
 * the following conditions is met:
-* 1. An acknowledgment of the clear request is recieved from the bpm
+* 1. An acknowledgment of the clear request is received from the bpm
 * 2. Communication with the bpm times out
 */
 bool BPMCommunication::clearBpm()
 {
 	qDebug() << "BPMComm: Clear";
 	bool writeCompleted = timedWriteBpm(0x11, 0x05);
-	if (false == writeCompleted) {
+    if(!writeCompleted)
+    {
 		return false;
 	}
 
@@ -317,7 +351,7 @@ bool BPMCommunication::clearBpm()
 /*
 * Calls review on the bpm and handles communication with the bpm until one of
 * the following conditions is met:
-* 1. An acknowledgment of the review request is recieved from the bpm
+* 1. An acknowledgment of the review request is received from the bpm
 * 2. Communication with the bpm times out
 * 
 * This will also set the cycleTime, readingNumber and resultCode
@@ -326,7 +360,8 @@ bool BPMCommunication::reviewBpm()
 {
 	qDebug() << "BPMComm: Review";
 	bool writeCompleted = timedWriteBpm(0x11, 0x02);
-	if (false == writeCompleted) {
+    if(!writeCompleted)
+    {
 		return false;
 	}
 
@@ -335,15 +370,16 @@ bool BPMCommunication::reviewBpm()
 	int result = timedReadLoop(5,
 		[this]() -> bool {
 			BPMMessage nextMessage = m_msgQueue->dequeue();
-			if (nextMessage.getMsgId() == 6 && nextMessage.getData0() == 2) { // Non generic condition
-				qDebug() << "Ack received for review: " << nextMessage.getAsQString() << endl;
+            if(nextMessage.getMsgId() == 6 && nextMessage.getData0() == 2)
+            { // Non generic condition
+                qDebug() << "Ack received for review: " << nextMessage.getAsQString() << Qt::endl;
 				m_cycleTime = nextMessage.getData1();
 				//m_readingNumber = nextMessage.GetData2();
 				//m_resultCode = nextMessage.GetData3();
 				return true;
 			}
 			else {
-				qDebug() << "WARNING: Expected a review ack. But got- " << nextMessage.getAsQString() << endl;
+                qDebug() << "WARNING: Expected a review ack. But got- " << nextMessage.getAsQString() << Qt::endl;
 				return false;
 			}
 		});
@@ -353,14 +389,15 @@ bool BPMCommunication::reviewBpm()
 /*
 * Initiates a handshake with the bpm and handles communication with the bpm 
 * until one of the following conditions is met: 
-* 1. An acknowledgment of the handshake request is recieved from the bpm
+* 1. An acknowledgment of the handshake request is received from the bpm
 * 2. Communication with the bpm times out
 */
 bool BPMCommunication::handshakeBpm()
 {
 	qDebug() << "BPMComm: Handshake";
 	bool writeCompleted = timedWriteBpm(0x11, 0x00);
-	if (writeCompleted == false) {
+    if(!writeCompleted)
+    {
 		return false;
 	}
 
@@ -369,14 +406,16 @@ bool BPMCommunication::handshakeBpm()
 	bool result = timedReadLoop(5,
 		[this]() -> bool {
 			BPMMessage msg = m_msgQueue->dequeue();
-			if (msg.getMsgId() == 6 && msg.getData0() == 0) {
+            if (msg.getMsgId() == 6 && msg.getData0() == 0)
+            {
 				QString version = QString("%1.%2.%3").arg(msg.getData1()).arg(msg.getData2()).arg(msg.getData3());
 				emit versionInfoAvailable(version);
-				qDebug() << "Ack received for handshake. Version = " << version << endl;
+                qDebug() << "Ack received for handshake. Version = " << version << Qt::endl;
 				return true;
 			}
-			else {
-				qDebug() << "WARNING: Expected a handshake ack. But got- " << msg.getAsQString() << endl;
+            else
+            {
+                qDebug() << "WARNING: Expected a handshake ack. But got- " << msg.getAsQString() << Qt::endl;
 				return false;
 			}
 		});
@@ -388,20 +427,24 @@ bool BPMCommunication::handshakeBpm()
 * If the bpm is not connected then it tries to connect for a period of time
 * until it times out
 */
-bool BPMCommunication::timedWriteBpm(quint8 msgId, quint8 data0, quint8 data1, quint8 data2, quint8 data3)
+bool BPMCommunication::timedWriteBpm(
+        const quint8& msgId, const quint8& data0,
+        const quint8& data1, const quint8& data2, const quint8& data3)
 {
 	int timeout = 5;
 	bool successful = timedLoop(timeout,
 		[this, msgId, data0, data1, data2, data3]() -> bool {
 			bool connected = attemptConnectionToBpm();
-			if (connected) {
+            if(connected)
+            {
 				QByteArray buf = BPMMessage::createPackedMessage(msgId, data0, data1, data2, data3);
 				m_bpm200->write(&buf, buf.size());
 				return true;
 			}
 			return false;
 		});
-	if (false == successful) {
+    if(!successful)
+    {
 		emit connectionStatus(false);
 	}
 	return successful;
@@ -434,7 +477,7 @@ void BPMCommunication::readFromBpm()
 	// Convert bytes to BPMMessages
 	int numBytes = bytes.size();
 	if (0 < numBytes) {
-		qDebug() << ". NumBytes: " << numBytes << endl;
+        qDebug() << ". NumBytes: " << numBytes << Qt::endl;
 		for (int i = 0; i + 7 < numBytes;) {
 			quint8 firstByte = bytes[i];
 			quint8 lastByte = bytes[i + 7];
@@ -447,15 +490,15 @@ void BPMCommunication::readFromBpm()
 				quint8 crc = bytes[i + 6];
 				BPMMessage msg(id, data0, data1, data2, data3);
 				bool crcValid = msg.checkCRCValid(crc);
-				qDebug() << "Message: " << msg.getAsQString() << endl;
-				qDebug() << "CRC Valid: " << crcValid << endl;
+                qDebug() << "Message: " << msg.getAsQString() << Qt::endl;
+                qDebug() << "CRC Valid: " << crcValid << Qt::endl;
 				if (crcValid) {
 					m_msgQueue->enqueue(msg);
 				}
 				i += 8;
 			}
 			else {
-				qDebug() << i << " : " << readData[i] << " " << (i + 7) << " : " << readData[i + 7] << endl;
+                qDebug() << i << " : " << readData[i] << " " << (i + 7) << " : " << readData[i + 7] << Qt::endl;
 				i++;
 			}
 		}
@@ -466,7 +509,8 @@ void BPMCommunication::readFromBpm()
 * Timed read loop that calls he passed in "func". The loop will continue until true is returned
 * by the "func" or after "timeout" seconds.
 */
-bool BPMCommunication::timedLoop(const int timeout, const function<bool()> func, QString debugName)
+bool BPMCommunication::timedLoop(const int& timeout,
+  const std::function<bool()> func, const QString& debugName)
 {
 	QTime currTime = QTime::currentTime();
 	QTime dieTime = currTime.addSecs(timeout);
@@ -477,43 +521,49 @@ bool BPMCommunication::timedLoop(const int timeout, const function<bool()> func,
 		}
 
 		currTime = QTime::currentTime();
-		qDebug() << debugName << currTime << endl;
+        qDebug() << debugName << currTime << Qt::endl;
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 	}
 
-	qDebug() << "Did not receive the expected data back from BPM within the time frame given" << endl;
+    qDebug() << "Did not receive the expected data back from BPM within the time frame given" << Qt::endl;
 	return false;
 }
 
 /*
 * Reads data from the BPM in a continuous loop and calls the passed in "func" to make
-* checks on the data recieved from the BPM. The loop will continue until true is returned
+* checks on the data received from the BPM. The loop will continue until true is returned
 * by the "func" or after "timeout" seconds. 
 */
-bool BPMCommunication::timedReadLoop(int timeout, function<bool()> func, QString debugName)
+bool BPMCommunication::timedReadLoop(const int& timeout,
+  std::function<bool()> func, const QString& debugName)
 {
 	bool connected = attemptConnectionToBpm();
-	if (connected == false) {
+    if(!connected)
+    {
 		return false;
 	}
 	m_lastBpmMessageTime = QTime::currentTime();
 	bool successful = timedLoop(timeout, 
 		[this, func]() -> bool {
-			if (m_aborted) {
+            if(m_aborted)
+            {
 				m_aborted = false;
 				return true;
 			}
 
 			readFromBpm();
-			if(false == m_msgQueue->isEmpty()) {
+            if(!m_msgQueue->isEmpty())
+            {
 				m_lastBpmMessageTime = QTime::currentTime();
 				bool successful = func();
-				if (successful) {
+                if(successful)
+                {
 					return true;
 				}
 			}
 			QTime tooLongSinceLastReadTime = m_lastBpmMessageTime.addSecs(45);
-			if (QTime::currentTime() > tooLongSinceLastReadTime) {
+            if(QTime::currentTime() > tooLongSinceLastReadTime)
+            {
 				QString errorMessage = 
 					"There has been a large pause since the last communication from the bpm. Connection status being considered interupted";
 				qDebug() << errorMessage;
@@ -530,16 +580,19 @@ bool BPMCommunication::timedReadLoop(int timeout, function<bool()> func, QString
 * Checks if the next message in the message queue is an acknowledgement 
 * for the expected command
 */
-bool BPMCommunication::ackCheck(int expectedData0, QString logName)
+bool BPMCommunication::ackCheck(const int& expectedData0, const QString& logName)
 {
 	int acknowledgmentMsgId = 6;
 	BPMMessage nextMessage = m_msgQueue->dequeue();
-	if (nextMessage.getMsgId() == acknowledgmentMsgId && nextMessage.getData0() == expectedData0) {
-		qDebug() << "Ack received for " << logName << endl;
+    if(nextMessage.getMsgId() == acknowledgmentMsgId &&
+       nextMessage.getData0() == expectedData0)
+    {
+        qDebug() << "Ack received for " << logName << Qt::endl;
 		return true;
 	}
-	else {
-		qDebug() << "WARNING: Expected a " << logName << " ack. But got- " << nextMessage.getAsQString() << endl;
+    else
+    {
+        qDebug() << "WARNING: Expected a " << logName << " ack. But got- " << nextMessage.getAsQString() << Qt::endl;
 		return false;
 	}
 }
@@ -556,7 +609,8 @@ void BPMCommunication::resetValues()
 
 void BPMCommunication::startReading()
 {
-	if (QDateTime::fromMSecsSinceEpoch(0) == m_readingStartTime) {
+    if(QDateTime::fromMSecsSinceEpoch(0) == m_readingStartTime)
+    {
 		m_readingNumberCalc++;
 		m_readingStartTime = QDateTime::currentDateTime();
 	}
@@ -564,7 +618,8 @@ void BPMCommunication::startReading()
 
 void BPMCommunication::endReading(const int& sbp, const int& dbp, const int& pulse)
 {
-	if (QDateTime::fromMSecsSinceEpoch(0) != m_readingStartTime) {
+    if(QDateTime::fromMSecsSinceEpoch(0) != m_readingStartTime)
+    {
 		emit measurementReady(sbp, dbp, pulse, m_readingStartTime, QDateTime::currentDateTime(), m_readingNumberCalc);
 		m_readingStartTime = QDateTime::fromMSecsSinceEpoch(0);
 	}

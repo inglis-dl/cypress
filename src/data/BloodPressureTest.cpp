@@ -12,7 +12,11 @@ BloodPressureTest::BloodPressureTest()
     m_outputKeyList << "user id";
 }
 
-void BloodPressureTest::addMeasurement(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum)
+void BloodPressureTest::addMeasurement(const int& sbp, const int& dbp,
+                                       const int& pulse,
+                                       const QDateTime& start,
+                                       const QDateTime& end,
+                                       const int& readingNum)
 {
     if (readingNum == 1) {
         addMetaDataCharacteristic("first start time", start);
@@ -137,21 +141,30 @@ void BloodPressureTest::addAverageMeasurement(const int& sbpAvg, const int& dbpA
     addMetaDataCharacteristic("avg count", numMeasurements);
 
     qDebug() << QString("Averages: sbp(%1:%2) dbp(%3:%4) pulse(%5:%6)").arg(sbpAvg).arg(avgSbpCalc).arg(dbpAvg).arg(avgDbpCalc).arg(pulseAvg).arg(avgPulseCalc);
-    if (round(avgSbpCalc) == sbpAvg) {
+    if(qRound(avgSbpCalc) == sbpAvg)
+    {
         addMetaDataCharacteristic("avg systolic", sbpAvg);
-    }else {
+    }
+    else
+    {
         qDebug() << QString("WARNING: SBP average (%1) does not align with calculated average (%2)").arg(sbpAvg).arg(avgSbpCalc);
     }
 
-    if (round(avgDbpCalc) == dbpAvg) {
+    if(qRound(avgDbpCalc) == dbpAvg)
+    {
         addMetaDataCharacteristic("avg diastolic", dbpAvg);
-    }else{
+    }
+    else
+    {
         qDebug() << QString("WARNING: DBP average (%1) does not align with calculated average (%2)").arg(dbpAvg).arg(avgDbpCalc);
     }
 
-    if (round(avgPulseCalc) == pulseAvg) {
+    if(qRound(avgPulseCalc) == pulseAvg)
+    {
         addMetaDataCharacteristic("avg pulse", pulseAvg);
-    }else {
+    }
+    else
+    {
         qDebug() << QString("WARNING: Pulse average (%1) does not align with calculated average (%2)").arg(pulseAvg).arg(avgPulseCalc);
     }
 
@@ -165,9 +178,9 @@ void BloodPressureTest::storeAllAverageMetaData(int sbpTotal, int dbpTotal, int 
         sbpTotal += getMetaDataCharacteristic("first systolic").toInt();
         dbpTotal += getMetaDataCharacteristic("first diastolic").toInt();
         pulseTotal += getMetaDataCharacteristic("first pulse").toInt();
-        addMetaDataCharacteristic("all avg systolic", round(sbpTotal * 1.0 / numMeasurments));
-        addMetaDataCharacteristic("all avg diastolic", round(dbpTotal * 1.0 / numMeasurments));
-        addMetaDataCharacteristic("all avg pulse", round(pulseTotal * 1.0 / numMeasurments));
+        addMetaDataCharacteristic("all avg systolic", qRound(sbpTotal * 1.0 / numMeasurments));
+        addMetaDataCharacteristic("all avg diastolic", qRound(dbpTotal * 1.0 / numMeasurments));
+        addMetaDataCharacteristic("all avg pulse", qRound(pulseTotal * 1.0 / numMeasurments));
     }
     else {
         qDebug() << "WARNING: No data found for first measurement when trying to calculate all average data";

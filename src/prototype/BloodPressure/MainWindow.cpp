@@ -16,13 +16,19 @@ MainWindow::MainWindow(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::MainWindow)
     , m_verbose(false)
+    , m_manager(this)
 {
     ui->setupUi(this);
+}
 
-    // allocate 2 columns x 8 rows of hearing measurement items
-    //
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
 
-    for (int row = 0; row < 8; row++)
+void MainWindow::initializeModel()
+{
+    for(int row = 0; row < m_manager.getNumberOfModelRows(); row++)
     {
         QStandardItem* item = new QStandardItem();
         m_model.setItem(row, 0, item);
@@ -36,39 +42,98 @@ MainWindow::MainWindow(QWidget *parent)
     ui->testdataTableView->verticalHeader()->hide();
 }
 
-MainWindow::~MainWindow()
-{
-    delete ui;
-}
-
 void MainWindow::initialize()
 {
-    setupConnections();
-    initializeArmBandDropDowns();
+    initializeModel();
+    initializeConnections();
     initializeButtonState();
+}
 
+void MainWindow::run()
+{
     m_manager.setVerbose(m_verbose);
     m_manager.setRunMode(m_mode);
 
-    readInput();
-
-    populateBarcodeDisplay();
-
-    // read the path to C:\Users\clsa\Documents\CDTT-2018-07-22\CDTTstereo.jar
+    // Read the .ini file for cached device data
     //
     QDir dir = QCoreApplication::applicationDirPath();
-    qDebug() << "Dir: " << dir;
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
     m_manager.loadSettings(settings);
-    // Must load settings before initializing connection ids ui
-    initializeConnectionIdsUi();
 
-    // have the manager build the inputs from the input json file
+    // Pass the input to the manager for verification
+    //
     m_manager.setInputData(m_inputData);
+
+    m_manager.start();
 }
 
-void MainWindow::setupConnections()
+void MainWindow::initializeConnections()
 {
+    // The qcombobox automatically selects the first item in the list. So a blank entry is
+    // added to display that an option has not been picked yet. The blank entry is treated
+    // as not being a valid option by the rest of this code. If there was no blank entry, then
+    // another option would be set by default and users may forget to change the default option
+    //
+    QStringList bandList = (QStringList()<<""<<"Small"<<"Medium"<<"Large"<<"X-large");
+    ui->armBandSizeComboBox->addItems(bandList);
+
+    QStringList armList = (QStringList()<<""<<"Left"<<"Right");
+    ui->armComboBox->addItems(armList);
+
+    // Disable all buttons by default
+    //
+    for(auto&& x : this->findChildren<QPushButton *>())
+    {
+        x->setEnabled(false);
+
+        // disable enter key press event passing onto auto focus buttons
+        //
+        x->setDefault(false);
+        x->setAutoDefault(false);
+    }
+
+    // Close the application
+    //
+    ui->closeButton->setEnabled(true);
+
+    // Relay messages from the manager to the status bar
+    //
+    connect(&m_manager,&ManagerBase::message,
+            ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
+
+    // Every instrument stage launched by an interviewer requires input
+    // of the interview barcode that accompanies a participant.
+    // The expected barcode is passed from upstream via .json file.
+    // In simulate mode this value is ignored and a default barcode "00000000" is
+    // assigned instead.
+    // In production mode the input to the barcodeLineEdit is verified against
+    // the content held by the manager and a message or exception is thrown accordingly
+    //
+    // TODO: for DCS interviews, the first digit corresponds the the wave rank
+    // for inhome interviews there is a host dependent prefix before the barcode
+    //
+    if(CypressConstants::RunMode::Simulate == m_mode)
+    {
+      ui->barcodeWidget->setBarcode("00000000");
+    }
+
+    connect(ui->barcodeWidget,&BarcodeWidget::validated,
+            this,[this](const bool& valid)
+      {
+        if(valid)
+        {
+            // launch the manager
+            //
+            this->run();
+        }
+        else
+        {
+            QMessageBox::critical(
+              this, QApplication::applicationName(),
+              tr("The input does not match the expected barcode for this participant."));
+        }
+    });
+
     // bpm connected successfully
     //
     connect(&m_manager, &BloodPressureManager::canMeasure,
@@ -76,7 +141,6 @@ void MainWindow::setupConnections()
             ui->measureButton->setEnabled(true);
             ui->saveButton->setEnabled(false);
             ui->connectButton->setEnabled(false);
-            ui->statusBar->showMessage("Connected: Ready to measure blood pressure");
         });
 
     // Connect to the device (bpm)
@@ -127,9 +191,7 @@ void MainWindow::setupConnections()
         this, [this]() {
             auto h = ui->testdataTableView->horizontalHeader();
             h->setSectionResizeMode(QHeaderView::Fixed);
-
             m_manager.buildModel(&m_model);
-
             QSize ts_pre = ui->testdataTableView->size();
             h->resizeSections(QHeaderView::ResizeToContents);
             ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
@@ -149,7 +211,6 @@ void MainWindow::setupConnections()
     connect(&m_manager, &BloodPressureManager::canWrite,
         this, [this]() {
             ui->saveButton->setEnabled(true);
-            ui->statusBar->showMessage("Done Measuring: Blood pressure data ready to be saved");
         });
 
     // Write test data to output
@@ -167,16 +228,19 @@ void MainWindow::setupConnections()
     connect(ui->armBandSizeComboBox, &QComboBox::currentTextChanged, 
         this, [this](const QString &size) {
             m_manager.setArmBandSize(size);
-            if (m_manager.armInformationSet() && m_manager.connectionInfoSet()) {
+            if (m_manager.armInformationSet() && m_manager.connectionInfoSet())
+            {
                 ui->connectButton->setEnabled(true);
             }
         });
+
     // Update arm used selected by user
     //
     connect(ui->armComboBox, &QComboBox::currentTextChanged,
         this, [this](const QString& arm) {
             m_manager.setArm(arm);
-            if (m_manager.armInformationSet() && m_manager.connectionInfoSet()) {
+            if (m_manager.armInformationSet() && m_manager.connectionInfoSet())
+            {
                 ui->connectButton->setEnabled(true);
             }
         });
@@ -184,16 +248,19 @@ void MainWindow::setupConnections()
     // TODO figure out how manager can create its own signals
     connect(&m_manager.m_bpm, &BPM200::connectionStatusReady,
         this, &MainWindow::bpmDisconnected);
+
     connect(&m_manager.m_bpm, &BPM200::sendError,
         this, [this](const QString& error) {
             ui->statusBar->showMessage("ERROR: Blood Pressure device error.");
             m_manager.finish();
-            if (error.isEmpty()) {
+            if(error.isEmpty())
+            {
                 QMessageBox::warning(
                     this, QApplication::applicationName(),
                     tr("ERROR: Blood Pressure device error"));
             }
-            else {
+            else
+            {
                 QMessageBox::warning(
                     this, QApplication::applicationName(),
                     tr(error.toLocal8Bit().data()));
@@ -209,10 +276,12 @@ void MainWindow::setupConnections()
             int pid = ui->newPidComboBox->currentText().toInt();
             m_manager.m_bpm.setConnectionInfo(pid);
             ui->currentPidLabel->setText(QString("Current pid: %1").arg(pid));
-            if (m_manager.connectionInfoSet()) {
+            if(m_manager.connectionInfoSet())
+            {
                 ui->selectButton->setEnabled(false);
                 ui->refreshButton->setEnabled(false);
-                if (m_manager.armInformationSet()) {
+                if (m_manager.armInformationSet())
+                {
                     ui->connectButton->setEnabled(true);
                 }
             }
@@ -220,24 +289,26 @@ void MainWindow::setupConnections()
 
     connect(ui->refreshButton, &QPushButton::clicked,
         this, [this]() {
-            updatePossiblePidOptions();
-        });
+        // remove current options
+        ui->newPidComboBox->clear();
+        // add new options based on current connected usb devices with bpm vid
+        QList<int> possiblePids = m_manager.m_bpm.findAllPids();
+        foreach(int pid, possiblePids)
+        {
+          ui->newPidComboBox->addItem(QString("%1").arg(pid));
+        }
+     });
 
     // Setup Connections for manager
     m_manager.setupConnections();
+
+    // Read inputs, such as interview barcode
+    //
+    readInput();
 }
 
 void MainWindow::initializeButtonState()
 {
-    // disable all buttons by default
-    //
-    for (auto&& x : this->findChildren<QPushButton*>())
-        x->setEnabled(false);
-
-    // Close the application
-    //
-    ui->closeButton->setEnabled(true);
-
     // Set the selected arm band size if it has already been selected
     // NOTE: It may have already been set if there is an error while measuring
     QString selectedArmBandSize = ui->armBandSizeComboBox->currentText();
@@ -259,68 +330,21 @@ void MainWindow::initializeButtonState()
     }
 }
 
-void MainWindow::initializeArmBandDropDowns()
-{
-    // The qcombobox automatically selects the first item in the list. So a blank entry is
-    // added to display that an option has not been picked yet. The blank entry is treated 
-    // as not being a valid option by the rest of this code. If there was no blank entry, then 
-    // another option would be set by default and users may forget to change the default option
-    ui->armBandSizeComboBox->addItem("");
-    ui->armBandSizeComboBox->addItem("Small");
-    ui->armBandSizeComboBox->addItem("Medium");
-    ui->armBandSizeComboBox->addItem("Large");
-    ui->armBandSizeComboBox->addItem("X-Large");
-
-    ui->armComboBox->addItem("");
-    ui->armComboBox->addItem("Left");
-    ui->armComboBox->addItem("Right");
-}
-
 void MainWindow::initializeConnectionIdsUi()
 {
     int pid = m_manager.getPid();
     int vid = m_manager.getVid();
     ui->currentPidLabel->setText(QString("Current pid: %1").arg(pid));
     ui->vidLabel->setText(QString("Vid: %1").arg(vid));
-    if (false == m_manager.connectionInfoSet()) {
+    if (false == m_manager.connectionInfoSet())
+    {
         ui->selectButton->setEnabled(true);
         ui->refreshButton->setEnabled(true);
-        updatePossiblePidOptions();
-
+        ui->refreshButton->click();
         QMessageBox::warning(
             this, QApplication::applicationName(),
             tr("Select the pid of the blood pressure monitor from the drop down and then click select"));
     }
-}
-
-void MainWindow::populateBarcodeDisplay()
-{
-    // Populate barcode display
-    //
-    if (m_inputData.contains("barcode") && m_inputData["barcode"].isValid())
-        ui->barcodeLineEdit->setText(m_inputData["barcode"].toString());
-    else
-        ui->barcodeLineEdit->setText("00000000"); // dummy
-}
-
-void MainWindow::updatePossiblePidOptions()
-{
-    // remove current options
-    ui->newPidComboBox->clear();
-    /*int comboBoxOptionCount = ui->newPidComboBox->count();
-    for (int i = 0; i < comboBoxOptionCount; i++) {
-        ui->newPidComboBox->removeItem(comboBoxOptionCount - i - 1);
-    }*/
-    // add new options based on current connected usb devices with bpm vid
-    QList<int> possiblePids = m_manager.m_bpm.findAllPids();
-    for each (int pid in possiblePids) {
-        ui->newPidComboBox->addItem(QString("%1").arg(pid));
-    }
-}
-
-void MainWindow::run()
-{
-    m_manager.start();
 }
 
 void MainWindow::bpmDisconnected(const bool &connected)
@@ -338,7 +362,6 @@ void MainWindow::closeEvent(QCloseEvent* event)
 {
     if (m_verbose)
         qDebug() << "close event called";
-
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
     m_manager.saveSettings(&settings);
@@ -350,36 +373,43 @@ void MainWindow::readInput()
 {
     // TODO: if the run mode is not debug, an input file name is mandatory, throw an error
     //
-    if (m_inputFileName.isEmpty())
+    if(m_inputFileName.isEmpty())
     {
-        qDebug() << "no input file";
+        if(CypressConstants::RunMode::Simulate == m_mode)
+        {
+            m_inputData["barcode"]="00000000";
+        }
+        else
+        {
+            qDebug() << "ERROR: no input json file";
+        }
         return;
     }
     QFileInfo info(m_inputFileName);
-    if (info.exists())
+    if(info.exists())
     {
-        QFile file;
-        file.setFileName(m_inputFileName);
-        file.open(QIODevice::ReadOnly | QIODevice::Text);
-        QString val = file.readAll();
-        file.close();
-        qDebug() << val;
+      QFile file;
+      file.setFileName(m_inputFileName);
+      file.open(QIODevice::ReadOnly | QIODevice::Text);
+      QString val = file.readAll();
+      file.close();
 
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
-        QJsonObject jsonObj = jsonDoc.object();
-        QMapIterator<QString, QVariant> it(m_inputData);
-        QList<QString> keys = jsonObj.keys();
-        for (int i = 0; i < keys.size(); i++)
-        {
-            QJsonValue v = jsonObj.value(keys[i]);
-            // TODO: error report all missing expected key values
-            //
-            if (!v.isUndefined())
-            {
-                m_inputData[keys[i]] = v.toVariant();
-                qDebug() << keys[i] << v.toVariant();
-            }
-        }
+      QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
+      QJsonObject jsonObj = jsonDoc.object();
+      QList<QString> keys = jsonObj.keys();
+      for(int i=0;i<keys.size();i++)
+      {
+          QJsonValue v = jsonObj.value(keys[i]);
+          // TODO: error report all missing expected key values
+          //
+          if(!v.isUndefined())
+          {
+              m_inputData[keys[i]] = v.toVariant();
+              qDebug() << keys[i] << v.toVariant();
+          }
+      }
+      if(m_inputData.contains("barcode"))
+          ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }
     else
         qDebug() << m_inputFileName << " file does not exist";
@@ -387,15 +417,15 @@ void MainWindow::readInput()
 
 void MainWindow::writeOutput()
 {
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "begin write process ... ";
 
     QJsonObject jsonObj = m_manager.toJsonObject();
 
-    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
-    jsonObj.insert("barcode", QJsonValue(barcode));
+    QString barcode = ui->barcodeWidget->barcode();
+    jsonObj.insert("verification_barcode",QJsonValue(barcode));
 
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "determine file output name ... ";
 
     QString fileName;
@@ -409,40 +439,40 @@ void MainWindow::writeOutput()
 
     // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
     //
-    if (m_outputFileName.isEmpty())
+    if(m_outputFileName.isEmpty())
         constructDefault = true;
     else
     {
-        QFileInfo info(m_outputFileName);
-        QDir dir = info.absoluteDir();
-        if (dir.exists())
-            fileName = m_outputFileName;
-        else
-            constructDefault = true;
+      QFileInfo info(m_outputFileName);
+      QDir dir = info.absoluteDir();
+      if(dir.exists())
+        fileName = m_outputFileName;
+      else
+        constructDefault = true;
     }
-    if (constructDefault)
+    if(constructDefault)
     {
         QDir dir = QCoreApplication::applicationDirPath();
-        if (m_outputFileName.isEmpty())
+        if(m_outputFileName.isEmpty())
         {
-            QStringList list;
-            list
-                << barcode
-                << QDate().currentDate().toString("yyyyMMdd")
-                << m_manager.getGroup()
-                << "test.json";
-            fileName = dir.filePath(list.join("_"));
+          QStringList list;
+          list
+            << m_manager.getInputDataValue("barcode").toString()
+            << QDate().currentDate().toString("yyyyMMdd")
+            << m_manager.getGroup()
+            << "test.json";
+          fileName = dir.filePath( list.join("_") );
         }
         else
-            fileName = dir.filePath(m_outputFileName);
+          fileName = dir.filePath( m_outputFileName );
     }
 
-    QFile saveFile(fileName);
+    QFile saveFile( fileName );
     saveFile.open(QIODevice::WriteOnly);
     saveFile.write(QJsonDocument(jsonObj).toJson());
 
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "wrote to file " << fileName;
 
-    ui->statusBar->showMessage("Blood Pressure data recorded.  Close when ready.");
+    ui->statusBar->showMessage("Audiometer data recorded.  Close when ready.");
 }

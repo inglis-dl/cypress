@@ -39,7 +39,7 @@ void BPMCommunicationHelper::Write(BPMMessage message) {
 }
 
 /*
-* Read the first available message that has been recieved from the BPM
+* Read the first available message that has been received from the BPM
 */
 BPMMessage BPMCommunicationHelper::Read() {
     if (MessagesAvailable()) {

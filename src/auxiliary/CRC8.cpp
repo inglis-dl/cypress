@@ -1,10 +1,12 @@
 #include "CRC8.h"
 
+#include <QByteArray>
+
 /*CRC-8 Lookup table based on:
 	poly = x^8 + x^2 + x^1 + x^0 (100000111)
 	init = 0
 */
-const quint8 CRC8::lookupTable[256] =
+const quint8 CRC8::crcLUT[256] =
 {
 	0x00,0x07,0x0E,0x09,0x1C,0x1B,0x12,0x15,0x38,0x3F,0x36,0x31,0x24,0x23,0x2A,0x2D,
 	0x70,0x77,0x7E,0x79,0x6C,0x6B,0x62,0x65,0x48,0x4F,0x46,0x41,0x54,0x53,0x5A,0x5D,
@@ -24,18 +26,18 @@ const quint8 CRC8::lookupTable[256] =
 	0xDE,0xD9,0xD0,0xD7,0xC2,0xC5,0xCC,0xCB,0xE6,0xE1,0xE8,0xEF,0xFA,0xFD,0xF4,0xF3
 };
 
-quint8 CRC8::Calculate(QByteArray vals, int length)
+quint8 CRC8::calculate(const QByteArray& vals, const int& length)
 {
 	unsigned char crc = 0;
-	for (int i = 0; i < length; i++) {
-		crc = lookupTable[(crc ^ vals[i]) & 0xFF];
+    for(int i = 0; i < length; i++)
+    {
+      crc = crcLUT[(crc ^ vals.at(i)) & 0xFF];
 	}
 	return crc;
 }
 
-bool CRC8::ValidCrc(QByteArray vals, int length, quint8 crc)
+bool CRC8::isValid(const QByteArray& vals, const int& length, const quint8& crc)
 {
-	quint8 correctCRC = Calculate(vals, length);
-	bool valid = crc == correctCRC;
-	return valid;
+    quint8 correctCRC = calculate(vals, length);
+    return (crc == correctCRC);
 }

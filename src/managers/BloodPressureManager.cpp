@@ -12,9 +12,14 @@ BloodPressureManager::BloodPressureManager(QObject* parent)
     : ManagerBase(parent), m_bpm(new BPM200())
 {
     setGroup("bloodpressure");
+    m_col = 1;
+    m_row = 8;
+
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
-    qDebug() << "Manager created on thread: " << QThread::currentThreadId();
+
+    if(m_verbose)
+      qDebug() << "Manager created on thread: " << QThread::currentThreadId();
 }
 
 void BloodPressureManager::start()
@@ -56,7 +61,7 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
     //
     int n_total = m_test.getNumberOfMeasurements();
     int n_row = qMax(1, n_total);
-    if (model->rowCount() != n_row)
+    if(model->rowCount() != n_row)
     {
         model->setRowCount(n_row);
     }
@@ -73,8 +78,7 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
         }
         firstItem->setData(firstMeasurement, Qt::DisplayRole);
         row++;
-    }
-    
+    }    
 
     for (int i = 0; i < n_total; i++)
     {
@@ -137,9 +141,9 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
         return;
     }
     bool ok = true;
-    for (auto&& x : m_inputKeyList)
+    for(auto&& x : m_inputKeyList)
     {
-        if (!input.contains(x))
+        if(!input.contains(x))
         {
             ok = false;
             break;
@@ -174,39 +178,44 @@ void BloodPressureManager::finish()
     m_test.reset();
 }
 
-void BloodPressureManager::measurementAvailable(const int &sbp, const int& dbp, const int& pulse, const const QDateTime& start, 
-    const QDateTime& end, const int& readingNum)
+void BloodPressureManager::measurementAvailable(
+  const int& sbp, const int& dbp, const int& pulse,
+  const QDateTime& start, const QDateTime& end, const int& readingNum)
 {
     m_test.addMeasurement(sbp, dbp, pulse, start, end, readingNum);
     emit dataChanged();
 }
 
-void BloodPressureManager::averageAvailable(const int& sbp, const int& dbp, const int& pulse)
+void BloodPressureManager::averageAvailable(
+  const int& sbp, const int& dbp, const int& pulse)
 {
     m_test.addAverageMeasurement(sbp, dbp, pulse);
     emit dataChanged();
 }
 
-void BloodPressureManager::finalReviewAvailable(const int& sbp, const int& dbp, const int& pulse)
+void BloodPressureManager::finalReviewAvailable(
+  const int& sbp, const int& dbp, const int& pulse)
 {
-    bool reviewDataVerified = m_test.verifyReviewData(sbp, dbp, pulse);
-    if (reviewDataVerified) {
+    if(m_test.verifyReviewData(sbp, dbp, pulse))
+    {
         emit canWrite();
-        return;
     }
-    else {
+    else
+    {
         // Error message on failure
         emit canMeasure();
         return;
     }
 }
 
-void BloodPressureManager::connectionStatusAvailable(const bool connected)
+void BloodPressureManager::connectionStatusAvailable(const bool& connected)
 {
-    if (connected) {
+    if(connected)
+    {
         emit canMeasure();
     }
-    else {
+    else
+    {
         //emit connectionFailure();
         // TODO: Show the following message to user 
         //       "There was a problem connecting to the Blood Pressure Monitor.

@@ -3,7 +3,7 @@
 
 #include "ManagerBase.h"
 #include "../data/BloodPressureTest.h"
-#include "../prototype/BloodPressure/BPM200.h"
+#include "BPM200.h"
 
 class BloodPressureManager : public ManagerBase
 {
@@ -28,20 +28,18 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QMap<QString, QVariant>&);
+    void setInputData(const QMap<QString,QVariant>&) override;
 
     void setupConnections();
 
     void setArmBandSize(const QString& size) { m_test.setArmBandSize(size); }
     void setArm(const QString& arm) { m_test.setArm(arm); }
     bool armInformationSet() const { return m_test.armInformationSet(); }
-
-    void connectToBpm() {
-        m_bpm.connectToBpm();
-    }
-    int getPid() const { return m_bpm.getPid(); }
-    int getVid() const { return m_bpm.getVid(); }
+    void connectToBpm() { m_bpm.connectToBpm(); }
+    int  getPid() const { return m_bpm.getPid(); }
+    int  getVid() const { return m_bpm.getVid(); }
     bool connectionInfoSet() const { return m_bpm.connectionInfoSet(); }
+
 public slots:
 
     void start() override;
@@ -56,15 +54,19 @@ public slots:
     void finish() override;
 
     // slot for signals coming from bpm200
-    void measurementAvailable(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum);
-    void averageAvailable(const int& sbp, const int& dbp, const int& pulse);
-    void finalReviewAvailable(const int &sbp, const int &dbp, const int &pulse);
-    void connectionStatusAvailable(const bool connected);
-protected:
-    void clearData() override;
+    void measurementAvailable(const int&, const int&, const int&,
+                              const QDateTime&, const QDateTime&,
+                              const int&);
+    void averageAvailable(const int&, const int&, const int&);
+    void finalReviewAvailable(const int&, const int&, const int&);
+    void connectionStatusAvailable(const bool&);
 
 private:
+
     BloodPressureTest m_test;
+
+    void clearData() override;
+
 };
 
 #endif // BLOODPRESSUREMANAGER_H
