@@ -196,5 +196,5 @@ QString CDTTDialog::getVerificationBarcode() const
 
 void CDTTDialog::setVerificationBarcode(const QString &barcode)
 {
-    ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
+  ui->barcodeWidget->setBarcode(barcode);
 }

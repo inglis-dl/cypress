@@ -43,6 +43,8 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::confirmLUT= BodyComposi
 BodyCompositionAnalyzerManager::BodyCompositionAnalyzerManager(QObject *parent) : SerialPortManager(parent)
 {
   setGroup("body_composition_analyzer");
+  m_col = 1;
+  m_row = 8;
 
   // all managers must check for barcode and language input values
   //
@@ -283,7 +285,7 @@ void BodyCompositionAnalyzerManager::buildModel(QStandardItemModel *model) const
     qDebug() << "building model from " <<
                 QString::number(m_test.getNumberOfMeasurements()) <<
                 "measurements";
-    for(int row = 0; row < 8; row++)
+    for(int row = 0; row < m_row; row++)
     {
         QString s = "NA";
         BodyCompositionMeasurement m = m_test.getMeasurement(row);

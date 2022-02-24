@@ -16,6 +16,8 @@ TonometerManager::TonometerManager(QObject* parent):
     ManagerBase(parent)
 {
     setGroup("tonometer");
+    m_col = 2;
+    m_row = 8;
 
     // all managers must check for barcode and language input values
     //
@@ -69,7 +71,7 @@ void TonometerManager::buildModel(QStandardItemModel *model) const
     {
       int col = "left" == side ? 0 : 1;
       QStringList list = m_test.getMeasurementStrings(side);
-      for(int row=0;row<list.size();row++)
+      for(int row = 0; row < list.size(); row++)
       {
         QStandardItem* item = model->item(row,col);
         if(Q_NULLPTR == item)

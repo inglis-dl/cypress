@@ -30,9 +30,6 @@ public:
     //
     void setInputData(const QMap<QString, QVariant> &) override;
 
-    int getNumberOfModelColumns() const override  { return 2; };
-    int getNumberOfModelRows() const override { return 8; };
-
 public slots:
 
     // retrieve a measurement from the device

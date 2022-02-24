@@ -19,10 +19,12 @@ QByteArray AudiometerManager::initEndCode()
     return QByteArray(data);
 }
 
-AudiometerManager::AudiometerManager(QObject *parent) : SerialPortManager(parent)
+AudiometerManager::AudiometerManager(QObject *parent)
+    : SerialPortManager(parent)
 {
     setGroup("audiometer");
-
+    m_col = 2;
+    m_row = 8;
     // all managers must check for barcode and language input values
     //
     m_inputKeyList << "barcode";
@@ -36,7 +38,7 @@ void AudiometerManager::buildModel(QStandardItemModel* model) const
     {
       int i_freq = 0;
       int col = "left" == side ? 0 : 1;
-      for(int row=0;row<8;row++)
+      for(int row = 0; row < m_row; row++)
       {
         HearingMeasurement m = m_test.getMeasurement(side,i_freq);
         if(!m.isValid())

@@ -11,6 +11,8 @@ FraxManager::FraxManager(QObject* parent):
     ManagerBase(parent)
 {
     setGroup("frax");
+    m_col = 1;
+    m_row = 4;
 
     // all managers must check for barcode and language input values
     //
@@ -69,15 +71,15 @@ void FraxManager::buildModel(QStandardItemModel *model) const
 {
     // add the four probability measurements
     //
-    for(int i = 0; i < m_test.getNumberOfMeasurements(); i++)
+    for(int row = 0; row < m_test.getNumberOfMeasurements(); row++)
     {
-        QStandardItem* item = model->item(i, 0);
+        QStandardItem* item = model->item(row, 0);
         if(Q_NULLPTR == item)
         {
             item = new QStandardItem();
-            model->setItem(i, 0, item);
+            model->setItem(row, 0, item);
         }
-        item->setData(m_test.getMeasurement(i).toString(), Qt::DisplayRole);
+        item->setData(m_test.getMeasurement(row).toString(), Qt::DisplayRole);
     }
 }
 

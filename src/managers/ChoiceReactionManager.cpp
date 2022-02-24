@@ -16,6 +16,8 @@ ChoiceReactionManager::ChoiceReactionManager(QObject *parent) :
     ManagerBase(parent)
 {
     setGroup("choice_reaction");
+    m_col = 2;
+    m_row = 8;
 
     // all managers must check for barcode and language input values
     //
@@ -23,7 +25,7 @@ ChoiceReactionManager::ChoiceReactionManager(QObject *parent) :
     m_inputKeyList << "language";
 
     //TODO:
-    // use the "clinic" CCB arg for the site identification
+    // use the "clinic" CCB arg for the site identification ?
 }
 
 void ChoiceReactionManager::start()

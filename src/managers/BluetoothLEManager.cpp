@@ -19,13 +19,15 @@
 BluetoothLEManager::BluetoothLEManager(QObject *parent) : ManagerBase(parent)
 {
     setGroup("thermometer");
+    m_col = 1;
+    m_row = 2;
 
     // all managers must check for barcode and language input values
     //
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
 
-    m_test.setMaximumNumberOfMeasurements(2);
+    m_test.setMaximumNumberOfMeasurements(m_row);
 }
 
 void BluetoothLEManager::start()
@@ -36,7 +38,7 @@ void BluetoothLEManager::start()
 
 void BluetoothLEManager::buildModel(QStandardItemModel *model) const
 {
-    for(int row = 0; row < m_test.getMaximumNumberOfMeasurements(); row++)
+    for(int row = 0; row < m_row; row++)
     {
         QString s = "NA";
         TemperatureMeasurement m = m_test.getMeasurement(row);

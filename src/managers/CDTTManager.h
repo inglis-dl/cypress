@@ -20,9 +20,6 @@ public:
 
     void buildModel(QStandardItemModel *) const override;
 
-    int getNumberOfModelColumns() const override  { return 2; };
-    int getNumberOfModelRows() const override { return 8; };
-
    // is the passed string a jar file
    // with the correct path elements ?
    //

@@ -32,7 +32,7 @@ public:
     bool isVerbose() const { return m_verbose; }
 
     void setRunMode(const CypressConstants::RunMode& mode) { m_mode = mode; }
-    CypressConstants::RunMode runMode() const { return m_mode; }
+    CypressConstants::RunMode getRunMode() const { return m_mode; }
 
     // collate test results and device and other meta data
     // for the main application to write to .json
@@ -46,8 +46,8 @@ public:
     // get the required model columns and rows depending
     // on test output requirements
     //
-    virtual int getNumberOfModelColumns() const = 0;
-    virtual int getNumberOfModelRows() const = 0;
+    int getNumberOfModelColumns() const { return m_col; }
+    int getNumberOfModelRows() const { return m_row; }
 
     // Set the input data.
     // The input data is read from the input
@@ -123,6 +123,9 @@ protected:
     // an ordered set of input keys
     //
     QList<QString> m_inputKeyList;
+
+    int m_row { 0 };
+    int m_col { 0 };
 
 private:
 
