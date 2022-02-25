@@ -7,10 +7,6 @@
 #include <QString>
 #include <QHidDevice>
 
-// NOTE: These don't seem needed anymore
-//#include <functional>
-//#include <iostream>
-
 BPMCommunication::BPMCommunication(QObject* parent) : QObject(parent)
     , m_bpm200(new QHidDevice())
 	, m_msgQueue(new QQueue<BPMMessage>())
@@ -48,7 +44,7 @@ void BPMCommunication::measure()
 	qDebug() << "BPMComm: Measurement signal received. Preparing to measure";
 	resetValues();
 
-	// Stop just incase it was running
+    // Stop just in case it was running
 	// NOTE: if already stopped then the BPM will not respond to stop request
 	stopBpm();
 
@@ -162,7 +158,7 @@ bool BPMCommunication::startBpm()
 
 	// Read output from BPM looking for a start acknolegment
 	// Wait up to 30 seconds before giving up
-	int result = timedReadLoop(600,
+    bool result = timedReadLoop(600,
 		[this]() -> bool {
 			BPMMessage msg = m_msgQueue->dequeue();
 			quint8 msgId = msg.getMsgId();
@@ -461,7 +457,7 @@ void BPMCommunication::readFromBpm()
 	int numBytesReturned = m_bpm200->read(readData, dataLength, 300);
 
 	// Stop here if no data was read in
-	if (numBytesReturned <= 0) return;
+    if(0 >= numBytesReturned) return;
 
 	// Convert read in QByteArray to a QByteArray with values that can be used as quint8
 	// NOTE: Typically all the data is stored in index 0 of readData which is why the 
@@ -469,19 +465,23 @@ void BPMCommunication::readFromBpm()
 	//		 will always be the case. It still checks each byte in readData up to index 
 	//       numBytesReturned - 1 just incase their is data in any of thoses indecies 
 	QByteArray bytes = QByteArray::fromHex(readData[0].toHex());
-	for (int i = 1; i < numBytesReturned; i++) {
+    for(int i = 1; i < numBytesReturned; i++)
+    {
 		QByteArray tempBytes = QByteArray::fromHex(readData[i].toHex());
 		bytes.append(tempBytes);
 	}
 
 	// Convert bytes to BPMMessages
 	int numBytes = bytes.size();
-	if (0 < numBytes) {
+    if(0 < numBytes)
+    {
         qDebug() << ". NumBytes: " << numBytes << Qt::endl;
-		for (int i = 0; i + 7 < numBytes;) {
+        for(int i = 0; i + 7 < numBytes;)
+        {
 			quint8 firstByte = bytes[i];
 			quint8 lastByte = bytes[i + 7];
-			if (2 == firstByte && 3 == lastByte) {
+            if(2 == firstByte && 3 == lastByte)
+            {
 				quint8 id = bytes[i + 1];
 				quint8 data0 = bytes[i + 2];
 				quint8 data1 = bytes[i + 3];
@@ -492,12 +492,14 @@ void BPMCommunication::readFromBpm()
 				bool crcValid = msg.checkCRCValid(crc);
                 qDebug() << "Message: " << msg.getAsQString() << Qt::endl;
                 qDebug() << "CRC Valid: " << crcValid << Qt::endl;
-				if (crcValid) {
+                if(crcValid)
+                {
 					m_msgQueue->enqueue(msg);
 				}
 				i += 8;
 			}
-			else {
+            else
+            {
                 qDebug() << i << " : " << readData[i] << " " << (i + 7) << " : " << readData[i + 7] << Qt::endl;
 				i++;
 			}
@@ -510,13 +512,15 @@ void BPMCommunication::readFromBpm()
 * by the "func" or after "timeout" seconds.
 */
 bool BPMCommunication::timedLoop(const int& timeout,
-  const std::function<bool()> func, const QString& debugName)
+  const std::function<bool()>& func, const QString& debugName)
 {
 	QTime currTime = QTime::currentTime();
 	QTime dieTime = currTime.addSecs(timeout);
-	while (currTime < dieTime) {
+    while (currTime < dieTime)
+    {
 		bool successful = func();
-		if (successful) {
+        if(successful)
+        {
 			return true;
 		}
 
@@ -535,7 +539,7 @@ bool BPMCommunication::timedLoop(const int& timeout,
 * by the "func" or after "timeout" seconds. 
 */
 bool BPMCommunication::timedReadLoop(const int& timeout,
-  std::function<bool()> func, const QString& debugName)
+  const std::function<bool()>& func, const QString& debugName)
 {
 	bool connected = attemptConnectionToBpm();
     if(!connected)

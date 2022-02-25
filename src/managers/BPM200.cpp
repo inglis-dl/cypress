@@ -74,12 +74,17 @@ void BPM200::connectToBpm()
 */
 void BPM200::disconnect()
 {
+    //TODO: remove debug or refactor into manager class
+    //
     qDebug() << "BPM200: Disconnect called, terminating thread with bpm";
+
     emit abortMeasurement(QThread::currentThread());
     while(!m_aborted)
     {
       QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }
+    //TODO: remove debug or refactor into manager class
+    //
     qDebug() << "BPM200: Finished";
 }
 
@@ -112,7 +117,10 @@ QList<int> BPM200::findAllPids()
 void BPM200::abortComplete(const bool& successful)
 {
     Q_UNUSED(successful)
+    //TODO: remove debug or refactor into manager class
+    //
     qDebug() << "BPM200: Abort complete";
+
     m_commThread.quit();
     m_commThread.wait();
     m_aborted = true;

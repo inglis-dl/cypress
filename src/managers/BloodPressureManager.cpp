@@ -24,34 +24,62 @@ BloodPressureManager::BloodPressureManager(QObject* parent)
 
 void BloodPressureManager::start()
 {
+    setupConnections();
     emit dataChanged();
 }
 
 void BloodPressureManager::loadSettings(const QSettings& settings)
 {
     int pid = settings.value(getGroup() + "/client/pid").toInt();
-    m_bpm.setConnectionInfo(pid);
+    setDevice(pid);
 }
 
 void BloodPressureManager::saveSettings(QSettings* settings) const
 {
     int pid = getPid();
-    if (0 != pid)
+    if(0 != pid)
     {
         settings->beginGroup(getGroup());
         settings->setValue("client/pid", pid);
         settings->endGroup();
-        if (m_verbose)
+        if(m_verbose)
             qDebug() << "wrote pid to settings file";
     }
+}
+
+void BloodPressureManager::setDevice(const int& pid)
+{
+    m_bpm.setConnectionInfo(pid);
+    if(armInformationSet() && connectionInfoSet())
+    {
+        emit message(tr("Ready to connect..."));
+        emit canConnectDevice();
+    }
+}
+
+void BloodPressureManager::setArmBandSize(const QString &size)
+{
+  m_test.setArmBandSize(size);
+  if(armInformationSet() && connectionInfoSet())
+  {
+      emit message(tr("Ready to connect..."));
+      emit canConnectDevice();
+  }
+}
+
+void BloodPressureManager::setArm(const QString &arm)
+{
+  m_test.setArm(arm);
+  if(armInformationSet() && connectionInfoSet())
+  {
+      emit message(tr("Ready to connect..."));
+      emit canConnectDevice();
+  }
 }
 
 QJsonObject BloodPressureManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if (CypressConstants::RunMode::Simulate != m_mode)
-    {
-    }
     return json;
 }
 
@@ -69,9 +97,10 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
     // Add first measurement
     int row = 0;
     QString firstMeasurement = m_test.firstMeasurementToString();
-    if ("" != firstMeasurement) {
+    if("" != firstMeasurement)
+    {
         QStandardItem* firstItem = model->item(row);
-        if (Q_NULLPTR == firstItem)
+        if(Q_NULLPTR == firstItem)
         {
             firstItem = new QStandardItem();
             model->setItem(row, 0, firstItem);
@@ -80,12 +109,12 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
         row++;
     }    
 
-    for (int i = 0; i < n_total; i++)
+    for(int i = 0; i < n_total; i++)
     {
         BloodPressureMeasurement measurement = m_test.getMeasurement(i);
         QString measurementStr = measurement.isValid() ? measurement.toString() : "NA";
         QStandardItem* item = model->item(row);
-        if (Q_NULLPTR == item)
+        if(Q_NULLPTR == item)
         {
             item = new QStandardItem();
             model->setItem(row, 0, item);
@@ -96,9 +125,10 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
 
     // Add avg measurement
     QString avgMeasurement = m_test.avgMeasurementToString();
-    if ("" != avgMeasurement) {
+    if("" != avgMeasurement)
+    {
         QStandardItem* avgItem = model->item(row);
-        if (Q_NULLPTR == avgItem)
+        if(Q_NULLPTR == avgItem)
         {
             avgItem = new QStandardItem();
             model->setItem(row, 0, avgItem);
@@ -109,7 +139,8 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
 
     // Add all avg measurement
     QString allAvgMeasurement = m_test.allAvgMeasurementToString();
-    if ("" != avgMeasurement) {
+    if("" != avgMeasurement)
+    {
         QStandardItem* allAvgItem = model->item(row);
         if (Q_NULLPTR == allAvgItem)
         {
@@ -122,14 +153,17 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
 
 void BloodPressureManager::measure()
 {
-    if (CypressConstants::RunMode::Simulate == m_mode)
+    if(m_verbose)
+      qDebug() << "starting process from measure";
+
+    emit message(tr("Measuring blood pressure..."));
+
+    if(CypressConstants::RunMode::Simulate == m_mode)
     {
         return;
     }
 
     clearData();
-    // launch the process
-    qDebug() << "starting process from measure";
     m_bpm.measure();
 }
 
@@ -137,7 +171,8 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
 {
     if (CypressConstants::RunMode::Simulate == m_mode)
     {
-        m_inputData["barcode"] = 12345678;
+        m_inputData["barcode"] = "00000000";
+        m_inputData["language"] = "english";
         return;
     }
     bool ok = true;
@@ -151,7 +186,7 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
         else
             m_inputData[x] = input[x];
     }
-    if (!ok)
+    if(!ok)
         m_inputData.clear();
 }
 
@@ -198,6 +233,8 @@ void BloodPressureManager::finalReviewAvailable(
 {
     if(m_test.verifyReviewData(sbp, dbp, pulse))
     {
+        // emit the can write signal
+        emit message(tr("Ready to save results..."));
         emit canWrite();
     }
     else
@@ -212,6 +249,9 @@ void BloodPressureManager::connectionStatusAvailable(const bool& connected)
 {
     if(connected)
     {
+        // signal the GUI that the measure button can be clicked
+        //
+        emit message(tr("Ready to measure..."));
         emit canMeasure();
     }
     else

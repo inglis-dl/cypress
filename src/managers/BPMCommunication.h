@@ -45,13 +45,13 @@ private:
                        const quint8& data3 = 0x00);
 	void readFromBpm();
 
-    bool timedLoop(const int& timeout, const std::function<bool()> func, const QString& debugName = "");
-    bool timedReadLoop(const int& timeout, const std::function<bool()> func, const QString& debugName = "");
+    bool timedLoop(const int& timeout, const std::function<bool()>& func, const QString& debugName = "");
+    bool timedReadLoop(const int& timeout, const std::function<bool()>& func, const QString& debugName = "");
     bool ackCheck(const int& expectedData0, const QString& logName);
 	void resetValues();
 
-	QHidDevice* m_bpm200;
-	QQueue<BPMMessage>* m_msgQueue;
+    QHidDevice* m_bpm200  { Q_NULLPTR };
+    QQueue<BPMMessage>* m_msgQueue { Q_NULLPTR };
 
 	// The vid and pid for connecting to the bpm
     int m_vid { -1 };

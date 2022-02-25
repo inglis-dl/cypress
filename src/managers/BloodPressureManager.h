@@ -7,6 +7,8 @@
 
 class BloodPressureManager : public ManagerBase
 {
+    Q_OBJECT
+
 public:
     explicit BloodPressureManager(QObject* parent = Q_NULLPTR);
 
@@ -30,15 +32,16 @@ public:
     //
     void setInputData(const QMap<QString,QVariant>&) override;
 
-    void setupConnections();
+    void setArmBandSize(const QString&);
+    void setArm(const QString&);
 
-    void setArmBandSize(const QString& size) { m_test.setArmBandSize(size); }
-    void setArm(const QString& arm) { m_test.setArm(arm); }
-    bool armInformationSet() const { return m_test.armInformationSet(); }
     void connectToBpm() { m_bpm.connectToBpm(); }
     int  getPid() const { return m_bpm.getPid(); }
     int  getVid() const { return m_bpm.getVid(); }
     bool connectionInfoSet() const { return m_bpm.connectionInfoSet(); }
+
+signals:
+    void canConnectDevice();
 
 public slots:
 
@@ -53,6 +56,10 @@ public slots:
     //
     void finish() override;
 
+    // set the device by PID
+    //
+    void setDevice(const int&);
+
     // slot for signals coming from bpm200
     void measurementAvailable(const int&, const int&, const int&,
                               const QDateTime&, const QDateTime&,
@@ -63,6 +70,8 @@ public slots:
 
 private:
 
+    void setupConnections();
+    bool armInformationSet() const { return m_test.armInformationSet(); }
     BloodPressureTest m_test;
 
     void clearData() override;

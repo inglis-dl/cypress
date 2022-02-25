@@ -143,44 +143,33 @@ void MainWindow::initializeConnections()
             ui->connectButton->setEnabled(false);
         });
 
+    // Ready to connect device
+    //
+    connect(&m_manager, &BloodPressureManager::canConnectDevice,
+            this,[this]() {
+        ui->connectButton->setEnabled(true);
+        ui->measureButton->setEnabled(false);
+        ui->saveButton->setEnabled(false);
+    });
+
     // Connect to the device (bpm)
     //
     connect(ui->connectButton, &QPushButton::clicked,
         this, [this]() {
-            if (m_manager.armInformationSet()) {
-                m_manager.connectToBpm();
-                // Remove blank enty from selection, so that user cannot change answer to blank
-                // The user will still be able to change there selection if they make a mistake
-                // But they will be foreced to chose a valid option
-                QComboBox* armBandSizeCB = ui->armBandSizeComboBox;
-                for (int i = 0; i < armBandSizeCB->count(); i++) {
-                    if ("" == armBandSizeCB->itemText(i)) {
-                        armBandSizeCB->removeItem(i);
-                    }
-                }
-                QComboBox* armUsedCB = ui->armComboBox;
-                for (int i = 0; i < armUsedCB->count(); i++) {
-                    if ("" == armUsedCB->itemText(i)) {
-                        armUsedCB->removeItem(i);
-                    }
-                }
-            }
-            else {
-                // this warning message should never be reached. The user should not have 
-                // the option to connect until choosing arm band size and arm used.
-                // It is here as an added precaution incase the user somehow is able to 
-                // click connect before intended
-                QMessageBox::warning(
-                    this, QApplication::applicationName(),
-                    tr("Please select arm band size and arm used before trying to connect"));
-            }
-        });
+      m_manager.connectToBpm();
+
+      // Remove blank enty from selection, so that user cannot change answer to blank
+      // The user will still be able to change their selection if they make a mistake
+      // But they will be forced to chose a valid option
+      //
+      ui->armBandSizeComboBox->removeItem(ui->armBandSizeComboBox->findText(""));
+      ui->armComboBox->removeItem(ui->armComboBox->findText(""));
+    });
 
     // Request a measurement from the device (bpm)
     //
     connect(ui->measureButton, &QPushButton::clicked,
         this, [this]() {
-            ui->statusBar->showMessage("Measuring blood pressure");
             ui->measureButton->setEnabled(false);
             m_manager.measure();
         });
@@ -228,10 +217,6 @@ void MainWindow::initializeConnections()
     connect(ui->armBandSizeComboBox, &QComboBox::currentTextChanged, 
         this, [this](const QString &size) {
             m_manager.setArmBandSize(size);
-            if (m_manager.armInformationSet() && m_manager.connectionInfoSet())
-            {
-                ui->connectButton->setEnabled(true);
-            }
         });
 
     // Update arm used selected by user
@@ -239,15 +224,20 @@ void MainWindow::initializeConnections()
     connect(ui->armComboBox, &QComboBox::currentTextChanged,
         this, [this](const QString& arm) {
             m_manager.setArm(arm);
-            if (m_manager.armInformationSet() && m_manager.connectionInfoSet())
-            {
-                ui->connectButton->setEnabled(true);
-            }
         });
 
     // TODO figure out how manager can create its own signals
     connect(&m_manager.m_bpm, &BPM200::connectionStatusReady,
-        this, &MainWindow::bpmDisconnected);
+            this, [this](const bool& connected) {
+            if(!connected)
+            {
+                initializeButtonState();
+                ui->statusBar->showMessage("ERROR: Cannot connect to blood pressure monitor");
+                QMessageBox::warning(
+                    this, QApplication::applicationName(),
+                    tr("ERROR: Cannot connect to blood pressure monitor. Please ensure that the blood pressure monitor is plugged in, turned on and connected to the computer"));
+            }
+         });
 
     connect(&m_manager.m_bpm, &BPM200::sendError,
         this, [this](const QString& error) {
@@ -274,17 +264,8 @@ void MainWindow::initializeConnections()
         this, [this]() {
             ui->statusBar->showMessage("Pid selected");
             int pid = ui->newPidComboBox->currentText().toInt();
-            m_manager.m_bpm.setConnectionInfo(pid);
+            m_manager.setDevice(pid);
             ui->currentPidLabel->setText(QString("Current pid: %1").arg(pid));
-            if(m_manager.connectionInfoSet())
-            {
-                ui->selectButton->setEnabled(false);
-                ui->refreshButton->setEnabled(false);
-                if (m_manager.armInformationSet())
-                {
-                    ui->connectButton->setEnabled(true);
-                }
-            }
         });
 
     connect(ui->refreshButton, &QPushButton::clicked,
@@ -299,9 +280,6 @@ void MainWindow::initializeConnections()
         }
      });
 
-    // Setup Connections for manager
-    m_manager.setupConnections();
-
     // Read inputs, such as interview barcode
     //
     readInput();
@@ -311,22 +289,20 @@ void MainWindow::initializeButtonState()
 {
     // Set the selected arm band size if it has already been selected
     // NOTE: It may have already been set if there is an error while measuring
+    //
     QString selectedArmBandSize = ui->armBandSizeComboBox->currentText();
-    if ("" != selectedArmBandSize) {
+    if("" != selectedArmBandSize)
+    {
         m_manager.setArmBandSize(selectedArmBandSize);
     }
 
     // Set the selected arm used if it has already been selected
     // NOTE: It may have already been set if there is an error while measuring
+    //
     QString selectedArmUsed = ui->armComboBox->currentText();
-    if ("" != selectedArmUsed) {
+    if("" != selectedArmUsed)
+    {
         m_manager.setArm(selectedArmUsed);
-    }
-
-    // Enable the connect button if the arm information has been set
-    // NOTE: It may have already been set if there is an error while measuring
-    if (m_manager.armInformationSet()) {
-        ui->connectButton->setEnabled(true);
     }
 }
 
@@ -336,7 +312,7 @@ void MainWindow::initializeConnectionIdsUi()
     int vid = m_manager.getVid();
     ui->currentPidLabel->setText(QString("Current pid: %1").arg(pid));
     ui->vidLabel->setText(QString("Vid: %1").arg(vid));
-    if (false == m_manager.connectionInfoSet())
+    if(!m_manager.connectionInfoSet())
     {
         ui->selectButton->setEnabled(true);
         ui->refreshButton->setEnabled(true);
@@ -347,20 +323,9 @@ void MainWindow::initializeConnectionIdsUi()
     }
 }
 
-void MainWindow::bpmDisconnected(const bool &connected)
-{
-    if (connected == false) {
-        initializeButtonState();
-        ui->statusBar->showMessage("ERROR: Cannot connect to blood pressure monitor");
-        QMessageBox::warning(
-            this, QApplication::applicationName(),
-            tr("ERROR: Cannot connect to blood pressure monitor. Please ensure that the blood pressure monitor is plugged in, turned on and connected to the computer"));
-    }
-}
-
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);

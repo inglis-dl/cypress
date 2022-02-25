@@ -43,7 +43,6 @@ public:
 
 public slots:
     void writeOutput();
-    void bpmDisconnected(const bool &connected);
 
 protected:
     void closeEvent(QCloseEvent*) override;

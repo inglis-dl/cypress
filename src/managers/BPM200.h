@@ -14,7 +14,7 @@ class BPM200: public QObject
 	QThread m_commThread;
 
 private:
-	const int m_vid = 4279;
+    const int m_vid = 4279;  // vendor ID for BpTru
 
 public:
 	explicit BPM200(QObject* parent = Q_NULLPTR);
