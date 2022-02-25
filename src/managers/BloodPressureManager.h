@@ -38,7 +38,7 @@ public:
     void connectToBpm() { m_bpm.connectToBpm(); }
     int  getPid() const { return m_bpm.getPid(); }
     int  getVid() const { return m_bpm.getVid(); }
-    bool connectionInfoSet() const { return m_bpm.connectionInfoSet(); }
+    bool connectionInfoSet() const;
 
 signals:
     void canConnectDevice();

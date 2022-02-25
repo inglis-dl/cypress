@@ -1,12 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "ui_MainWindow.h"
 #include "../../managers/BloodPressureManager.h"
 #include "../../auxiliary/CypressConstants.h"
+#include <QDialog>
 #include <QStandardItemModel>
-
-QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

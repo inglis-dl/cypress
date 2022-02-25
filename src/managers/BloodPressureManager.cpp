@@ -57,6 +57,15 @@ void BloodPressureManager::setDevice(const int& pid)
     }
 }
 
+bool BloodPressureManager::connectionInfoSet() const
+{
+    if(CypressConstants::RunMode::Simulate == m_mode)
+    {
+        return true;
+    }
+    return m_bpm.connectionInfoSet();
+}
+
 void BloodPressureManager::setArmBandSize(const QString &size)
 {
   m_test.setArmBandSize(size);
