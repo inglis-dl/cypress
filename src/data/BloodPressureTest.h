@@ -4,9 +4,9 @@
 #include "TestBase.h"
 #include "BloodPressureMeasurement.h"
 
-#include <QList>
-#include <QString>
-#include <QJsonObject>
+//#include <QList>
+//#include <QString>
+//#include <QJsonObject>
 
 class BloodPressureTest : public TestBase<BloodPressureMeasurement>
 {
@@ -29,14 +29,14 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
-    bool verifyReviewData(const int sbp, const int dbp, const int pulse);
+    bool verifyReviewData(const int& sbp, const int& dbp, const int& pulse) const;
 
     QString firstMeasurementToString() const;
     QString avgMeasurementToString() const;
     QString allAvgMeasurementToString() const;
 
-    void setArmBandSize(const QString& size) { addMetaDataCharacteristic("arm band size", size); }
-    void setArm(const QString& arm) { addMetaDataCharacteristic("arm used", arm); }
+    void setCuffSize(const QString& size);
+    void setSide(const QString& side);
     bool armInformationSet() const;
 
 private:

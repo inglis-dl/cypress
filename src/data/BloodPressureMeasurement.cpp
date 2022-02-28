@@ -1,19 +1,13 @@
 #include "BloodPressureMeasurement.h"
 
 #include <QDebug>
-#include <QRandomGenerator>
 #include <QDateTime>
 
-/**
- * sample input
- *
- *
- */
-void BloodPressureMeasurement::storeData(const int &sbp, const int& dbp, const int& pulse, const QDateTime &start, const QDateTime& end, const int& readingNum)
+BloodPressureMeasurement::BloodPressureMeasurement(const int &sbp, const int& dbp, const int& pulse, const QDateTime &start, const QDateTime& end, const int& readingNum)
 {
-    setCharacteristic("reading number", readingNum);
-    setCharacteristic("start time", start);
-    setCharacteristic("end time", end);
+    setCharacteristic("reading_number", readingNum);
+    setCharacteristic("start_time", start);
+    setCharacteristic("end_time", end);
     setCharacteristic("systolic", sbp);
     setCharacteristic("diastolic", dbp);
     setCharacteristic("pulse", pulse);
@@ -25,20 +19,25 @@ bool BloodPressureMeasurement::isValid() const
         hasCharacteristic("systolic") 
         && hasCharacteristic("diastolic")
         && hasCharacteristic("pulse")
-        && hasCharacteristic("start time")
-        && hasCharacteristic("end time")
-        && hasCharacteristic("reading number");
-    if (false == hasAllRequiredCharacteristics) {
-            return false;
+        && hasCharacteristic("start_time")
+        && hasCharacteristic("end_time")
+        && hasCharacteristic("reading_number");
+    if(!hasAllRequiredCharacteristics)
+    {
+      return false;
     }
 
     // TODO: There should be some low and high values which
     //       are not feasible to be blood pressures. These 
     //       values should be set as boundries for check
-    bool sbpValid = getCharacteristic("systolic").toInt() > -1;
-    bool dbpValid = getCharacteristic("diastolic").toInt() > -1;
-    bool pulseValid = getCharacteristic("pulse").toInt() > -1;
-    return sbpValid && dbpValid && pulseValid;
+    //       normal systolic pressure: 90 - 120 mmHg
+    //       normal diastolic pressure: 60 - 80 mmHg
+    //       normal pulse rate: 60 - 100 bpm
+    //
+    bool sbpValid = 0 < getCharacteristic("systolic").toInt();
+    bool dbpValid = 0 < getCharacteristic("diastolic").toInt();
+    bool pulseValid = 0 < getCharacteristic("pulse").toInt();
+    return (sbpValid && dbpValid && pulseValid);
 }
 
 QString BloodPressureMeasurement::toString() const
@@ -47,11 +46,13 @@ QString BloodPressureMeasurement::toString() const
         .arg(getSbp())
         .arg(getDbp())
         .arg(getPulse())
-        .arg(getCharacteristic("reading number").toInt())
-        .arg(getCharacteristic("start time").toDateTime().toString("yyyy-MM-dd  HH:mm:ss"))
-        .arg(getCharacteristic("end time").toDateTime().toString("HH:mm:ss"));
+        .arg(getCharacteristic("reading_number").toInt())
+        .arg(getCharacteristic("start_time").toDateTime().toString("yyyy-MM-dd  HH:mm:ss"))
+        .arg(getCharacteristic("end_time").toDateTime().toString("HH:mm:ss"));
 }
 
+// TODO: implement simulated measurement
+//
 BloodPressureMeasurement BloodPressureMeasurement::simulate()
 {
     BloodPressureMeasurement simulatedMeasurement;

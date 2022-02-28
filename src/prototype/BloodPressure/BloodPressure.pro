@@ -34,7 +34,6 @@ HEADERS += ./MainWindow.h \
     ../../auxiliary/CypressConstants.h \
     ../../widgets/BarcodeWidget.h \
     ../../auxiliary/CRC8.h \
-    ../../managers/BPM200.h \
     ../../managers/BPMMessage.h \
     ../../managers/BPMCommunication.h \
     ../../managers/ManagerBase.h \
@@ -43,7 +42,6 @@ HEADERS += ./MainWindow.h \
 SOURCES += ./MainWindow.cpp \
     ./main.cpp \
     ../../auxiliary/CRC8.cpp \
-    ../../managers/BPM200.cpp \
     ../../managers/BPMMessage.cpp \
     ../../managers/BPMCommunication.cpp \
     ../../auxiliary/CommandLineParser.cpp \
@@ -53,7 +51,7 @@ SOURCES += ./MainWindow.cpp \
     ../../data/BloodPressureTest.cpp \
     ../../widgets/BarcodeWidget.cpp \
     ../../managers/ManagerBase.cpp \
-    ../../managers/BloodPressureManager.cpp
+    ../../managers/BloodPressureManager.cpp 
 
 FORMS += \
     ../../widgets/barcodewidget.ui \

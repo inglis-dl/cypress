@@ -50,9 +50,6 @@ private:
     void initializeModel();
     void initializeConnections();
 
-    void initializeButtonState();
-    void initializeConnectionIdsUi();
-
     Ui::MainWindow* ui;
     QString m_inputFileName;
     QString m_outputFileName;

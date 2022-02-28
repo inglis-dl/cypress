@@ -23,7 +23,7 @@ BPMMessage::BPMMessage(const quint8& msgID,
     m_msgBytes.append(data3);
 }
 
-QString BPMMessage::getAsQString() const
+QString BPMMessage::toString() const
 {
     return QString("ID: %1, Data: %2, %3, %4, %5")
         .arg(QString::number(getMsgId()),

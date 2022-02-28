@@ -3,8 +3,8 @@
 
 #include <QObject>
 #include <QDateTime>
-#include <QTime>
 #include <QQueue>
+#include <QTime>
 #include <functional>
 
 QT_FORWARD_DECLARE_CLASS(BPMMessage)
@@ -16,6 +16,12 @@ class BPMCommunication: public QObject
 
 public:
 	explicit BPMCommunication(QObject* parent = Q_NULLPTR);
+    ~BPMCommunication();
+
+    QString serialNumber() const {return m_serialNumber;};
+    QString manufacturer() const {return m_manufacturer;};
+    QString product() const {return m_product;};
+    QString version() const {return m_version;};
 
 public slots:
     void connectToBpm(const int& vid, const int& pid);
@@ -24,11 +30,11 @@ public slots:
 
 signals:
     void connectionStatus(const bool& connected);
-    void versionInfoAvailable(const QString& version);
+    void deviceInfoReady();
 	void measurementReady(const int& sbp, const int& dbp, const int& pulse, const QDateTime& start, const QDateTime& end, const int& readingNum);
 	void averageReady(const int& sbp, const int& dbp, const int& pulse);
 	void finalReviewReady(const int& sbp, const int& dbp, const int& pulse);
-	void measurementError(const QString& error);
+    void measurementError(const QString& error, const int& timeout=0);
     void abortFinished(const bool& successful);
 
 private:
@@ -82,6 +88,11 @@ private:
     bool m_stopUnexpectedReceived { false };
 
 	QTime m_lastBpmMessageTime = QTime::currentTime();
+
+    QString m_serialNumber;
+    QString m_version;
+    QString m_manufacturer;
+    QString m_product;
 };
 
 #endif //BPMCOMMUNICATION_H

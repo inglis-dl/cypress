@@ -41,7 +41,7 @@
    <item>
     <widget class="QGroupBox" name="armBandGroupBox">
      <property name="title">
-      <string>arm band information</string>
+      <string>cuff information</string>
      </property>
      <layout class="QHBoxLayout" name="armBandHorizontalLayout">
       <item>
@@ -50,7 +50,7 @@
          <string>Arm band size:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -63,7 +63,7 @@
          <string>Arm used:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -82,50 +82,36 @@
       </sizepolicy>
      </property>
      <property name="title">
-      <string>connection ids</string>
+      <string>Usb devices</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QLabel" name="vidLabel">
-        <property name="text">
-         <string>Vid: 0</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="currentPidLabel">
-        <property name="text">
-         <string>Current Pid: 0</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="newPidLabel">
+       <widget class="QLabel" name="devicePidLabel">
         <property name="layoutDirection">
          <enum>Qt::LeftToRight</enum>
         </property>
         <property name="text">
-         <string>New Pid:</string>
+         <string>Device Pid:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="newPidComboBox"/>
+       <widget class="QComboBox" name="deviceComboBox"/>
       </item>
       <item>
-       <widget class="QPushButton" name="refreshButton">
+       <widget class="QPushButton" name="scanButton">
         <property name="text">
-         <string>Refresh</string>
+         <string>Scan</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="selectButton">
+       <widget class="QPushButton" name="connectButton">
         <property name="text">
-         <string>Select</string>
+         <string>Connect</string>
         </property>
        </widget>
       </item>
@@ -140,13 +126,6 @@
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QPushButton" name="connectButton">
-          <property name="text">
-           <string>Connect</string>
-          </property>
-         </widget>
-        </item>
         <item>
          <widget class="QPushButton" name="measureButton">
           <property name="text">

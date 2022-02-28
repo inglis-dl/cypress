@@ -64,9 +64,9 @@ void BodyCompositionTest::fromArray(const QByteArray &arr)
       // depending on age and gender.  The body type used by
       // analyzer is recovered from the test output data here.
       //
-      addMetaDataCharacteristic("body type", readBodyType());
+      addMetaDataCharacteristic("body_type", readBodyType());
       addMetaDataCharacteristic("gender", readGender());
-      addMetaDataCharacteristic("test datetime", QDateTime::currentDateTime());
+      addMetaDataCharacteristic("test_datetime", QDateTime::currentDateTime());
       addMetaDataCharacteristic("age", readAge());
       addMetaDataCharacteristic("height", readHeight());
 
