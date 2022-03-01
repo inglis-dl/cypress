@@ -13,7 +13,8 @@
         msgBytes[3] = data2;
         msgBytes[4] = data3;
 */
-BPMMessage::BPMMessage(quint8 msgID, quint8 data0, quint8 data1, quint8 data2, quint8 data3)
+BPMMessage::BPMMessage(const quint8& msgID,
+  const quint8& data0, const quint8& data1, const quint8& data2, const quint8& data3)
 {
     m_msgBytes.append(msgID);
     m_msgBytes.append(data0);
@@ -22,7 +23,7 @@ BPMMessage::BPMMessage(quint8 msgID, quint8 data0, quint8 data1, quint8 data2, q
     m_msgBytes.append(data3);
 }
 
-QString BPMMessage::getAsQString() const
+QString BPMMessage::toString() const
 {
     return QString("ID: %1, Data: %2, %3, %4, %5")
         .arg(QString::number(getMsgId()),
@@ -42,12 +43,13 @@ QByteArray BPMMessage::packMessage() const
     packedMsg.append(getData1()); // Data 1
     packedMsg.append(getData2()); // Data 2
     packedMsg.append(getData3()); // Data 3
-    packedMsg.append(CRC8::Calculate(m_msgBytes, 5)); // CRC8
+    packedMsg.append(CRC8::calculate(m_msgBytes, 5)); // CRC8
     packedMsg.append(m_etx); // ETX
     return packedMsg;
 }
 
-QByteArray BPMMessage::createPackedMessage(quint8 msgID, quint8 data0, quint8 data1, quint8 data2, quint8 data3)
+QByteArray BPMMessage::createPackedMessage(const quint8& msgID,
+  const quint8& data0, const quint8& data1, const quint8& data2, const quint8& data3)
 {
     BPMMessage msg(msgID, data0, data1, data2, data3);
     return msg.packMessage();

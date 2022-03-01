@@ -36,9 +36,9 @@ void MainWindow::initializeModel()
 {
     // allocate 2 columns x 8 rows of hearing measurement items
     //
-    for(int col=0;col<m_manager.getNumberOfModelColumns();col++)
+    for(int col = 0; col < m_manager.getNumberOfModelColumns(); col++)
     {
-      for(int row=0;row<m_manager.getNumberOfModelRows();row++)
+      for(int row = 0; row < m_manager.getNumberOfModelRows(); row++)
       {
         QStandardItem* item = new QStandardItem();
         m_model.setItem(row,col,item);

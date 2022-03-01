@@ -1,12 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "ui_MainWindow.h"
 #include "../../managers/BloodPressureManager.h"
 #include "../../auxiliary/CypressConstants.h"
+#include <QDialog>
 #include <QStandardItemModel>
-
-QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -43,19 +41,14 @@ public:
 
 public slots:
     void writeOutput();
-    void bpmDisconnected(const bool &connected);
 
 protected:
     void closeEvent(QCloseEvent*) override;
 
 private:
-    void setupConnections();
-    void initializeButtonState();
-    void initializeArmBandDropDowns();
-    void initializeConnectionIdsUi();
     void readInput();
-    void populateBarcodeDisplay();
-    void updatePossiblePidOptions();
+    void initializeModel();
+    void initializeConnections();
 
     Ui::MainWindow* ui;
     QString m_inputFileName;
@@ -71,4 +64,4 @@ private:
     QStandardItemModel m_model;
 };
 
-#endif MAINWINDOW_H
+#endif // MAINWINDOW_H

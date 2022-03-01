@@ -11,24 +11,33 @@ SerialPortManager::SerialPortManager(QObject *parent) : ManagerBase(parent)
 void SerialPortManager::start()
 {
     connect(&m_port, &QSerialPort::readyRead,
-             this, &SerialPortManager::readDevice);
+      this, &SerialPortManager::readDevice);
 
     connect(&m_port, &QSerialPort::errorOccurred,
-            this,[this](QSerialPort::SerialPortError error){
-            if(error == QSerialPort::NoError)
-               return;
-             qDebug() << "ERROR: serial port " << m_port.errorString();
-            });
+      this,[this](QSerialPort::SerialPortError error)
+      {
+        if(error == QSerialPort::NoError)
+          return;
+        emit message(tr(
+          QString("Serial port error: %1").arg(m_port.errorString()).toStdString().c_str()
+        ));
+        if(m_verbose)
+          qDebug() << "ERROR: serial port " << m_port.errorString();
+      });
 
     connect(&m_port, &QSerialPort::dataTerminalReadyChanged,
-            this,[](bool set){
-        qDebug() << "data terminal ready DTR changed to " << (set?"high":"low");
-    });
+      this,[this](bool set)
+      {
+        if(m_verbose)
+          qDebug() << "data terminal ready DTR changed to " << (set?"high":"low");
+      });
 
     connect(&m_port, &QSerialPort::requestToSendChanged,
-            this,[](bool set){
-        qDebug() << "request to send RTS changed to " << (set?"high":"low");
-    });
+      this,[this](bool set)
+      {
+        if(m_verbose)
+          qDebug() << "request to send RTS changed to " << (set?"high":"low");
+      });
 
   scanDevices();
   emit dataChanged();

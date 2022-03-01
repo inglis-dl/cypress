@@ -25,27 +25,37 @@ CONFIG += c++11 console
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-HEADERS += ../../data/BloodPressureTest.h \
-    ./MainWindow.h \
+HEADERS += ./MainWindow.h \
     ../../data/MeasurementBase.h \
-    ../../data/TestBase.h \
-    ../../auxiliary/CommandLineParser.h \
-    ../../widgets/BarcodeWidget.h \
-    ../../managers/ManagerBase.h \
     ../../data/BloodPressureMeasurement.h \
+    ../../data/TestBase.h \
+    ../../data/BloodPressureTest.h \
+    ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/CypressConstants.h \
+    ../../widgets/BarcodeWidget.h \
+    ../../auxiliary/CRC8.h \
+    ../../managers/BPMMessage.h \
+    ../../managers/BPMCommunication.h \
+    ../../managers/ManagerBase.h \
     ../../managers/BloodPressureManager.h
 
 SOURCES += ./MainWindow.cpp \
     ./main.cpp \
+    ../../auxiliary/CRC8.cpp \
+    ../../managers/BPMMessage.cpp \
+    ../../managers/BPMCommunication.cpp \
     ../../auxiliary/CommandLineParser.cpp \
+    ../../auxiliary/CypressConstants.cpp \
     ../../data/MeasurementBase.cpp \
-    ../../managers/ManagerBase.cpp \
-    ../../widgets/BarcodeWidget.cpp \
     ../../data/BloodPressureMeasurement.cpp \
     ../../data/BloodPressureTest.cpp \
-    ../../managers/BloodPressureManager.cpp
+    ../../widgets/BarcodeWidget.cpp \
+    ../../managers/ManagerBase.cpp \
+    ../../managers/BloodPressureManager.cpp 
 
-FORMS += ./MainWindow.ui
+FORMS += \
+    ../../widgets/barcodewidget.ui \
+    MainWindow.ui
 
 TRANSLATIONS += \
     BloodPressure_en_CA.ts

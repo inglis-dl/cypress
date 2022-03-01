@@ -3,16 +3,19 @@
 
 #include "ManagerBase.h"
 #include "../data/BloodPressureTest.h"
-#include "../prototype/BloodPressure/BPM200.h"
+
+#include <QObject>
+#include <QThread>
+
+QT_FORWARD_DECLARE_CLASS(BPMCommunication)
 
 class BloodPressureManager : public ManagerBase
 {
-public:
-    explicit BloodPressureManager(QObject* parent = Q_NULLPTR);
+    Q_OBJECT
 
-    // TODO: make this private. This is public so that it can send a signal 
-    // to mainwindow since bloodPressureManager cannot have its own signals
-    BPM200 m_bpm;
+public:
+    explicit BloodPressureManager(QObject *parent = Q_NULLPTR);
+    ~BloodPressureManager();
 
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
@@ -28,22 +31,26 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QMap<QString, QVariant>&);
+    void setInputData(const QMap<QString,QVariant>&) override;
 
-    void setupConnections();
+    //TODO: use cypress constant for all use of size and side
+    void setCuffSize(const QString&);
 
-    void setArmBandSize(const QString& size) { m_test.setArmBandSize(size); }
-    void setArm(const QString& arm) { m_test.setArm(arm); }
-    bool armInformationSet() const { return m_test.armInformationSet(); }
+    //TODO: use cypress constant for all use of size and side
+    void setSide(const QString&);
 
-    void connectToBpm() {
-        m_bpm.connectToBpm();
-    }
-    int getPid() const { return m_bpm.getPid(); }
-    int getVid() const { return m_bpm.getVid(); }
-    bool connectionInfoSet() const { return m_bpm.connectionInfoSet(); }
+    int getPid() const { return m_pid; }
+    int getVid() const { return m_vid; }
+
+    bool connectionInfoSet() const;
+
+    QList<int> findAllPids() const;
+
 public slots:
 
+    // what the manager does in response to the main application
+    // window invoking its run method
+    //
     void start() override;
 
     // retrieve a measurement from the device
@@ -55,16 +62,53 @@ public slots:
     //
     void finish() override;
 
+    void connectDevice();
+
+    void disconnectDevice();
+
+    // set the device by PID
+    //
+    void selectDevice(const QString&);
+
+private slots:
+
     // slot for signals coming from bpm200
-    void measurementAvailable(const int& sbp, const int& dbp, const int& pulse, const const QDateTime& start, const QDateTime& end, const int& readingNum);
-    void averageAvailable(const int& sbp, const int& dbp, const int& pulse);
-    void finalReviewAvailable(const int &sbp, const int &dbp, const int &pulse);
-    void connectionStatusAvailable(const bool connected);
-protected:
-    void clearData() override;
+    void measurementAvailable(const int&, const int&, const int&,
+                              const QDateTime&, const QDateTime&,
+                              const int&);
+    void averageAvailable(const int&, const int&, const int&);
+    void finalReviewAvailable(const int&, const int&, const int&);
+    void connectionStatusChanged(const bool&);
+    void abortComplete(const bool&);
+    void deviceInfoAvailable();
+
+signals:
+
+    void canConnectDevice();
+
+    // Signals to comm
+    void attemptConnection(const int&, const int&);
+    void startMeasurement();
+    void abortMeasurement(QThread*);
 
 private:
+
+    bool armInformationSet() const { return m_test.armInformationSet(); }
     BloodPressureTest m_test;
+    QThread m_thread;
+
+    const int m_vid = 4279;  // vendor ID for BpTru
+    int m_pid { 0 };
+
+    BPMCommunication* m_comm;
+
+    bool m_aborted { false };
+    bool m_connectionsSet { false };
+
+    void clearData() override;
+
+    // device data is separate from test data
+    MeasurementBase m_deviceData;
 };
 
 #endif // BLOODPRESSUREMANAGER_H
