@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QQueue>
 #include <QTime>
+#include <QUsb>
 #include <functional>
 
 QT_FORWARD_DECLARE_CLASS(BPMMessage)
@@ -24,12 +25,13 @@ public:
     QString version() const {return m_version;};
 
 public slots:
-    void connectToBpm(const int& vid, const int& pid);
+    void connect(const QUsb::Id&);
+    void disconnect();
 	void measure();
-	void abort(QThread* uiThread);
+    void abort(QThread*);
 
 signals:
-    void connectionStatus(const bool& connected);
+    void connectionStatus(const bool&);
     void deviceInfoReady();
 	void measurementReady(const int& sbp, const int& dbp, const int& pulse, const QDateTime& start, const QDateTime& end, const int& readingNum);
 	void averageReady(const int& sbp, const int& dbp, const int& pulse);
@@ -60,8 +62,7 @@ private:
     QQueue<BPMMessage>* m_msgQueue { Q_NULLPTR };
 
 	// The vid and pid for connecting to the bpm
-    int m_vid { -1 };
-    int m_pid { -1 };
+    QUsb::Id m_info;
 
 	void startReading();
 	void endReading(const int& sbp, const int& dbp, const int& pulse);

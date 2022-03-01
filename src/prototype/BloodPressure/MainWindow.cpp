@@ -82,6 +82,20 @@ void MainWindow::initializeConnections()
     ui->armComboBox->addItems(armList);
     ui->armComboBox->setCurrentIndex(0);
 
+    // Update cuff size selected by user
+    //
+    connect(ui->armBandSizeComboBox, &QComboBox::currentTextChanged,
+        this, [this](const QString &size) {
+            m_manager.setCuffSize(size);
+        });
+
+    // Update arm used selected by user
+    //
+    connect(ui->armComboBox, &QComboBox::currentTextChanged,
+        this, [this](const QString& side) {
+            m_manager.setSide(side);
+        });
+
     // Disable all buttons by default
     //
     for(auto&& x : this->findChildren<QPushButton *>())
@@ -136,21 +150,78 @@ void MainWindow::initializeConnections()
         }
     });
 
-    // bpm connected successfully
+    // Scan for devices
     //
-    connect(&m_manager, &BloodPressureManager::canMeasure,
-        this, [this]() {
-            ui->measureButton->setEnabled(true);
-            ui->saveButton->setEnabled(false);
-            ui->connectButton->setEnabled(false);
-        });
+    connect(&m_manager, &BloodPressureManager::scanningDevices,
+            ui->deviceComboBox, &QComboBox::clear);
+
+    // Update the drop down list as devices are discovered during scanning
+    //
+    connect(&m_manager, &BloodPressureManager::deviceDiscovered,
+            this,[this](const QString &label){
+        int index = ui->deviceComboBox->findText(label);
+        bool oldState = ui->deviceComboBox->blockSignals(true);
+        if(-1 == index)
+        {
+            ui->deviceComboBox->addItem(label);
+        }
+        ui->deviceComboBox->blockSignals(oldState);
+    });
+
+    connect(&m_manager, &BloodPressureManager::deviceSelected,
+            this,[this](const QString &label){
+        if(label!=ui->deviceComboBox->currentText())
+        {
+            ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findText(label));
+        }
+    });
+
+    // Prompt user to select a device from the drop down list when previously
+    // cached device information in the ini file is unavailable or invalid
+    //
+    connect(&m_manager, &BloodPressureManager::canSelectDevice,
+            this,[this](){
+        QMessageBox::warning(
+          this, QApplication::applicationName(),
+          tr("Select the device from the list.  If the device "
+          "is not in the list, quit the application and check that the usb port is "
+          "working and connect the blood pressure monitor to it before running this application."));
+    });
+
+    // Select a device from drop down list
+    //
+    connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
+            &m_manager,&BloodPressureManager::selectDevice);
+
+    // Select a device from drop down list
+    //
+    connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::activated),
+      this,[this](int index){
+        m_manager.selectDevice(ui->deviceComboBox->itemText(index));
+    });
 
     // Ready to connect device
     //
     connect(&m_manager, &BloodPressureManager::canConnectDevice,
             this,[this]() {
         ui->connectButton->setEnabled(true);
+        ui->disconnectButton->setEnabled(false);
         ui->measureButton->setEnabled(false);
+        ui->saveButton->setEnabled(false);
+    });
+
+    // Connect to the device (bpm)
+    //
+    connect(ui->connectButton, &QPushButton::clicked,
+        &m_manager, &BloodPressureManager::connectDevice);
+
+    // Connection is established: enable measurement requests
+    //
+    connect(&m_manager, &BloodPressureManager::canMeasure,
+            this,[this](){
+        ui->connectButton->setEnabled(false);
+        ui->disconnectButton->setEnabled(true);
+        ui->measureButton->setEnabled(true);
         ui->saveButton->setEnabled(false);
 
         // Remove blank enty from selection, so that user cannot change answer to blank
@@ -161,10 +232,10 @@ void MainWindow::initializeConnections()
         ui->armComboBox->removeItem(ui->armComboBox->findText(""));
     });
 
-    // Connect to the device (bpm)
+    // Disconnect from device
     //
-    connect(ui->connectButton, &QPushButton::clicked,
-        &m_manager, &BloodPressureManager::connectDevice);
+    connect(ui->disconnectButton, &QPushButton::clicked,
+            &m_manager, &BloodPressureManager::disconnectDevice);
 
     // Request a measurement from the device (bpm)
     //
@@ -208,44 +279,6 @@ void MainWindow::initializeConnections()
     //
     connect(ui->closeButton, &QPushButton::clicked,
         this, &MainWindow::close);
-
-    // Update arm band size selected by user
-    //
-    connect(ui->armBandSizeComboBox, &QComboBox::currentTextChanged, 
-        this, [this](const QString &size) {
-            m_manager.setCuffSize(size);
-        });
-
-    // Update arm used selected by user
-    //
-    connect(ui->armComboBox, &QComboBox::currentTextChanged,
-        this, [this](const QString& side) {
-            m_manager.setSide(side);
-        });
-
-    // Select a device (serial port) from drop down list
-    //
-    connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
-            &m_manager,&BloodPressureManager::selectDevice);
-
-    // Select a device (serial port) from drop down list
-    //
-    connect(ui->deviceComboBox, QOverload<int>::of(&QComboBox::activated),
-      this,[this](int index){
-        m_manager.selectDevice(ui->deviceComboBox->itemText(index));
-    });
-
-    connect(ui->scanButton, &QPushButton::clicked,
-        this, [this]() {
-        // remove current options
-        ui->deviceComboBox->clear();
-        // add new options based on current connected usb devices with bpm vid
-        QList<int> possiblePids = m_manager.findAllPids();
-        foreach(int pid, possiblePids)
-        {
-          ui->deviceComboBox->addItem(QString::number(pid));
-        }
-     });
 
     // Read inputs, such as interview barcode
     //

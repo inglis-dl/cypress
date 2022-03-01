@@ -20,20 +20,28 @@ BPMCommunication::~BPMCommunication()
 /*
 * Connect to the device
 */
-void BPMCommunication::connectToBpm(const int& vid, const int& pid)
+void BPMCommunication::connect(const QUsb::Id& info)
 {
-	m_vid = vid;
-	m_pid = pid;
+    m_info = info;
 	bool connectionSuccessful = attemptConnectionToBpm();
     if(connectionSuccessful)
     {
 		// Preform handshake and update connection status
 		// Assumes that bpm isn't actually connected if the handshake fails
-		// NOTE: Will emit a VersionInfoAvailable signal if successful
+        // NOTE: Will emit a deviceInfoReady signal if successful
+        //
 		connectionSuccessful = handshakeBpm();
 	}
 	
 	emit connectionStatus(connectionSuccessful);
+}
+
+void BPMCommunication::disconnect()
+{
+    if(m_bpm200->isOpen())
+    {
+        m_bpm200->close();
+    }
 }
 
 /*
@@ -121,20 +129,20 @@ void BPMCommunication::abort(QThread* uiThread)
 bool BPMCommunication::attemptConnectionToBpm()
 {
 	// Return false if connection values not set
-    if(-1 == m_vid || -1 == m_pid)
+    if(0 == m_info.pid || 0 == m_info.vid)
     {
-		return false;
+      return false;
 	}
 
 	// Check if bpm is already connected
     if(m_bpm200->isOpen())
     {
-		qDebug() << "Already connected";
-		return true;
+      qDebug() << "Already connected";
+      return true;
 	}
 
 	// Attempt to connect to bpm and return true if successful, false otherwise
-	bool connectionSuccessful = m_bpm200->open(m_vid, m_pid);
+    bool connectionSuccessful = m_bpm200->open(m_info.vid, m_info.pid);
 	qDebug() << "BPMComm: Connection attempt with bpm: " << (connectionSuccessful ? "Successful" : "Failed");
 	return connectionSuccessful;
 }
@@ -471,6 +479,7 @@ void BPMCommunication::readFromBpm()
 	//		 toHex then FromHex needs to be done. However this code does not assume that 
 	//		 will always be the case. It still checks each byte in readData up to index 
     //       numBytesReturned - 1 just in case their is data in any of those indices
+    //
 	QByteArray bytes = QByteArray::fromHex(readData[0].toHex());
     for(int i = 1; i < numBytesReturned; i++)
     {
