@@ -47,8 +47,12 @@ public:
     //
     virtual QJsonObject toJsonObject() const = 0;
 
+    // default is to reset both meta and measurement data
+    //
     virtual void reset();
 
+    //TODO: add measurement system as enum to cypress constants
+    //
     void setMeasurementSystem(const QString &s)
     {
       m_measurementSystem = "imperial" == s ? s : "metric";

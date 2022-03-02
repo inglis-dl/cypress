@@ -33,7 +33,7 @@ public slots:
 signals:
     void connectionStatus(const bool&);
     void deviceInfoReady();
-	void measurementReady(const int& sbp, const int& dbp, const int& pulse, const QDateTime& start, const QDateTime& end, const int& readingNum);
+    void measurementReady(const int& readingNum, const int& sbp, const int& dbp, const int& pulse, const QDateTime& start, const QDateTime& end);
 	void averageReady(const int& sbp, const int& dbp, const int& pulse);
 	void finalReviewReady(const int& sbp, const int& dbp, const int& pulse);
     void measurementError(const QString& error, const int& timeout=0);
@@ -59,7 +59,7 @@ private:
 	void resetValues();
 
     QHidDevice* m_bpm200  { Q_NULLPTR };
-    QQueue<BPMMessage>* m_msgQueue { Q_NULLPTR };
+    QQueue<BPMMessage>* m_queue { Q_NULLPTR };
 
 	// The vid and pid for connecting to the bpm
     QUsb::Id m_info;

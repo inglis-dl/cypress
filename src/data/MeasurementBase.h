@@ -57,6 +57,17 @@ public:
 
     void reset();
 
+    void remove(const QStringList& list)
+    {
+      foreach(auto key, list)
+        removeCharacteristic(key);
+    }
+
+    void removeCharacteristic(const QString& key)
+    {
+      m_characteristicValues.remove(key);
+    }
+
     void setCharacteristic(const QString &key, const QVariant &value)
     {
       m_characteristicValues[key]=value;
@@ -70,14 +81,14 @@ public:
 
     QMap<QString,QVariant> getCharacteristicValues() const
     {
-        return m_characteristicValues;
+      return m_characteristicValues;
     }
 
     inline bool hasCharacteristic(const QString &key) const
     {
-        return m_characteristicValues.contains(key) &&
-               !m_characteristicValues[key].isNull() &&
-                m_characteristicValues[key].isValid();
+      return m_characteristicValues.contains(key) &&
+            !m_characteristicValues[key].isNull() &&
+             m_characteristicValues[key].isValid();
     }
 
 protected:
@@ -88,7 +99,7 @@ Q_DECLARE_METATYPE(MeasurementBase);
 
 inline bool operator==(const MeasurementBase &lhs, const MeasurementBase &rhs)
 {
-    return  lhs.getCharacteristicValues()==rhs.getCharacteristicValues();
+    return (lhs.getCharacteristicValues() == rhs.getCharacteristicValues());
 }
 
 inline bool operator!=(const MeasurementBase &lhs, const MeasurementBase &rhs)

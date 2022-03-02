@@ -19,15 +19,16 @@ public:
     BloodPressureMeasurement() = default;
     ~BloodPressureMeasurement() = default;
 
-    BloodPressureMeasurement(const int& sbp, const int& dbp,
-                   const int& pulse, const QDateTime& start,
-                   const QDateTime& end, const int& readingNum);
+    BloodPressureMeasurement(const int& readingNum,
+            const int& sbp, const int& dbp,
+            const int& pulse, const QDateTime& start,
+            const QDateTime& end);
 
     bool isValid() const override;
 
     QString toString() const override;
 
-    static BloodPressureMeasurement simulate();
+    static BloodPressureMeasurement simulate(const int&);
 
     int getSbp() const { return getCharacteristic("systolic").toInt(); }
     int getDbp() const { return getCharacteristic("diastolic").toInt(); }

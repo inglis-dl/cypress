@@ -2,15 +2,19 @@
 
 #include <QDebug>
 #include <QDateTime>
+#include <QRandomGenerator>
 
-BloodPressureMeasurement::BloodPressureMeasurement(const int &sbp, const int& dbp, const int& pulse, const QDateTime &start, const QDateTime& end, const int& readingNum)
+BloodPressureMeasurement::BloodPressureMeasurement(
+        const int& readingNum,
+        const int &sbp, const int& dbp, const int& pulse,
+        const QDateTime &start, const QDateTime& end)
 {
     setCharacteristic("reading_number", readingNum);
-    setCharacteristic("start_time", start);
-    setCharacteristic("end_time", end);
     setCharacteristic("systolic", sbp);
     setCharacteristic("diastolic", dbp);
     setCharacteristic("pulse", pulse);
+    setCharacteristic("start_time", start);
+    setCharacteristic("end_time", end);
 }
 
 bool BloodPressureMeasurement::isValid() const
@@ -34,29 +38,38 @@ bool BloodPressureMeasurement::isValid() const
     //       normal diastolic pressure: 60 - 80 mmHg
     //       normal pulse rate: 60 - 100 bpm
     //
-    bool sbpValid = 0 < getCharacteristic("systolic").toInt();
-    bool dbpValid = 0 < getCharacteristic("diastolic").toInt();
-    bool pulseValid = 0 < getCharacteristic("pulse").toInt();
+    bool sbpValid = 0 < getSbp();
+    bool dbpValid = 0 < getDbp();
+    bool pulseValid = 0 < getPulse();
     return (sbpValid && dbpValid && pulseValid);
 }
 
 QString BloodPressureMeasurement::toString() const
 {
-    return QString("%4. SBP: %1 DBP: %2 Pulse: %3 (%5 -> %6)")
-        .arg(getSbp())
-        .arg(getDbp())
-        .arg(getPulse())
-        .arg(getCharacteristic("reading_number").toInt())
-        .arg(getCharacteristic("start_time").toDateTime().toString("yyyy-MM-dd  HH:mm:ss"))
-        .arg(getCharacteristic("end_time").toDateTime().toString("HH:mm:ss"));
+    return QString("%1. SBP: %2 DBP: %3 Pulse: %4 (%5 -> %6)").arg(
+        getCharacteristic("reading_number").toString(),
+        getCharacteristic("systolic").toString(),
+        getCharacteristic("diastolic").toString(),
+        getCharacteristic("pulse").toString(),
+        getCharacteristic("start_time").toDateTime().toString("yyyy-MM-dd  HH:mm:ss"),
+        getCharacteristic("end_time").toDateTime().toString("HH:mm:ss"));
 }
 
-// TODO: implement simulated measurement
-//
-BloodPressureMeasurement BloodPressureMeasurement::simulate()
+BloodPressureMeasurement BloodPressureMeasurement::simulate(const int& reading)
 {
-    BloodPressureMeasurement simulatedMeasurement;
-    return simulatedMeasurement;
+    static QDateTime previous = QDateTime::currentDateTime();
+
+    int systolic = QRandomGenerator::global()->bounded(90,120);
+    int diastolic = QRandomGenerator::global()->bounded(60,80);
+    int pulse = QRandomGenerator::global()->bounded(60,100);
+    int timeoffset = QRandomGenerator::global()->bounded(26000,99000);
+    QDateTime start = QDateTime::currentDateTime();
+    if(start<previous) start = previous;
+    QDateTime end = start.addMSecs(timeoffset);
+    previous = end;
+    BloodPressureMeasurement measure(reading, systolic, diastolic, pulse, start, end);
+    qDebug() << measure.toString();
+    return measure;
 }
 
 QDebug operator<<(QDebug dbg, const BloodPressureMeasurement& item)

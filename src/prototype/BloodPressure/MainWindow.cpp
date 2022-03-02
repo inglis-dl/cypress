@@ -29,14 +29,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::initializeModel()
 {
+    QStringList header = (QStringList()<<"#"<<"start time"<<"end time"<<"systolic (mmHg)"<<"diastolic (mmHg)"<<"pulse (bpm)");
     for(int row = 0; row < m_manager.getNumberOfModelRows(); row++)
     {
+      for(int col = 0; col < m_manager.getNumberOfModelColumns(); col++)
+      {
         QStandardItem* item = new QStandardItem();
-        m_model.setItem(row, 0, item);
+        m_model.setItem(row, col, item);
+        m_model.setHeaderData(col, Qt::Horizontal, header.at(col), Qt::DisplayRole);
+      }
     }
-    m_model.setHeaderData(0, Qt::Horizontal, "Test Results", Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
-
     ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -74,27 +77,29 @@ void MainWindow::initializeConnections()
     // as not being a valid option by the rest of this code. If there was no blank entry, then
     // another option would be set by default and users may forget to change the default option
     //
-    QStringList bandList = (QStringList()<<""<<"Small"<<"Medium"<<"Large"<<"X-large");
+    QStringList bandList = (QStringList()<<""<<"small"<<"medium"<<"large"<<"x-large");
     ui->armBandSizeComboBox->addItems(bandList);
     ui->armBandSizeComboBox->setCurrentIndex(0);
 
-    QStringList armList = (QStringList()<<""<<"Left"<<"Right");
+    QStringList armList = (QStringList()<<""<<"left"<<"right");
     ui->armComboBox->addItems(armList);
     ui->armComboBox->setCurrentIndex(0);
 
     // Update cuff size selected by user
     //
     connect(ui->armBandSizeComboBox, &QComboBox::currentTextChanged,
-        this, [this](const QString &size) {
-            m_manager.setCuffSize(size);
-        });
+        &m_manager, &BloodPressureManager::setCuffSize);
 
     // Update arm used selected by user
     //
     connect(ui->armComboBox, &QComboBox::currentTextChanged,
-        this, [this](const QString& side) {
-            m_manager.setSide(side);
-        });
+            &m_manager, &BloodPressureManager::setSide);
+
+    connect(&m_manager, &BloodPressureManager::cuffSizeChanged,
+            ui->armBandSizeComboBox, &QComboBox::setCurrentText);
+
+    connect(&m_manager, &BloodPressureManager::sideChanged,
+            ui->armComboBox, &QComboBox::setCurrentText);
 
     // Disable all buttons by default
     //
@@ -170,7 +175,7 @@ void MainWindow::initializeConnections()
 
     connect(&m_manager, &BloodPressureManager::deviceSelected,
             this,[this](const QString &label){
-        if(label!=ui->deviceComboBox->currentText())
+        if(label != ui->deviceComboBox->currentText())
         {
             ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findText(label));
         }
@@ -191,7 +196,7 @@ void MainWindow::initializeConnections()
     // Select a device from drop down list
     //
     connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
-            &m_manager,&BloodPressureManager::selectDevice);
+            &m_manager, &BloodPressureManager::selectDevice);
 
     // Select a device from drop down list
     //
@@ -251,11 +256,15 @@ void MainWindow::initializeConnections()
             m_manager.buildModel(&m_model);
             QSize ts_pre = ui->testdataTableView->size();
             h->resizeSections(QHeaderView::ResizeToContents);
-            ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
+            int h_sum = 0;
+            for(int col = 0; col < m_manager.getNumberOfModelColumns(); col++)
+            {
+              ui->testdataTableView->setColumnWidth(col, h->sectionSize(col));
+              h_sum += h->sectionSize(col) + 1;
+            }
             ui->testdataTableView->resize(
-                h->sectionSize(0) +
-                ui->testdataTableView->autoScrollMargin(),
-                8 * ui->testdataTableView->rowHeight(0) + 1 +
+                h_sum + ui->testdataTableView->autoScrollMargin(),
+                m_manager.getNumberOfModelRows() * ui->testdataTableView->rowHeight(0) + 1 +
                 h->height());
             QSize ts_post = ui->testdataTableView->size();
             int dx = ts_post.width() - ts_pre.width();
@@ -304,10 +313,11 @@ void MainWindow::readInput()
     {
         if(CypressConstants::RunMode::Simulate == m_mode)
         {
-            m_inputData["barcode"]="00000000";
+          m_inputData["barcode"]="00000000";
         }
         else
         {
+          if(m_verbose)
             qDebug() << "ERROR: no input json file";
         }
         return;
@@ -332,14 +342,18 @@ void MainWindow::readInput()
           if(!v.isUndefined())
           {
               m_inputData[keys[i]] = v.toVariant();
-              qDebug() << keys[i] << v.toVariant();
+              if(m_verbose)
+                qDebug() << keys[i] << v.toVariant();
           }
       }
       if(m_inputData.contains("barcode"))
           ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }
     else
+    {
+      if(m_verbose)
         qDebug() << m_inputFileName << " file does not exist";
+    }
 }
 
 void MainWindow::writeOutput()
