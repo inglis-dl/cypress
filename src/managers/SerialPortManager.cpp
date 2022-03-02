@@ -64,7 +64,7 @@ void SerialPortManager::scanDevices()
     emit message(tr("Discovering serial ports..."));
     emit scanningDevices();
     if(m_verbose)
-      qDebug() << "start scanning for devices ....";
+      qDebug() << "start scanning for devices...";
 
     if(CypressConstants::RunMode::Simulate == m_mode)
     {
@@ -160,13 +160,13 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
     if(CypressConstants::RunMode::Simulate == m_mode)
     {
        // get the device data
-       m_deviceData.setCharacteristic("port product ID", "simulated");
-       m_deviceData.setCharacteristic("port vendor ID", "simulated");
-       m_deviceData.setCharacteristic("port manufacturer", "simulated");
-       m_deviceData.setCharacteristic("port name", (m_deviceName.isEmpty() ? "simulated" : m_deviceName));
-       m_deviceData.setCharacteristic("port serial number", "simulated");
-       m_deviceData.setCharacteristic("port system location", "simulated");
-       m_deviceData.setCharacteristic("port description", "simulated");
+       m_deviceData.setCharacteristic("port_product_id", "simulated");
+       m_deviceData.setCharacteristic("port_vendor_id", "simulated");
+       m_deviceData.setCharacteristic("port_manufacturer", "simulated");
+       m_deviceData.setCharacteristic("port_name", (m_deviceName.isEmpty() ? "simulated" : m_deviceName));
+       m_deviceData.setCharacteristic("port_serial_number", "simulated");
+       m_deviceData.setCharacteristic("port_system_location", "simulated");
+       m_deviceData.setCharacteristic("port_description", "simulated");
        emit message(tr("Ready to connect..."));
        emit canConnectDevice();
        return;
@@ -183,19 +183,19 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
 
     // get the device data
     if(info.hasProductIdentifier())
-      m_deviceData.setCharacteristic("port product ID", info.productIdentifier());
+      m_deviceData.setCharacteristic("port_product_id", info.productIdentifier());
     if(info.hasVendorIdentifier())
-      m_deviceData.setCharacteristic("port vendor ID", info.vendorIdentifier());
+      m_deviceData.setCharacteristic("port_vendor_id", info.vendorIdentifier());
     if(!info.manufacturer().isEmpty())
-      m_deviceData.setCharacteristic("port manufacturer", info.manufacturer());
+      m_deviceData.setCharacteristic("port_manufacturer", info.manufacturer());
     if(!info.portName().isEmpty())
-      m_deviceData.setCharacteristic("port name", info.portName());
+      m_deviceData.setCharacteristic("port_name", info.portName());
     if(!info.serialNumber().isEmpty())
-      m_deviceData.setCharacteristic("port serial number", info.serialNumber());
+      m_deviceData.setCharacteristic("port_serial_number", info.serialNumber());
     if(!info.systemLocation().isEmpty())
-      m_deviceData.setCharacteristic("port system location", info.systemLocation());
+      m_deviceData.setCharacteristic("port_system_location", info.systemLocation());
     if(!info.description().isEmpty())
-      m_deviceData.setCharacteristic("port description", info.description());
+      m_deviceData.setCharacteristic("port_description", info.description());
 
     m_port.setPort(info);
     if(m_port.open(QSerialPort::ReadWrite))

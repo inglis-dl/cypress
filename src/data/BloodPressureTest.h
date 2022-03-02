@@ -4,10 +4,6 @@
 #include "TestBase.h"
 #include "BloodPressureMeasurement.h"
 
-//#include <QList>
-//#include <QString>
-//#include <QJsonObject>
-
 class BloodPressureTest : public TestBase<BloodPressureMeasurement>
 {
 public:
