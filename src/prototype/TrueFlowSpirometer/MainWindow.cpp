@@ -31,6 +31,7 @@ void MainWindow::initialize()
 {
   initializeModel();
   initializeConnections();
+  m_manager.start();
 }
 
 void MainWindow::initializeModel()
@@ -202,6 +203,24 @@ void MainWindow::initializeConnections()
     connect(ui->saveButton, &QPushButton::clicked,
         this, &MainWindow::writeOutput);
 
+    connect(&m_manager, &TrueFlowSpirometerManager::canSelectRunnable,
+        this, [this]() {
+            for (auto&& x : this->findChildren<QPushButton*>())
+                x->setEnabled(false);
+            ui->closeButton->setEnabled(true);
+            //ui->openButton->setEnabled(true);
+            static bool warn = true;
+            if (warn)
+            {
+                QMessageBox::warning(
+                    this, QApplication::applicationName(),
+                    tr("Select the exe by clicking Open and browsing to the "
+                        "required executable (CDTTStereo.jar) and selecting the file.  If the executable "
+                        "is valid click the Run button to start the test otherwise check the installation."));
+                warn = false;
+            }
+        });
+
     // Read inputs required to launch frax test
     // In simulate mode the barcode is always populated with a default of "00000000"
     //
@@ -213,7 +232,7 @@ void MainWindow::run()
     m_manager.setVerbose(m_verbose);
     m_manager.setRunMode(m_mode);
 
-     // read the path to blackbox.exe
+     // read the path to
     //
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);

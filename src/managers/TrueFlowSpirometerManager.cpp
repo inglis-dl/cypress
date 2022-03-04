@@ -7,15 +7,31 @@
 #include <QProcess>
 #include <QSettings>
 #include <QStandardItemModel>
+#include <QProcess>
+#include <QFile>
+
+#include "../prototype/TrueFlowSpirometer/OnyxOutXml.h"
 
 TrueFlowSpirometerManager::TrueFlowSpirometerManager(QObject* parent) : ManagerBase(parent)
 {
-    setGroup("template");
+    setGroup("trueflowspirometer");
 
     // all managers must check for barcode and language input values
     //
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
+    m_inputKeyList << "gender";
+    m_inputKeyList << "date_of_birth";
+    m_inputKeyList << "height";
+    m_inputKeyList << "weight";
+    //m_inputKeyList << "ethnicity";
+    m_inputKeyList << "smoker";
+    //m_inputKeyList << "asthma";
+    //m_inputKeyList << "copd";
+}
+
+TrueFlowSpirometerManager::~TrueFlowSpirometerManager()
+{
 }
 
 void TrueFlowSpirometerManager::start()
@@ -25,6 +41,14 @@ void TrueFlowSpirometerManager::start()
 
 void TrueFlowSpirometerManager::loadSettings(const QSettings& settings)
 {
+    // the full spec path name including exe name
+    // eg., C:/Program Files (x86)/ndd Medizintechnik/Easy on-PC/Application/EasyWarePro.exe
+    //
+    QString exeName = settings.value(getGroup() + "/client/exe").toString();
+    QString transferDir = settings.value(getGroup() + "/client/transferDir").toString();
+    QString transferInFilename = settings.value(getGroup() + "/client/transferInFilename").toString();
+    QString transferOutFilename = settings.value(getGroup() + "/client/transferOutFilename").toString();
+    selectRunnable(exeName);
 }
 
 void TrueFlowSpirometerManager::saveSettings(QSettings* settings) const
@@ -79,6 +103,24 @@ void TrueFlowSpirometerManager::buildModel(QStandardItemModel* model) const
     }
 }
 
+bool TrueFlowSpirometerManager::isDefined(const QString& runnableFullPath) const
+{
+    bool ok = false;
+    if (!runnableFullPath.isEmpty())
+    {
+        QFileInfo info(runnableFullPath);
+        if (info.exists() && "exe" == info.completeSuffix())
+        {
+            ok = true;
+        }
+        else
+            qDebug() << "ERROR: info does not exist for file " << runnableFullPath;
+    }
+    else
+        qDebug() << "ERROR: isDefined check on empty string";
+    return ok;
+}
+
 void TrueFlowSpirometerManager::measure()
 {
     if(CypressConstants::RunMode::Simulate == m_mode)
@@ -90,6 +132,14 @@ void TrueFlowSpirometerManager::measure()
     clearData();
     // launch the process
     qDebug() << "starting process from measure";
+    
+    
+
+    QString easyOnPcDirPath = "C:/ProgramData/ndd/Easy on-PC";
+    ResetEasyOnPcFiles(easyOnPcDirPath);
+    m_onyxInXml.write(easyOnPcDirPath);
+    LaunchEasyOnPc();
+    readOutput();
 }
 
 void TrueFlowSpirometerManager::setInputData(const QMap<QString, QVariant>& input)
@@ -98,6 +148,11 @@ void TrueFlowSpirometerManager::setInputData(const QMap<QString, QVariant>& inpu
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
+        m_inputData["gender"] = "Male";
+        m_inputData["date_of_birth"] = "1950-12-25";
+        m_inputData["height"] = 1.8;
+        m_inputData["weight"] = 100;
+        m_inputData["smoker"] = false;
         return;
     }
     bool ok = true;
@@ -114,8 +169,31 @@ void TrueFlowSpirometerManager::setInputData(const QMap<QString, QVariant>& inpu
         m_inputData.clear();
     else
     {
-    // DO SOMETHING
+        // Get participat info from inputs
+        QString gender = m_inputData["gender"].toString();
+        QDate birthDate = m_inputData["date_of_birth"].toDate();
+        double height = m_inputData["height"].toDouble();
+        double weight = m_inputData["weight"].toDouble();
+        bool smoker = m_inputData["smoker"].toBool();
+
+        // load participant info
+        m_onyxInXml.setParticipantInfo(gender, birthDate, height, weight, smoker);
     }
+}
+
+void TrueFlowSpirometerManager::selectRunnable(const QString& runnableFullPath)
+{
+    if (isDefined(runnableFullPath))
+    {
+        QFileInfo info(runnableFullPath);
+        m_runnableFullPath = runnableFullPath;
+        m_runnableDir = info.absolutePath();
+
+        emit runnableSelected();
+        configureProcess();
+    }
+    else
+        emit canSelectRunnable();
 }
 
 void TrueFlowSpirometerManager::readOutput()
@@ -127,12 +205,85 @@ void TrueFlowSpirometerManager::readOutput()
     }
 
     // Read the output for non simulate mode
+    bool loaded = m_test.loadData();
+    if (loaded) {
+        emit canWrite();
+    }
+    else {
+        // Todo: do something here
+    }
 }
 
 void TrueFlowSpirometerManager::clearData()
 {
     m_test.reset();
     emit dataChanged();
+}
+
+void TrueFlowSpirometerManager::LaunchEasyOnPc() 
+{
+    m_process.start();
+    bool launched = m_process.waitForFinished(100000000);
+    m_process.close();
+    qDebug() << "Easy on pc launched = " << launched << endl;
+}
+
+void TrueFlowSpirometerManager::ResetEasyOnPcFiles(const QString& dirPath) const
+{
+    // Delete OnyxOut.xml if it exists
+    QString onyxOutFilePath = QString("%1/OnyxOut.xml").arg(dirPath);
+    if (QFile::exists(onyxOutFilePath)) {
+        QFile::remove(onyxOutFilePath);
+    }
+
+    // Delete OnyxIn.xml if it exists
+    QString onyxInFilePath = QString("%1/OnyxIn.xml").arg(dirPath);
+    if (QFile::exists(onyxInFilePath)) {
+        QFile::remove(onyxInFilePath);
+    }
+
+    // TODO: Remove patient entries from EasyOnPc
+    // NOTE: Not sure where this data is stored
+}
+
+void TrueFlowSpirometerManager::configureProcess()
+{
+    if (CypressConstants::RunMode::Simulate == m_mode)
+    {
+        if (!m_inputData.isEmpty())
+        {
+            emit message(tr("Ready to measure..."));
+            emit canMeasure();
+        }
+        return;
+    }
+
+    QDir working(m_runnableDir);
+    if (isDefined(m_runnableFullPath) &&
+        working.exists())
+    {
+        qDebug() << "OK: configuring command";
+
+        // TODO: Check that a correct version of java is installed
+        QString command = QString("\"%1\"").arg(m_runnableFullPath);
+        //command = QString("\"C:\\Program Files (x86)\\ndd Medizintechnik\\Easy on-PC\\Application\\EasyWarePro.exe\"");
+        QStringList arguments;
+        //arguments << "-jar"
+        //    << m_runnableFullPath
+        //    << getInputDataValue("barcode").toString();
+
+        m_process.setProgram(command);
+        //m_process.setArguments(arguments);
+        m_process.setWorkingDirectory(working.absolutePath());
+
+        //qDebug() << "process config args: " << m_process.arguments().join(" ");
+        qDebug() << "process working dir: " << working.absolutePath();
+
+        emit message(tr("Ready to measure..."));
+        emit canMeasure();
+    }
+    else
+        qDebug() << "failed to configure process";
 }
 
 void TrueFlowSpirometerManager::finish()

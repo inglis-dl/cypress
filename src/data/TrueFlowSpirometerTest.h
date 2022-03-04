@@ -16,7 +16,7 @@ public:
     TrueFlowSpirometerTest();
     ~TrueFlowSpirometerTest() = default;
 
-    void fromFile(const QString&);
+    bool loadData();
 
     // String representation for debug and GUI display purposes
     //

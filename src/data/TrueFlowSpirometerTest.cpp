@@ -1,14 +1,71 @@
 #include "TrueFlowSpirometerTest.h"
 
+#include "../prototype//TrueFlowSpirometer/OnyxOutXml.h"
+#include "../prototype//TrueFlowSpirometer/Models/OutDataModel.h"
+
+const QString barcode = "barcode";
+const QString outputHeight = "output_height";
+const QString outputWeight = "output_weight";
+const QString outputEthnicity = "output_ethnicity";
+const QString outputAsthma = "output_asthma";
+const QString outputSmoker = "output_smoker";
+const QString outputCopd = "output_copd";
+const QString outputQualityGrade = "output_quality_grade";
+const QString resFvcPred2 = "res_fvc_pred2";
+const QString resFvcLlnormal2 = "res_fvc_llnormal2";
+const QString resFev1Pred2 = "res_fev1_pred2";
+const QString resFev1Llnormal2 = "res_fev1_llnormal2";
+const QString resFev1FvcPred2 = "res_fev1_fvc_pred2";
+const QString resFev1FvcLlnormal2 = "res_fev1_fvc_llnormal2";
+
 // the minimum output data keys required from a successful a test
 //
 TrueFlowSpirometerTest::TrueFlowSpirometerTest()
 {
-    m_outputKeyList << "barcode";
+    m_outputKeyList << barcode;
+    m_outputKeyList << outputHeight;
+    m_outputKeyList << outputWeight;
+    m_outputKeyList << outputEthnicity;
+    m_outputKeyList << outputAsthma;
+    m_outputKeyList << outputSmoker;
+    m_outputKeyList << outputCopd;
+    m_outputKeyList << outputQualityGrade;
+    m_outputKeyList << resFvcPred2;
+    m_outputKeyList << resFvcLlnormal2;
+    m_outputKeyList << resFev1Pred2;
+    m_outputKeyList << resFev1Llnormal2;
+    m_outputKeyList << resFev1FvcPred2;
+    m_outputKeyList << resFev1FvcLlnormal2;
 }
 
-void TrueFlowSpirometerTest::fromFile(const QString& filePath)
+bool TrueFlowSpirometerTest::loadData()
 {
+    OutDataModel outData = OnyxOutXml::ReadImportantValues();
+    m_metaData.setCharacteristic(outputHeight, outData.height);
+    m_metaData.setCharacteristic(outputWeight, outData.weight);
+    m_metaData.setCharacteristic(outputEthnicity, outData.ethnicity);
+    m_metaData.setCharacteristic(outputAsthma, outData.asthma);
+    m_metaData.setCharacteristic(outputSmoker, outData.smoker);
+    m_metaData.setCharacteristic(outputCopd, outData.copd);
+    m_metaData.setCharacteristic(outputQualityGrade, outData.qualityGrade);
+
+    // TODO: Figure out what these are
+    m_metaData.setCharacteristic(resFvcPred2, "?");
+    m_metaData.setCharacteristic(resFvcLlnormal2, "?");
+    m_metaData.setCharacteristic(resFev1Pred2, "?");
+    m_metaData.setCharacteristic(resFev1Llnormal2, "?");
+    m_metaData.setCharacteristic(resFev1FvcPred2, "?");
+    m_metaData.setCharacteristic(resFev1FvcLlnormal2, "?");
+
+    for(TrialDataModel trial: outData.trials) 
+    {
+        TrueFlowSpirometerMeasurement measurement;
+        measurement.fromTrialData(trial);
+        m_measurementList.append(measurement);
+    }
+
+    // TODO: return false if output is not satisfactory
+    return true;
 }
 
 // String representation for debug and GUI display purposes

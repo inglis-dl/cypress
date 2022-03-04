@@ -2,6 +2,7 @@
 #define TRUEFLOWSPIROMETERMEASUREMENT_H
 
 #include "../../src/data/MeasurementBase.h"
+#include "../prototype//TrueFlowSpirometer/Models/TrialDataModel.h"
 
 /*!
 * \class TrueFlowSpirometerMeasurement
@@ -16,7 +17,7 @@ public:
     TrueFlowSpirometerMeasurement() = default;
     ~TrueFlowSpirometerMeasurement() = default;
 
-    void fromString(const QString&);
+    void fromTrialData(const TrialDataModel&);
 
     bool isValid() const override;
 
