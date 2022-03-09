@@ -83,7 +83,6 @@ bool TonometerMeasurement::isValid() const
       if(!hasAttribute(it.key()))
       {
         ok = false;
-        qDebug() << "invalid measurement, missing attribute"<<it.key();
         break;
       }
       it++;
@@ -106,7 +105,6 @@ void TonometerMeasurement::fromJson(const QJsonObject& obj)
            TonometerMeasurement::unitsLUT[key] : QString();
 
          setAttribute(key, obj[it.value()].toVariant(), units);
-         qDebug() << "mesurement setting attribute" << key << getAttribute(key).toString();
        }
        it++;
     }
@@ -117,7 +115,6 @@ void TonometerMeasurement::simulate(const QString& side)
     double mu = QRandomGenerator::global()->generateDouble();
     reset();
     setAttribute("side", side);
-    qDebug() <<"echo"<< getAttribute("side").toString();
 
     QMap<QString,QString>::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
     int sample = qRound(Utilities::interp(37.0f,74.0f,mu));
@@ -179,8 +176,6 @@ void TonometerMeasurement::simulate(const QString& side)
       QString units = TonometerMeasurement::unitsLUT.contains(key) ?
                   TonometerMeasurement::unitsLUT[key] : QString();
       setAttribute(key, value, units);
-
-      qDebug() << QString("%1: %2").arg(key,getAttribute(key).toString());
     }
 }
 

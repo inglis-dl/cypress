@@ -20,7 +20,7 @@ QMap<QString,QString> TonometerTest::initMetaLUT()
   map["measure_number"] = "MeasureNumber";
   map["session_datetime"] = "SessionDate";
   map["patient_id"] = "PatientID";
-  map["ora_serial_number"] = "ORASerialNmber";
+  map["ora_serial_number"] = "ORASerialNumber";
   map["ora_software"] = "ORASoftware";
   map["pc_software"] = "PCSoftware";
   map["meds"] = "Meds";
@@ -120,7 +120,6 @@ void TonometerTest::fromJson(const QJsonArray &json)
                   if(obj.contains(it.value()))
                   {
                     addMetaData(it.key(),obj[it.value()].toVariant());
-                    qDebug() << "adding meta data" << it.key() << getMetaData(it.key()).toString();
                   }
                   it++;
                }
@@ -131,11 +130,8 @@ void TonometerTest::fromJson(const QJsonArray &json)
             m.fromJson(obj);
             if(m.isValid())
             {
-              qDebug() << "success add of measurement";
               addMeasurement(m);
             }
-            else
-                qDebug() << "error, invalid measurement, cannot add to test";
           }
         }
     }
@@ -234,6 +230,7 @@ bool TonometerTest::isValid() const
     {
       if(!hasMetaData(key))
       {
+         qDebug() << "error, test is missing metadata" << key;
          okMeta = false;
          break;
        }
