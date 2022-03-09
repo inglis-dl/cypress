@@ -1,49 +1,70 @@
 #include "TemplateTest.h"
 
+#include <QDebug>
+#include <QJsonObject>
+#include <QJsonArray>
+
 // the minimum output data keys required from a successful a test
 //
 TemplateTest::TemplateTest()
 {
-    m_outputKeyList << "barcode";
-}
-
-void TemplateTest::fromFile(const QString& filePath)
-{
+    // if a device returns a patient identifier for example:
+    // m_outputKeyList << "patient_id";
 }
 
 // String representation for debug and GUI display purposes
 //
 QString TemplateTest::toString() const
 {
-    QString displayString;
-    if (isValid())
+    QString str;
+    if(isValid())
     {
-        QStringList stringList;
-        for (auto&& measurement : m_measurementList)
-        {
-            stringList << measurement.toString();
-        }
-        displayString = stringList.join("\n");
+      QStringList list;
+      foreach(auto measurement, m_measurementList)
+      {
+        list << measurement.toString();
+      }
+      str = list.join("\n");
     }
-    return displayString;
+    return str;
 }
 
 bool TemplateTest::isValid() const
 {
-    return true;
+    bool okMeta = true;
+    foreach(auto key, m_outputKeyList)
+    {
+      if(!hasMetaData(key))
+      {
+         okMeta = false;
+         break;
+       }
+    }
+    bool okTest = 0 < getNumberOfMeasurements();
+    if(okTest)
+    {
+      foreach(auto m, m_measurementList)
+      {
+        if(!m.isValid())
+        {
+          okTest = false;
+          break;
+        }
+      }
+    }
+    return okMeta && okTest;
 }
 
-// String keys are converted to snake_case
-//
 QJsonObject TemplateTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    for (auto&& measurement : m_measurementList)
+    foreach(auto m, m_measurementList)
     {
-        jsonArr.append(measurement.toJsonObject());
+      jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    json.insert("test_meta_data", m_metaData.toJsonObject());
-    json.insert("test_results", jsonArr);
+    if(hasMetaData())
+      json.insert("test_meta_data",m_metaData.toJsonObject());
+    json.insert("test_results",jsonArr);
     return json;
 }

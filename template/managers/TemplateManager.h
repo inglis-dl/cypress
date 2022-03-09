@@ -16,9 +16,6 @@ public:
 
     void buildModel(QStandardItemModel*) const override;
 
-    int getNumberOfModelColumns() const override  { return 1; };
-    int getNumberOfModelRows() const override { return 1; };
-
     // Set the input data.
     // The input data is read from the input
     // json file to the main application.  This method should be
@@ -43,8 +40,6 @@ public slots:
     // data has been retrieved and processed by any upstream classes
     //
     void finish() override;
-
-    void readOutput();
 
 private:
     TemplateTest m_test;

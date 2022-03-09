@@ -1,22 +1,22 @@
 #ifndef TEMPLATEMEASUREMENT_H
 #define TEMPLATEMEASUREMENT_H
 
-#include "../../src/data/MeasurementBase.h"
+#include "../../src/data/Measurement.h"
 
 /*!
 * \class TemplateMeasurement
 * \brief A TemplateMeasurement class
 *
-* \sa MeasurementBase
+* \sa Measurement
 */
 
-class TemplateMeasurement : public MeasurementBase
+class TemplateMeasurement : public Measurement
 {
 public:
     TemplateMeasurement() = default;
     ~TemplateMeasurement() = default;
 
-    void fromString(const QString&);
+    void fromString(const QString& string) { };
 
     bool isValid() const override;
 

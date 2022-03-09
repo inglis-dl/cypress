@@ -4,19 +4,13 @@
 #include "../../src/data/TestBase.h"
 #include "TemplateMeasurement.h"
 
-#include <QDateTime>
-#include <QDebug>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QFileInfo>
-
 class TemplateTest : public TestBase<TemplateMeasurement>
 {
 public:
     TemplateTest();
     ~TemplateTest() = default;
 
-    void fromFile(const QString&);
+    void fromFile(const QString& string) { };
 
     // String representation for debug and GUI display purposes
     //
