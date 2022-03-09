@@ -49,7 +49,7 @@ void ChoiceReactionDialog::initializeConnections()
 
   // Disable all buttons by default
   //
-  for(auto&& x : this->findChildren<QPushButton *>())
+  for(auto x, this->findChildren<QPushButton *>())
   {
       x->setEnabled(false);
 
@@ -71,7 +71,7 @@ void ChoiceReactionDialog::initializeConnections()
   // Every instrument stage launched by an interviewer requires input
   // of the interview barcode that accompanies a participant.
   // The expected barcode is passed from upstream via .json file.
-  // In simulate mode this value is ignored and a default barcode "00000000" is
+  // In simulate mode this value is ignored and a default barcode Constants::DefaultBarcode is
   // assigned instead.
   // In production mode the input to the barcodeLineEdit is verified against
   // the content held by the manager and a message or exception is thrown accordingly
@@ -79,9 +79,9 @@ void ChoiceReactionDialog::initializeConnections()
   // TODO: for DCS interviews, the first digit corresponds the the wave rank
   // for inhome interviews there is a host dependent prefix before the barcode
   //
-  if(CypressConstants::RunMode::Simulate == m_mode)
+  if(Constants::RunMode::modeSimulate == m_mode)
   {
-    ui->barcodeWidget->setBarcode("00000000");
+    ui->barcodeWidget->setBarcode(Constants::DefaultBarcode);
   }
 
   connect(ui->barcodeWidget,&BarcodeWidget::validated,
@@ -103,7 +103,7 @@ void ChoiceReactionDialog::initializeConnections()
 
   connect(derived.get(),&ChoiceReactionManager::canSelectRunnable,
             this,[this](){
-        for(auto&& x : this->findChildren<QPushButton *>())
+        for(auto x, this->findChildren<QPushButton *>())
             x->setEnabled(false);
         ui->closeButton->setEnabled(true);
         ui->openButton->setEnabled(true);
@@ -185,7 +185,7 @@ void ChoiceReactionDialog::initializeConnections()
             this, &ChoiceReactionDialog::close);
 
   // Read inputs required to launch cognitive test
-  // In simulate mode the barcode is always populated with a default of "00000000"
+  // In simulate mode the barcode is always populated with a default of Constants::DefaultBarcode
   //
   readInput();
 }

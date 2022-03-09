@@ -58,9 +58,9 @@ void DialogBase::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
-        if(CypressConstants::RunMode::Simulate == m_mode)
+        if(Constants::RunMode::modeSimulate == m_mode)
         {
-            m_inputData["barcode"]="00000000";
+            m_inputData["barcode"]=Constants::DefaultBarcode;
         }
         else
         {

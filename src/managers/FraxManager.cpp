@@ -107,7 +107,7 @@ void FraxManager::saveSettings(QSettings* settings) const
 QJsonObject FraxManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if(CypressConstants::RunMode::Simulate != m_mode)
+    if(Constants::RunMode::modeSimulate != m_mode)
     {
       QFile ofile(m_outputFile);
       ofile.open(QIODevice::ReadOnly);
@@ -116,19 +116,15 @@ QJsonObject FraxManager::toJsonObject() const
       json.insert("test_output_file_mime_type","txt");
     }
     QJsonObject jsonInput;
-    for(auto&& x : m_inputData.toStdMap())
-    {
-        // convert to space delimited phrases to snake_case
-        //
-        jsonInput.insert(QString(x.first).toLower().replace(QRegExp("[\\s]+"),"_"), QJsonValue::fromVariant(x.second));
-    }
+    jsonInput.insert("barcode",m_inputData["barcode"].toJsonValue());
+    jsonInput.insert("language",m_inputData["language"].toJsonValue());
     json.insert("test_input",jsonInput);
     return json;
 }
 
 bool FraxManager::isDefined(const QString &exeName) const
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
        return true;
     }
@@ -164,7 +160,7 @@ void FraxManager::selectRunnable(const QString &runnableName)
 
 void FraxManager::measure()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         readOutput();
         return;
@@ -177,101 +173,118 @@ void FraxManager::measure()
 
 void FraxManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    m_inputData = input;
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-        m_inputData["barcode"] = "00000000";
+      if(!input.contains("barcode"))
+        m_inputData["barcode"] = Constants::DefaultBarcode;
+      if(!input.contains("language"))
         m_inputData["language"] = "english";
 
+      if(!input.contains("type"))
         m_inputData["type"] = "t";
+      if(!input.contains("country_code"))
         m_inputData["country_code"] = 19;
+      if(!input.contains("age"))
         m_inputData["age"] = 84.19;
+      if(!input.contains("sex"))
         m_inputData["sex"] = 0;
+      if(!input.contains("bmi"))
         m_inputData["bmi"] = 24.07;
+      if(!input.contains("previous_fracture"))
         m_inputData["previous_fracture"] = 0;
+      if(!input.contains("parent_hip_fracture"))
         m_inputData["parent_hip_fracture"] = 0;
+      if(!input.contains("current_smoker"))
         m_inputData["current_smoker"] = 0;
+      if(!input.contains("gluccocorticoid"))
         m_inputData["gluccocorticoid"] = 0;
+      if(!input.contains("rheumatoid_arthritis"))
         m_inputData["rheumatoid_arthritis"] = 0;
+      if(!input.contains("secondary_osteoporosis"))
         m_inputData["secondary_osteoporosis"] = 0;
+      if(!input.contains("alcohol"))
         m_inputData["alcohol"] = 0;
+      if(!input.contains("femoral_neck_bmd"))
         m_inputData["femoral_neck_bmd"] = -1.1;
-        return;
     }
     bool ok = true;
-    m_inputData = input;
     QStringList intKeys = {
         "sex","previous_fracture","parent_hip_fracture",
         "current_smoker","gluccocorticoid","rheumatoid_arthritis",
         "secondary_osteoporosis","alcohol"};
     QStringList doubleKeys = {"age","bmi","femoral_neck_bmd"};
-    for(auto&& x : m_inputKeyList)
+    foreach(auto key, m_inputKeyList)
     {
-        if(m_inputData.contains(x))
+      if(!m_inputData.contains(key))
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
+      else
+      {
+        if("barcode" == key || "language" == key) continue;
+        QVariant value = m_inputData[key];
+        bool valueOk = true;
+        if(intKeys.contains(key))
         {
-            if("barcode" == x || "language" == x) continue;
-            QVariant value = m_inputData[x];
-            bool valueOk = true;
-            if(intKeys.contains(x))
+          if((valueOk = value.canConvert(QMetaType::Int)))
+          {
+            int v = value.toInt();
+            if(!(1 == v || 0 == v))
             {
-              if((valueOk = value.canConvert(QMetaType::Int)))
-              {
-                int v = value.toInt();
-                if(!(1 == v || 0 == v))
-                {
-                    valueOk = false;
-                }
-              }
+              valueOk = false;
             }
-            else if(doubleKeys.contains(x))
-            {
-              valueOk = value.canConvert(QMetaType::Double);
-            }
-            if(!valueOk)
-            {
-              ok = false;
-              qDebug() << "ERROR: invalid input" << x << value.toString();
-              break;
-            }
+          }
         }
-        else
+        else if(doubleKeys.contains(key))
+        {
+          valueOk = value.canConvert(QMetaType::Double);
+        }
+        if(!valueOk)
         {
           ok = false;
-          qDebug() << "ERROR: missing expected input " << x;
+          if(m_verbose)
+            qDebug() << "ERROR: invalid input" << key << value.toString();
           break;
         }
+      }
     }
     if(!ok)
-        m_inputData.clear();
+    {
+      if(m_verbose)
+        qDebug() << "ERROR: invalid input data";
+
+      emit message(tr("ERROR: the input data is incorrect"));
+      m_inputData.clear();
+    }
     else
-        configureProcess();
+      configureProcess();
 }
 
 void FraxManager::readOutput()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-        qDebug() << "simulating read out";
+        if(m_verbose)
+          qDebug() << "simulating read out";
 
-        FraxMeasurement m;
-        m.setCharacteristic("type","osteoporotic_fracture");
-        m.setCharacteristic("probability", 1.0);
-        m.setCharacteristic("units","%");
-        m_test.addMeasurement(m);
-        m.setCharacteristic("type","hip_fracture");
-        m_test.addMeasurement(m);
-        m.setCharacteristic("type","osteoporotic_fracture_bmd");
-        m_test.addMeasurement(m);
-        m.setCharacteristic("type","hip_fracture_bmd");
-        m_test.addMeasurement(m);
-
-        for(auto&& x : m_inputData.toStdMap())
+        foreach(auto x, m_inputData.toStdMap())
         {
-          m_test.addMetaDataCharacteristic(x.first,x.second);
+          if("language" == x.first || "barcode" == x.first) continue;
+          if("age" == x.first)
+            m_test.addMetaData(x.first,x.second,"yr");
+          else if("bmi" == x.first)
+            m_test.addMetaData(x.first,x.second,"kg/m2");
+          else
+            m_test.addMetaData(x.first,x.second);
         }
+        m_test.simulate();
         emit message(tr("Ready to save results..."));
         emit canWrite();
         emit dataChanged();
-
         return;
     }
 
@@ -303,7 +316,7 @@ void FraxManager::readOutput()
 
 void FraxManager::configureProcess()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode &&
+    if(Constants::RunMode::modeSimulate == m_mode &&
        !m_inputData.isEmpty())
     {
         emit message(tr("Ready to measure..."));
@@ -338,11 +351,11 @@ void FraxManager::configureProcess()
         // exclude interview barcode and language
         //
         QStringList list;
-        for(auto&& x : m_inputKeyList)
+        foreach(auto key, m_inputKeyList)
         {
-            if("barcode" == x || "language" == x) continue;
-            if(m_inputData.contains(x))
-              list << m_inputData[x].toString();
+            if("barcode" == key || "language" == key) continue;
+            if(m_inputData.contains(key))
+              list << m_inputData[key].toString();
         }
         QString line = list.join(",");
         QFile ofile(m_inputFile);

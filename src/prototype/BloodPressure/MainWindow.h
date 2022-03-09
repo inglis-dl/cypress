@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include "../../managers/BloodPressureManager.h"
-#include "../../auxiliary/CypressConstants.h"
+#include "../../auxiliary/Constants.h"
 #include <QDialog>
 #include <QStandardItemModel>
 
@@ -33,8 +33,8 @@ public:
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
     QString getOutputFileName() const { return m_outputFileName; }
 
-    void setRunMode(const CypressConstants::RunMode& getRunMode) { m_mode = getRunMode; }
-    CypressConstants::RunMode getRunMode() const { return m_mode; }
+    void setRunMode(const Constants::RunMode& getRunMode) { m_mode = getRunMode; }
+    Constants::RunMode getRunMode() const { return m_mode; }
 
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() { return m_verbose; }
@@ -53,7 +53,7 @@ private:
     Ui::MainWindow* ui;
     QString m_inputFileName;
     QString m_outputFileName;
-    CypressConstants::RunMode m_mode;
+    Constants::RunMode m_mode;
     bool m_verbose;
 
     QMap<QString, QVariant> m_inputData;

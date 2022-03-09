@@ -26,12 +26,12 @@ CONFIG += c++11 console
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 HEADERS += ./MainWindow.h \
-    ../../data/MeasurementBase.h \
+    ../../data/Measurement.h \
     ../../data/BloodPressureMeasurement.h \
     ../../data/TestBase.h \
     ../../data/BloodPressureTest.h \
     ../../auxiliary/CommandLineParser.h \
-    ../../auxiliary/CypressConstants.h \
+    ../../auxiliary/Constants.h \
     ../../widgets/BarcodeWidget.h \
     ../../auxiliary/CRC8.h \
     ../../managers/BPMMessage.h \
@@ -45,8 +45,8 @@ SOURCES += ./MainWindow.cpp \
     ../../managers/BPMMessage.cpp \
     ../../managers/BPMCommunication.cpp \
     ../../auxiliary/CommandLineParser.cpp \
-    ../../auxiliary/CypressConstants.cpp \
-    ../../data/MeasurementBase.cpp \
+    ../../auxiliary/Constants.cpp \
+    ../../data/Measurement.cpp \
     ../../data/BloodPressureMeasurement.cpp \
     ../../data/BloodPressureTest.cpp \
     ../../widgets/BarcodeWidget.cpp \

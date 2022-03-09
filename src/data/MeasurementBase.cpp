@@ -6,7 +6,7 @@
 bool MeasurementBase::isValid() const
 {
     bool ok = true;
-    for(auto&& x : m_characteristicValues)
+    for(auto x, m_characteristicValues)
     {
       if(x.isNull())
       {
@@ -25,7 +25,7 @@ void MeasurementBase::reset()
 QString MeasurementBase::toString() const
 {
     QStringList l;
-    for(auto&& x :  m_characteristicValues)
+    for(auto x,  m_characteristicValues)
     {
       l << x.toString();
     }
@@ -35,7 +35,7 @@ QString MeasurementBase::toString() const
 QJsonObject MeasurementBase::toJsonObject() const
 {
     QJsonObject json;
-    for(auto&& x : m_characteristicValues.toStdMap())
+    for(auto x, m_characteristicValues.toStdMap())
     {
         // convert to space delimited phrases to snake_case
         //

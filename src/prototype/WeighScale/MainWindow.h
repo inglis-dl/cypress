@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include "../../managers/WeighScaleManager.h"
-#include "../../auxiliary/CypressConstants.h"
+#include "../../auxiliary/Constants.h"
 #include <QDialog>
 #include <QStandardItemModel>
 
@@ -33,8 +33,8 @@ public:
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
     QString outputFileName() { return m_outputFileName; }
 
-    void setRunMode(const CypressConstants::RunMode& mode) { m_mode = mode; }
-    CypressConstants::RunMode runMode() const { return m_mode; }
+    void setRunMode(const Constants::RunMode& mode) { m_mode = mode; }
+    Constants::RunMode runMode() const { return m_mode; }
 
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose(){ return m_verbose; }
@@ -53,7 +53,7 @@ private:
     Ui::MainWindow *ui;
     QString m_inputFileName;
     QString m_outputFileName;
-    CypressConstants::RunMode m_mode;
+    Constants::RunMode m_mode;
     bool m_verbose;
 
     QMap<QString,QVariant> m_inputData;

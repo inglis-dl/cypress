@@ -1,5 +1,4 @@
 #include "ManagerBase.h"
-#include <QDebug>
 
 ManagerBase::ManagerBase(QObject *parent) : QObject(parent)
 {

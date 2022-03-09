@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    for(auto&& id : m_usb.devices())
+    for(auto id, m_usb.devices())
     {
         QString line = "usb device id " + id;
         ui->listWidget->addItem(line);

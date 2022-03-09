@@ -1,11 +1,13 @@
 #include "WeighScaleManager.h"
 
 #include "../data/WeighScaleTest.h"
+#include "../auxiliary/Utilities.h"
 
 #include <QDateTime>
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QRandomGenerator>
 #include <QSerialPortInfo>
 #include <QSettings>
 #include <QStandardItemModel>
@@ -63,25 +65,33 @@ void WeighScaleManager::saveSettings(QSettings *settings) const
 
 void WeighScaleManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    m_inputData = input;
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-        m_inputData["barcode"] = "00000000";
+      if(!input.contains("barcode"))
+        m_inputData["barcode"] = Constants::DefaultBarcode;
+      if(!input.contains("language"))
         m_inputData["language"] = "english";
-        return;
     }
     bool ok = true;
-    m_inputData = input;
-    for(auto&& x : m_inputKeyList)
+    foreach(auto key, m_inputKeyList)
     {
-        if(!input.contains(x))
-        {
-            ok = false;
-            qDebug() << "ERROR: missing expected input " << x;
-            break;
-        }
+      if(!m_inputData.contains(key))
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
     }
     if(!ok)
-        m_inputData.clear();
+    {
+      if(m_verbose)
+        qDebug() << "ERROR: invalid input data";
+
+      emit message(tr("ERROR: the input data is incorrect"));
+      m_inputData.clear();
+    }
 }
 
 void WeighScaleManager::clearData()
@@ -103,7 +113,7 @@ void WeighScaleManager::connectDevice()
 {
     clearData();
 
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         m_request = QByteArray("i");
         writeDevice();
@@ -162,20 +172,22 @@ void WeighScaleManager::measure()
 
 void WeighScaleManager::readDevice()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         QString simdata;
         if("i" == QString(m_request))
          {
-           simdata = "12345";
+           simdata = "999999";
          }
          else if("z" == QString(m_request))
          {
-           simdata = "0.0 C body";
+           simdata = "0.0 kg gross";
          }
          else if("p" == QString(m_request))
          {
-            simdata = "36.1 C body";
+            double mu = QRandomGenerator::global()->generateDouble();
+            double w = Utilities::interp(77.0f,77.2f,mu);
+            simdata = QString("%1 kg gross").arg(QString::number(w,'f',1));
          }
          m_buffer = QByteArray(simdata.toUtf8());
     }
@@ -191,7 +203,7 @@ void WeighScaleManager::readDevice()
     {
       if("i" == QString(m_request))
       {
-        m_deviceData.setCharacteristic("software ID", QString(m_buffer.simplified()));
+        m_deviceData.setAttribute("software_id", QString(m_buffer.simplified()));
         // signal the GUI that the measure button can be clicked
         //
         emit message(tr("Ready to measure..."));
@@ -230,7 +242,7 @@ void WeighScaleManager::writeDevice()
     //
     m_buffer.clear();
 
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         if(m_verbose)
           qDebug() << "in simulate mode writeDevice with request " << QString(m_request);

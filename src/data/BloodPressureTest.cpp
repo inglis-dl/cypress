@@ -18,31 +18,32 @@ BloodPressureTest::BloodPressureTest()
     m_outputKeyList << "first_start_time";
     m_outputKeyList << "first_end_time";
 
-    m_outputKeyList << "avg_count";
     m_outputKeyList << "avg_systolic";
     m_outputKeyList << "avg_diastolic";
     m_outputKeyList << "avg_pulse";
+    m_outputKeyList << "avg_count";
 
     m_outputKeyList << "total_avg_systolic";
     m_outputKeyList << "total_avg_diastolic";
     m_outputKeyList << "total_avg_pulse";
+    m_outputKeyList << "total_avg_count";
 }
 
 // String representation for debug and GUI display purposes
 //
 QString BloodPressureTest::toString() const
 {
-    QString outputStr;
+    QString str;
     if(isValid())
     {
-        QStringList tempList;
-        for(auto&& measurement : m_measurementList)
+        QStringList list;
+        foreach(auto m, m_measurementList)
         {
-          tempList << measurement.toString();
+          list << m.toString();
         }
-        outputStr = tempList.join("\n");
+        str = list.join("\n");
     }
-    return outputStr;
+    return str;
 }
 
 void BloodPressureTest::simulate()
@@ -70,23 +71,20 @@ void BloodPressureTest::simulate()
 bool BloodPressureTest::isValid() const
 {
     bool okMeta = true;
-    for(auto&& x : m_outputKeyList)
+    foreach(auto key, m_outputKeyList)
     {
-      if(!hasMetaDataCharacteristic(x))
+      if(!hasMetaData(key))
       {
          okMeta = false;
-         qDebug() << "ERROR: missing test meta data " << x;
          break;
        }
     }
-
-    // need at least one measurement
     bool okTest = 1 <= getNumberOfMeasurements();
     if(okTest)
     {
-      for(auto&& x : m_measurementList)
+      foreach(auto m, m_measurementList)
       {
-        if(!x.isValid())
+        if(!m.isValid())
         {
           okTest = false;
           break;
@@ -101,13 +99,14 @@ bool BloodPressureTest::isValid() const
 QJsonObject BloodPressureTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    for(auto&& measurement : m_measurementList)
+    foreach(auto m, m_measurementList)
     {
-        jsonArr.append(measurement.toJsonObject());
+      jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    json.insert("test_meta_data", m_metaData.toJsonObject());
-    json.insert("test_results", jsonArr);
+    if(hasMetaData())
+      json.insert("test_meta_data",m_metaData.toJsonObject());
+    json.insert("test_results",jsonArr);
     return json;
 }
 
@@ -116,9 +115,9 @@ bool BloodPressureTest::verifyDeviceAverage(const int& sbp, const int& dbp, cons
     bool dataMatches = false;
     if(hasAverage())
     {
-        int avgSystolic = getMetaDataCharacteristic("avg_systolic").toInt();
-        int avgDiastolic = getMetaDataCharacteristic("avg_diastolic").toInt();
-        int avgPulse = getMetaDataCharacteristic("avg_pulse").toInt();
+        int avgSystolic = getMetaData("avg_systolic").toInt();
+        int avgDiastolic = getMetaData("avg_diastolic").toInt();
+        int avgPulse = getMetaData("avg_pulse").toInt();
         if(avgSystolic == sbp && avgDiastolic == dbp && avgPulse == pulse)
         {
           dataMatches = true;
@@ -147,11 +146,11 @@ void BloodPressureTest::addDeviceAverage(const int& sbpAvg, const int& dbpAvg, c
     }
     // add the first measurement as separate test meta data
     BloodPressureMeasurement first = m_measurementList.first();
-    addMetaDataCharacteristic("first_systolic",first.getSbp());
-    addMetaDataCharacteristic("first_diastolic",first.getDbp());
-    addMetaDataCharacteristic("first_pulse",first.getPulse());
-    addMetaDataCharacteristic("first_start_time",first.getCharacteristic("start_time"));
-    addMetaDataCharacteristic("first_end_time",first.getCharacteristic("end_time"));
+    addMetaData("first_systolic",first.getAttribute("systolic"));
+    addMetaData("first_diastolic",first.getAttribute("diastolic"));
+    addMetaData("first_pulse",first.getAttribute("pulse"));
+    addMetaData("first_start_time",first.getAttribute("start_time"));
+    addMetaData("first_end_time",first.getAttribute("end_time"));
 
     // skip the first measurement
     int count = 0;
@@ -176,14 +175,14 @@ void BloodPressureTest::addDeviceAverage(const int& sbpAvg, const int& dbpAvg, c
     double avgDbpCalc = dbpTotal * 1.0f / count;
     double avgPulseCalc = pulseTotal * 1.0f / count;
 
-    addMetaDataCharacteristic("avg_count", count);
+    addMetaData("avg_count", QVariant(count));
 
     qDebug() << QString("Averages: sbp(%1:%2) dbp(%3:%4) pulse(%5:%6)").arg(sbpAvg).arg(avgSbpCalc).arg(dbpAvg).arg(avgDbpCalc).arg(pulseAvg).arg(avgPulseCalc);
 
     bool ok = true;
     if(qRound(avgSbpCalc) == sbpAvg)
     {
-      addMetaDataCharacteristic("avg_systolic", sbpAvg);
+      addMetaData("avg_systolic", Measurement::Value(QVariant(sbpAvg),"mmHg"));
     }
     else
     {
@@ -192,7 +191,7 @@ void BloodPressureTest::addDeviceAverage(const int& sbpAvg, const int& dbpAvg, c
     }
     if(qRound(avgDbpCalc) == dbpAvg)
     {
-      addMetaDataCharacteristic("avg_diastolic", dbpAvg);      
+      addMetaData("avg_diastolic", Measurement::Value(QVariant(dbpAvg),"mmHg"));
     }
     else
     {
@@ -201,7 +200,7 @@ void BloodPressureTest::addDeviceAverage(const int& sbpAvg, const int& dbpAvg, c
     }
     if(qRound(avgPulseCalc) == pulseAvg)
     {
-      addMetaDataCharacteristic("avg_pulse", pulseAvg);
+      addMetaData("avg_pulse", Measurement::Value(QVariant(pulseAvg),"bpm"));
     }
     else
     {
@@ -218,13 +217,16 @@ void BloodPressureTest::computeTotalAverage(int sbpTotal, int dbpTotal, int puls
     if(hasFirstMeasurement())
     {
       int count = m_measurementList.count() + 1;
-      sbpTotal += getMetaDataCharacteristic("first_systolic").toInt();
-      dbpTotal += getMetaDataCharacteristic("first_diastolic").toInt();
-      pulseTotal += getMetaDataCharacteristic("first_pulse").toInt();
-      addMetaDataCharacteristic("total_avg_systolic", qRound(sbpTotal * 1.0f / count));
-      addMetaDataCharacteristic("total_avg_diastolic", qRound(dbpTotal * 1.0f / count));
-      addMetaDataCharacteristic("total_avg_pulse", qRound(pulseTotal * 1.0f / count));
-      addMetaDataCharacteristic("total_avg_count", count);
+      sbpTotal += getMetaData("first_systolic").toInt();
+      dbpTotal += getMetaData("first_diastolic").toInt();
+      pulseTotal += getMetaData("first_pulse").toInt();
+      addMetaData("total_avg_systolic",
+                  Measurement::Value(QVariant(qRound(sbpTotal * 1.0f / count)),"mmHg"));
+      addMetaData("total_avg_diastolic",
+                  Measurement::Value(QVariant(qRound(dbpTotal * 1.0f / count)),"mmHg"));
+      addMetaData("total_avg_pulse",
+                  Measurement::Value(QVariant(qRound(pulseTotal * 1.0f / count)),"bpm"));
+      addMetaData("total_avg_count", QVariant(count));
     }
     else
     {
@@ -234,45 +236,43 @@ void BloodPressureTest::computeTotalAverage(int sbpTotal, int dbpTotal, int puls
 
 bool BloodPressureTest::hasFirstMeasurement() const
 {
-  return hasMetaDataCharacteristic("first_start_time") &&
-         hasMetaDataCharacteristic("first_end_time") &&
-         hasMetaDataCharacteristic("first_systolic") &&
-         hasMetaDataCharacteristic("first_diastolic") &&
-         hasMetaDataCharacteristic("first_pulse");
+  return hasMetaData("first_start_time") &&
+         hasMetaData("first_end_time") &&
+         hasMetaData("first_systolic") &&
+         hasMetaData("first_diastolic") &&
+         hasMetaData("first_pulse");
 }
 
 bool BloodPressureTest::hasAverage() const
 {
-  return hasMetaDataCharacteristic("avg_systolic") &&
-         hasMetaDataCharacteristic("avg_diastolic") &&
-         hasMetaDataCharacteristic("avg_pulse") &&
-         hasMetaDataCharacteristic("avg_count");
+  return hasMetaData("avg_systolic") &&
+         hasMetaData("avg_diastolic") &&
+         hasMetaData("avg_pulse") &&
+         hasMetaData("avg_count");
 }
 
 bool BloodPressureTest::hasTotalAverage() const
 {
-  return hasMetaDataCharacteristic("total_avg_systolic") &&
-         hasMetaDataCharacteristic("total_avg_diastolic") &&
-         hasMetaDataCharacteristic("total_avg_pulse")&&
-         hasMetaDataCharacteristic("total_avg_count");
+  return hasMetaData("total_avg_systolic") &&
+         hasMetaData("total_avg_diastolic") &&
+         hasMetaData("total_avg_pulse")&&
+         hasMetaData("total_avg_count");
 }
 
 void BloodPressureTest::setCuffSize(const QString &size)
 {
-    qDebug() << "setting cuff size" << size;
-    addMetaDataCharacteristic("cuff_size", size);
+    addMetaData("cuff_size", QVariant(size));
 }
 
 void BloodPressureTest::setSide(const QString &side)
 {
-    qDebug() << "setting arm side" << side;
-    addMetaDataCharacteristic("side", side);
+    addMetaData("side", QVariant(side));
 }
 
 bool BloodPressureTest::armInformationSet() const
 {
-    return hasMetaDataCharacteristic("cuff_size")
-        && hasMetaDataCharacteristic("side");
+    return hasMetaData("cuff_size")
+        && hasMetaData("side");
 }
 
 void BloodPressureTest::reset()

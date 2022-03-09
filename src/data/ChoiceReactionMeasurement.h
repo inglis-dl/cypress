@@ -1,7 +1,7 @@
 #ifndef CHOICEREACTIONMEASUREMENT_H
 #define CHOICEREACTIONMEASUREMENT_H
 
-#include "MeasurementBase.h"
+#include "Measurement.h"
 
 /*!
 * \class ChoiceReationMeasurement
@@ -12,10 +12,10 @@
 * This class facilitates parsing comma delimited data from
 * the csv output of a test run.
 *
-* \sa MeasurementBase
+* \sa Measurement
 */
 
-class ChoiceReactionMeasurement : public MeasurementBase
+class ChoiceReactionMeasurement : public Measurement
 {
 public:
     ChoiceReactionMeasurement() = default;

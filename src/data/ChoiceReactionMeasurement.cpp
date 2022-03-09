@@ -26,18 +26,17 @@ const int ChoiceReactionMeasurement::TEST_CODE = 11;
 void ChoiceReactionMeasurement::fromString(const QString &s)
 {
     // parse the comma deliminated string
-    QStringList l = s.split(",");
-    if(15 == l.size())
+    QStringList list = s.split(",");
+    if(15 == list.size())
     {
-        int code = l.at(0).toInt();
+        int code = list.at(0).toInt();
         if(ChoiceReactionMeasurement::TEST_CODE == code)
         {
-            setCharacteristic("screen id",l.at(7));
-            setCharacteristic("response correct", l.at(8).toUInt());
-            setCharacteristic("elapsed time",l.at(9).toUInt());
-            setCharacteristic("units","ms");
-            setCharacteristic("correct position",l.at(10).toLower());
-            setCharacteristic("response stimulus interval",l.at(11).toUInt());
+            setAttribute("screen_id",list.at(7));
+            setAttribute("response_correct", list.at(8).toUInt());
+            setAttribute("elapsed_time",list.at(9).toUInt(),"ms");
+            setAttribute("correct_position",list.at(10).toLower());
+            setAttribute("response_stimulus_interval",list.at(11).toUInt(),"ms");
         }
     }
 }
@@ -45,11 +44,10 @@ void ChoiceReactionMeasurement::fromString(const QString &s)
 bool ChoiceReactionMeasurement::isValid() const
 {
     bool ok =
-            hasCharacteristic("response correct") &&
-            hasCharacteristic("elapsed time") &&
-            hasCharacteristic("units") &&
-            hasCharacteristic("correct position") &&
-            hasCharacteristic("response stimulus interval");
+      hasAttribute("response_correct") &&
+      hasAttribute("elapsed_time") &&
+      hasAttribute("correct_position") &&
+      hasAttribute("response_stimulus_interval");
     return ok;
 }
 
@@ -58,12 +56,10 @@ QString ChoiceReactionMeasurement::toString() const
   QString s;
   if(isValid())
   {
-    s = getCharacteristic("correct position").toString() +
-        (getCharacteristic("response correct").toBool() ? " correct, time: " : " incorrect, time: ") +
-         QString::number(getCharacteristic("elapsed time").toUInt()) +
-        "(" + getCharacteristic("units").toString() + "), interval: " +
-         QString::number(getCharacteristic("response stimulus interval").toUInt()) +
-        "(" + getCharacteristic("units").toString() + ")";
+    s = getAttribute("correct_position").toString() +
+        (getAttributeValue("response_correct").toBool() ? " correct, time: " : " incorrect, time: ") +
+         getAttribute("elapsed_time").toString() + ", interval: " +
+         getAttribute("response_stimulus_interval").toString();
   }
   return s;
 }
@@ -81,13 +77,12 @@ ChoiceReactionMeasurement ChoiceReactionMeasurement::simulate()
     int high = stimulus_interval + 200;
     int time = QRandomGenerator::global()->bounded(low,high);
 
-    m.setCharacteristic("screen id",
-      "RT" + QStringLiteral("%1").arg(id+7,2,10,QLatin1Char('0')));
-    m.setCharacteristic("response correct", 1);
-    m.setCharacteristic("elapsed time",time);
-    m.setCharacteristic("units","ms");
-    m.setCharacteristic("correct position",(0 == (id % 2) ? "left" : "right"));
-    m.setCharacteristic("response stimulus interval",stimulus_interval);
+    m.setAttribute("screen_id",
+      QString("RT%1").arg(id+7,2,10,QLatin1Char('0')));
+    m.setAttribute("response_correct", true);
+    m.setAttribute("elapsed_time",time,"ms");
+    m.setAttribute("correct_position",(0 == (id % 2) ? "left" : "right"));
+    m.setAttribute("response_stimulus_interval",stimulus_interval,"ms");
 
     if(60 < id++) id = 1;
 

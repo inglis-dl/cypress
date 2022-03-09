@@ -6,21 +6,32 @@
 #include <QJsonArray>
 #include <QStringBuilder>
 
+BodyCompositionTest::BodyCompositionTest()
+{
+    m_outputKeyList << "body_type";
+    m_outputKeyList << "gender";
+    m_outputKeyList << "test_datetime";
+    m_outputKeyList << "age";
+    m_outputKeyList << "height";
+}
+
 bool BodyCompositionTest::isValid() const
 {
-    bool okMeta =
-      hasMetaDataCharacteristic("body type") &&
-      hasMetaDataCharacteristic("gender") &&
-      hasMetaDataCharacteristic("test datetime") &&
-      hasMetaDataCharacteristic("age") &&
-      hasMetaDataCharacteristic("height");
-
-    bool okTest = 8 == getNumberOfMeasurements();
+    bool okMeta = true;
+    foreach(auto key, m_outputKeyList)
+    {
+      if(!hasMetaData(key))
+      {
+         okMeta = false;
+         break;
+       }
+    }
+    bool okTest = 1 == getNumberOfMeasurements();
     if(okTest)
     {
-      for(auto&& x : m_measurementList)
+      foreach(auto m, m_measurementList)
       {
-        if(!x.isValid())
+        if(!m.isValid())
         {
           okTest = false;
           break;
@@ -30,27 +41,36 @@ bool BodyCompositionTest::isValid() const
     return okMeta && okTest;
 }
 
-QString BodyCompositionTest::toString() const
+QStringList BodyCompositionTest::toStringList() const
 {
-    QString s;
-    if(isValid())
-    {
-        QStringList l;
-        l << QString("body type: ") % getMetaDataCharacteristic("body type").toString();
-        l << QString("gender: ") % getMetaDataCharacteristic("gender").toString();
-        l << QString("test datetime: ") % getMetaDataCharacteristic("test datetime").toDateTime().toString("yyyy-MM-dd hh:mm:ss");
-        l << QString("age: ") % getMetaDataCharacteristic("age").toString();
-        l << QString("height: ") % getMetaDataCharacteristic("height").toString();
-        for(auto&& x : m_measurementList)
-        {
-            l << x.toString();
-        }
-        s = l.join("\n");
-    }
-    return s;
+  QStringList list;
+  if(isValid())
+  {
+      list << getMetaData("body_type").toString();
+      list << getMetaData("gender").toString();
+      list << getMetaData("test_datetime").toString();
+      list << getMetaData("age").toString();
+      list << getMetaData("height").toString();
+      auto m = getMeasurement(0);
+      foreach(auto att, m.getAttributes())
+      {
+        list << m.toString();
+      }
+  }
+  return list;
 }
 
-// The TanitaManager class provides the data after validating
+QString BodyCompositionTest::toString() const
+{
+    QString str;
+    if(isValid())
+    {
+      str = toStringList().join("\n");
+    }
+    return str;
+}
+
+// The manager class provides the data after validating
 // it via hasEndCode(arr) before passing to this class
 //
 void BodyCompositionTest::fromArray(const QByteArray &arr)
@@ -59,62 +79,38 @@ void BodyCompositionTest::fromArray(const QByteArray &arr)
     {
       reset();
       m_array = arr;
+      Constants::UnitsSystem unitsSystem = getUnitsSystem();
+      QString sys = Constants::getUnitsSystemName(unitsSystem);
 
       // NOTE: input body type can be overridden by the analyzer
       // depending on age and gender.  The body type used by
       // analyzer is recovered from the test output data here.
       //
-      addMetaDataCharacteristic("body_type", readBodyType());
-      addMetaDataCharacteristic("gender", readGender());
-      addMetaDataCharacteristic("test_datetime", QDateTime::currentDateTime());
-      addMetaDataCharacteristic("age", readAge());
-      addMetaDataCharacteristic("height", readHeight());
+      addMetaData("test_datetime", QDateTime::currentDateTime());
+      addMetaData("body_type", readBodyType());
+      addMetaData("gender", readGender());
+      addMetaData("age", readAge());
 
-      QString sys = getMeasurementSystem();
+      QString units = "metric" == sys ? "cm" : "in";
+      addMetaData("height", Measurement::Value(readHeight(),units));
 
       BodyCompositionMeasurement m;
-      m.setCharacteristic("weight", readWeight());
-      m.setCharacteristic("units",("metric" == sys ? "kg" : "lb"));
-      addMeasurement(m);
-
-      m.reset();
-      m.setCharacteristic("impedance", readImpedence());
-      m.setCharacteristic("units","ohm");
-      addMeasurement(m);
-
-      m.reset();
-      m.setCharacteristic("percent fat", readFatPercent());
-      m.setCharacteristic("units","%");
-      addMeasurement(m);
-
-      m.reset();
-      m.setCharacteristic("fat mass", readFatMass());
-      m.setCharacteristic("units",("metric" == sys ? "kg" : "lb"));
-      addMeasurement(m);
-
-      m.reset();
-      m.setCharacteristic("fat free mass", readFatFreeMass());
-      m.setCharacteristic("units",("metric" == sys ? "kg" : "lb"));
-      addMeasurement(m);
-
-      m.reset();
-      m.setCharacteristic("total body water", readTotalBodyWater());
-      m.setCharacteristic("units",("metric" == sys ? "kg" : "lb"));
-      addMeasurement(m);
-
-      m.reset();
-      m.setCharacteristic("body mass index", readBMI());
-      m.setCharacteristic("units",("metric" == sys ? "kg/cm2" : "lb/in2"));
-      addMeasurement(m);
+      units = "metric" == sys ? "kg" : "lb";
+      m.setAttribute("weight", Measurement::Value(readWeight(),units));
+      m.setAttribute("impedance", Measurement::Value(readImpedence(),"ohm"));
+      m.setAttribute("percent_fat", Measurement::Value(readFatPercent(),"%"));
+      m.setAttribute("fat_mass", Measurement::Value(readFatMass(),units));
+      m.setAttribute("fat_free_mass", Measurement::Value(readFatFreeMass(),units));
+      m.setAttribute("total_body_water", Measurement::Value(readTotalBodyWater(),units));
+      units = "metric" == sys ? "kg/cm2" : "lb/in2";
+      m.setAttribute("body_mass_index", Measurement::Value(readBMI(),units));
 
       // TODO: check if bmr is always givin in kJ
       // conversions:
       // 1 kcal = 4.187 kJ
       // 1 kJ = 0.2388 kcal
       //
-      m.reset();
-      m.setCharacteristic("basal metabolic rate", readBMR());
-      m.setCharacteristic("units","kJ");
+      m.setAttribute("basal_metabolic_rate", Measurement::Value(readBMR(),"kJ"));
       addMeasurement(m);
     }
 }
@@ -141,7 +137,7 @@ QVariant BodyCompositionTest::readHeight() const
 {
     QString s = readArray(4,8).trimmed();
     bool ok;
-    float result = s.toFloat(&ok);
+    float result = s.toDouble(&ok);
     return ok ? QVariant(result) : QVariant();
 }
 
@@ -152,7 +148,7 @@ QVariant BodyCompositionTest::readWeight() const
     if(!s.isEmpty())
     {
       bool ok;
-      float value = s.toFloat(&ok);
+      float value = s.toDouble(&ok);
       if(ok)
       {
         char buffer[10];
@@ -167,7 +163,7 @@ QVariant BodyCompositionTest::readImpedence() const
 {
     QString s = readArray(16,18).trimmed();
     bool ok;
-    float result = s.toFloat(&ok);
+    float result = s.toDouble(&ok);
     return ok ? QVariant(result) : QVariant();
 }
 
@@ -178,7 +174,7 @@ QVariant BodyCompositionTest::readFatPercent() const
     if(!s.isEmpty())
     {
       bool ok;
-      float value = s.toFloat(&ok);
+      float value = s.toDouble(&ok);
       if(ok)
       {
         char buffer[10];
@@ -196,7 +192,7 @@ QVariant BodyCompositionTest::readFatMass() const
     if(!s.isEmpty())
     {
       bool ok;
-      float value = s.toFloat(&ok);
+      float value = s.toDouble(&ok);
       if(ok)
       {
         char buffer[10];
@@ -214,7 +210,7 @@ QVariant BodyCompositionTest::readFatFreeMass() const
     if(!s.isEmpty())
     {
       bool ok;
-      float value = s.toFloat(&ok);
+      float value = s.toDouble(&ok);
       if(ok)
       {
         char buffer[10];
@@ -232,7 +228,7 @@ QVariant BodyCompositionTest::readTotalBodyWater() const
     if(!s.isEmpty())
     {
       bool ok;
-      float value = s.toFloat(&ok);
+      float value = s.toDouble(&ok);
       if(ok)
       {
         char buffer[10];
@@ -261,7 +257,7 @@ QVariant BodyCompositionTest::readBMI() const
     if(!s.isEmpty())
     {
       bool ok;
-      float value = s.toFloat(&ok);
+      float value = s.toDouble(&ok);
       if(ok)
       {
         char buffer[10];
@@ -279,7 +275,7 @@ QVariant BodyCompositionTest::readBMR() const
     if(!s.isEmpty())
     {
       bool ok;
-      float value = s.toFloat(&ok);
+      float value = s.toDouble(&ok);
       if(ok)
       {
         char buffer[10];
@@ -293,13 +289,13 @@ QVariant BodyCompositionTest::readBMR() const
 QJsonObject BodyCompositionTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    for(auto&& x : m_measurementList)
+    foreach(auto m, m_measurementList)
     {
-        QJsonObject test = x.toJsonObject();
-        jsonArr.append(test);
+      jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    json.insert("test_meta_data",m_metaData.toJsonObject());
+    if(hasMetaData())
+      json.insert("test_meta_data",m_metaData.toJsonObject());
     json.insert("test_results",jsonArr);
     return json;
 }

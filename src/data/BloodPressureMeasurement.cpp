@@ -9,24 +9,24 @@ BloodPressureMeasurement::BloodPressureMeasurement(
         const int &sbp, const int& dbp, const int& pulse,
         const QDateTime &start, const QDateTime& end)
 {
-    setCharacteristic("reading_number", readingNum);
-    setCharacteristic("systolic", sbp);
-    setCharacteristic("diastolic", dbp);
-    setCharacteristic("pulse", pulse);
-    setCharacteristic("start_time", start);
-    setCharacteristic("end_time", end);
+    setAttribute("reading_number", Measurement::Value(readingNum));
+    setAttribute("systolic", Measurement::Value(sbp,"mmHg"));
+    setAttribute("diastolic", Measurement::Value(dbp,"mmHg"));
+    setAttribute("pulse", Measurement::Value(pulse,"bpm"));
+    setAttribute("start_time", Measurement::Value(start));
+    setAttribute("end_time", Measurement::Value(end));
 }
 
 bool BloodPressureMeasurement::isValid() const
 {
-    bool hasAllRequiredCharacteristics =
-        hasCharacteristic("systolic") 
-        && hasCharacteristic("diastolic")
-        && hasCharacteristic("pulse")
-        && hasCharacteristic("start_time")
-        && hasCharacteristic("end_time")
-        && hasCharacteristic("reading_number");
-    if(!hasAllRequiredCharacteristics)
+    bool hasAllRequiredAttributes =
+        hasAttribute("systolic")
+        && hasAttribute("diastolic")
+        && hasAttribute("pulse")
+        && hasAttribute("start_time")
+        && hasAttribute("end_time")
+        && hasAttribute("reading_number");
+    if(!hasAllRequiredAttributes)
     {
       return false;
     }
@@ -47,12 +47,12 @@ bool BloodPressureMeasurement::isValid() const
 QString BloodPressureMeasurement::toString() const
 {
     return QString("%1. SBP: %2 DBP: %3 Pulse: %4 (%5 -> %6)").arg(
-        getCharacteristic("reading_number").toString(),
-        getCharacteristic("systolic").toString(),
-        getCharacteristic("diastolic").toString(),
-        getCharacteristic("pulse").toString(),
-        getCharacteristic("start_time").toDateTime().toString("yyyy-MM-dd  HH:mm:ss"),
-        getCharacteristic("end_time").toDateTime().toString("HH:mm:ss"));
+        getAttributeValue("reading_number").toString(),
+        getAttributeValue("systolic").toString(),
+        getAttributeValue("diastolic").toString(),
+        getAttributeValue("pulse").toString(),
+        getAttributeValue("start_time").toString(),
+        getAttributeValue("end_time").toString());
 }
 
 BloodPressureMeasurement BloodPressureMeasurement::simulate(const int& reading)

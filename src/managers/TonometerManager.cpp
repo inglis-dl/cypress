@@ -28,6 +28,8 @@ TonometerManager::TonometerManager(QObject* parent):
     //
     m_inputKeyList << "date_of_birth"; // format dd/MM/YY 00:00:00, BirthDate column in Patients table
     m_inputKeyList << "sex";           // 0  = female, 1 = male, Sex column in Patients table
+
+    m_test.setMaximumNumberOfMeasurements(2);
 }
 
 TonometerManager::~TonometerManager()
@@ -67,7 +69,7 @@ void TonometerManager::start()
 void TonometerManager::buildModel(QStandardItemModel *model) const
 {
     QVector<QString> v_side({"left","right"});
-    for(auto&& side : v_side)
+    foreach(auto side, v_side)
     {
       int col = "left" == side ? 0 : 1;
       QStringList list = m_test.getMeasurementStrings(side);
@@ -110,15 +112,13 @@ void TonometerManager::saveSettings(QSettings* settings) const
 
 QJsonObject TonometerManager::toJsonObject() const
 {
-    QJsonObject json;
-    if(m_test.isValid())
-      json = m_test.toJsonObject();
+    QJsonObject json = m_test.toJsonObject();
     return json;
 }
 
 bool TonometerManager::isDefined(const QString &fileName, TonometerManager::FileType type) const
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
        return true;
     }
@@ -208,61 +208,68 @@ void TonometerManager::selectDatabase(const QString &dbName)
 
 void TonometerManager::measure()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-        readOutput();
-        return;
+      readOutput();
+      return;
     }
     clearData();
     // launch the process
-    qDebug() << "starting process from measure";
+    if(m_verbose)
+      qDebug() << "Starting process from measure";
+
     m_process.start();
 }
 
 void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    m_inputData = input;
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-        m_inputData["barcode"] = "00000000";
-        m_inputData["language"] = "english";
+      if(!input.contains("barcode"))
+        m_inputData["barcode"] = Constants::DefaultBarcode;
+      if(!input.contains("language"))
+          m_inputData["language"] = "english";
+      if(!input.contains("date_of_birth"))
         m_inputData["date_of_birth"] = "1965-12-17";
+      if(!input.contains("sex"))
         m_inputData["sex"] = -1;
     }
-    else
-      m_inputData = input;
-
     bool ok = true;
-    for(auto&& x : m_inputKeyList)
+    foreach(auto key, m_inputKeyList)
     {
-        if(m_inputData.contains(x))
+        if(m_inputData.contains(key))
         {
-           QVariant value = m_inputData[x];
-           if("sex" == x)
+           QVariant value = m_inputData[key];
+           if("sex" == key)
            {
              if(QVariant::Type::String == value.type())
              {
-                m_inputData[x] = value.toString().toLower().startsWith("f") ? 0 : -1;
+                m_inputData[key] = value.toString().toLower().startsWith("f") ? 0 : -1;
              }
            }
         }
         else
         {
-            ok = false;
-            qDebug() << "ERROR: missing expected input " << x;
-            break;
+          ok = false;
+          if(m_verbose)
+            qDebug() << "ERROR: missing expected input" << key;
+          break;
         }
     }
     if(!ok)
     {
+      if(m_verbose)
         qDebug() << "ERROR: invalid input data";
-        emit message(tr("ERROR: the input data is incorrect"));
-        m_inputData.clear();
+
+      emit message(tr("ERROR: the input data is incorrect"));
+      m_inputData.clear();
     }
 }
 
 void TonometerManager::readOutput()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         m_test.simulate(m_inputData);
         if(m_test.isValid())
@@ -315,7 +322,7 @@ void TonometerManager::configureProcess()
 {
     if(m_inputData.isEmpty()) return;
 
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         emit message(tr("Ready to measure..."));
         emit canMeasure();
@@ -457,7 +464,7 @@ void TonometerManager::clearData()
 
 void TonometerManager::finish()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
       return;
     }

@@ -7,7 +7,7 @@
 class BodyCompositionTest : public TestBase<BodyCompositionMeasurement>
 {
 public:
-    BodyCompositionTest() = default;
+    BodyCompositionTest();
     ~BodyCompositionTest() = default;
 
     void fromArray(const QByteArray &);
@@ -16,6 +16,8 @@ public:
     //
     QString toString() const override;
 
+    QStringList toStringList() const;
+
     bool isValid() const override;
 
     // String keys are converted to snake_case
@@ -23,6 +25,7 @@ public:
     QJsonObject toJsonObject() const override;
 
 private:
+    QList<QString> m_outputKeyList;
     QByteArray m_array;
     QString readArray(const quint8 &, const quint8 &) const;
 

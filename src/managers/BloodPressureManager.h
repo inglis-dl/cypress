@@ -143,7 +143,7 @@ private:
     void clearData() override;
 
     // device data is separate from test data
-    MeasurementBase m_deviceData;
+    Measurement m_deviceData;
 
     // the usb hid device
     QString m_deviceName;

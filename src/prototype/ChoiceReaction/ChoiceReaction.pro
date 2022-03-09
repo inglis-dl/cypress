@@ -26,10 +26,10 @@ CONFIG += c++11 console
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
-    ../../auxiliary/CypressConstants.h \
+    ../../auxiliary/Constants.h \
     ../../data/ChoiceReactionMeasurement.h \
     ../../data/ChoiceReactionTest.h \
-    ../../data/MeasurementBase.h \
+    ../../data/Measurement.h \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \
     ../../managers/ChoiceReactionManager.h \
@@ -38,8 +38,8 @@ HEADERS += \
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-    ../../auxiliary/CypressConstants.cpp \
-    ../../data/MeasurementBase.cpp \
+    ../../auxiliary/Constants.cpp \
+    ../../data/Measurement.cpp \
     ../../data/ChoiceReactionMeasurement.cpp \
     ../../data/ChoiceReactionTest.cpp \
     ../../managers/ManagerBase.cpp \

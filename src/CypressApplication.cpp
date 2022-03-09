@@ -4,7 +4,7 @@
 #include <QDir>
 #include <QFileInfo>
 
-#include "./auxiliary/CypressConstants.h"
+#include "./auxiliary/Constants.h"
 #include "./dialogs/DialogFactory.h"
 #include "./dialogs/DialogBase.h"
 
@@ -23,9 +23,9 @@ void CypressApplication::setArgs(const QMap<QString, QVariant> &args)
     if(args.contains("outputFileName"))
       m_outputFileName = args["outputFileName"].toString();
     if(args.contains("measureType"))
-      m_type = args["measureType"].value<CypressConstants::MeasureType>();
+      m_type = args["measureType"].value<Constants::MeasureType>();
     if(args.contains("runMode"))
-      m_mode = args["runMode"].value<CypressConstants::RunMode>();
+      m_mode = args["runMode"].value<Constants::RunMode>();
     if(args.contains("verbose"))
       m_verbose = args["verbose"].toBool();
 }

@@ -24,7 +24,13 @@ public:
     static QMap<QByteArray,QString> initIncorrectResponseLUT();
     static QMap<QByteArray,QString> initConfirmationLUT();
 
+    // set inputs from json file or by default
+    //
     void setInputData(const QMap<QString,QVariant> &) override;
+
+    // update inputs from the UI
+    //
+    void updateInputData(const QMap<QString,QVariant> &);
 
     static int AGE_MIN;
     static int AGE_MAX;

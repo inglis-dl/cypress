@@ -14,6 +14,9 @@
  * The returned QVariant from processQuery method must be interpreted
  * within the context of the current operation.
  *
+ * CAVEAT: the schema is assumed to be that of the Reichert Tonometer.
+ * The implementation herein should be refactored for other schema.
+ *
  * \sa TonometerManager, TonometerTest
  *
  */

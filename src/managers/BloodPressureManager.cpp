@@ -67,7 +67,7 @@ void BloodPressureManager::start()
 
 bool BloodPressureManager::isDefined(const QString &label) const
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
       return true;
     }
@@ -85,7 +85,7 @@ void BloodPressureManager::loadSettings(const QSettings& settings)
     QUsb::Id info;
     info.pid = settings.value(getGroup() + "/client/pid").toInt();
     info.vid = settings.value(getGroup() + "/client/vid").toInt();
-    selectDevice(info);
+    selectDeviceById(info);
 }
 
 void BloodPressureManager::saveSettings(QSettings* settings) const
@@ -136,7 +136,7 @@ void BloodPressureManager::scanDevices()
     emit scanningDevices();
     if(m_verbose)
       qDebug() << "start scanning for devices...";
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
       QUsb::Id info;
       info.pid = 1;
@@ -225,17 +225,18 @@ void BloodPressureManager::scanDevices()
 
 void BloodPressureManager::setDevice(const QUsb::Id &info)
 {
+    qDebug() << "manager setting device with info";
     m_deviceData.reset();
     m_device = QUsb::Id();
 
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
        // get the device data
-       m_deviceData.setCharacteristic("usb_hid_product_id", info.pid);
-       m_deviceData.setCharacteristic("usb_hid_vendor_id", info.vid);
-       m_deviceData.setCharacteristic("usb_hid_manufacturer", "BpTru");
-       m_deviceData.setCharacteristic("usb_hid_serial_number", "simulated");
-       m_deviceData.setCharacteristic("usb_hid_product", "BPM200");
+       m_deviceData.setAttribute("usb_hid_product_id", info.pid);
+       m_deviceData.setAttribute("usb_hid_vendor_id", info.vid);
+       m_deviceData.setAttribute("usb_hid_manufacturer", "BpTru");
+       m_deviceData.setAttribute("usb_hid_serial_number", "simulated");
+       m_deviceData.setAttribute("usb_hid_product", "BPM200");
        emit message(tr("Ready to connect..."));
        emit canConnectDevice();
        return;
@@ -253,19 +254,19 @@ void BloodPressureManager::setDevice(const QUsb::Id &info)
     QHidDevice device;
     if(device.open(info.pid,info.vid))
     {
-        // signal the GUI that the device is connectable so that
-        // the connect button can be clicked
-        //
         QString serial = device.serialNumber();
         QString manufacturer = device.manufacturer();
         QString product = device.product();
-        m_deviceData.setCharacteristic("usb_hid_product_id", info.pid);
-        m_deviceData.setCharacteristic("usb_hid_vendor_id", info.vid);
-        m_deviceData.setCharacteristic("usb_hid_manufacturer", manufacturer);
-        m_deviceData.setCharacteristic("usb_hid_serial_number", serial);
-        m_deviceData.setCharacteristic("usb_hid_product", product);
+        m_deviceData.setAttribute("usb_hid_product_id", info.pid);
+        m_deviceData.setAttribute("usb_hid_vendor_id", info.vid);
+        m_deviceData.setAttribute("usb_hid_manufacturer", manufacturer);
+        m_deviceData.setAttribute("usb_hid_serial_number", serial);
+        m_deviceData.setAttribute("usb_hid_product", product);
         m_device = info;
 
+        // signal the GUI that the device is connectable so that
+        // the connect button can be clicked
+        //
         emit message(tr("Ready to connect..."));
         emit canConnectDevice();
         device.close();
@@ -309,14 +310,16 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
     for(int row = 0; row < n_total; row++)
     {
         BloodPressureMeasurement m = m_test.getMeasurement(row);
-        qDebug() <<"model build" << m;
+        if(m_verbose)
+          qDebug() <<"model build" << m;
+
         QStringList list = (QStringList()
-          << m.getCharacteristic("reading_number").toString()
-          << m.getCharacteristic("start_time").toDateTime().toString("HH:mm:ss")
-          << m.getCharacteristic("end_time").toDateTime().toString("HH:mm:ss")
-          << m.getCharacteristic("systolic").toString()
-          << m.getCharacteristic("diastolic").toString()
-          << m.getCharacteristic("pulse").toString());
+          << m.getAttribute("reading_number").toString()
+          << m.getAttribute("start_time").toString()
+          << m.getAttribute("end_time").toString()
+          << m.getAttribute("systolic").toString()
+          << m.getAttribute("diastolic").toString()
+          << m.getAttribute("pulse").toString());
         for(int col = 0; col < m_col; col ++)
         {
             QStandardItem* item = model->item(row,col);
@@ -339,7 +342,7 @@ void BloodPressureManager::measure()
 
     emit message(tr("Measuring blood pressure..."));
     clearData();
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
       m_test.simulate();
       emit dataChanged();
@@ -356,33 +359,41 @@ void BloodPressureManager::measure()
 
 void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    if(CypressConstants::RunMode::Simulate == m_mode && input.isEmpty())
+    m_inputData = input;
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-        m_inputData["barcode"] = "00000000";
-        m_inputData["language"] = "english";
-        return;
+        if(!input.contains("barcode"))
+          m_inputData["barcode"] = Constants::DefaultBarcode;
+        if(!input.contains("language"))
+          m_inputData["language"] = "english";
     }
     bool ok = true;
-    for(auto&& x : m_inputKeyList)
+    foreach(auto key, m_inputKeyList)
     {
-        if(!input.contains(x))
-        {
-            ok = false;
-            break;
-        }
-        else
-            m_inputData[x] = input[x];
+      if(!m_inputData.contains(key))
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
     }
     if(!ok)
-        m_inputData.clear();
+    {
+      if(m_verbose)
+        qDebug() << "ERROR: invalid input data";
+
+      emit message(tr("ERROR: the input data is incorrect"));
+      m_inputData.clear();
+    }
     else
     {
       // optional json inputs
       //
-      if(input.contains("side"))
-          setSide(input["side"].toString());
-      if(input.contains("cuff_size"))
-          setCuffSize(input["cuff_size"].toString());
+      if(m_inputData.contains("side"))
+          setSide(m_inputData["side"].toString());
+      if(m_inputData.contains("cuff_size"))
+          setCuffSize(m_inputData["cuff_size"].toString());
     }
 }
 
@@ -397,7 +408,7 @@ void BloodPressureManager::clearData()
 void BloodPressureManager::disconnectDevice()
 {
     m_aborted = false;
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
       emit message(tr("Ready to connect..."));
       emit canConnectDevice();
@@ -470,7 +481,7 @@ void BloodPressureManager::finalReviewAvailable(
 //
 void BloodPressureManager::connectDevice()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         if(m_test.armInformationSet())
         {
@@ -521,13 +532,13 @@ void BloodPressureManager::deviceInfoAvailable()
     QString manufacturer = m_comm->manufacturer();
     QString version = m_comm->version();
     if(!product.isEmpty() && 0 < product.length())
-      m_deviceData.setCharacteristic("usb_hid_product",product);
+      m_deviceData.setAttribute("usb_hid_product",product);
     if(!serial.isEmpty() && 0 < serial.length())
-      m_deviceData.setCharacteristic("usb_hid_serial_number",serial);
+      m_deviceData.setAttribute("usb_hid_serial_number",serial);
     if(!manufacturer.isEmpty() && 0 < manufacturer.length())
-      m_deviceData.setCharacteristic("usb_hid_manufacturer",manufacturer);
+      m_deviceData.setAttribute("usb_hid_manufacturer",manufacturer);
     if(!version.isEmpty() && 0 < version.length())
-      m_deviceData.setCharacteristic("usb_hid_version",version);
+      m_deviceData.setAttribute("usb_hid_version",version);
 }
 
 // slot for BPMCommunication

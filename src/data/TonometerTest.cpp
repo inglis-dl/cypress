@@ -1,4 +1,5 @@
 #include "TonometerTest.h"
+#include "../auxiliary/Utilities.h"
 
 #include <QDateTime>
 #include <QDebug>
@@ -7,36 +8,7 @@
 #include <QRandomGenerator>
 #include <algorithm>
 
-#define interp(MU, A, B) ((1.0 - (MU))*(A) + (MU)*(B))
-
-QMap<QString,QString> TonometerTest::variableLUT = TonometerTest::initVariableLUT();
 QMap<QString,QString> TonometerTest::metaLUT = TonometerTest::initMetaLUT();
-QMap<QString,QString> TonometerTest::unitsLUT = TonometerTest::initUnitsLUT();
-
-QMap<QString,QString> TonometerTest::initVariableLUT()
-{
-  QMap<QString,QString> map;
-
-  map["measure_id"] = "MeasureID";
-  map["measure_datetime"] = "MeasureDate";
-  map["side"] = "Eye";
-  map["iopg"] = "IOPG";
-  map["iopcc"] = "IOPCC";
-  map["crf"] = "CRF";
-  map["cct_avg"] = "CCTAvg";
-  map["cct_lowest"] = "CCTLowest";
-  map["cct_sd"] = "CCTSD";
-  map["ch"] = "CH";
-  map["tear_film_value"] = "TearFilmValue";
-  map["pressure"] = "Pressure";
-  map["applanation"] = "Applanation";
-  map["time_in"] = "TimeIn";
-  map["time_out"] = "TimeOut";
-  map["quality_index"] = "QualityIndex";
-  map["indexes"] = "Indexes";
-
-  return map;
-}
 
 QMap<QString,QString> TonometerTest::initMetaLUT()
 {
@@ -70,23 +42,6 @@ QMap<QString,QString> TonometerTest::initMetaLUT()
   return map;
 }
 
-QMap<QString,QString> TonometerTest::initUnitsLUT()
-{
-  QMap<QString,QString> map;
-
-  map["iopg"] = "mmHg";
-  map["iopcc"] = "mmHg";
-  map["crf"] = "mmHg";
-  map["ch"] = "mmHg";
-  map["cct_avg"] = "um";
-  map["cct_avg"] = "um";
-  map["cct_avg"] = "um";
-  map["time_in"] = "ms";
-  map["time_out"] = "ms";
-
-  return map;
-}
-
 TonometerTest::TonometerTest()
 {
     // exam meta data
@@ -115,25 +70,6 @@ TonometerTest::TonometerTest()
     m_outputKeyList << "b_abc";           // double (range -23.85 - -3.42) "b_ABC"
     m_outputKeyList << "b_pp";            // double (not applicable? always 6.12) "b_PP"
     m_outputKeyList << "best_weighted";   // uint (not applicable? always 0 or false) "BestWeighted"
-
-    // data per eye
-    m_outputKeyList << "measure_id";      // int (range 1 - 3) "MeasureID" primary key in Measures table
-    m_outputKeyList << "measure_datetime";    // datetime "MeasureDate"
-    m_outputKeyList << "side";            // string (L,R) "Eye" (convert to {left,right}
-    m_outputKeyList << "iopg";            // double (range 5.6 - 28.3) mmHg "IOPG" : IOP = Goldmann-correlated intraocular pressure (IOP)
-    m_outputKeyList << "iopcc";           // double (range 0.8 - 34.8) mmHg "IOPCC" : corneal-compensated IOP
-    m_outputKeyList << "crf";             // double (range 0.45 - 18.3) mmHg "CRF" : corneal resistance factor
-    m_outputKeyList << "cct_avg";         // double (not applicable? always 0) um "CCTAvg" : CCT = central corneal thickness
-    m_outputKeyList << "cct_lowest";      // double (not applicable? always 0) um "CCTLowest"
-    m_outputKeyList << "cct_sd";           // double (not applicable? always 0) um "CCTSD"
-    m_outputKeyList << "ch";              // double (range 4.3 - 17.5) mmHg "CH" : corneal hysteresis
-    m_outputKeyList << "tear_film_value"; // double (range -14 - 31.4) "TearFilmValue"
-    m_outputKeyList << "pressure";        // string comma delim int vector "Pressure"
-    m_outputKeyList << "applanation";     // string comma delim int vector "Applanation"
-    m_outputKeyList << "time_in";         // double (range 5.7 - 9.8) msec "TimeIn"
-    m_outputKeyList << "time_out";        // double (16.4 - 21.3) msec "TimeOut"
-    m_outputKeyList << "quality_index";   // double (range 0 - 10) "QualityIndex" : waveform score
-    m_outputKeyList << "indexes";         // string comma delim double vector "Indexes"
 }
 
 void TonometerTest::fromJson(const QJsonArray &json)
@@ -147,7 +83,7 @@ void TonometerTest::fromJson(const QJsonArray &json)
     // data from the most recent
     //
     QList<QDateTime> dateList;
-    for(auto&& x : json)
+    foreach(auto x, json)
     {
         QJsonObject obj = x.toObject();
         if(obj.contains("SessionDate"))
@@ -159,14 +95,14 @@ void TonometerTest::fromJson(const QJsonArray &json)
     }
 
     std::sort(dateList.begin(),dateList.end());
-    for(auto&& x : dateList)
+    foreach(auto x, dateList)
     {
       qDebug() << "sorted session" << x.toString();
     }
     QDateTime lastSession = dateList.last();
 
     bool meta = false;
-    for(auto&& x : json)
+    foreach(auto x, json)
     {
         QJsonObject obj = x.toObject();
         if(obj.contains("SessionDate") && obj.contains("Eye"))
@@ -182,29 +118,17 @@ void TonometerTest::fromJson(const QJsonArray &json)
                while(it != TonometerTest::metaLUT.constEnd())
                {
                   if(obj.contains(it.value()))
-                    addMetaDataCharacteristic(it.key(),obj[it.value()].toVariant());
-                  ++it;
+                    addMetaData(it.key(),obj[it.value()].toVariant());
+                  it++;
                }
                meta = true;
             }
 
-            QString side = "L" == obj["Eye"].toVariant().toString() ? "left" : "right";
-            QMap<QString,QString>::const_iterator it = TonometerTest::variableLUT.constBegin();
-            while(it != TonometerTest::variableLUT.constEnd())
+            TonometerMeasurement m;
+            m.fromJson(obj);
+            if(m.isValid())
             {
-               QString key = it.key();
-               if("side" != key && obj.contains(it.value()))
-               {
-                 TonometerMeasurement m;
-                 m.setCharacteristic("name", key);
-                 m.setCharacteristic("value", obj[it.value()].toVariant());
-                 m.setCharacteristic("side",side);
-                 m.setCharacteristic("units",
-                   TonometerTest::unitsLUT.contains(key) ? TonometerTest::unitsLUT[key] : QVariant());
-
-                 addMeasurement(m);
-               }
-               ++it;
+              addMeasurement(m);
             }
           }
         }
@@ -216,11 +140,18 @@ QStringList TonometerTest::getMeasurementStrings(const QString &side) const
     QStringList list;
     if(isValid())
     {
-      for(auto&& x : m_measurementList)
+      foreach(auto m, m_measurementList)
       {
-        if(side == x.getCharacteristic("side").toString())
+        if(side == m.getAttribute("side").toString())
         {
-          list.push_back(x.toString());
+            QMap<QString,QString>::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
+            while(it != TonometerMeasurement::variableLUT.constEnd())
+            {
+               QString key = it.key();
+               it++;
+               if("side" == key) continue;
+               list << QString("%1: %2").arg(key,m.getAttribute(key).toString());
+            }
         }
       }
     }
@@ -231,63 +162,45 @@ void TonometerTest::simulate(const QMap<QString, QVariant> &input)
 {
     reset();
     qDebug() << "generating simulated data";
-    addMetaDataCharacteristic("id",input["barcode"]);
-    addMetaDataCharacteristic("sex",input["sex"]);
-    addMetaDataCharacteristic("date_of_birth",input["date_of_birth"].toDateTime());
+    addMetaData("id",input["barcode"]);
+    addMetaData("sex",input["sex"]);
+    addMetaData("date_of_birth",input["date_of_birth"].toDateTime());
 
     double mu = QRandomGenerator::global()->generateDouble();
 
-    addMetaDataCharacteristic("measure_number",1);
-    addMetaDataCharacteristic("session_datetime",QDateTime::currentDateTime());
-    addMetaDataCharacteristic("patient_id",1234);
-    addMetaDataCharacteristic("ora_serial_number","000073158");
-    addMetaDataCharacteristic("ora_software","2.11");
-    addMetaDataCharacteristic("pc_software","3.01");
-    addMetaDataCharacteristic("meds",QString(""));
-    addMetaDataCharacteristic("conditions",QString(""));
-    addMetaDataCharacteristic("notes_1",QString(""));
-    addMetaDataCharacteristic("notes_2",QString(""));
-    addMetaDataCharacteristic("notes_3",QString(""));
-    addMetaDataCharacteristic("m_g2",6.711f);
-    addMetaDataCharacteristic("b_g2",68.0f);
-    addMetaDataCharacteristic("m_g3",4.444f);
-    addMetaDataCharacteristic("b_g3",-22.9f);
-    addMetaDataCharacteristic("iop_cc_coef",0.43f);
-    addMetaDataCharacteristic("crf_coef",0.7f);
-    addMetaDataCharacteristic("m_abc",interp(mu,1.03,1.09));
-    addMetaDataCharacteristic("b_abc",interp(mu,-23.85,-3.42));
-    addMetaDataCharacteristic("b_pp",6.12f);
-    addMetaDataCharacteristic("best_weighted",0);
+    addMetaData("measure_number",1);
+    addMetaData("session_datetime",QDateTime::currentDateTime());
+    addMetaData("patient_id",QRandomGenerator::global()->bounded(1000, 9999));
+    addMetaData("ora_serial_number","000073158");
+    addMetaData("ora_software","2.11");
+    addMetaData("pc_software","3.01");
+    addMetaData("meds",QString(""));
+    addMetaData("conditions",QString(""));
+    addMetaData("notes_1",QString(""));
+    addMetaData("notes_2",QString(""));
+    addMetaData("notes_3",QString(""));
+    addMetaData("m_g2",6.711f);
+    addMetaData("b_g2",68.0f);
+    addMetaData("m_g3",4.444f);
+    addMetaData("b_g3",-22.9f);
+    addMetaData("iop_cc_coef",0.43f);
+    addMetaData("crf_coef",0.7f);
+    addMetaData("m_abc",Utilities::interp(1.03,1.09,mu));
+    addMetaData("b_abc",Utilities::interp(-23.85,-3.42,mu));
+    addMetaData("b_pp",6.12f);
+    addMetaData("best_weighted",0);
 
     QStringList sides = {"left","right"};
-
-    for(auto&& side : sides)
+    foreach(auto side, sides)
     {
-        qDebug() << "simulating side" << side;
-        for(auto&& key : TonometerTest::variableLUT.keys())
+        TonometerMeasurement m;
+        m.simulate(side);
+        if(m.isValid())
         {
-          if("side" == key) continue;
-          TonometerMeasurement m;
-          m.setCharacteristic("name", key);
-          QVariant value;
-          if(key.endsWith("datetime"))
-              value = QDateTime::currentDateTime();
-          else if(key.startsWith("cct_"))
-              value = 0.0f;
-          else if("pressure"==key || "applanation" == key || "indexes" == key)
-              value = QString("1,2,3,4,5,6");
-          else
-              value = 1.0f;
-
-          m.setCharacteristic("name",key);
-          m.setCharacteristic("value",value);
-          m.setCharacteristic("side",side);
-          m.setCharacteristic("units",
-            TonometerTest::unitsLUT.contains(key) ? TonometerTest::unitsLUT[key] : QVariant());
-
-          qDebug() << "adding" << key<<m.toString()<<(m.isValid()?"VALID":"INVALID");
           addMeasurement(m);
         }
+        else
+          qDebug() << "ERROR: simulated measurement is invalid";
     }
 }
 
@@ -295,61 +208,55 @@ void TonometerTest::simulate(const QMap<QString, QVariant> &input)
 //
 QString TonometerTest::toString() const
 {
-    QString outStr;
+    QString str;
     if(isValid())
     {
-        QStringList tempList;
-        for(auto&& measurement : m_measurementList)
-        {
-            tempList << measurement.toString();
-        }
-        outStr = tempList.join("\n");
+      QStringList list;
+      foreach(auto m, m_measurementList)
+      {
+         list << m.toString();
+      }
+      str = list.join("\n");
     }
-    return outStr;
+    return str;
 }
 
 bool TonometerTest::isValid() const
 {
     bool okMeta = true;
-    for(auto&& x : m_outputKeyList)
+    foreach(auto key, m_outputKeyList)
     {
-      if(!TonometerTest::metaLUT.contains(x)) continue;
-      if(!hasMetaDataCharacteristic(x))
+      if(!hasMetaData(key))
       {
          okMeta = false;
-         qDebug() << "ERROR: missing test meta data " << x;
          break;
        }
     }
-    bool okTest = (2*(TonometerTest::variableLUT.size()-1)) == getNumberOfMeasurements();
+    bool okTest = 2 == getNumberOfMeasurements();
     if(okTest)
     {
-      for(auto&& x : m_measurementList)
+      foreach(auto m, m_measurementList)
       {
-        if(!x.isValid())
+        if(!m.isValid())
         {
           okTest = false;
-          qDebug() << "ERROR: invalid test measurement";
           break;
         }
       }
     }
-    else
-        qDebug() <<"ERROR: wrong number of measurements"<<QString::number(TonometerTest::variableLUT.size())<<
-                   QString::number(getNumberOfMeasurements());
-
     return okMeta && okTest;
 }
 
 QJsonObject TonometerTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    for(auto&& x : m_measurementList)
+    foreach(auto m, m_measurementList)
     {
-        jsonArr.append(x.toJsonObject());
+      jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    json.insert("test_meta_data",m_metaData.toJsonObject());
+    if(hasMetaData())
+      json.insert("test_meta_data",m_metaData.toJsonObject());
     json.insert("test_results",jsonArr);
     return json;
 }

@@ -17,22 +17,20 @@ HearingTest::HearingTest()
 bool HearingTest::isValid() const
 {
     bool okMeta = true;
-    for(auto&& x : m_outputKeyList)
+    foreach(auto key, m_outputKeyList)
     {
-      if(!hasMetaDataCharacteristic(x))
+      if(!hasMetaData(key))
       {
          okMeta = false;
-         qDebug() << "ERROR: missing test meta data " << x;
          break;
        }
     }
-
     bool okTest = 16 == getNumberOfMeasurements();
     if(okTest)
     {
-      for(auto&& x : m_measurementList)
+      foreach(auto m, m_measurementList)
       {
-        if(!x.isValid())
+        if(!m.isValid())
         {
           okTest = false;
           break;
@@ -47,9 +45,9 @@ bool HearingTest::isPartial() const
     bool okTest = 0 < getNumberOfMeasurements();
     if(okTest)
     {
-      for(auto&& x : m_measurementList)
+      foreach(auto m, m_measurementList)
       {
-        if(!x.isValid())
+        if(!m.isValid())
         {
           okTest = false;
           break;
@@ -61,27 +59,29 @@ bool HearingTest::isPartial() const
 
 QString HearingTest::toString() const
 {
-    QString s;
+    QString str;
     if(isValid())
     {
-        QStringList l;
-        l << QString("patient id: ") % getMetaDataCharacteristic("patient_id").toString();
-        l << QString("test id: ") % getMetaDataCharacteristic("test_id").toString();
-        l << QString("test datetime: ") % getMetaDataCharacteristic("test_datetime").toDateTime().toString("yyyy-MM-dd hh:mm:ss");
-        l << QString("last calibration date: ") % getMetaDataCharacteristic("last_calibration_date").toDate().toString("yyyy-MM-dd");
-        for(auto&& x : m_measurementList)
+        QStringList list;
+        list << QString("patient id: ") % getMetaData("patient_id").toString();
+        list << QString("test id: ") % getMetaData("test_id").toString();
+        list << QString("test datetime: ") % getMetaData("test_datetime").toDateTime().toString("yyyy-MM-dd hh:mm:ss");
+        list << QString("last calibration date: ") % getMetaData("last_calibration_date").toDate().toString("yyyy-MM-dd");
+        foreach(auto m, m_measurementList)
         {
-            l << x.toString();
+          list << m.toString();
         }
-        s = l.join("\n");
+        str = list.join("\n");
     }
-    return s;
+    return str;
 }
 
 QString HearingTest::readArray(const quint8 &begin, const quint8 &end) const
 {
-    int len = end-begin+1;
-    return 0<len && end<m_array.size() ? QString::fromLatin1(m_array.mid(begin, len)) : QString();
+    int len = end - begin + 1;
+    return (0 < len && end < m_array.size() ?
+            QString::fromLatin1(m_array.mid(begin, len)) :
+            QString());
 }
 
 // The AudiometerManager class provides the data after validating
@@ -94,21 +94,18 @@ void HearingTest::fromArray(const QByteArray &arr)
         reset();
         m_array = arr;
 
-        addMetaDataCharacteristic("patient_id",readPatientID());
-        addMetaDataCharacteristic("test_id",readTestID());
-        addMetaDataCharacteristic("test_datetime",readTestDateTime());
-        addMetaDataCharacteristic("last_calibration_date",readCalibrationDate());
+        addMetaData("patient_id",readPatientID());
+        addMetaData("test_id",readTestID());
+        addMetaData("test_datetime",readTestDateTime());
+        addMetaData("last_calibration_date",readCalibrationDate());
 
-        QList<HearingMeasurement> l_htl = readHearingThresholdLevels("left");
-        QList<HearingMeasurement> r_htl = readHearingThresholdLevels("right");
-
-        for(auto&& x : l_htl)
+        QStringList sides = {"left","right"};
+        foreach(auto side, sides)
         {
-          addMeasurement(x);
-        }
-        for(auto&& x : r_htl)
-        {
-          addMeasurement(x);
+          foreach(auto m, readHearingThresholdLevels(side))
+          {
+            addMeasurement(m);
+          }
         }
     }
 }
@@ -145,16 +142,15 @@ QString HearingTest::readExaminerID() const
 QList<HearingMeasurement> HearingTest::readHearingThresholdLevels(const QString& side) const
 {
   QList<HearingMeasurement> htl;
-  QString s = ("left" == side.toLower()) ?
+  QString str = ("left" == side.toLower()) ?
     readArray(75,106).trimmed() :
     readArray(107,138).trimmed();
 
-  QStringList s_list = s.split(QRegExp("\\s+")).replaceInStrings(QRegExp("^\\s+|\\s+$"),"");
-  int i_freq = 0;
-  foreach(auto atom, s_list)
+  QStringList list = str.split(QRegExp("\\s+")).replaceInStrings(QRegExp("^\\s+|\\s+$"),"");
+  int index = 0;
+  foreach(auto code, list)
   {
-    HearingMeasurement m;
-    m.fromCode(side, i_freq++, atom);
+    HearingMeasurement m(side, index++, code);
     htl.append(m);
   }
 
@@ -163,29 +159,29 @@ QList<HearingMeasurement> HearingTest::readHearingThresholdLevels(const QString&
 
 HearingMeasurement HearingTest::getMeasurement(const QString& side, const int& index) const
 {
-    HearingMeasurement m;
-    for(auto&& x : m_measurementList)
+    HearingMeasurement measure;
+    foreach(auto m, m_measurementList)
     {
-        if(side == x.getCharacteristic("side").toString() &&
-           HearingMeasurement::frequencyLookup[index] == x.getCharacteristic("test"))
+        if(side == m.getAttributeValue("side").toString() &&
+           HearingMeasurement::frequencyLookup[index] == m.getAttributeValue("test").toString())
         {
-            m = x;
-            break;
+          measure = m;
+          break;
         }
     }
-    return m;
+    return measure;
 }
 
 QJsonObject HearingTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    for(auto&& x : m_measurementList)
+    foreach(auto m, m_measurementList)
     {
-        QJsonObject test = x.toJsonObject();
-        jsonArr.append(test);
+      jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    json.insert("test_meta_data",m_metaData.toJsonObject());
+    if(hasMetaData())
+      json.insert("test_meta_data",m_metaData.toJsonObject());
     json.insert("test_results",jsonArr);
     return json;
 }

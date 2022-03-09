@@ -1,27 +1,39 @@
 #ifndef TONOMETERMEASUREMENT_H
 #define TONOMETERMEASUREMENT_H
 
-#include "MeasurementBase.h"
+#include "Measurement.h"
 
 /*!
 * \class TonometerMeasurement
 * \brief A Tonometer Measurement class
 *
-* Tonometer measurements are derived from output.txt file produced by Tonometer blackbox.exe
+* Tonometer measurements are derived from MS Access database files.
 * This class facilitates converting the given inputs to output.
 *
-* \sa MeasurementBase
+* \sa Measurement, TonometerTest
 */
 
-class TonometerMeasurement : public MeasurementBase
+QT_FORWARD_DECLARE_CLASS(QJsonObject)
+
+class TonometerMeasurement : public Measurement
 {
 public:
     TonometerMeasurement() = default;
     ~TonometerMeasurement() = default;
 
+    void fromJson(const QJsonObject&);
+
     bool isValid() const override;
 
     QString toString() const override;
+
+    void simulate(const QString&);
+
+    static QMap<QString,QString> variableLUT;
+    static QMap<QString,QString> unitsLUT;
+
+    static QMap<QString,QString> initVariableLUT();
+    static QMap<QString,QString> initUnitsLUT();
 };
 
 Q_DECLARE_METATYPE(TonometerMeasurement);

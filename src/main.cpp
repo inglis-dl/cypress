@@ -7,7 +7,7 @@
 #include <QMessageBox>
 #include <QDebug>
 
-#include "./auxiliary/CypressConstants.h"
+#include "./auxiliary/Constants.h"
 
 int main(int argc, char *argv[])
 {

@@ -46,7 +46,7 @@ void AudiometerDialog::initializeConnections()
 
   // Disable all buttons by default
   //
-  for(auto&& x : this->findChildren<QPushButton *>())
+  for(auto x, this->findChildren<QPushButton *>())
   {
       x->setEnabled(false);
 
@@ -68,7 +68,7 @@ void AudiometerDialog::initializeConnections()
   // Every instrument stage launched by an interviewer requires input
   // of the interview barcode that accompanies a participant.
   // The expected barcode is passed from upstream via .json file.
-  // In simulate mode this value is ignored and a default barcode "00000000" is
+  // In simulate mode this value is ignored and a default barcode Constants::DefaultBarcode is
   // assigned instead.
   // In production mode the input to the barcodeLineEdit is verified against
   // the content held by the manager and a message or exception is thrown accordingly
@@ -76,9 +76,9 @@ void AudiometerDialog::initializeConnections()
   // TODO: for DCS interviews, the first digit corresponds the the wave rank
   // for inhome interviews there is a host dependent prefix before the barcode
   //
-  if(CypressConstants::RunMode::Simulate == m_mode)
+  if(Constants::RunMode::modeSimulate == m_mode)
   {
-    ui->barcodeWidget->setBarcode("00000000");
+    ui->barcodeWidget->setBarcode(Constants::DefaultBarcode);
   }
 
   connect(ui->barcodeWidget,&BarcodeWidget::validated,

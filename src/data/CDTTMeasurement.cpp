@@ -5,14 +5,7 @@
 bool CDTTMeasurement::isValid() const
 {
     bool ok =
-            hasCharacteristic("name") &&
-            hasCharacteristic("value");
-    if(ok)
-    {
-        QStringList list = {"speech_reception_threshold","standard_deviation","reversal_count","trial_count"};
-        QString name = getCharacteristic("name").toString();
-        ok = (list.contains(name) || name.startsWith("stimulus") || name.startsWith("response"));
-    }
+      hasAttribute("trial");
     return ok;
 }
 
@@ -21,8 +14,13 @@ QString CDTTMeasurement::toString() const
   QString s;
   if(isValid())
   {
-    QString name = getCharacteristic("name").toString();
-    QVariant value = getCharacteristic("value");
+    s = getAttribute("trial").toString();
+  }
+  /*
+  if(isValid())
+  {
+    QString name = getAttribute("name").toString();
+    QVariant value = getAttribute("value");
     QString representation;
     if(QVariant::List == value.type())
     {
@@ -34,6 +32,7 @@ QString CDTTMeasurement::toString() const
 
     s = QString("%1: %2").arg(name, representation);
   }
+  */
   return s;
 }
 

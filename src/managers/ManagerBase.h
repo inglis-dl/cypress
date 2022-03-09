@@ -1,7 +1,7 @@
 #ifndef MANAGERBASE_H
 #define MANAGERBASE_H
 
-#include "../auxiliary/CypressConstants.h"
+#include "../auxiliary/Constants.h"
 #include <QObject>
 #include <QWidget>
 #include <QMap>
@@ -31,8 +31,8 @@ public:
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose() const { return m_verbose; }
 
-    void setRunMode(const CypressConstants::RunMode& mode) { m_mode = mode; }
-    CypressConstants::RunMode getRunMode() const { return m_mode; }
+    void setRunMode(const Constants::RunMode& mode) { m_mode = mode; }
+    Constants::RunMode getRunMode() const { return m_mode; }
 
     // collate test results and device and other meta data
     // for the main application to write to .json
@@ -106,7 +106,7 @@ protected:
     // device and test data
     // - "live" - production mode
     //
-    CypressConstants::RunMode m_mode { CypressConstants::RunMode::Unknown };
+    Constants::RunMode m_mode { Constants::RunMode::modeUnknown };
 
     // Context dependent clear test data and possibly device data (eg., serial port info)
     // SerialPortManager class clears device data during setDevice() while

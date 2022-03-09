@@ -11,7 +11,7 @@
  * Concrete implementation of TestBase using TemperatureMeasurement
  * class specialization.
  *
- * \sa BluetoothLEManager, TemperatureMeasurement, MeasurementBase
+ * \sa BluetoothLEManager, TemperatureMeasurement, Measurement
  *
  */
 

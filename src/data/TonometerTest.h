@@ -30,13 +30,8 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
-    static QMap<QString,QString> variableLUT;
     static QMap<QString,QString> metaLUT;
-    static QMap<QString,QString> unitsLUT;
-
-    static QMap<QString,QString> initVariableLUT();
     static QMap<QString,QString> initMetaLUT();
-    static QMap<QString,QString> initUnitsLUT();
 
 private:
     QList<QString> m_outputKeyList;

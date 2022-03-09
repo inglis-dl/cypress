@@ -1,8 +1,8 @@
 #ifndef TESTBASE_H
 #define TESTBASE_H
 
-#include "MeasurementBase.h"
-#include <QList>
+#include "Measurement.h"
+#include "../auxiliary/Constants.h"
 
 /*!
  * \class TestBase
@@ -15,7 +15,7 @@
  * Inherited classes must implement the pure virtual methods:
  * toString, isValid, toJsonObject
  *
- * \sa MeasurementBase, AutiometerTest, QList
+ * \sa Measurement, AudiometerTest, QList
  *
  */
 
@@ -25,11 +25,7 @@ template <class T>
 class TestBase
 {
 public:
-    TestBase()
-    {
-        m_maximumNumberOfMeasurements = 1000;
-        m_measurementSystem = "metric";
-    }
+    TestBase() = default;
     virtual ~TestBase() = default;
 
     // When a fixed maximum number of measurements is
@@ -51,48 +47,61 @@ public:
     //
     virtual void reset();
 
-    //TODO: add measurement system as enum to cypress constants
-    //
-    void setMeasurementSystem(const QString &s)
+    void setUnitsSystem(const Constants::UnitsSystem& system)
     {
-      m_measurementSystem = "imperial" == s ? s : "metric";
+      m_unitsSystem = system;
     }
 
-    QString getMeasurementSystem() const
+    Constants::UnitsSystem getUnitsSystem() const
     {
-      return m_measurementSystem;
+      return m_unitsSystem;
     }
 
-    void setMetataData(const MeasurementBase &other)
+    void setMetataData(const Measurement &other)
     {
       m_metaData = other;
     }
 
-    MeasurementBase getMetaData() const
+    Measurement getMetaData() const
     {
       return m_metaData;
     }
 
-    void addMetaDataCharacteristic(const QString &key, const QVariant &value)
+    void addMetaData(const QString& key, const QVariant& value, const QString& units)
     {
-      m_metaData.setCharacteristic(key,value);
+      m_metaData.setAttribute(key, value, units);
     }
 
-    QVariant getMetaDataCharacteristic(const QString &key) const
+    void addMetaData(const QString& key, const QVariant& value)
     {
-      return m_metaData.getCharacteristic(key);
+      m_metaData.setAttribute(key, value);
     }
 
-    bool hasMetaDataCharacteristic(const QString &key) const
+    void addMetaData(const QString &key, const Measurement::Value &value)
     {
-      return m_metaData.hasCharacteristic(key);
+      m_metaData.setAttribute(key, value);
     }
 
-    void addMeasurement(const T &);
+    QVariant getMetaData(const QString &key) const
+    {
+      return m_metaData.getAttributeValue(key);
+    }
 
-    T getMeasurement(const quint32 &) const;
+    bool hasMetaData() const
+    {
+      return !m_metaData.isEmpty();
+    }
 
-    T* find_first(const QString& key, const QVariant& value);
+    bool hasMetaData(const QString &key) const
+    {
+      return m_metaData.hasAttribute(key);
+    }
+
+    void addMeasurement(const T&);
+
+    bool hasMeasurement(const int&) const;
+
+    T getMeasurement(const int&) const;
 
     int getNumberOfMeasurements() const
     {
@@ -111,9 +120,9 @@ public:
 
 protected:
     QVector<T> m_measurementList;
-    MeasurementBase m_metaData;
-    int m_maximumNumberOfMeasurements;
-    QString m_measurementSystem;
+    Measurement m_metaData;
+    int m_maximumNumberOfMeasurements { 1000 };
+    Constants::UnitsSystem m_unitsSystem { Constants::UnitsSystem::systemMetric };
 };
 
 template <class T>
@@ -135,28 +144,19 @@ void TestBase<T>::addMeasurement(const T &item)
 }
 
 template <class T>
-T TestBase<T>::getMeasurement(const quint32 &i) const
+T TestBase<T>::getMeasurement(const int &index) const
 {
     T m;
-    if((int)i < m_measurementList.size())
-      m = m_measurementList.at(i);
+    if(index < m_measurementList.size())
+      m = m_measurementList.at(index);
     return m;
 }
 
 template <class T>
-T* TestBase<T>::find_first(const QString& key, const QVariant& value)
+bool TestBase<T>::hasMeasurement(const int& index) const
 {
-    for(auto&& x : m_measurementList)
-    {
-        for(auto&& v : x.toStdMap())
-        {
-            if(key == v.first && value == v.second)
-            {
-                return &x;
-            }
-        }
-    }
-    return Q_NULLPTR;
+    T m = getMeasurement(index);
+    return !m.isEmpty();
 }
 
 #endif // TESTBASE_H

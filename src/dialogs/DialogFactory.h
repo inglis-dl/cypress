@@ -1,7 +1,7 @@
 #ifndef DIALOGFACTORY_H
 #define DIALOGFACTORY_H
 
-#include "../auxiliary/CypressConstants.h"
+#include "../auxiliary/Constants.h"
 
 QT_FORWARD_DECLARE_CLASS(DialogBase)
 
@@ -11,7 +11,7 @@ public:
     static DialogFactory *instance();
     ~DialogFactory();
 
-    DialogBase* instantiate(const CypressConstants::MeasureType&);
+    DialogBase* instantiate(const Constants::MeasureType&);
     DialogBase* instantiate(const QString&);
 
 private:

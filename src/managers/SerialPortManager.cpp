@@ -45,7 +45,7 @@ void SerialPortManager::start()
 
 bool SerialPortManager::isDefined(const QString &label) const
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
        return true;
     }
@@ -66,7 +66,7 @@ void SerialPortManager::scanDevices()
     if(m_verbose)
       qDebug() << "start scanning for devices...";
 
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
       QSerialPortInfo info;
       QString label = m_deviceName.isEmpty() ? "simulated_device" : m_deviceName;
@@ -78,7 +78,7 @@ void SerialPortManager::scanDevices()
       return;
     }
 
-    for(auto&& info : QSerialPortInfo::availablePorts())
+    foreach(auto info, QSerialPortInfo::availablePorts())
     {
         if(m_verbose)
         {
@@ -157,16 +157,16 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
 {
     m_deviceData.reset();
 
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
        // get the device data
-       m_deviceData.setCharacteristic("port_product_id", "simulated");
-       m_deviceData.setCharacteristic("port_vendor_id", "simulated");
-       m_deviceData.setCharacteristic("port_manufacturer", "simulated");
-       m_deviceData.setCharacteristic("port_name", (m_deviceName.isEmpty() ? "simulated" : m_deviceName));
-       m_deviceData.setCharacteristic("port_serial_number", "simulated");
-       m_deviceData.setCharacteristic("port_system_location", "simulated");
-       m_deviceData.setCharacteristic("port_description", "simulated");
+       m_deviceData.setAttribute("port_product_id", "simulated");
+       m_deviceData.setAttribute("port_vendor_id", "simulated");
+       m_deviceData.setAttribute("port_manufacturer", "simulated");
+       m_deviceData.setAttribute("port_name", (m_deviceName.isEmpty() ? "simulated" : m_deviceName));
+       m_deviceData.setAttribute("port_serial_number", "simulated");
+       m_deviceData.setAttribute("port_system_location", "simulated");
+       m_deviceData.setAttribute("port_description", "simulated");
        emit message(tr("Ready to connect..."));
        emit canConnectDevice();
        return;
@@ -181,37 +181,37 @@ void SerialPortManager::setDevice(const QSerialPortInfo &info)
     if(m_verbose)
         qDebug() << "ready to connect to " << info.portName();
 
-    // get the device data
-    if(info.hasProductIdentifier())
-      m_deviceData.setCharacteristic("port_product_id", info.productIdentifier());
-    if(info.hasVendorIdentifier())
-      m_deviceData.setCharacteristic("port_vendor_id", info.vendorIdentifier());
-    if(!info.manufacturer().isEmpty())
-      m_deviceData.setCharacteristic("port_manufacturer", info.manufacturer());
-    if(!info.portName().isEmpty())
-      m_deviceData.setCharacteristic("port_name", info.portName());
-    if(!info.serialNumber().isEmpty())
-      m_deviceData.setCharacteristic("port_serial_number", info.serialNumber());
-    if(!info.systemLocation().isEmpty())
-      m_deviceData.setCharacteristic("port_system_location", info.systemLocation());
-    if(!info.description().isEmpty())
-      m_deviceData.setCharacteristic("port_description", info.description());
-
     m_port.setPort(info);
     if(m_port.open(QSerialPort::ReadWrite))
     {
+      // get the device data
+      if(info.hasProductIdentifier())
+        m_deviceData.setAttribute("port_product_id", info.productIdentifier());
+      if(info.hasVendorIdentifier())
+        m_deviceData.setAttribute("port_vendor_id", info.vendorIdentifier());
+      if(!info.manufacturer().isEmpty())
+        m_deviceData.setAttribute("port_manufacturer", info.manufacturer());
+      if(!info.portName().isEmpty())
+        m_deviceData.setAttribute("port_name", info.portName());
+      if(!info.serialNumber().isEmpty())
+        m_deviceData.setAttribute("port_serial_number", info.serialNumber());
+      if(!info.systemLocation().isEmpty())
+        m_deviceData.setAttribute("port_system_location", info.systemLocation());
+      if(!info.description().isEmpty())
+        m_deviceData.setAttribute("port_description", info.description());
+
       // signal the GUI that the port is connectable so that
       // the connect button can be clicked
       //
       emit message(tr("Ready to connect..."));
       emit canConnectDevice();
-    }
-    m_port.close();
+      m_port.close();
+    }    
 }
 
 void SerialPortManager::connectDevice()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         emit message(tr("Ready to measure..."));
         emit canMeasure();
@@ -239,7 +239,7 @@ void SerialPortManager::disconnectDevice()
 {
     emit message(tr("Ready to connect..."));
     emit canConnectDevice();
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
        return;
     }

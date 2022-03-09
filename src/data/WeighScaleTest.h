@@ -13,7 +13,7 @@
  * obtained as a QByteArray from the RS232 interface controlled by the WeighScaleManager
  * class.
  *
- * \sa WeighScaleManager, WeightMeasurement, MeasurementBase
+ * \sa WeighScaleManager, WeightMeasurement, Measurement
  *
  */
 
