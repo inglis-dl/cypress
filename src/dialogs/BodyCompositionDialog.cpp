@@ -45,14 +45,14 @@ void BodyCompositionDialog::initializeConnections()
 
   // Disable all buttons by default
   //
-  for(auto x, this->findChildren<QPushButton *>())
+  foreach(auto button, this->findChildren<QPushButton *>())
   {
-      x->setEnabled(false);
+    button->setEnabled(false);
 
-      // disable enter key press event passing onto auto focus buttons
-      //
-      x->setDefault(false);
-      x->setAutoDefault(false);
+    // disable enter key press event passing onto auto focus buttons
+    //
+    button->setDefault(false);
+    button->setAutoDefault(false);
   }
 
   // Close the application
@@ -218,7 +218,7 @@ void BodyCompositionDialog::initializeConnections()
   // Set the inputs to the analyzer
   //
   connect(ui->setButton, &QPushButton::clicked,
-           this,[this](){
+           this,[this, derived](){
       QMap<QString,QVariant> inputs;
       inputs["equation"] = "westerner";
 
@@ -249,7 +249,7 @@ void BodyCompositionDialog::initializeConnections()
       inputs["tare_weight"] = s.toDouble();
 
       qDebug() << inputs;
-      m_manager->setInputData(inputs);
+      derived->updateInputData(inputs);
   });
 
   // Confirm inputs and check if measurement can proceed

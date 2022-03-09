@@ -1,6 +1,6 @@
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport bluetooth sql designer
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport bluetooth sql usb
 
 CONFIG += c++11
 
@@ -10,9 +10,11 @@ CONFIG += c++11
 
 SOURCES += \
     auxiliary/Constants.cpp \
+    auxiliary/CRC8.cpp \
     auxiliary/CommandLineParser.cpp \
     data/Measurement.cpp \
     data/HearingTest.cpp \
+    data/BloodPressureTest.cpp \
     data/TonometerTest.cpp \
     data/BodyCompositionTest.cpp \
     data/CDTTTest.cpp \
@@ -23,6 +25,7 @@ SOURCES += \
     data/ChoiceReactionTest.cpp \
     data/TemperatureTest.cpp \
     data/HearingMeasurement.cpp \
+    data/BloodPressureMeasurement.cpp \
     data/BodyCompositionMeasurement.cpp \
     data/CDTTMeasurement.cpp \
     data/FraxMeasurement.cpp \
@@ -35,6 +38,9 @@ SOURCES += \
     managers/ChoiceReactionManager.cpp \
     managers/SerialPortManager.cpp \
     managers/BluetoothLEManager.cpp \
+    managers/BloodPressureManager.cpp \
+    managers/BPMMessage.cpp \
+    managers/BPMCommunication.cpp \
     managers/FraxManager.cpp \
     managers/TonometerManager.cpp \
     managers/CDTTManager.cpp \
@@ -43,6 +49,7 @@ SOURCES += \
     widgets/BarcodeWidget.cpp \
     dialogs/AudiometerDialog.cpp \
     dialogs/BodyCompositionDialog.cpp \
+    dialogs/BloodPressureDialog.cpp \
     dialogs/CDTTDialog.cpp \
     dialogs/ChoiceReactionDialog.cpp \
     dialogs/FraxDialog.cpp \
@@ -56,10 +63,13 @@ SOURCES += \
 
 HEADERS += \
     auxiliary/Constants.h \
+    auxiliary/Utilities.h \
+    auxiliary/CRC8.h \
     auxiliary/CommandLineParser.h \
     data/Measurement.h \
     data/TestBase.h \
     data/HearingTest.h \
+    data/BloodPressureTest.cpp \
     data/TonometerTest.h \
     data/BodyCompositionTest.h \
     data/CDTTTest.h \
@@ -71,6 +81,7 @@ HEADERS += \
     data/ChoiceReactionTest.h \
     data/TemperatureTest.h \
     data/HearingMeasurement.h \
+    data/BloodPressureMeasurement.h \
     data/BodyCompositionMeasurement.h \
     data/CDTTMeasurement.h \
     data/FraxMeasurement.h \
@@ -82,6 +93,9 @@ HEADERS += \
     managers/ChoiceReactionManager.h \
     managers/SerialPortManager.h \
     managers/BluetoothLEManager.h \
+    managers/BloodPressureManager.h \
+    managers/BPMMessage.h \
+    managers/BPMCommunication.h \
     managers/FraxManager.h \
     managers/BodyCompositionAnalyzerManager.h \
     managers/TonometerManager.h \
@@ -90,6 +104,7 @@ HEADERS += \
     widgets/BarcodeWidget.h \
     dialogs/AudiometerDialog.h \
     dialogs/BodyCompositionDialog.h \
+    dialogs/BloodPressureDialog.h \
     dialogs/CDTTDialog.h \
     dialogs/ChoiceReactionDialog.h \
     dialogs/FraxDialog.h \
@@ -113,6 +128,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 FORMS += \
   widgets/barcodewidget.ui \
   dialogs/audiometerdialog.ui \
+  dialogs/bloodpressuredialog.ui \
   dialogs/bodycompositiondialog.ui \
   dialogs/thermometerdialog.ui \
   dialogs/runnabledialog.ui \

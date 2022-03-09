@@ -44,14 +44,14 @@ void WeighScaleDialog::initializeConnections()
 
   // Disable all buttons by default
   //
-  for(auto x, this->findChildren<QPushButton *>())
+  foreach(auto button, this->findChildren<QPushButton *>())
   {
-      x->setEnabled(false);
+    button->setEnabled(false);
 
-      // disable enter key press event passing onto auto focus buttons
-      //
-      x->setDefault(false);
-      x->setAutoDefault(false);
+    // disable enter key press event passing onto auto focus buttons
+    //
+    button->setDefault(false);
+    button->setAutoDefault(false);
   }
 
   // Close the application
@@ -116,7 +116,7 @@ void WeighScaleDialog::initializeConnections()
 
   connect(derived.get(), &WeighScaleManager::deviceSelected,
           this,[this](const QString &label){
-      if(label!=ui->deviceComboBox->currentText())
+      if(label != ui->deviceComboBox->currentText())
       {
           ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findText(label));
       }

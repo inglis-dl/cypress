@@ -60,10 +60,11 @@ void DialogBase::readInput()
     {
         if(Constants::RunMode::modeSimulate == m_mode)
         {
-            m_inputData["barcode"]=Constants::DefaultBarcode;
+          m_inputData["barcode"] = Constants::DefaultBarcode;
         }
         else
         {
+          if(m_verbose)
             qDebug() << "ERROR: no input json file";
         }
         return;
@@ -79,23 +80,25 @@ void DialogBase::readInput()
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject jsonObj = jsonDoc.object();
-      QList<QString> keys = jsonObj.keys();
-      for(int i=0;i<keys.size();i++)
+      foreach(auto key, jsonObj.keys())
       {
-          QJsonValue v = jsonObj.value(keys[i]);
+          QJsonValue v = jsonObj.value(key);
           // TODO: error report all missing expected key values
           //
           if(!v.isUndefined())
           {
-              m_inputData[keys[i]] = v.toVariant();
-              qDebug() << keys[i] << v.toVariant();
+              m_inputData[key] = v.toVariant();
+              qDebug() << key << v.toVariant();
           }
       }
       if(m_inputData.contains("barcode"))
           this->setVerificationBarcode(m_inputData["barcode"].toString());
     }
     else
+    {
+      if(m_verbose)
         qDebug() << m_inputFileName << " file does not exist";
+    }
 }
 
 void DialogBase::writeOutput()
@@ -156,4 +159,5 @@ void DialogBase::writeOutput()
 
    if(m_verbose)
        qDebug() << "wrote to file " << fileName;
+
 }

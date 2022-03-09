@@ -133,7 +133,7 @@ void MainWindow::initializeConnections()
 
   connect(&m_manager, &AudiometerManager::deviceSelected,
           this,[this](const QString &label){
-      if(label!=ui->deviceComboBox->currentText())
+      if(label != ui->deviceComboBox->currentText())
       {
           ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findText(label));
       }

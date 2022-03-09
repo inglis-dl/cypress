@@ -2,7 +2,7 @@
 #define BPMMESSAGE_H
 
 #include <QString>
-#include "../../auxiliary/CRC8.h"
+#include "../auxiliary/CRC8.h"
 
 class BPMMessage
 {

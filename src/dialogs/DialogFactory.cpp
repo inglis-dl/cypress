@@ -1,7 +1,7 @@
 #include "DialogFactory.h"
 
 #include "AudiometerDialog.h"
-//#include "BloodPressureDialog.h"
+#include "BloodPressureDialog.h"
 #include "ThermometerDialog.h"
 #include "BodyCompositionDialog.h"
 #include "CDTTDialog.h"
@@ -9,6 +9,7 @@
 #include "FraxDialog.h"
 #include "TonometerDialog.h"
 #include "WeighScaleDialog.h"
+
 #include <QDebug>
 
 DialogFactory *DialogFactory::pInstance = Q_NULLPTR;
@@ -31,43 +32,43 @@ DialogBase* DialogFactory::instantiate(const Constants::MeasureType &type)
     DialogBase* dialog = Q_NULLPTR;
     switch(type)
     {
-      case Constants::MeasureType::WeighScale:
+      case Constants::MeasureType::typeWeighScale:
         dialog = new WeighScaleDialog();
         break;
-      case Constants::MeasureType::BodyCompositionAnalyzer:
+      case Constants::MeasureType::typeBodyCompositionAnalyzer:
         dialog = new BodyCompositionDialog();
         break;
-      case Constants::MeasureType::Audiometer:
+      case Constants::MeasureType::typeAudiometer:
         dialog = new AudiometerDialog();
         break;
-      case Constants::MeasureType::ChoiceReaction:
+      case Constants::MeasureType::typeChoiceReaction:
         dialog = new ChoiceReactionDialog();
         break;
-      case Constants::MeasureType::Thermometer:
+      case Constants::MeasureType::typeThermometer:
         dialog = new ThermometerDialog();
         break;
-      case Constants::MeasureType::Frax:
+      case Constants::MeasureType::typeFrax:
         dialog = new FraxDialog();
         break;
-      case Constants::MeasureType::CDTT:
+      case Constants::MeasureType::typeCDTT:
         dialog = new CDTTDialog();
         break;
-      case Constants::MeasureType::Tonometer:
+      case Constants::MeasureType::typeTonometer:
         dialog = new TonometerDialog();
         break;
-      case Constants::MeasureType::Spirometer:
+      case Constants::MeasureType::typeSpirometer:
         //dialog = Q_NULLPTR;
         break;
-      case Constants::MeasureType::BloodPressure:
+      case Constants::MeasureType::typeBloodPressure:
+        dialog = new BloodPressureDialog();
+        break;
+      case Constants::MeasureType::typeRetinalCamera:
         //dialog = Q_NULLPTR;
         break;
-      case Constants::MeasureType::RetinalCamera:
+      case Constants::MeasureType::typeECG:
         //dialog = Q_NULLPTR;
         break;
-      case Constants::MeasureType::ECG:
-        //dialog = Q_NULLPTR;
-        break;
-      case Constants::MeasureType::None:
+      case Constants::MeasureType::typeUnknown:
         //dialog = Q_NULLPTR;
         break;
       default:

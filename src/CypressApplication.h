@@ -20,8 +20,8 @@ public:
 private:
     QString m_inputFileName;
     QString m_outputFileName;
-    Constants::RunMode m_mode { Constants::RunMode::Unknown };
-    Constants::MeasureType m_type { Constants::MeasureType::None };
+    Constants::RunMode m_mode { Constants::RunMode::modeUnknown };
+    Constants::MeasureType m_type { Constants::MeasureType::typeUnknown };
     bool m_verbose;
 
     QScopedPointer<DialogBase> m_dialog;

@@ -43,16 +43,16 @@ public:
 
     // the default barcode to use when no input.json is provided
     //
-    static QString DefaultBarcode;
+    static const QString DefaultBarcode;
 
     // the default system of units is metric
     //
-    static UnitsSystem DefaultUnitsSystem;
+    static const UnitsSystem DefaultUnitsSystem;
 
     // the default number of elements (5) to display when a
     // comma delimeted string of numbers is split
     //
-    static quint16 DefaultSplitLength;
+    static const quint16 DefaultSplitLength;
 
     static MeasureType getMeasureType(const QString&);
     static RunMode getRunMode(const QString&);    

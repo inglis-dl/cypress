@@ -52,14 +52,14 @@ void TonometerDialog::initializeConnections()
 
   // Disable all buttons by default
   //
-  for(auto x, this->findChildren<QPushButton *>())
+  foreach(auto button, this->findChildren<QPushButton *>())
   {
-      x->setEnabled(false);
+    button->setEnabled(false);
 
-      // disable enter key press event passing onto auto focus buttons
-      //
-      x->setDefault(false);
-      x->setAutoDefault(false);
+    // disable enter key press event passing onto auto focus buttons
+    //
+    button->setDefault(false);
+    button->setAutoDefault(false);
   }
 
   // Close the application
@@ -106,8 +106,9 @@ void TonometerDialog::initializeConnections()
 
     connect(derived.get(),&TonometerManager::canSelectRunnable,
             this,[this](){
-        for(auto x, this->findChildren<QPushButton *>())
-            x->setEnabled(false);
+        foreach(auto button, this->findChildren<QPushButton *>())
+            button->setEnabled(false);
+
         ui->closeButton->setEnabled(true);
         ui->openButton->setEnabled(true);
         static bool warn = true;
@@ -127,8 +128,9 @@ void TonometerDialog::initializeConnections()
 
     connect(derived.get(),&TonometerManager::canSelectDatabase,
             this,[this](){
-        for(auto x, this->findChildren<QPushButton *>())
-            x->setEnabled(false);
+        foreach(auto button, this->findChildren<QPushButton *>())
+            button->setEnabled(false);
+
         ui->closeButton->setEnabled(true);
         ui->openButton->setEnabled(true);
         static bool warn = true;
