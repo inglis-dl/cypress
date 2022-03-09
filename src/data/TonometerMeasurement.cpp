@@ -83,6 +83,7 @@ bool TonometerMeasurement::isValid() const
       if(!hasAttribute(it.key()))
       {
         ok = false;
+        qDebug() << "invalid measurement, missing attribute"<<it.key();
         break;
       }
       it++;
@@ -105,6 +106,7 @@ void TonometerMeasurement::fromJson(const QJsonObject& obj)
            TonometerMeasurement::unitsLUT[key] : QString();
 
          setAttribute(key, obj[it.value()].toVariant(), units);
+         qDebug() << "mesurement setting attribute" << key << getAttribute(key).toString();
        }
        it++;
     }

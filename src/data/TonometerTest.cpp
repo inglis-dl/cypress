@@ -118,7 +118,10 @@ void TonometerTest::fromJson(const QJsonArray &json)
                while(it != TonometerTest::metaLUT.constEnd())
                {
                   if(obj.contains(it.value()))
+                  {
                     addMetaData(it.key(),obj[it.value()].toVariant());
+                    qDebug() << "adding meta data" << it.key() << getMetaData(it.key()).toString();
+                  }
                   it++;
                }
                meta = true;
@@ -128,8 +131,11 @@ void TonometerTest::fromJson(const QJsonArray &json)
             m.fromJson(obj);
             if(m.isValid())
             {
+              qDebug() << "success add of measurement";
               addMeasurement(m);
             }
+            else
+                qDebug() << "error, invalid measurement, cannot add to test";
           }
         }
     }
