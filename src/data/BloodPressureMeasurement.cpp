@@ -9,12 +9,12 @@ BloodPressureMeasurement::BloodPressureMeasurement(
         const int &sbp, const int& dbp, const int& pulse,
         const QDateTime &start, const QDateTime& end)
 {
-    setAttribute("reading_number", Measurement::Value(readingNum));
-    setAttribute("systolic", Measurement::Value(sbp,"mmHg"));
-    setAttribute("diastolic", Measurement::Value(dbp,"mmHg"));
-    setAttribute("pulse", Measurement::Value(pulse,"bpm"));
-    setAttribute("start_time", Measurement::Value(start));
-    setAttribute("end_time", Measurement::Value(end));
+    setAttribute("reading_number",readingNum);
+    setAttribute("systolic",sbp,"mmHg");
+    setAttribute("diastolic",dbp,"mmHg");
+    setAttribute("pulse",pulse,"bpm");
+    setAttribute("start_time",start);
+    setAttribute("end_time",end);
 }
 
 bool BloodPressureMeasurement::isValid() const

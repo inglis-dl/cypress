@@ -101,8 +101,10 @@ void TonometerMeasurement::fromJson(const QJsonObject& obj)
        QString key = it.key();
        if("side" != key && obj.contains(it.value()))
        {
-         QString units = TonometerMeasurement::unitsLUT.contains(key) ? TonometerMeasurement::unitsLUT[key] : QString();
-         setAttribute(key,Measurement::Value(obj[it.value()].toVariant(),units));
+         QString units = TonometerMeasurement::unitsLUT.contains(key) ?
+           TonometerMeasurement::unitsLUT[key] : QString();
+
+         setAttribute(key, obj[it.value()].toVariant(), units);
        }
        it++;
     }
@@ -112,7 +114,7 @@ void TonometerMeasurement::simulate(const QString& side)
 {
     double mu = QRandomGenerator::global()->generateDouble();
     reset();
-    setAttribute("side",side);
+    setAttribute("side", side);
     qDebug() <<"echo"<< getAttribute("side").toString();
 
     QMap<QString,QString>::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
@@ -174,7 +176,7 @@ void TonometerMeasurement::simulate(const QString& side)
 
       QString units = TonometerMeasurement::unitsLUT.contains(key) ?
                   TonometerMeasurement::unitsLUT[key] : QString();
-      setAttribute(key, Measurement::Value(value,units));
+      setAttribute(key, value, units);
 
       qDebug() << QString("%1: %2").arg(key,getAttribute(key).toString());
     }

@@ -72,16 +72,16 @@ void FraxTest::fromFile(const QString &fileName)
         {
            FraxMeasurement m;
            m.setAttribute("type","osteoporotic_fracture");
-           m.setAttribute("probability", Measurement::Value(list.at(13).toDouble(),"%"));
+           m.setAttribute("probability", list.at(13).toDouble(), "%");
            addMeasurement(m);
            m.setAttribute("type","hip_fracture");
-           m.setAttribute("probability", Measurement::Value(list.at(14).toDouble(),"%"));
+           m.setAttribute("probability", list.at(14).toDouble(), "%");
            addMeasurement(m);
            m.setAttribute("type","osteoporotic_fracture_bmd");
-           m.setAttribute("probability", Measurement::Value(list.at(15).toDouble(),"%"));
+           m.setAttribute("probability", list.at(15).toDouble(), "%");
            addMeasurement(m);
            m.setAttribute("type","hip_fracture_bmd");
-           m.setAttribute("probability", Measurement::Value(list.at(16).toDouble(),"%"));
+           m.setAttribute("probability", list.at(16).toDouble(), "%");
            addMeasurement(m);
 
            addMetaData("type",list.at(0).toLower());
@@ -108,22 +108,22 @@ void FraxTest::simulate()
 
     m.setAttribute("type","osteoporotic_fracture");
     double p = Utilities::interp(1.0f,30.0f,mu);
-    m.setAttribute("probability", Measurement::Value(p,"%"));
+    m.setAttribute("probability", p, "%");
     addMeasurement(m);
 
     m.setAttribute("type","hip_fracture");
     p = Utilities::interp(0.0f,13.0f,mu);
-    m.setAttribute("probability", Measurement::Value(p,"%"));
+    m.setAttribute("probability", p, "%");
     addMeasurement(m);
 
     m.setAttribute("type","osteoporotic_fracture_bmd");
     p = Utilities::interp(2.0f,22.0f,mu);
-    m.setAttribute("probability", Measurement::Value(p,"%"));
+    m.setAttribute("probability", p, "%");
     addMeasurement(m);
 
     m.setAttribute("type","hip_fracture_bmd");
     p = Utilities::interp(0.0f,8.0f,mu);
-    m.setAttribute("probability", Measurement::Value(p,"%"));
+    m.setAttribute("probability", p, "%");
     addMeasurement(m);
 }
 

@@ -182,7 +182,7 @@ void BloodPressureTest::addDeviceAverage(const int& sbpAvg, const int& dbpAvg, c
     bool ok = true;
     if(qRound(avgSbpCalc) == sbpAvg)
     {
-      addMetaData("avg_systolic", Measurement::Value(QVariant(sbpAvg),"mmHg"));
+      addMetaData("avg_systolic",sbpAvg,"mmHg");
     }
     else
     {
@@ -191,7 +191,7 @@ void BloodPressureTest::addDeviceAverage(const int& sbpAvg, const int& dbpAvg, c
     }
     if(qRound(avgDbpCalc) == dbpAvg)
     {
-      addMetaData("avg_diastolic", Measurement::Value(QVariant(dbpAvg),"mmHg"));
+      addMetaData("avg_diastolic",dbpAvg,"mmHg");
     }
     else
     {
@@ -200,7 +200,7 @@ void BloodPressureTest::addDeviceAverage(const int& sbpAvg, const int& dbpAvg, c
     }
     if(qRound(avgPulseCalc) == pulseAvg)
     {
-      addMetaData("avg_pulse", Measurement::Value(QVariant(pulseAvg),"bpm"));
+      addMetaData("avg_pulse",pulseAvg,"bpm");
     }
     else
     {
@@ -220,13 +220,10 @@ void BloodPressureTest::computeTotalAverage(int sbpTotal, int dbpTotal, int puls
       sbpTotal += getMetaData("first_systolic").toInt();
       dbpTotal += getMetaData("first_diastolic").toInt();
       pulseTotal += getMetaData("first_pulse").toInt();
-      addMetaData("total_avg_systolic",
-                  Measurement::Value(QVariant(qRound(sbpTotal * 1.0f / count)),"mmHg"));
-      addMetaData("total_avg_diastolic",
-                  Measurement::Value(QVariant(qRound(dbpTotal * 1.0f / count)),"mmHg"));
-      addMetaData("total_avg_pulse",
-                  Measurement::Value(QVariant(qRound(pulseTotal * 1.0f / count)),"bpm"));
-      addMetaData("total_avg_count", QVariant(count));
+      addMetaData("total_avg_systolic",qRound(sbpTotal * 1.0f / count),"mmHg");
+      addMetaData("total_avg_diastolic",qRound(dbpTotal * 1.0f / count),"mmHg");
+      addMetaData("total_avg_pulse",qRound(pulseTotal * 1.0f / count),"bpm");
+      addMetaData("total_avg_count",count);
     }
     else
     {

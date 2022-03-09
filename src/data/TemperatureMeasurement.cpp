@@ -72,7 +72,7 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      // temperature type if bit 2 is on , no type if off
      //
      QBitArray f_arr = QBitArray::fromBits(arr.data(),3);
-     QString t_format_str = f_arr.at(0) ? "F" : "C";
+     QString t_units_str = f_arr.at(0) ? "F" : "C";
 
      // Temperature:
      //
@@ -82,7 +82,7 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      char buffer[10];
      sprintf(buffer,"%5.1f",t_value);
      QVariant t_var = QString::fromLatin1(buffer).toDouble();
-     setAttribute("temperature", Measurement::Value(t_var,t_format_str,1));
+     setAttribute("temperature", t_var, t_units_str, 1);
 
      // Datetime:
      //
@@ -123,7 +123,7 @@ TemperatureMeasurement TemperatureMeasurement::simulate(const Constants::UnitsSy
    }
    TemperatureMeasurement m;
    m.setAttribute("mode","body");
-   m.setAttribute("temperature",Measurement::Value(t,units,1));
+   m.setAttribute("temperature", t, units, 1);
    m.setAttribute("timestamp",QDateTime::currentDateTime());
    return m;
 }

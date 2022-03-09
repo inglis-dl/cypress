@@ -92,25 +92,25 @@ void BodyCompositionTest::fromArray(const QByteArray &arr)
       addMetaData("age", readAge());
 
       QString units = "metric" == sys ? "cm" : "in";
-      addMetaData("height", Measurement::Value(readHeight(),units));
+      addMetaData("height", readHeight(), units);
 
       BodyCompositionMeasurement m;
       units = "metric" == sys ? "kg" : "lb";
-      m.setAttribute("weight", Measurement::Value(readWeight(),units));
-      m.setAttribute("impedance", Measurement::Value(readImpedence(),"ohm"));
-      m.setAttribute("percent_fat", Measurement::Value(readFatPercent(),"%"));
-      m.setAttribute("fat_mass", Measurement::Value(readFatMass(),units));
-      m.setAttribute("fat_free_mass", Measurement::Value(readFatFreeMass(),units));
-      m.setAttribute("total_body_water", Measurement::Value(readTotalBodyWater(),units));
+      m.setAttribute("weight", readWeight(), units);
+      m.setAttribute("impedance", readImpedence(), "ohm");
+      m.setAttribute("percent_fat", readFatPercent(), "%");
+      m.setAttribute("fat_mass", readFatMass(), units);
+      m.setAttribute("fat_free_mass", readFatFreeMass(), units);
+      m.setAttribute("total_body_water", readTotalBodyWater(), units);
       units = "metric" == sys ? "kg/cm2" : "lb/in2";
-      m.setAttribute("body_mass_index", Measurement::Value(readBMI(),units));
+      m.setAttribute("body_mass_index", readBMI(), units);
 
       // TODO: check if bmr is always givin in kJ
       // conversions:
       // 1 kcal = 4.187 kJ
       // 1 kJ = 0.2388 kcal
       //
-      m.setAttribute("basal_metabolic_rate", Measurement::Value(readBMR(),"kJ"));
+      m.setAttribute("basal_metabolic_rate", readBMR(), "kJ");
       addMeasurement(m);
     }
 }

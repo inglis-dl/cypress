@@ -11,7 +11,7 @@ void WeightMeasurement::fromArray(const QByteArray &arr)
       QList<QByteArray> parts = bytes.split(' ');
       if(3 <= parts.size())
       {
-        setAttribute("weight", Measurement::Value(parts[0].toDouble(), QString(parts[1]), 1));
+        setAttribute("weight", parts[0].toDouble(), QString(parts[1]), 1);
         setAttribute("mode", QString(parts[2]));
         setAttribute("timestamp", QDateTime::currentDateTime());
       }

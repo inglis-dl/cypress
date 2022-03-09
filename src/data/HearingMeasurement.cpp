@@ -135,20 +135,20 @@ void HearingMeasurement::fromCode(const QString &side, const int &index, const Q
     reset();
     if(frequencyLookup.contains(index))
     {
-      setAttribute("side",Measurement::Value(side.toLower()));
-      setAttribute("test",Measurement::Value(frequencyLookup[index]));
+      setAttribute("side", side.toLower());
+      setAttribute("test", frequencyLookup[index]);
       if(codeLookup.contains(code))
       {
         QString err = codeLookup[code];
-        setAttribute("error",Measurement::Value(err));
-        setAttribute("outcome",Measurement::Value(outcomeLookup[err]));
+        setAttribute("error", err);
+        setAttribute("outcome", outcomeLookup[err]);
       }
       else
       {
         QRegExp r("\\d*");
         if(r.exactMatch(code))
         {
-          setAttribute("level",Measurement::Value(code.toInt(),"dB"));
+          setAttribute("level", code.toInt(), "dB");
         }
       }
     }
