@@ -230,42 +230,43 @@ void MainWindow::readInput()
 {
     // TODO: if the run mode is not debug, an input file name is mandatory, throw an error
     //
-    if (m_inputFileName.isEmpty())
+    if(m_inputFileName.isEmpty())
     {
         if(Constants::RunMode::modeSimulate == m_mode)
         {
-            m_inputData["barcode"] = Constants::DefaultBarcode;
+          m_inputData["barcode"] = Constants::DefaultBarcode;
         }
         else
         {
+          if(m_verbose)
             qDebug() << "ERROR: no input json file";
         }
         return;
     }
     QFileInfo info(m_inputFileName);
-    if (info.exists())
+    if(info.exists())
     {
-        QFile file;
-        file.setFileName(m_inputFileName);
-        file.open(QIODevice::ReadOnly | QIODevice::Text);
-        QString val = file.readAll();
-        file.close();
+      QFile file;
+      file.setFileName(m_inputFileName);
+      file.open(QIODevice::ReadOnly | QIODevice::Text);
+      QString val = file.readAll();
+      file.close();
 
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
-        QJsonObject jsonObj = jsonDoc.object();
-        foreach(auto key, jsonObj.keys())
-        {
-            QJsonValue v = jsonObj.value(key);
-            // TODO: error report all missing expected key values
-            //
-            if(!v.isUndefined())
-            {
-                m_inputData[key] = v.toVariant();
-                qDebug() << key << v.toVariant();
-            }
-        }
-        if(m_inputData.contains("barcode"))
-            ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
+      QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
+      QJsonObject jsonObj = jsonDoc.object();
+      foreach(auto key, jsonObj.keys())
+      {
+          QJsonValue v = jsonObj.value(key);
+          // TODO: error report all missing expected key values
+          //
+          if(!v.isUndefined())
+          {
+              m_inputData[key] = v.toVariant();
+              qDebug() << key << v.toVariant();
+          }
+      }
+      if(m_inputData.contains("barcode"))
+          ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }
     else
     {

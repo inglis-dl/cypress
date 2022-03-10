@@ -72,6 +72,11 @@ public:
       m_metaData.setAttribute(key, value, units);
     }
 
+    void addMetaData(const QString& key, const QVariant& value, const int& precision)
+    {
+      m_metaData.setAttribute(key, value, QString(), precision);
+    }
+
     void addMetaData(const QString& key, const QVariant& value)
     {
       m_metaData.setAttribute(key, value);
@@ -85,6 +90,11 @@ public:
     QVariant getMetaData(const QString &key) const
     {
       return m_metaData.getAttributeValue(key);
+    }
+
+    QString getMetaDataAsString(const QString &key) const
+    {
+      return m_metaData.getAttribute(key).toString();
     }
 
     bool hasMetaData() const

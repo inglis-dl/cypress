@@ -369,6 +369,15 @@ void TonometerManager::configureProcess()
             db.open();
         if(db.isOpen())
         {
+            // TODO:
+            // for testing on Win with no actual device connected to ORA
+            // - create ora.mdb with testing barcode in Patients table
+            //   and linkage to Measures table
+            // - launch ora software and close with no changes to ora.mdb
+            // - requires skipping the next db actions to remove any pre-existing
+            //   participant records
+            //
+
             // case 1) - db has no particpant records in the Patients or Measures table
             // - insert one particpant record to the db
             //

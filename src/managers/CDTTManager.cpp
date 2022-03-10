@@ -94,7 +94,8 @@ QJsonObject CDTTManager::toJsonObject() const
 
 void CDTTManager::buildModel(QStandardItemModel* model) const
 {
-    for(int row = 0; row < m_test.getNumberOfMeasurements(); row++)
+    int row = 0;
+    foreach(auto str, m_test.toStringList())
     {
         QStandardItem* item = model->item(row, 0);
         if(Q_NULLPTR == item)
@@ -102,7 +103,8 @@ void CDTTManager::buildModel(QStandardItemModel* model) const
             item = new QStandardItem();
             model->setItem(row, 0, item);
         }
-        item->setData(m_test.getMeasurement(row).toString(), Qt::DisplayRole);
+        item->setData(str, Qt::DisplayRole);
+        row++;
     }
 }
 
@@ -207,6 +209,8 @@ void CDTTManager::readOutput()
           emit message(tr("Ready to save results..."));
           emit canWrite();
         }
+        else
+            qDebug() << "invalid test results";
         emit dataChanged();
         return;
     }

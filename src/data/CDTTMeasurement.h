@@ -23,6 +23,8 @@ public:
 
     bool isValid() const override;
 
+    void simulate(const quint16&);
+
     QString toString() const override;
 };
 

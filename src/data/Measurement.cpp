@@ -114,7 +114,7 @@ QString Measurement::Value::toString() const
     QString str;
     if(m_value.type() == QVariant::Type::DateTime)
     {
-      str = m_value.toDateTime().toString("HH:mm:ss");
+      str = m_value.toDateTime().toString("yyyy-MM-dd HH:mm:ss");
     }
     else
     {
@@ -124,17 +124,23 @@ QString Measurement::Value::toString() const
       }
       else
       {
-        str = m_value.toString();
+        if(m_value.canConvert<QString>())
+          str = m_value.toString();
+        else if(m_value.canConvert<QStringList>())
+        {
+          str = m_value.toStringList().join(",");
+        }
+        else
+        {
+            qDebug() << "value conversion to string failed with type" << m_value.typeName();
+        }
         if(str.contains(","))
         {
-          QStringList values;
-          // only show the first 5
-          foreach(auto v, str.split(","))
-          {
-            values.push_back(v);
-            if(Constants::DefaultSplitLength == values.size()) break;
-          }
-          str = values.join(",") + "...";
+          QStringList values = str.split(",");
+          if(Constants::DefaultSplitLength <= values.size())
+            str = values.join(",") + "...";
+          else
+            str = values.join(",");
         }
       }
     }
