@@ -33,6 +33,10 @@ public:
     // the older ones are removed from the list
     //
 
+    // TODO: implement validation for tests that capture participant ID meta data
+    // against an interview barcode
+    //
+
     // String representation for debug and GUI display purposes
     //
     virtual QString toString() const = 0;

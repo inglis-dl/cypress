@@ -49,9 +49,9 @@ QString CDTTMeasurement::toString() const
 QDebug operator<<(QDebug dbg, const CDTTMeasurement &item)
 {
     const QString measurementStr = item.toString();
-    if (measurementStr.isEmpty())
-        dbg.nospace() << "CDTTT Measurement()";
+    if(measurementStr.isEmpty())
+      dbg.nospace() << "CDTT Measurement()";
     else
-        dbg.nospace() << "CDTTT Measurement(" << measurementStr << " ...)";
+      dbg.nospace() << "CDTT Measurement(" << measurementStr << " ...)";
     return dbg.maybeSpace();
 }

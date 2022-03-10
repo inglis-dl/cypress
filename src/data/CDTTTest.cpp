@@ -297,10 +297,10 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
       int index = 0;
       for(auto it = obj.constBegin(), end=obj.constEnd(); it!=end; it++)
       {
-        int trial_number = it.key().replace(0,9).toInt()+1;
+        int trial_number = it.key().remove(0,9).toInt()+1;
         if(measures.contains(trial_number))
         {
-          CDTTMeasurement m = measures[trial_number];
+          CDTTMeasurement m = measures.take(trial_number);
           m.setAttribute("response",it.value().toVariant());
           measures[trial_number] = m;
         }

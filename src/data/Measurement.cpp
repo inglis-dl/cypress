@@ -66,7 +66,7 @@ QJsonObject Measurement::toJsonObject() const
 QDebug operator<<(QDebug dbg, const Measurement &item)
 {
     const QString s = item.toString();
-    if (s.isEmpty())
+    if(s.isEmpty())
       dbg.nospace() << "Measurement()";
     else
       dbg.nospace() << "Measurement(" << s << " ...)";
@@ -88,9 +88,9 @@ Measurement::Value::Value(const Measurement::Value& other)
     m_precision = other.m_precision;
 }
 
-Measurement::Value &Measurement::Value::operator=(const Value &other)
+Measurement::Value& Measurement::Value::operator=(const Value& other)
 {
-    if(this != &other)
+    if(*this != other)
     {
       m_value = other.m_value;
       m_units = other.m_units;
@@ -132,7 +132,7 @@ QString Measurement::Value::toString() const
         }
         else
         {
-            qDebug() << "value conversion to string failed with type" << m_value.typeName();
+          qDebug() << "WARNING: value conversion to string may fail with type" << m_value.typeName();
         }
         if(str.contains(","))
         {

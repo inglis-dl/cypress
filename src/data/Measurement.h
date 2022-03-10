@@ -53,9 +53,11 @@ public:
         Value(const QVariant& value, const QString& units = QString(), const quint16& precision = 0);
         Value(const Value&);
         Value& operator=(const Value&);
+
         bool hasUnits() const;
         bool isNull() const;
         QString toString() const;
+
         QVariant value() const { return m_value; }
         QString units() const { return m_units; }
         quint16 precision() const { return m_precision; }
