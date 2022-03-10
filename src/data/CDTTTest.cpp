@@ -259,7 +259,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
     // get the stimulus digits
     helper = ExcelQueryHelper("B13",endCell,sheet);
 
-    QMap<quint16,CDTTMeasurement> measures;
+    QMap<int,CDTTMeasurement> measures;
     if((ok = helper.buildQuery(db)))
     {
       helper.setOrder(ExcelQueryHelper::Order::Row);
@@ -271,14 +271,14 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
       {
          CDTTMeasurement m;
          index++;
-         quint16 trial_number = it.key().remove(0,9).toUInt()+1;
+         int trial_number = it.key().remove(0,9).toInt()+1;
          m.setAttribute("trial",trial_number);
          m.setAttribute("stimulus",it.value().toVariant());
          measures[trial_number] = m;
       }
       if(num_row != index)
       {
-          qDebug() << "ERROR: incorrect row readout from stimulus data query";
+          qDebug() << "ERROR: incorrect readout from stimulus data query";
       }
     }
     else
@@ -297,17 +297,18 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
       int index = 0;
       for(auto it = obj.constBegin(), end=obj.constEnd(); it!=end; it++)
       {
-        if(index < measures.size())
+        int trial_number = it.key().replace(0,9).toInt()+1;
+        if(measures.contains(trial_number))
         {
-          quint16 trial_number = it.key().replace(0,9).toUInt()+1;
-          if(measures.contains(trial_number))
-          {
-            CDTTMeasurement m = measures[trial_number];
-            m.setAttribute("response",it.value().toVariant());
-            measures[trial_number] = m;
-          }
+          CDTTMeasurement m = measures[trial_number];
+          m.setAttribute("response",it.value().toVariant());
+          measures[trial_number] = m;
         }
         index++;
+      }
+      if(num_row != index)
+      {
+          qDebug() << "ERROR: incorrect readout from response data query";
       }
     }
     if(ok)
