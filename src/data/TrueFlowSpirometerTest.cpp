@@ -41,21 +41,21 @@ TrueFlowSpirometerTest::TrueFlowSpirometerTest()
 bool TrueFlowSpirometerTest::loadData(const QString& transferOutPath)
 {
     OutDataModel outData = OnyxOutXml::readImportantValues(transferOutPath);
-    m_metaData.setCharacteristic(outputHeight, outData.height);
-    m_metaData.setCharacteristic(outputWeight, outData.weight);
-    m_metaData.setCharacteristic(outputEthnicity, outData.ethnicity);
-    m_metaData.setCharacteristic(outputAsthma, outData.asthma);
-    m_metaData.setCharacteristic(outputSmoker, outData.smoker);
-    m_metaData.setCharacteristic(outputCopd, outData.copd);
-    m_metaData.setCharacteristic(outputQualityGrade, outData.qualityGrade);
+    addMetaData(outputHeight, outData.height);
+    addMetaData(outputWeight, outData.weight);
+    addMetaData(outputEthnicity, outData.ethnicity);
+    addMetaData(outputAsthma, outData.asthma);
+    addMetaData(outputSmoker, outData.smoker);
+    addMetaData(outputCopd, outData.copd);
+    addMetaData(outputQualityGrade, outData.qualityGrade);
 
     // TODO: Figure out what these are
-    m_metaData.setCharacteristic(resFvcPred2, "?");
-    m_metaData.setCharacteristic(resFvcLlnormal2, "?");
-    m_metaData.setCharacteristic(resFev1Pred2, "?");
-    m_metaData.setCharacteristic(resFev1Llnormal2, "?");
-    m_metaData.setCharacteristic(resFev1FvcPred2, "?");
-    m_metaData.setCharacteristic(resFev1FvcLlnormal2, "?");
+    addMetaData(resFvcPred2, "?");
+    addMetaData(resFvcLlnormal2, "?");
+    addMetaData(resFev1Pred2, "?");
+    addMetaData(resFev1Llnormal2, "?");
+    addMetaData(resFev1FvcPred2, "?");
+    addMetaData(resFev1FvcLlnormal2, "?");
 
     for(TrialDataModel trial: outData.trials) 
     {

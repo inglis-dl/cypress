@@ -82,72 +82,28 @@ void MainWindow::initializeConnections()
   connect(&m_manager,&ManagerBase::message,
           ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
-  // Every instrument stage launched by an interviewer requires input
-  // of the interview barcode that accompanies a participant.
-  // The expected barcode is passed from upstream via .json file.
-  // In simulate mode this value is ignored and a default barcode "00000000" is
-  // assigned instead.
-  // In production mode the input to the barcodeLineEdit is verified against
-  // the content held by the manager and a message or exception is thrown accordingly
-  //
-  // TODO: for DCS interviews, the first digit corresponds the the wave rank
-  // for inhome interviews there is a host dependent prefix before the barcode
-  //
-  if(CypressConstants::RunMode::Simulate == m_mode)
+  if (Constants::RunMode::modeSimulate == m_mode)
   {
-    ui->barcodeLineEdit->setText("00000000");
+      ui->barcodeWidget->setBarcode(Constants::DefaultBarcode);
   }
 
-  //TODO: handle the case for in home DCS visits where
-  // the barcode is prefixed with a host name code
-  //
-  QRegExp rx("\\d{8}");
-  QRegExpValidator *v_barcode = new QRegExpValidator(rx);
-  ui->barcodeLineEdit->setValidator(v_barcode);
-
-  connect(ui->barcodeLineEdit, &QLineEdit::returnPressed,
-          this,[this](){
-      bool valid = false;
-      if(m_inputData.contains("barcode"))
+  connect(ui->barcodeWidget, &BarcodeWidget::validated,
+      this, [this](const bool& valid)
       {
-          QString str = ui->barcodeLineEdit->text().simplified();
-          str.replace(" ","");
-          valid = str == m_inputData["barcode"].toString();
-      }
-      auto p = this->findChild<QTimeLine *>("timer");
-      if(valid)
-      {
-          p->stop();
-          p->setCurrentTime(0);
-          auto p = ui->barcodeLineEdit->palette();
-          p.setBrush(QPalette::Base,QBrush(QColor(0,255,0,128)));
-          ui->barcodeLineEdit->setPalette(p);
-          ui->barcodeLineEdit->repaint();
+          if (valid)
+          {
+              // launch the manager
+              //
+              this->run();
+          }
+          else
+          {
+              QMessageBox::critical(
+                  this, QApplication::applicationName(),
+                  tr("The input does not match the expected barcode for this participant."));
+          }
+      });
 
-          // launch the manager
-          //
-          this->run();
-      }
-      else
-      {
-          QMessageBox::critical(
-            this, QApplication::applicationName(),
-            tr("The input does not match the expected barcode for this participant."));
-      }
-  });
-
-  auto timeLine = new QTimeLine(2000,this);
-  timeLine->setFrameRange(0,255);
-  timeLine->setLoopCount(0);
-  timeLine->setObjectName("timer");
-  connect(timeLine, &QTimeLine::frameChanged,
-          this,[this](int frame){
-      auto p = ui->barcodeLineEdit->palette();
-      p.setBrush(QPalette::Base,QBrush(QColor(255,255,0,frame)));
-      ui->barcodeLineEdit->setPalette(p);
-  });
-  connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
-  timeLine->start();
 
     // Available to start measuring
     //
@@ -306,13 +262,14 @@ void MainWindow::readInput()
     //
     if (m_inputFileName.isEmpty())
     {
-        if(CypressConstants::RunMode::Simulate == m_mode)
+        if (Constants::RunMode::modeSimulate == m_mode)
         {
-            m_inputData["barcode"]="00000000";
+            m_inputData["barcode"] = Constants::DefaultBarcode;
         }
         else
         {
-            qDebug() << "ERROR: no input json file";
+            if (m_verbose)
+                qDebug() << "ERROR: no input json file";
         }
         return;
     }
@@ -327,21 +284,25 @@ void MainWindow::readInput()
 
         QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
         QJsonObject jsonObj = jsonDoc.object();
-        QList<QString> keys = jsonObj.keys();
-        for (int i = 0; i < keys.size(); i++)
+        foreach(auto key, jsonObj.keys())
         {
-            QJsonValue v = jsonObj.value(keys[i]);
+            QJsonValue v = jsonObj.value(key);
             // TODO: error report all missing expected key values
             //
             if (!v.isUndefined())
             {
-                m_inputData[keys[i]] = v.toVariant();
-                qDebug() << keys[i] << v.toVariant();
+                m_inputData[key] = v.toVariant();
+                qDebug() << key << v.toVariant();
             }
         }
+        if (m_inputData.contains("barcode"))
+            ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }
     else
-        qDebug() << m_inputFileName << " file does not exist";
+    {
+        if (m_verbose)
+            qDebug() << m_inputFileName << " file does not exist";
+    }
 }
 
 void MainWindow::writeOutput()
@@ -351,7 +312,7 @@ void MainWindow::writeOutput()
 
     QJsonObject jsonObj = m_manager.toJsonObject();
 
-    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
+    QString barcode = ui->barcodeWidget->barcode();
     jsonObj.insert("verification_barcode", QJsonValue(barcode));
 
     if (m_verbose)
@@ -368,10 +329,8 @@ void MainWindow::writeOutput()
 
     // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
     //
-    if (m_outputFileName.isEmpty()) 
-    {
+    if (m_outputFileName.isEmpty())
         constructDefault = true;
-    }     
     else
     {
         QFileInfo info(m_outputFileName);
@@ -405,5 +364,5 @@ void MainWindow::writeOutput()
     if (m_verbose)
         qDebug() << "wrote to file " << fileName;
 
-    ui->statusBar->showMessage("Test data recorded.  Close when ready.");
+    ui->statusBar->showMessage("Weigh scale data recorded.  Close when ready.");
 }

@@ -1,17 +1,17 @@
 #ifndef TRUEFLOWSPIROMETERMEASUREMENT_H
 #define TRUEFLOWSPIROMETERMEASUREMENT_H
 
-#include "../../src/data/MeasurementBase.h"
+#include "../../src/data/Measurement.h"
 #include "../prototype//TrueFlowSpirometer/Models/TrialDataModel.h"
 
 /*!
 * \class TrueFlowSpirometerMeasurement
 * \brief A TrueFlowSpirometerMeasurement class
 *
-* \sa MeasurementBase
+* \sa Measurement
 */
 
-class TrueFlowSpirometerMeasurement : public MeasurementBase
+class TrueFlowSpirometerMeasurement : public Measurement
 {
 public:
     TrueFlowSpirometerMeasurement() = default;

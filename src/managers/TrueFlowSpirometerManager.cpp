@@ -76,7 +76,7 @@ void TrueFlowSpirometerManager::saveSettings(QSettings* settings) const
 QJsonObject TrueFlowSpirometerManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if (CypressConstants::RunMode::Simulate != m_mode)
+    if (Constants::RunMode::modeSimulate != m_mode)
     {
         QFile ofile(getTransferOutFilePath());
         ofile.open(QIODevice::ReadOnly);
@@ -145,7 +145,7 @@ bool TrueFlowSpirometerManager::isDefined(const QString& runnableFullPath) const
 
 void TrueFlowSpirometerManager::measure()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         readOutput();
         return;
@@ -163,7 +163,7 @@ void TrueFlowSpirometerManager::measure()
 
 void TrueFlowSpirometerManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         m_inputData["barcode"] = "00000000";
         m_inputData["language"] = "english";
@@ -232,7 +232,7 @@ void TrueFlowSpirometerManager::selectEmrTransferDir(const QString& emrTransferD
 
 void TrueFlowSpirometerManager::readOutput()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         // TODO: Implement simulate mode
         return;
@@ -334,7 +334,7 @@ bool TrueFlowSpirometerManager::inputDataInitialized() const
 
 void TrueFlowSpirometerManager::configureProcess()
 {
-    if (CypressConstants::RunMode::Simulate == m_mode)
+    if (Constants::RunMode::modeSimulate == m_mode)
     {
         if (!m_inputData.isEmpty())
         {

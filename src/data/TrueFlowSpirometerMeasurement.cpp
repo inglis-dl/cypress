@@ -23,28 +23,27 @@ const QString volumeValues = "volume_values";
 
 void TrueFlowSpirometerMeasurement::fromTrialData(const TrialDataModel& trialData)
 {
-    m_characteristicValues.insert(outputTrialDate, trialData.date);
-    m_characteristicValues.insert(outputTrialRank, trialData.rank);
-    m_characteristicValues.insert(outputTrialRankOriginal, trialData.rankOriginal);
-    m_characteristicValues.insert(accepted, trialData.accepted);
-    m_characteristicValues.insert(acceptedOriginal, trialData.acceptedOriginal);
-    m_characteristicValues.insert(manualAmbientOverride, trialData.manualAmbientOverride);
-    m_characteristicValues.insert(flowInterval, trialData.flowInterval);
+    setAttribute(outputTrialDate, trialData.date);
+    setAttribute(outputTrialRank, trialData.rank);
+    setAttribute(outputTrialRankOriginal, trialData.rankOriginal);
+    setAttribute(accepted, trialData.accepted);
+    setAttribute(acceptedOriginal, trialData.acceptedOriginal);
+    setAttribute(manualAmbientOverride, trialData.manualAmbientOverride);
+    setAttribute(flowInterval, trialData.flowInterval);
     QVariant flowVals = QVariant::fromValue<QList<double>>(trialData.flowValues);
-    m_characteristicValues.insert(flowValues, flowVals);
-    m_characteristicValues.insert(trialNumber, trialData.number);
-    m_characteristicValues.insert(volumeInterval, trialData.volumeInterval);
+    setAttribute(flowValues, flowVals);
+    setAttribute(trialNumber, trialData.number);
+    setAttribute(volumeInterval, trialData.volumeInterval);
     QVariant volumeVals = QVariant::fromValue<QList<double>>(trialData.volumeValues);
-    m_characteristicValues.insert(volumeValues, volumeVals);
+    setAttribute(volumeValues, volumeVals);
 
     for (QString key : trialData.resultParameters.results.keys())
     {
         qDebug() << key << endl;
         ResultParameterModel result = trialData.resultParameters.results[key];
-        m_characteristicValues.insert(QString("%1_data_value").arg(key.toLower()), result._dataValue);
-        m_characteristicValues.insert(QString("%1_ll_normal_value").arg(key.toLower()), result._llNormalValue);
-        m_characteristicValues.insert(QString("%1_predicted_value").arg(key.toLower()), result._predictedValue);
-        m_characteristicValues.insert(QString("%1_unit").arg(key.toLower()), result._unit);
+        setAttribute(QString("%1_data_value").arg(key.toLower()), result._dataValue, result._unit);
+        setAttribute(QString("%1_ll_normal_value").arg(key.toLower()), result._llNormalValue, result._unit);
+        setAttribute(QString("%1_predicted_value").arg(key.toLower()), result._predictedValue, result._unit);
     }
 }
 
