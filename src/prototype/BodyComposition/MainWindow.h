@@ -1,7 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "../../managers/BodyCompositionAnalyzerManager.h"
+#include "../../managers/BodyCompositionManager.h"
 #include "../../auxiliary/Constants.h"
 #include <QDialog>
 #include <QStandardItemModel>
@@ -61,7 +61,7 @@ private:
     QMap<QString,QVariant> m_inputData;
     QMap<QString,QVariant> m_outputData;
 
-    BodyCompositionAnalyzerManager m_manager;
+    BodyCompositionManager m_manager;
 
     QStandardItemModel m_model;
 };

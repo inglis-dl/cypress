@@ -83,22 +83,23 @@ QStringList CDTTTest::toStringList() const
     QStringList list;
     if(hasMetaData("speech_reception_threshold"))
     {
-        list << QString("SRT: %1").arg(getMetaDataAsString("speech_reception_threshold"));
+      list << QString("SRT: %1").arg(getMetaDataAsString("speech_reception_threshold"));
     }
     if(hasMetaData("standard_deviation"))
     {
-        list << QString("StdDev: %1").arg(getMetaDataAsString("standard_deviation"));
+      list << QString("StdDev: %1").arg(getMetaDataAsString("standard_deviation"));
     }
     if(hasMetaData("reversal_count"))
     {
-        list << QString("Reversals: %1").arg(getMetaDataAsString("reversal_count"));
+      list << QString("Reversals: %1").arg(getMetaDataAsString("reversal_count"));
     }
     if(hasMetaData("trial_count"))
     {
-        list << QString("Trials: %1").arg(getMetaDataAsString("trial_count"));
-    }    foreach(auto m, m_measurementList)
+      list << QString("Trials: %1").arg(getMetaDataAsString("trial_count"));
+    }
+    foreach(auto m, m_measurementList)
     {
-        list << m.toString();
+      list << m.toString();
     }
 
     return list;

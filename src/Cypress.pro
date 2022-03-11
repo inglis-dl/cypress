@@ -45,7 +45,7 @@ SOURCES += \
     managers/TonometerManager.cpp \
     managers/CDTTManager.cpp \
     managers/WeighScaleManager.cpp \
-    managers/BodyCompositionAnalyzerManager.cpp \
+    managers/BodyCompositionManager.cpp \
     widgets/BarcodeWidget.cpp \
     dialogs/AudiometerDialog.cpp \
     dialogs/BodyCompositionDialog.cpp \
@@ -97,7 +97,7 @@ HEADERS += \
     managers/BPMMessage.h \
     managers/BPMCommunication.h \
     managers/FraxManager.h \
-    managers/BodyCompositionAnalyzerManager.h \
+    managers/BodyCompositionManager.h \
     managers/TonometerManager.h \
     managers/CDTTManager.h \
     managers/WeighScaleManager.h \

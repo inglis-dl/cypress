@@ -108,12 +108,12 @@ void MainWindow::initializeConnections()
 
   // Scan for devices
   //
-  connect(&m_manager, &BodyCompositionAnalyzerManager::scanningDevices,
+  connect(&m_manager, &BodyCompositionManager::scanningDevices,
           ui->deviceComboBox, &QComboBox::clear);
 
   // Update the drop down list as devices are discovered during scanning
   //
-  connect(&m_manager, &BodyCompositionAnalyzerManager::deviceDiscovered,
+  connect(&m_manager, &BodyCompositionManager::deviceDiscovered,
           this, [this](const QString &label){
       int index = ui->deviceComboBox->findText(label);
       bool oldState = ui->deviceComboBox->blockSignals(true);
@@ -124,7 +124,7 @@ void MainWindow::initializeConnections()
       ui->deviceComboBox->blockSignals(oldState);
   });
 
-  connect(&m_manager, &BodyCompositionAnalyzerManager::deviceSelected,
+  connect(&m_manager, &BodyCompositionManager::deviceSelected,
           this,[this](const QString &label){
       if(label != ui->deviceComboBox->currentText())
       {
@@ -135,7 +135,7 @@ void MainWindow::initializeConnections()
   // Prompt user to select a device from the drop down list when previously
   // cached device information in the ini file is unavailable or invalid
   //
-  connect(&m_manager, &BodyCompositionAnalyzerManager::canSelectDevice,
+  connect(&m_manager, &BodyCompositionManager::canSelectDevice,
           this,[this](){
       ui->statusBar->showMessage("Ready to select...");
       QMessageBox::warning(
@@ -148,7 +148,7 @@ void MainWindow::initializeConnections()
   // Select a device (serial port) from drop down list
   //
   connect(ui->deviceComboBox, &QComboBox::currentTextChanged,
-          &m_manager,&BodyCompositionAnalyzerManager::selectDevice);
+          &m_manager,&BodyCompositionManager::selectDevice);
 
   // Select a device (serial port) from drop down list
   //
@@ -159,7 +159,7 @@ void MainWindow::initializeConnections()
 
   // Ready to connect device
   //
-  connect(&m_manager, &BodyCompositionAnalyzerManager::canConnectDevice,
+  connect(&m_manager, &BodyCompositionManager::canConnectDevice,
           this,[this](){
       ui->connectButton->setEnabled(true);
       ui->disconnectButton->setEnabled(false);
@@ -173,11 +173,11 @@ void MainWindow::initializeConnections()
   // Connect to device
   //
   connect(ui->connectButton, &QPushButton::clicked,
-          &m_manager, &BodyCompositionAnalyzerManager::connectDevice);
+          &m_manager, &BodyCompositionManager::connectDevice);
 
   // Connection is established, inputs are set and confirmed: enable measurement requests
   //
-  connect(&m_manager, &BodyCompositionAnalyzerManager::canMeasure,
+  connect(&m_manager, &BodyCompositionManager::canMeasure,
           this,[this](){
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
@@ -190,7 +190,7 @@ void MainWindow::initializeConnections()
 
   // Connection is established and a successful reset was done
   //
-  connect(&m_manager, &BodyCompositionAnalyzerManager::canInput,
+  connect(&m_manager, &BodyCompositionManager::canInput,
           this,[this](){
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
@@ -203,7 +203,7 @@ void MainWindow::initializeConnections()
 
   // A successful confirmation of all inputs was done
   //
-  connect(&m_manager, &BodyCompositionAnalyzerManager::canConfirm,
+  connect(&m_manager, &BodyCompositionManager::canConfirm,
           this,[this](){
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
@@ -217,12 +217,12 @@ void MainWindow::initializeConnections()
   // Disconnect from device
   //
   connect(ui->disconnectButton, &QPushButton::clicked,
-          &m_manager, &BodyCompositionAnalyzerManager::disconnectDevice);
+          &m_manager, &BodyCompositionManager::disconnectDevice);
 
   // Reset the device (clear all input settings)
   //
   connect(ui->resetButton, &QPushButton::clicked,
-        &m_manager, &BodyCompositionAnalyzerManager::resetDevice);
+        &m_manager, &BodyCompositionManager::resetDevice);
 
   // Set the inputs to the analyzer
   //
@@ -265,16 +265,16 @@ void MainWindow::initializeConnections()
   // Confirm inputs and check if measurement can proceed
   //
   connect(ui->confirmButton, &QPushButton::clicked,
-        &m_manager, &BodyCompositionAnalyzerManager::confirmSettings);
+        &m_manager, &BodyCompositionManager::confirmSettings);
 
   // Request a measurement from the device
   //
   connect(ui->measureButton, &QPushButton::clicked,
-        &m_manager, &BodyCompositionAnalyzerManager::measure);
+        &m_manager, &BodyCompositionManager::measure);
 
   // Update the UI with any data
   //
-  connect(&m_manager, &BodyCompositionAnalyzerManager::dataChanged,
+  connect(&m_manager, &BodyCompositionManager::dataChanged,
           this,[this](){
       m_manager.buildModel(&m_model);
       int nrow = m_model.rowCount();
@@ -292,7 +292,7 @@ void MainWindow::initializeConnections()
 
   // All measurements received: enable write test results
   //
-  connect(&m_manager, &BodyCompositionAnalyzerManager::canWrite,
+  connect(&m_manager, &BodyCompositionManager::canWrite,
           this,[this](){
       ui->statusBar->showMessage("Ready to save results...");
       ui->saveButton->setEnabled(true);
@@ -300,8 +300,8 @@ void MainWindow::initializeConnections()
 
   QIntValidator *v_age = new QIntValidator(this);
   v_age->setRange(
-    BodyCompositionAnalyzerManager::AGE_MIN,
-    BodyCompositionAnalyzerManager::AGE_MAX);
+    BodyCompositionManager::AGE_MIN,
+    BodyCompositionManager::AGE_MAX);
   ui->ageLineEdit->setValidator(v_age);
 
   // When the units are changed to imperial, the input field for
@@ -314,22 +314,22 @@ void MainWindow::initializeConnections()
      {
          QIntValidator *v_ht = new QIntValidator(this);
          v_ht->setRange(
-           BodyCompositionAnalyzerManager::HEIGHT_MIN_METRIC,
-           BodyCompositionAnalyzerManager::HEIGHT_MAX_METRIC);
+           BodyCompositionManager::HEIGHT_MIN_METRIC,
+           BodyCompositionManager::HEIGHT_MAX_METRIC);
          ui->heightLineEdit->setValidator(v_ht);
      }
      else
      {
          QDoubleValidator *v_ht = new QDoubleValidator(this);
          v_ht->setRange(
-           BodyCompositionAnalyzerManager::HEIGHT_MIN_IMPERIAL,
-           BodyCompositionAnalyzerManager::HEIGHT_MAX_IMPERIAL);
+           BodyCompositionManager::HEIGHT_MIN_IMPERIAL,
+           BodyCompositionManager::HEIGHT_MAX_IMPERIAL);
          v_ht->setDecimals(1);
          ui->heightLineEdit->setValidator(v_ht);
      }
   });
 
-  connect(&m_manager, &BodyCompositionAnalyzerManager::error,
+  connect(&m_manager, &BodyCompositionManager::error,
           this, [this](const QString &error){
       ui->statusBar->showMessage(error);
       QMessageBox::warning(

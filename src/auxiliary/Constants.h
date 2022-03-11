@@ -21,7 +21,7 @@ public:
         typeUnknown,
         typeAudiometer,
         typeBloodPressure,
-        typeBodyCompositionAnalyzer,
+        typeBodyComposition,
         typeCDTT,
         typeChoiceReaction,
         typeECG,

@@ -35,7 +35,7 @@ DialogBase* DialogFactory::instantiate(const Constants::MeasureType &type)
       case Constants::MeasureType::typeWeighScale:
         dialog = new WeighScaleDialog();
         break;
-      case Constants::MeasureType::typeBodyCompositionAnalyzer:
+      case Constants::MeasureType::typeBodyComposition:
         dialog = new BodyCompositionDialog();
         break;
       case Constants::MeasureType::typeAudiometer:

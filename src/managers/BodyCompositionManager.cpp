@@ -1,4 +1,4 @@
-#include "BodyCompositionAnalyzerManager.h"
+#include "BodyCompositionManager.h"
 
 #include <QByteArray>
 #include <QDateTime>
@@ -11,36 +11,32 @@
 #include <QStandardItemModel>
 #include <QtMath>
 
-int BodyCompositionAnalyzerManager::AGE_MIN = 7;
-int BodyCompositionAnalyzerManager::AGE_MAX = 99;
-int BodyCompositionAnalyzerManager::HEIGHT_MIN_METRIC = 90;
-int BodyCompositionAnalyzerManager::HEIGHT_MAX_METRIC = 249;
-double BodyCompositionAnalyzerManager::HEIGHT_MIN_IMPERIAL = 36.0;
-double BodyCompositionAnalyzerManager::HEIGHT_MAX_IMPERIAL = 95.5;
-
-QByteArray BodyCompositionAnalyzerManager::END_CODE = QByteArray(
-  { QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1(),
-    QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1() });
+int BodyCompositionManager::AGE_MIN = 7;
+int BodyCompositionManager::AGE_MAX = 99;
+int BodyCompositionManager::HEIGHT_MIN_METRIC = 90;
+int BodyCompositionManager::HEIGHT_MAX_METRIC = 249;
+double BodyCompositionManager::HEIGHT_MIN_IMPERIAL = 36.0;
+double BodyCompositionManager::HEIGHT_MAX_IMPERIAL = 95.5;
 
 // lookup table of default byte arrays for all serial commands
 //
-QMap<QString,QByteArray> BodyCompositionAnalyzerManager::defaultLUT = BodyCompositionAnalyzerManager::initDefaultLUT();
+QMap<QString,QByteArray> BodyCompositionManager::defaultLUT = BodyCompositionManager::initDefaultLUT();
 
 // lookup table of the unique first two bytes of a request to get the command
 //
-QMap<QByteArray,QString> BodyCompositionAnalyzerManager::commandLUT = BodyCompositionAnalyzerManager::initCommandLUT();
+QMap<QByteArray,QString> BodyCompositionManager::commandLUT = BodyCompositionManager::initCommandLUT();
 
 // lookup table of byte array responses for incorrect inputs
 // NOTE: if any of the set input commands are unclear, the response
 // from the unit can also be the reset command error
 //
-QMap<QByteArray,QString> BodyCompositionAnalyzerManager::incorrectLUT= BodyCompositionAnalyzerManager::initIncorrectResponseLUT();
+QMap<QByteArray,QString> BodyCompositionManager::incorrectLUT= BodyCompositionManager::initIncorrectResponseLUT();
 
 // lookup table of confirmation byte array responses for correct input or request commands
 //
-QMap<QByteArray,QString> BodyCompositionAnalyzerManager::confirmLUT= BodyCompositionAnalyzerManager::initConfirmationLUT();
+QMap<QByteArray,QString> BodyCompositionManager::confirmLUT= BodyCompositionManager::initConfirmationLUT();
 
-BodyCompositionAnalyzerManager::BodyCompositionAnalyzerManager(QObject *parent) : SerialPortManager(parent)
+BodyCompositionManager::BodyCompositionManager(QObject *parent) : SerialPortManager(parent)
 {
   setGroup("body_composition_analyzer");
   m_col = 1;
@@ -62,7 +58,11 @@ BodyCompositionAnalyzerManager::BodyCompositionAnalyzerManager(QObject *parent) 
   m_inputKeyList << "gender";  // <female,male> or <0,1>
 }
 
-QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
+// default command lookup by string
+// the D series commands for setting tare weight, height, and age
+// require specific bytes to be filled with numeric characters
+//
+QMap<QString,QByteArray> BodyCompositionManager::initDefaultLUT()
 {
     QMap<QString,QByteArray> commands;
     QByteArray atom;
@@ -72,7 +72,6 @@ QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
 
     atom = QByteArray("U0");
     atom.append(end);
-    //atom.append(END_CODE);
     commands["set_measurement_system_metric"] = atom;
     atom[1] = '1';
     commands["set_measurement_system_imperial"] = atom;
@@ -84,7 +83,6 @@ QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
 
     atom = QByteArray("D0000.0");
     atom.append(end);
-    //atom.append(END_CODE);
     commands["set_tare_weight"] = atom;
     atom[1] = '3';
     atom[5] = '0';
@@ -92,7 +90,6 @@ QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
 
     atom = QByteArray("D11");
     atom.append(end);
-    //atom.append(END_CODE);
     commands["set_gender_male"] = atom;
     atom[2] = '2';
     commands["set_gender_female"] = atom;
@@ -105,17 +102,14 @@ QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
 
     atom = QByteArray("D400");
     atom.append(end);
-    //atom.append(END_CODE);
     commands["set_age"] = atom;
 
     atom = QByteArray("D?");
     atom.append(end);
-    //atom.append(END_CODE);
     commands["confirm_settings"] = atom;
 
     atom = QByteArray("G1");
     atom.append(end);
-    //atom.append(END_CODE);
     commands["measure_body_fat"] = atom;
     atom[1] = '2';
     commands["measure_weight"] = atom;
@@ -123,13 +117,15 @@ QMap<QString,QByteArray> BodyCompositionAnalyzerManager::initDefaultLUT()
     atom.clear();
     atom.append(0x1f);
     atom.append(end);
-    //atom.append(END_CODE);
     commands["reset"] = atom;
 
     return commands;
 }
 
-QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initCommandLUT()
+// the first two characters of a command are sufficient
+// to identify what it is
+//
+QMap<QByteArray,QString> BodyCompositionManager::initCommandLUT()
 {
     QMap<QByteArray,QString> commands;
     QByteArray atom;
@@ -166,19 +162,18 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initCommandLUT()
     atom.clear();
     atom.append(0x1f);
     atom.append(0x0d);
-//    atom.append(QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1());
     commands[atom] = "reset";
 
     return commands;
 }
 
-QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initConfirmationLUT()
+// the first two characters of a returned buffer are sufficient
+// to identify the source command as being confirmated
+//
+QMap<QByteArray,QString> BodyCompositionManager::initConfirmationLUT()
 {
     QMap<QByteArray,QString> responses;
     QByteArray atom;
-    QByteArray end;
-    end.append(0x0d);
-    end.append(0x0a);
 
     atom = QByteArray("U0");
     responses[atom] = "correct metric measurements setting";
@@ -209,13 +204,14 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initConfirmationLUT()
     atom.clear();
     atom.append(0x1f);
     atom.append(0x0d);
-//    atom.append(QChar(QChar::SpecialCharacter::CarriageReturn).toLatin1());
     responses[atom] = "received reset request";
 
     return responses;
 }
 
-QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initIncorrectResponseLUT()
+// incorrect responses contain "!" character
+//
+QMap<QByteArray,QString> BodyCompositionManager::initIncorrectResponseLUT()
 {
     QMap<QByteArray,QString> responses;
     QByteArray atom;
@@ -225,18 +221,16 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initIncorrectResponseLU
 
     atom = QByteArray("U!");
     atom.append(end);
-    //atom.append(END_CODE);
     responses[atom] = "incorrect measurement system setting";
 
     atom[0] = 'R';
     responses[atom] = "incorrect equation setting";
 
     atom[0] = 'D';
-    responses[atom] = "incorrect tare (tare) weight setting";
+    responses[atom] = "incorrect tare weight setting";
 
     atom = QByteArray("D1!");
     atom.append(end);
-    //atom.append(END_CODE);
     responses[atom] = "incorrect gender setting";
 
     atom[1] = '2';
@@ -250,7 +244,6 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initIncorrectResponseLU
 
     atom = QByteArray("E00");
     atom.append(end);
-    //atom.append(END_CODE);
     responses[atom] = "error: attempted to start measuring without completing settings";
 
     atom[2] = '1';
@@ -273,13 +266,12 @@ QMap<QByteArray,QString> BodyCompositionAnalyzerManager::initIncorrectResponseLU
 
     atom = QByteArray("!");
     atom.append(end);
-    //atom.append(END_CODE);
     responses[atom] = "set input or reset command failed";
 
     return responses;
 }
 
-void BodyCompositionAnalyzerManager::loadSettings(const QSettings &settings)
+void BodyCompositionManager::loadSettings(const QSettings &settings)
 {
     QString name = settings.value(getGroup() + "/client/port").toString();
     if(!name.isEmpty())
@@ -290,7 +282,7 @@ void BodyCompositionAnalyzerManager::loadSettings(const QSettings &settings)
     }
 }
 
-void BodyCompositionAnalyzerManager::saveSettings(QSettings *settings) const
+void BodyCompositionManager::saveSettings(QSettings *settings) const
 {
     if(!m_deviceName.isEmpty())
     {
@@ -302,29 +294,29 @@ void BodyCompositionAnalyzerManager::saveSettings(QSettings *settings) const
     }
 }
 
-void BodyCompositionAnalyzerManager::buildModel(QStandardItemModel *model) const
+void BodyCompositionManager::buildModel(QStandardItemModel *model) const
 {
     QStringList list = m_test.toStringList();
     for(int row = 0; row < list.size(); row++)
     {
-        QStandardItem* item = model->item(row,0);
-        if(Q_NULLPTR == item)
-        {
-           item = new QStandardItem();
-           model->setItem(row,0,item);
-        }
-        item->setData(list.at(row), Qt::DisplayRole);
+      QStandardItem* item = model->item(row,0);
+      if(Q_NULLPTR == item)
+      {
+        item = new QStandardItem();
+        model->setItem(row,0,item);
+      }
+      item->setData(list.at(row), Qt::DisplayRole);
     }
 }
 
-void BodyCompositionAnalyzerManager::clearData()
+void BodyCompositionManager::clearData()
 {
     m_deviceData.reset();
     m_test.reset();
     emit dataChanged();
 }
 
-void BodyCompositionAnalyzerManager::finish()
+void BodyCompositionManager::finish()
 {
     m_deviceData.reset();
     m_deviceList.clear();
@@ -337,17 +329,16 @@ void BodyCompositionAnalyzerManager::finish()
     m_cache.clear();
 }
 
-bool BodyCompositionAnalyzerManager::hasEndCode(const QByteArray &arr) const
+bool BodyCompositionManager::hasEndCode(const QByteArray &arr) const
 {
     int size = arr.isEmpty() ? 0 : arr.size();
     if( 2 > size ) return false;
     return (
        0x0d == arr.at(size-2) && //\r
        0x0a == arr.at(size-1) ); //\n
-    //return arr.endsWith(END_CODE);
 }
 
-void BodyCompositionAnalyzerManager::connectDevice()
+void BodyCompositionManager::connectDevice()
 {
     if(Constants::RunMode::modeSimulate == m_mode)
     {
@@ -366,7 +357,7 @@ void BodyCompositionAnalyzerManager::connectDevice()
       m_port.setBaudRate(QSerialPort::Baud4800);
 
       connect(&m_port, &QSerialPort::readyRead,
-               this, &BodyCompositionAnalyzerManager::readDevice);
+               this, &BodyCompositionManager::readDevice);
 
       connect(&m_port, &QSerialPort::errorOccurred,
               this,[this](QSerialPort::SerialPortError error){
@@ -393,15 +384,15 @@ void BodyCompositionAnalyzerManager::connectDevice()
     }
 }
 
-void BodyCompositionAnalyzerManager::resetDevice()
+void BodyCompositionManager::resetDevice()
 {
     qDebug() << "reset device called, enqueing command";
     clearQueue();
-    m_queue.enqueue(BodyCompositionAnalyzerManager::defaultLUT["reset"]);
+    m_queue.enqueue(BodyCompositionManager::defaultLUT["reset"]);
     writeDevice();
 }
 
-void BodyCompositionAnalyzerManager::confirmSettings()
+void BodyCompositionManager::confirmSettings()
 {
     qDebug() << "***************CONFIRM SETTINGS called *******************";
     clearQueue();
@@ -411,19 +402,19 @@ void BodyCompositionAnalyzerManager::confirmSettings()
     // to measure
     //
     m_cache.clear();
-    m_queue.enqueue(BodyCompositionAnalyzerManager::defaultLUT["confirm_settings"]);
+    m_queue.enqueue(BodyCompositionManager::defaultLUT["confirm_settings"]);
     writeDevice();
 }
 
-void BodyCompositionAnalyzerManager::measure()
+void BodyCompositionManager::measure()
 {
     qDebug() << "measure called";
     clearQueue();
-    m_queue.enqueue(BodyCompositionAnalyzerManager::defaultLUT["measure_body_fat"]);
+    m_queue.enqueue(BodyCompositionManager::defaultLUT["measure_body_fat"]);
     writeDevice();
 }
 
-void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &input)
+void BodyCompositionManager::setInputData(const QMap<QString,QVariant> &input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -463,7 +454,7 @@ void BodyCompositionAnalyzerManager::setInputData(const QMap<QString,QVariant> &
 // inputs should only be set AFTER a successful reset
 // the order of inputs is important
 //
-void BodyCompositionAnalyzerManager::updateInputData(const QMap<QString,QVariant> &input)
+void BodyCompositionManager::updateInputData(const QMap<QString,QVariant> &input)
 {
     if(input.isEmpty()) return;
 
@@ -476,8 +467,8 @@ void BodyCompositionAnalyzerManager::updateInputData(const QMap<QString,QVariant
         units = input["measurement_system"].toString().toLower();
         QByteArray request =
           "metric" == units ?
-          BodyCompositionAnalyzerManager::defaultLUT["set_measurement_system_metric"] :
-          BodyCompositionAnalyzerManager::defaultLUT["set_measurement_system_imperial"];
+          BodyCompositionManager::defaultLUT["set_measurement_system_metric"] :
+          BodyCompositionManager::defaultLUT["set_measurement_system_imperial"];
         m_queue.enqueue(request);
         qDebug() << "enqueued measurement system input " << request << "from " << units;        
     }
@@ -488,8 +479,8 @@ void BodyCompositionAnalyzerManager::updateInputData(const QMap<QString,QVariant
     {
         QByteArray request =
           "westerner" == input["equation"].toString().toLower() ?
-          BodyCompositionAnalyzerManager::defaultLUT["set_equation_westerner"] :
-          BodyCompositionAnalyzerManager::defaultLUT["set_equation_oriental"];
+          BodyCompositionManager::defaultLUT["set_equation_westerner"] :
+          BodyCompositionManager::defaultLUT["set_equation_oriental"];
         m_queue.enqueue(request);
         qDebug() << "enqueued equation input " << request << "from " << input["equation"].toString();
     }
@@ -510,7 +501,7 @@ void BodyCompositionAnalyzerManager::updateInputData(const QMap<QString,QVariant
           QByteArray a = QByteArray::fromStdString(s.toStdString());
           if(5 == a.size())
           {
-            QByteArray request = BodyCompositionAnalyzerManager::defaultLUT["set_tare_weight"];
+            QByteArray request = BodyCompositionManager::defaultLUT["set_tare_weight"];
             request[2] = a[0];
             request[3] = a[1];
             request[4] = a[2];
@@ -534,8 +525,8 @@ void BodyCompositionAnalyzerManager::updateInputData(const QMap<QString,QVariant
     {
         QByteArray request =
           (("female" == input["gender"].toString().toLower()) | (0 == input["gender"].toUInt())) ?
-          BodyCompositionAnalyzerManager::defaultLUT["set_gender_female"] :
-          BodyCompositionAnalyzerManager::defaultLUT["set_gender_male"];
+          BodyCompositionManager::defaultLUT["set_gender_female"] :
+          BodyCompositionManager::defaultLUT["set_gender_male"];
         m_queue.enqueue(request);
         qDebug() << "enqueued gender input " << request << "from " << input["gender"].toString();
     }
@@ -548,8 +539,8 @@ void BodyCompositionAnalyzerManager::updateInputData(const QMap<QString,QVariant
     {
         QByteArray request =
           "athlete" == input["body_type"].toString().toLower() ?
-          BodyCompositionAnalyzerManager::defaultLUT["set_body_type_athlete"] :
-          BodyCompositionAnalyzerManager::defaultLUT["set_body_type_standard"];
+          BodyCompositionManager::defaultLUT["set_body_type_athlete"] :
+          BodyCompositionManager::defaultLUT["set_body_type_standard"];
         m_queue.enqueue(request);
         qDebug() << "enqueued body type input " << request << "from " << input["body_type"].toString();
     }
@@ -579,7 +570,7 @@ void BodyCompositionAnalyzerManager::updateInputData(const QMap<QString,QVariant
           QByteArray a = QByteArray::fromStdString(s.toStdString());
           if(5 == a.size())
           {
-            QByteArray request = BodyCompositionAnalyzerManager::defaultLUT["set_height"];
+            QByteArray request = BodyCompositionManager::defaultLUT["set_height"];
             request[2] = a[0];
             request[3] = a[1];
             request[4] = a[2];
@@ -606,7 +597,7 @@ void BodyCompositionAnalyzerManager::updateInputData(const QMap<QString,QVariant
         int a_max = 99;
         if(a_min <= value && value <= a_max)
         {
-          QByteArray request = BodyCompositionAnalyzerManager::defaultLUT["set_age"];
+          QByteArray request = BodyCompositionManager::defaultLUT["set_age"];
           QString s = QString::number(value);
           QByteArray a = QByteArray::fromStdString(s.toStdString());
           if(2 == a.size())
@@ -628,7 +619,7 @@ void BodyCompositionAnalyzerManager::updateInputData(const QMap<QString,QVariant
      writeDevice();
 }
 
-void BodyCompositionAnalyzerManager::clearQueue()
+void BodyCompositionManager::clearQueue()
 {
     if(!m_queue.isEmpty())
     {
@@ -637,18 +628,20 @@ void BodyCompositionAnalyzerManager::clearQueue()
     }
 }
 
-void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, QByteArray response)
+void BodyCompositionManager::processResponse()
 {
-    if(!hasEndCode(response)) return;
+    if(!hasEndCode(m_buffer)) return;
+    QByteArray request = m_request;
+    QByteArray response = m_buffer;
     m_buffer.clear();
 
     QByteArray commandKey = request.left(2);
-    if(!BodyCompositionAnalyzerManager::commandLUT.contains(commandKey))
+    if(!BodyCompositionManager::commandLUT.contains(commandKey))
     {
-        qDebug() << "ERROR: failed to process response, unknown command " << commandKey << request;
+        qDebug() << "ERROR: failed to process response, unknown command " << commandKey << m_request;
         return;
     }
-    QString requestName = BodyCompositionAnalyzerManager::commandLUT[commandKey];
+    QString requestName = BodyCompositionManager::commandLUT[commandKey];
     qDebug() << "processing response from request " << requestName;
 
     QByteArray code = response.trimmed();
@@ -657,9 +650,9 @@ void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, 
       QString info;
       // lookup the issue
       //
-      if(BodyCompositionAnalyzerManager::incorrectLUT.contains(response))
+      if(BodyCompositionManager::incorrectLUT.contains(response))
       {
-        info = BodyCompositionAnalyzerManager::incorrectLUT[response];
+        info = BodyCompositionManager::incorrectLUT[response];
         qDebug() << "WARNING: the request produced an invalid response " << info;
       }
       else
@@ -701,19 +694,27 @@ void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, 
     {
       // do we have a successful response?
       QString info;
-      if(BodyCompositionAnalyzerManager::confirmLUT.contains(commandKey))
+      if(BodyCompositionManager::confirmLUT.contains(commandKey))
       {
-        info = BodyCompositionAnalyzerManager::confirmLUT[commandKey];
+        info = BodyCompositionManager::confirmLUT[commandKey];
         qDebug() << "CONFIRMED: the command was accepted " << info;
       }
       if(requestName.startsWith("confirm_"))
       {
-         m_cache.push_back(response);
-         // confirm inputs completed
-         if(5 == m_cache.size())
+         if(Constants::RunMode::modeSimulate == m_mode)
          {
+           emit message(tr("Ready to measure..."));
+           emit canMeasure();
+         }
+         else
+         {
+           m_cache.push_back(response);
+           // confirm inputs completed
+           if(5 == m_cache.size())
+           {
              emit message(tr("Ready to measure..."));
              emit canMeasure();
+           }
          }
       }
       else if(requestName.startsWith("set_"))
@@ -733,24 +734,32 @@ void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, 
       }
       else if(requestName.startsWith("measure_"))
       {
-          // clear the buffer and wait for the buffer to fill with the measurement data
-          //
-          m_buffer.clear();
-          qDebug() << "received complete measurement request buffer, size = " << QString::number(response.size());
-          if(59 == response.size())
+          if(Constants::RunMode::modeSimulate == m_mode)
           {
+            m_test.simulate(
+              m_inputData["age"].toDouble(),
+              m_inputData["gender"].toString(),
+              m_inputData["height"].toDouble());
+          }
+          else
+          {
+            qDebug() << "received complete measurement request buffer, size = " << QString::number(response.size());
+            if(59 == response.size())
+            {
               qDebug() << "passing response to test for parsing ...";
               m_test.fromArray(response);
-              if(m_test.isValid())
-              {
-                  qDebug() << "OK: valid test";
-                  emit message(tr("Ready to save results..."));
-                  emit canWrite();
-              }
-              else
-                  qDebug() << "ERROR: invalid test";
-              emit dataChanged();
+            }
           }
+          if(m_test.isValid())
+          {
+            qDebug() << "OK: valid test";
+            emit message(tr("Ready to save results..."));
+            emit canWrite();
+           }
+           else
+             qDebug() << "ERROR: invalid test";
+
+          emit dataChanged();
       }
       else if("reset" == requestName)
       {
@@ -763,14 +772,18 @@ void BodyCompositionAnalyzerManager::processResponse(const QByteArray &request, 
     writeDevice();
 }
 
-void BodyCompositionAnalyzerManager::readDevice()
+void BodyCompositionManager::readDevice()
 {
     if(Constants::RunMode::modeSimulate == m_mode)
     {
         // parent SerialPortManager class calls
         // readDevice for the current request
         // simulate a successful test here
-        m_buffer = END_CODE;
+        QByteArray end;
+        end.append(0x0d);
+        end.append(0x0a);
+        m_buffer = end;
+        qDebug() << "simulated buffer with end code" << m_buffer.toHex();
     }
     else
     {
@@ -781,11 +794,11 @@ void BodyCompositionAnalyzerManager::readDevice()
       qDebug() << "read device received buffer " << m_buffer;
 
     qDebug() <<"readDevice process response start";
-    processResponse(m_request, m_buffer);
+    processResponse();
     qDebug() <<"readDevice process response end";
 }
 
-void BodyCompositionAnalyzerManager::writeDevice()
+void BodyCompositionManager::writeDevice()
 {
   if(!m_queue.isEmpty())
   {
@@ -800,7 +813,7 @@ void BodyCompositionAnalyzerManager::writeDevice()
     else
     {
       if(m_verbose)
-        qDebug() << "dequeued request " << BodyCompositionAnalyzerManager::commandLUT[m_request.left(2)] << m_request;
+        qDebug() << "dequeued request " << BodyCompositionManager::commandLUT[m_request.left(2)] << m_request.toHex();
       m_buffer.clear();
 
       if(Constants::RunMode::modeSimulate == m_mode)
@@ -819,7 +832,7 @@ void BodyCompositionAnalyzerManager::writeDevice()
   }
 }
 
-QJsonObject BodyCompositionAnalyzerManager::toJsonObject() const
+QJsonObject BodyCompositionManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
