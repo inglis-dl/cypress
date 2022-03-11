@@ -28,10 +28,11 @@ HEADERS += \
     ../../data/CDTTMeasurement.h \
     ../../data/CDTTTest.h \
     ../../data/ExcelQueryHelper.h \
-    ../../data/MeasurementBase.h \
+    ../../data/Measurement.h \
     ../../data/TestBase.h \
     ../../auxiliary/CommandLineParser.h \
-    ../../auxiliary/CypressConstants.h \
+    ../../auxiliary/Constants.h \
+    ../../auxiliary/Utilities.h \
     ../../managers/ManagerBase.h \
     ../../managers/CDTTManager.h \
     ../../widgets/BarcodeWidget.h \
@@ -39,11 +40,11 @@ HEADERS += \
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-    ../../auxiliary/CypressConstants.cpp \
+    ../../auxiliary/Constants.cpp \
     ../../data/CDTTMeasurement.cpp \
     ../../data/CDTTTest.cpp \
     ../../data/ExcelQueryHelper.cpp \
-    ../../data/MeasurementBase.cpp \
+    ../../data/Measurement.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/CDTTManager.cpp \
     ../../widgets/BarcodeWidget.cpp \

@@ -77,7 +77,7 @@ void ChoiceReactionManager::buildModel(QStandardItemModel *model) const
         ChoiceReactionMeasurement m = m_test.getMeasurement(i);
         if(m.isValid())
            s = "[" + QString::number(i+1) +"] " + m.toString();
-        int col = "left" == m.getCharacteristic("correct position") ? 0 : 1;
+        int col = "left" == m.getAttributeValue("correct_position").toString() ? 0 : 1;
         int *row = 0 == col ? &row_left : &row_right;
         QStandardItem* item = model->item(*row,col);
         if(Q_NULLPTR == item)
@@ -92,7 +92,7 @@ void ChoiceReactionManager::buildModel(QStandardItemModel *model) const
 
 bool ChoiceReactionManager::isDefined(const QString &exeName) const
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
        return true;
     }
@@ -140,29 +140,35 @@ void ChoiceReactionManager::selectRunnable(const QString &exeName)
 
 void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    m_inputData = input;
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-        m_inputData["barcode"] = "00000000";
-        m_inputData["language"] = "english";
-        return;
+        if(!input.contains("barcode"))
+          m_inputData["barcode"] = Constants::DefaultBarcode;
+        if(!input.contains("language"))
+          m_inputData["language"] = "english";
     }
     bool ok = true;
-    m_inputData = input;
-    for(auto&& x : m_inputKeyList)
+    foreach(auto key, m_inputKeyList)
     {
-        if(!input.contains(x))
-        {
-            ok = false;
-            break;
-        }
+      if(!m_inputData.contains(key))
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
     }
     if(!ok)
-        m_inputData.clear();
-    else
     {
-        qDebug() << "OK: input data is ok in setInputData()";
-        configureProcess();
+      if(m_verbose)
+        qDebug() << "ERROR: invalid input data";
+
+      emit message(tr("ERROR: the input data is incorrect"));
+      m_inputData.clear();
     }
+    else
+      configureProcess();
 }
 
 void ChoiceReactionManager::loadSettings(const QSettings &settings)
@@ -195,7 +201,7 @@ void ChoiceReactionManager::clearData()
 
 void ChoiceReactionManager::configureProcess()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode &&
+    if(Constants::RunMode::modeSimulate == m_mode &&
        !m_inputData.isEmpty())
     {
         emit message(tr("Ready to measure..."));
@@ -254,21 +260,20 @@ void ChoiceReactionManager::configureProcess()
 
 void ChoiceReactionManager::readOutput()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         qDebug() << "simulating read out";
-        m_test.addMetaDataCharacteristic("start_datetime",QDateTime::currentDateTime());
         m_test.reset();
+        m_test.addMetaData("start_datetime",QDateTime::currentDateTime());
+        m_test.addMetaData("version","simulated");
+        m_test.addMetaData("user_id",m_inputData["barcode"]);
+        m_test.addMetaData("interviewer_id","simulated");
+        m_test.addMetaData("end_datetime",QDateTime::currentDateTime());
+        m_test.addMetaData("number_of_measurements",60);
         for(int i = 0; i < 60; i++)
         {
             m_test.addMeasurement(ChoiceReactionMeasurement::simulate());
         }
-        m_test.addMetaDataCharacteristic("version","simulated");
-        m_test.addMetaDataCharacteristic("user_id","00000000");
-        m_test.addMetaDataCharacteristic("interviewer_id","simulated");
-        m_test.addMetaDataCharacteristic("end_datetime",QDateTime::currentDateTime());
-        m_test.addMetaDataCharacteristic("number_of_measurements",60);
-
         emit message(tr("Ready to save results..."));
         emit canWrite();
         emit dataChanged();
@@ -289,7 +294,6 @@ void ChoiceReactionManager::readOutput()
     // YYYYMMDD is the current date.  Multiple runs of CCB.exe therefore overwrite
     // the output file.
     // user id and interviewer id are embedded in the csv file content.
-    //
     //
     QStringList pattern;
     pattern << CCB_PREFIX << CCB_CLINIC << QDate().currentDate().toString("yyyyMMdd");
@@ -324,7 +328,7 @@ void ChoiceReactionManager::readOutput()
 
 void ChoiceReactionManager::measure()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         readOutput();
         return;
@@ -354,7 +358,7 @@ void ChoiceReactionManager::finish()
 QJsonObject ChoiceReactionManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if(CypressConstants::RunMode::Simulate != m_mode)
+    if(Constants::RunMode::modeSimulate != m_mode)
     {
       QFile ofile(m_outputFile);
       ofile.open(QIODevice::ReadOnly);

@@ -47,14 +47,14 @@ void FraxDialog::initializeConnections()
 
   // Disable all buttons by default
   //
-  for(auto&& x : this->findChildren<QPushButton *>())
+  foreach(auto button, this->findChildren<QPushButton *>())
   {
-      x->setEnabled(false);
+    button->setEnabled(false);
 
-      // disable enter key press event passing onto auto focus buttons
-      //
-      x->setDefault(false);
-      x->setAutoDefault(false);
+    // disable enter key press event passing onto auto focus buttons
+    //
+    button->setDefault(false);
+    button->setAutoDefault(false);
   }
 
   // Close the application
@@ -69,7 +69,7 @@ void FraxDialog::initializeConnections()
   // Every instrument stage launched by an interviewer requires input
   // of the interview barcode that accompanies a participant.
   // The expected barcode is passed from upstream via .json file.
-  // In simulate mode this value is ignored and a default barcode "00000000" is
+  // In simulate mode this value is ignored and a default barcode Constants::DefaultBarcode is
   // assigned instead.
   // In production mode the input to the barcodeLineEdit is verified against
   // the content held by the manager and a message or exception is thrown accordingly
@@ -77,9 +77,9 @@ void FraxDialog::initializeConnections()
   // TODO: for DCS interviews, the first digit corresponds the the wave rank
   // for inhome interviews there is a host dependent prefix before the barcode
   //
-  if(CypressConstants::RunMode::Simulate == m_mode)
+  if(Constants::RunMode::modeSimulate == m_mode)
   {
-    ui->barcodeWidget->setBarcode("00000000");
+    ui->barcodeWidget->setBarcode(Constants::DefaultBarcode);
   }
 
   connect(ui->barcodeWidget,&BarcodeWidget::validated,
@@ -101,8 +101,9 @@ void FraxDialog::initializeConnections()
 
   connect(derived.get(),&FraxManager::canSelectRunnable,
             this,[this](){
-        for(auto&& x : this->findChildren<QPushButton *>())
-            x->setEnabled(false);
+        foreach(auto button, this->findChildren<QPushButton *>())
+            button->setEnabled(false);
+
         ui->closeButton->setEnabled(true);
         ui->openButton->setEnabled(true);
         static bool warn = true;

@@ -29,23 +29,28 @@ AudiometerManager::AudiometerManager(QObject *parent)
     //
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
+
+    m_test.setMaximumNumberOfMeasurements(16);
 }
 
 void AudiometerManager::buildModel(QStandardItemModel* model) const
 {
-    QVector<QString> v_side({"left","right"});
-    for(auto&& side : v_side)
+    QStringList sides = {"left","right"};
+    foreach(auto side, sides)
     {
-      int i_freq = 0;
+      int index = 0;
       int col = "left" == side ? 0 : 1;
       for(int row = 0; row < m_row; row++)
       {
-        HearingMeasurement m = m_test.getMeasurement(side,i_freq);
+        HearingMeasurement m = m_test.getMeasurement(side,index);
+        if(m_verbose)
+            qDebug() << m.toString();
+
         if(!m.isValid())
-           m.fromCode(side,i_freq,"AA");
+           m.fromCode(side,index,"AA");
         QStandardItem* item = model->item(row,col);
         item->setData(m.toString(), Qt::DisplayRole);
-        i_freq++;
+        index++;
       }
     }
 }
@@ -56,6 +61,7 @@ void AudiometerManager::loadSettings(const QSettings &settings)
     if(!name.isEmpty())
     {
       setProperty("deviceName", name);
+      selectDevice(m_deviceName);
       if(m_verbose)
           qDebug() << "using serial port " << m_deviceName << " from settings file";
     }
@@ -63,37 +69,45 @@ void AudiometerManager::loadSettings(const QSettings &settings)
 
 void AudiometerManager::saveSettings(QSettings *settings) const
 {
-    if(!m_deviceName.isEmpty())
+    if(isDefined(m_deviceName))
     {
       settings->beginGroup(getGroup());
       settings->setValue("client/port",m_deviceName);
       settings->endGroup();
       if(m_verbose)
-          qDebug() << "wrote serial port to settings file";
+        qDebug() << "wrote serial port to settings file";
     }
 }
 
 void AudiometerManager::setInputData(const QMap<QString, QVariant> &input)
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    m_inputData = input;
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-        m_inputData["barcode"] = "00000000";
-        m_inputData["language"] = "english";
-        return;
+        if(!input.contains("barcode"))
+          m_inputData["barcode"] = Constants::DefaultBarcode;
+        if(!input.contains("language"))
+          m_inputData["language"] = "english";
     }
     bool ok = true;
-    m_inputData = input;
-    for(auto&& x : m_inputKeyList)
+    foreach(auto key, m_inputKeyList)
     {
-        if(!input.contains(x))
-        {
-            ok = false;
-            qDebug() << "ERROR: missing expected input " << x;
-            break;
-        }
+      if(!m_inputData.contains(key))
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
     }
     if(!ok)
-        m_inputData.clear();
+    {
+      if(m_verbose)
+        qDebug() << "ERROR: invalid input data";
+
+      emit message(tr("ERROR: the input data is incorrect"));
+      m_inputData.clear();
+    }
 }
 
 void AudiometerManager::clearData()
@@ -104,11 +118,12 @@ void AudiometerManager::clearData()
 
 void AudiometerManager::finish()
 {
+    if(m_port.isOpen())
+        m_port.close();
+
     m_deviceData.reset();
     m_deviceList.clear();
     m_test.reset();
-    if(m_port.isOpen())
-        m_port.close();
 }
 
 bool AudiometerManager::hasEndCode(const QByteArray &arr)
@@ -118,7 +133,7 @@ bool AudiometerManager::hasEndCode(const QByteArray &arr)
 
 void AudiometerManager::readDevice()
 {
-   if(CypressConstants::RunMode::Simulate == m_mode)
+   if(Constants::RunMode::modeSimulate == m_mode)
     {
         QString sim;
         QDateTime now = QDateTime::currentDateTime();
@@ -129,8 +144,10 @@ void AudiometerManager::readDevice()
         int i = now.time().minute();
         char buffer[20];
         sprintf(buffer,"%02d/%02d/%d%02d:%02d:00",m,d,y,h,i);
+        QString id = m_inputData["barcode"].toString().leftJustified(14,' ');
         QTextStream(&sim)
-          << "\u00010\u0002000000000      "
+          << "\u00010\u00020"
+          << id
           << "00055801011124431"
           << buffer
           << "04/01/20000000000       "
@@ -154,13 +171,13 @@ void AudiometerManager::readDevice()
             emit message(tr("Ready to save results..."));
             emit canWrite();
         }
-
         emit dataChanged();
     }
 }
 
 void AudiometerManager::measure()
 {
+    emit message(tr("Measuring hearing levels..."));
     clearData();
     const char cmd[] = {0x05,'4',0x0d};
     m_request = QByteArray::fromRawData(cmd,3);
@@ -173,7 +190,7 @@ void AudiometerManager::writeDevice()
     //
     m_buffer.clear();
 
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         if(m_verbose)
           qDebug() << "in simulate mode writeDevice with request " << QString(m_request);

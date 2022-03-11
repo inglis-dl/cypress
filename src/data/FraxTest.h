@@ -22,6 +22,8 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
+    void simulate();
+
 private:
 
     QList<QString> m_outputKeyList;

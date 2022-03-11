@@ -1,7 +1,7 @@
 #ifndef FRAXMEASUREMENT_H
 #define FRAXMEASUREMENT_H
 
-#include "MeasurementBase.h"
+#include "Measurement.h"
 
 /*!
 * \class FraxMeasurement
@@ -10,10 +10,10 @@
 * Frax measurements are derived from output.txt file produced by Frax blackbox.exe
 * This class facilitates converting the given inputs to output.
 *
-* \sa MeasurementBase
+* \sa Measurement
 */
 
-class FraxMeasurement : public MeasurementBase
+class FraxMeasurement : public Measurement
 {
 public:
     FraxMeasurement() = default;

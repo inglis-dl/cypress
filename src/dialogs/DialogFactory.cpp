@@ -1,7 +1,7 @@
 #include "DialogFactory.h"
 
 #include "AudiometerDialog.h"
-//#include "BloodPressureDialog.h"
+#include "BloodPressureDialog.h"
 #include "ThermometerDialog.h"
 #include "BodyCompositionDialog.h"
 #include "CDTTDialog.h"
@@ -9,6 +9,7 @@
 #include "FraxDialog.h"
 #include "TonometerDialog.h"
 #include "WeighScaleDialog.h"
+
 #include <QDebug>
 
 DialogFactory *DialogFactory::pInstance = Q_NULLPTR;
@@ -26,48 +27,48 @@ DialogFactory::~DialogFactory()
         pInstance = Q_NULLPTR;
 }
 
-DialogBase* DialogFactory::instantiate(const CypressConstants::MeasureType &type)
+DialogBase* DialogFactory::instantiate(const Constants::MeasureType &type)
 {
     DialogBase* dialog = Q_NULLPTR;
     switch(type)
     {
-      case CypressConstants::MeasureType::WeighScale:
+      case Constants::MeasureType::typeWeighScale:
         dialog = new WeighScaleDialog();
         break;
-      case CypressConstants::MeasureType::BodyCompositionAnalyzer:
+      case Constants::MeasureType::typeBodyCompositionAnalyzer:
         dialog = new BodyCompositionDialog();
         break;
-      case CypressConstants::MeasureType::Audiometer:
+      case Constants::MeasureType::typeAudiometer:
         dialog = new AudiometerDialog();
         break;
-      case CypressConstants::MeasureType::ChoiceReaction:
+      case Constants::MeasureType::typeChoiceReaction:
         dialog = new ChoiceReactionDialog();
         break;
-      case CypressConstants::MeasureType::Thermometer:
+      case Constants::MeasureType::typeThermometer:
         dialog = new ThermometerDialog();
         break;
-      case CypressConstants::MeasureType::Frax:
+      case Constants::MeasureType::typeFrax:
         dialog = new FraxDialog();
         break;
-      case CypressConstants::MeasureType::CDTT:
+      case Constants::MeasureType::typeCDTT:
         dialog = new CDTTDialog();
         break;
-      case CypressConstants::MeasureType::Tonometer:
+      case Constants::MeasureType::typeTonometer:
         dialog = new TonometerDialog();
         break;
-      case CypressConstants::MeasureType::Spirometer:
+      case Constants::MeasureType::typeSpirometer:
         //dialog = Q_NULLPTR;
         break;
-      case CypressConstants::MeasureType::BloodPressure:
+      case Constants::MeasureType::typeBloodPressure:
+        dialog = new BloodPressureDialog();
+        break;
+      case Constants::MeasureType::typeRetinalCamera:
         //dialog = Q_NULLPTR;
         break;
-      case CypressConstants::MeasureType::RetinalCamera:
+      case Constants::MeasureType::typeECG:
         //dialog = Q_NULLPTR;
         break;
-      case CypressConstants::MeasureType::ECG:
-        //dialog = Q_NULLPTR;
-        break;
-      case CypressConstants::MeasureType::None:
+      case Constants::MeasureType::typeUnknown:
         //dialog = Q_NULLPTR;
         break;
       default:
@@ -80,5 +81,5 @@ DialogBase* DialogFactory::instantiate(const CypressConstants::MeasureType &type
 DialogBase* DialogFactory::instantiate(const QString& name)
 {
     qDebug() << "factory making a" << name;
-    return instantiate(CypressConstants::getMeasureType(name));
+    return instantiate(Constants::getMeasureType(name));
 }

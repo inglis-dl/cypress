@@ -5,7 +5,7 @@
 #include <QSerialPortInfo>
 
 #include "ManagerBase.h"
-#include "../data/MeasurementBase.h"
+#include "../data/Measurement.h"
 
 class SerialPortManager : public ManagerBase
 {
@@ -101,7 +101,7 @@ protected:
     void scanDevices();
 
     // device data is separate from test data
-    MeasurementBase m_deviceData;
+    Measurement m_deviceData;
 
     // list of available serial ports
     QMap<QString,QSerialPortInfo> m_deviceList;

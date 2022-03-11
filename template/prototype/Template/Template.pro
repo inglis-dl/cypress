@@ -25,26 +25,30 @@ CONFIG += c++11 console
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 HEADERS += ./MainWindow.h \
-    ../../../src/data/MeasurementBase.h \
+    ../../../src/data/Measurement.h \
     ../../../src/data/TestBase.h \
     ../../../src/auxiliary/CommandLineParser.h \
-    ../../../src/auxiliary/CypressConstants.h \
+    ../../../src/auxiliary/Constants.h \
     ../../../src/managers/ManagerBase.h \
     ../../data/TemplateMeasurement.h \
     ../../data/TemplateTest.h \
-    ../../managers/TemplateManager.h
+    ../../managers/TemplateManager.h \
+    ../../../src/widgets/BarcodeWidget.h
 
 SOURCES += ./MainWindow.cpp \
     ./main.cpp \
     ../../../src/auxiliary/CommandLineParser.cpp \
-    ../../../src/auxiliary/CypressConstants.cpp \
-    ../../../src/data/MeasurementBase.cpp \
+    ../../../src/auxiliary/Constants.cpp \
+    ../../../src/data/Measurement.cpp \
     ../../../src/managers/ManagerBase.cpp \
     ../../data/TemplateMeasurement.cpp \
     ../../data/TemplateTest.cpp \
-    ../../managers/TemplateManager.cpp
+    ../../managers/TemplateManager.cpp \
+    ../../../src/widgets/BarcodeWidget.cpp
 
-FORMS += ./MainWindow.ui
+FORMS += \
+    ../../../src/widgets/barcodewidget.ui \
+    MainWindow.ui
 
 TRANSLATIONS += \
     TEMPLATE_en_CA.ts

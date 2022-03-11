@@ -1,5 +1,7 @@
 #include "CDTTTest.h"
+
 #include "ExcelQueryHelper.h"
+#include "../auxiliary/Utilities.h"
 
 #include <QDebug>
 #include <QJsonObject>
@@ -28,50 +30,78 @@ CDTTTest::CDTTTest()
     m_outputKeyList << "test_ear";
     m_outputKeyList << "sp_level";
     m_outputKeyList << "msk_level";
+    m_outputKeyList << "speech_reception_threshold";
+    m_outputKeyList << "standard_deviation";
+    m_outputKeyList << "reversal_count";
+    m_outputKeyList << "trial_count";
 }
 
 void CDTTTest::simulate(const QString &barcode)
 {
   reset();
-  addMetaDataCharacteristic("subject_id",barcode);
-  addMetaDataCharacteristic("datetime",QDateTime::currentDateTime());
-  addMetaDataCharacteristic("language","EN_CA");
-  addMetaDataCharacteristic("talker","Male");
-  addMetaDataCharacteristic("mode","Adaptive");
-  addMetaDataCharacteristic("digits","TRIPLET-80");
-  addMetaDataCharacteristic("list_number",1);
-  addMetaDataCharacteristic("msk_signal","SSNOISE");
-  addMetaDataCharacteristic("test_ear","Binaural");
-  addMetaDataCharacteristic("sp_level",65.0f);
-  addMetaDataCharacteristic("msk_level",65.0f);
-
-  CDTTMeasurement m;
-
-  m.setCharacteristic("name","speech_reception_threshold");
+  addMetaData("subject_id",barcode);
+  addMetaData("datetime",QDateTime::currentDateTime());
+  addMetaData("language","EN_CA");
+  addMetaData("talker","Male");
+  addMetaData("mode","Adaptive");
+  addMetaData("digits","TRIPLET-80");
+  addMetaData("list_number",1);
+  addMetaData("msk_signal","SSNOISE");
+  addMetaData("test_ear","Binaural");
+  addMetaData("sp_level",65.0f,"dB");
+  addMetaData("msk_level",65.0f,"dB");
 
   // typical double range from -14 to +2
   //
   double mu = QRandomGenerator::global()->generateDouble();
-  double srt = (1.0 - mu)*-14.0f + mu*2.0f;
-  m.setCharacteristic("value",srt);
-  addMeasurement(m);
-  m.reset();
-
-  m.setCharacteristic("name","standard_deviation");
+  double srt = Utilities::interp(-14.0f,2.0f,mu);
+  addMetaData("speech_reception_threshold",srt,"dB");
 
   //typical double range 1 - 5
   //
-  double stddev = (1.0 - mu)*1.0f + mu*5.0f;
-  m.setCharacteristic("value",stddev);
-  addMeasurement(m);
-  m.reset();
-
-  m.setCharacteristic("name","reversal_count");
+  double stddev = Utilities::interp(1.0f,5.0f,mu);
+  addMetaData("standard_deviation",stddev,"dB");
 
   // typical integer range 6 to 20
   //
-  m.setCharacteristic("value",QRandomGenerator::global()->bounded(6, 20));
-  addMeasurement(m);
+  addMetaData("reversal_count",QRandomGenerator::global()->bounded(6, 20));
+
+  int numTrial = 24;
+  addMetaData("trial_count",numTrial);
+  int trial = 1;
+  do
+  {
+    CDTTMeasurement m;
+    m.simulate(trial);
+    addMeasurement(m);
+  }
+  while(trial++ != numTrial);
+}
+
+QStringList CDTTTest::toStringList() const
+{
+    QStringList list;
+    if(hasMetaData("speech_reception_threshold"))
+    {
+        list << QString("SRT: %1").arg(getMetaDataAsString("speech_reception_threshold"));
+    }
+    if(hasMetaData("standard_deviation"))
+    {
+        list << QString("StdDev: %1").arg(getMetaDataAsString("standard_deviation"));
+    }
+    if(hasMetaData("reversal_count"))
+    {
+        list << QString("Reversals: %1").arg(getMetaDataAsString("reversal_count"));
+    }
+    if(hasMetaData("trial_count"))
+    {
+        list << QString("Trials: %1").arg(getMetaDataAsString("trial_count"));
+    }    foreach(auto m, m_measurementList)
+    {
+        list << m.toString();
+    }
+
+    return list;
 }
 
 void CDTTTest::fromDatabase(const QSqlDatabase &db)
@@ -90,7 +120,7 @@ void CDTTTest::fromDatabase(const QSqlDatabase &db)
     }
     if(ok)
     {
-      ok = readTrialData(db);
+      readTrialData(db);
     }
   }
 }
@@ -114,7 +144,7 @@ bool CDTTTest::readBarcode(const QSqlDatabase &db)
       if(obj.contains("header_valid") &&
          obj["header_valid"].toBool())
       {
-         addMetaDataCharacteristic("subject_id",obj["Subject ID:"].toString());
+         addMetaData("subject_id",obj["Subject ID:"].toString());
       }
       else
           ok = false;
@@ -150,16 +180,16 @@ bool CDTTTest::readMetaData(const QSqlDatabase &db)
          obj["header_valid"].toBool())
       {
          QString s = obj["Date & time"].toString().simplified().replace(", "," ");
-         addMetaDataCharacteristic("datetime",QDateTime::fromString(s, "yyyy-MM-dd hh:mm:ss"));
-         addMetaDataCharacteristic("language",obj["Language"].toString());
-         addMetaDataCharacteristic("talker",obj["Talker"].toString());
-         addMetaDataCharacteristic("mode",obj["Mode"].toString());
-         addMetaDataCharacteristic("digits",obj["Digits"].toString());
-         addMetaDataCharacteristic("list_number",obj["List #"].toInt());
-         addMetaDataCharacteristic("msk_signal",obj["MSK signal"].toString());
-         addMetaDataCharacteristic("test_ear",obj["Test Ear"].toString());
-         addMetaDataCharacteristic("sp_level",obj["SP level"].toDouble());
-         addMetaDataCharacteristic("msk_level",obj["MSK level"].toDouble());
+         addMetaData("datetime",QDateTime::fromString(s, "yyyy-MM-dd hh:mm:ss"));
+         addMetaData("language",obj["Language"].toString());
+         addMetaData("talker",obj["Talker"].toString());
+         addMetaData("mode",obj["Mode"].toString());
+         addMetaData("digits",obj["Digits"].toString());
+         addMetaData("list_number",obj["List #"].toInt());
+         addMetaData("msk_signal",obj["MSK signal"].toString());
+         addMetaData("test_ear",obj["Test Ear"].toString());
+         addMetaData("sp_level",obj["SP level"].toDouble(),"dB");
+         addMetaData("msk_level",obj["MSK level"].toDouble(),"dB");
       }
       else
           ok = false;
@@ -185,18 +215,9 @@ bool CDTTTest::readSummary(const QSqlDatabase &db)
       if(obj.contains("header_valid") &&
          obj["header_valid"].toBool())
       {
-        CDTTMeasurement m;
-        m.setCharacteristic("name","speech_reception_threshold");
-        m.setCharacteristic("value",obj["SRT"].toDouble());
-        addMeasurement(m);
-        m.reset();
-        m.setCharacteristic("name","standard_deviation");
-        m.setCharacteristic("value",obj["St# Dev#"].toDouble());
-        addMeasurement(m);
-        m.reset();
-        m.setCharacteristic("name","reversal_count");
-        m.setCharacteristic("value",obj["Reversals"].toInt());
-        addMeasurement(m);
+        addMetaData("speech_reception_threshold",obj["SRT"].toDouble(),"dB");
+        addMetaData("standard_deviation",obj["St# Dev#"].toDouble(),"dB");
+        addMetaData("reversal_count",obj["Reversals"].toInt());
       }
       else
         ok = false;
@@ -213,8 +234,8 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
     // by querying the first column of the sheet
     //
     QString sheet = QString("%1-%2").arg(
-      getMetaDataCharacteristic("language").toString(),
-      getMetaDataCharacteristic("talker").toString());
+      getMetaData("language").toString(),
+      getMetaData("talker").toString());
 
     ExcelQueryHelper helper = ExcelQueryHelper("A13","A60",sheet);
     bool ok = true;
@@ -229,11 +250,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
     QJsonObject obj = helper.getOutput();
     QJsonArray arr = obj["column_0"].toArray();
     int num_row = arr.last().toInt();
-
-    CDTTMeasurement m;
-    m.setCharacteristic("name","trial_count");
-    m.setCharacteristic("value",num_row);
-    addMeasurement(m);
+    addMetaData("trial_count",num_row);
 
     QString cell_suffix = QString::number(13+num_row-1);
     QString endCell = "D" + cell_suffix;
@@ -241,18 +258,27 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
     qDebug() << "-----------getting stimulus digits...";
     // get the stimulus digits
     helper = ExcelQueryHelper("B13",endCell,sheet);
+
+    QMap<int,CDTTMeasurement> measures;
     if((ok = helper.buildQuery(db)))
     {
       helper.setOrder(ExcelQueryHelper::Order::Row);
       helper.setPrefix("stimulus_");
       helper.processQuery();
       obj = helper.getOutput();
+      int index = 0;
       for(auto it = obj.constBegin(), end=obj.constEnd(); it!=end; it++)
       {
          CDTTMeasurement m;
-         m.setCharacteristic("name",it.key());
-         m.setCharacteristic("value",it.value().toVariant());
-         addMeasurement(m);
+         index++;
+         int trial_number = it.key().remove(0,9).toInt()+1;
+         m.setAttribute("trial",trial_number);
+         m.setAttribute("stimulus",it.value().toVariant());
+         measures[trial_number] = m;
+      }
+      if(num_row != index)
+      {
+          qDebug() << "ERROR: incorrect readout from stimulus data query";
       }
     }
     else
@@ -268,15 +294,28 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
       helper.setPrefix("response_");
       helper.processQuery();
       obj = helper.getOutput();
+      int index = 0;
       for(auto it = obj.constBegin(), end=obj.constEnd(); it!=end; it++)
       {
-         CDTTMeasurement m;
-         m.setCharacteristic("name",it.key());
-         m.setCharacteristic("value",it.value().toVariant());
-         addMeasurement(m);
+        int trial_number = it.key().remove(0,9).toInt()+1;
+        if(measures.contains(trial_number))
+        {
+          CDTTMeasurement m = measures.take(trial_number);
+          m.setAttribute("response",it.value().toVariant());
+          measures[trial_number] = m;
+        }
+        index++;
+      }
+      if(num_row != index)
+      {
+          qDebug() << "ERROR: incorrect readout from response data query";
       }
     }
-
+    if(ok)
+    {
+      foreach(auto m, measures)
+        addMeasurement(m);
+    }
     return ok;
 }
 
@@ -284,45 +323,44 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
 //
 QString CDTTTest::toString() const
 {
-    QString s;
+    QString str;
     if(isValid())
     {
-        QStringList l;
-        for(auto&& x : m_measurementList)
+        QStringList list;
+        foreach(auto m, m_measurementList)
         {
-            l << x.toString();
+          list << m.toString();
         }
-        s = l.join("\n");
+        str = list.join("\n");
     }
-    return s;
+    return str;
 }
 
 bool CDTTTest::isValid() const
 {
     bool okMeta = true;
-    for(auto&& key : m_outputKeyList)
+    foreach(auto key, m_outputKeyList)
     {
-      if(!hasMetaDataCharacteristic(key))
+      if(!hasMetaData(key))
       {
          okMeta = false;
-         qDebug() << "ERROR: missing test meta data " << key;
+         qDebug() << "test invalid missing metadata"<<key;
          break;
        }
     }
     bool okTest = 0 < getNumberOfMeasurements();
     if(okTest)
     {
-      for(auto&& x : m_measurementList)
+      foreach(auto m, m_measurementList)
       {
-        if(!x.isValid())
+        if(!m.isValid())
         {
+          qDebug() << "test invalid measurement"<<m;
           okTest = false;
-          qDebug() << "ERROR: invalid test measurement";
           break;
         }
       }
     }
-
     return okMeta && okTest;
 }
 
@@ -331,12 +369,13 @@ bool CDTTTest::isValid() const
 QJsonObject CDTTTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    for(auto&& x : m_measurementList)
+    foreach(auto m, m_measurementList)
     {
-        jsonArr.append(x.toJsonObject());
+      jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    json.insert("test_meta_data",m_metaData.toJsonObject());
+    if(hasMetaData())
+      json.insert("test_meta_data",m_metaData.toJsonObject());
     json.insert("test_results",jsonArr);
     return json;
 }

@@ -15,14 +15,23 @@ BloodPressureManager::BloodPressureManager(QObject* parent)
     , m_comm(new BPMCommunication())
 {
     setGroup("bloodpressure");
-    m_col = 1;
-    m_row = 8;
+
+    // test number, start time, end time, systolic, diastolic, pulse
+    //
+    m_col = 6;
+
+    // 6 actual measurements
+    // the average of the last 5, the average of all 6 not displayed
+    //
+    m_row = 6;
 
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
 
     if(m_verbose)
       qDebug() << "Manager created on thread: " << QThread::currentThreadId();
+
+    m_test.setMaximumNumberOfMeasurements(m_row);
 }
 
 BloodPressureManager::~BloodPressureManager()
@@ -37,7 +46,7 @@ void BloodPressureManager::start()
     connect(this, &BloodPressureManager::startMeasurement, m_comm, &BPMCommunication::measure);
     connect(this, &BloodPressureManager::abortMeasurement, m_comm, &BPMCommunication::abort);
 
-    // connect communication signals with slots
+    // connect communication to manager
     connect(m_comm, &BPMCommunication::abortFinished, this, &BloodPressureManager::abortComplete);
     connect(m_comm, &BPMCommunication::connectionStatus, this, &BloodPressureManager::connectionStatusChanged);
     connect(m_comm, &BPMCommunication::measurementReady, this, &BloodPressureManager::measurementAvailable);
@@ -58,7 +67,7 @@ void BloodPressureManager::start()
 
 bool BloodPressureManager::isDefined(const QString &label) const
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
       return true;
     }
@@ -76,7 +85,7 @@ void BloodPressureManager::loadSettings(const QSettings& settings)
     QUsb::Id info;
     info.pid = settings.value(getGroup() + "/client/pid").toInt();
     info.vid = settings.value(getGroup() + "/client/vid").toInt();
-    selectDevice(info);
+    selectDeviceById(info);
 }
 
 void BloodPressureManager::saveSettings(QSettings* settings) const
@@ -85,7 +94,7 @@ void BloodPressureManager::saveSettings(QSettings* settings) const
     {
         settings->beginGroup(getGroup());
         settings->setValue("client/pid", m_device.pid);
-        settings->setValue("client/pid", m_device.vid);
+        settings->setValue("client/vid", m_device.vid);
         settings->endGroup();
         if(m_verbose)
             qDebug() << "wrote pid/vid to settings file";
@@ -127,7 +136,7 @@ void BloodPressureManager::scanDevices()
     emit scanningDevices();
     if(m_verbose)
       qDebug() << "start scanning for devices...";
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
       QUsb::Id info;
       info.pid = 1;
@@ -140,10 +149,15 @@ void BloodPressureManager::scanDevices()
       setDevice(info);
       return;
     }
+
     QHidDevice hid_device;
     foreach(auto info, QUsb::devices())
     {
-      // try to open the device as an hid
+      if(0 != m_vendorIDFilter && m_vendorIDFilter != info.vid)
+          continue;
+
+      // try to open the usb hid device
+      //
       hid_device.open(info.vid,info.pid);
       if(hid_device.isOpen())
       {
@@ -211,17 +225,18 @@ void BloodPressureManager::scanDevices()
 
 void BloodPressureManager::setDevice(const QUsb::Id &info)
 {
+    qDebug() << "manager setting device with info";
     m_deviceData.reset();
     m_device = QUsb::Id();
 
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
        // get the device data
-       m_deviceData.setCharacteristic("usb_hid_product_id", info.pid);
-       m_deviceData.setCharacteristic("usb_hid_vendor_id", info.vid);
-       m_deviceData.setCharacteristic("usb_hid_manufacturer", "BpTru");
-       m_deviceData.setCharacteristic("usb_hid_serial_number", "simulated");
-       m_deviceData.setCharacteristic("usb_hid_product", "BPM200");
+       m_deviceData.setAttribute("usb_hid_product_id", info.pid);
+       m_deviceData.setAttribute("usb_hid_vendor_id", info.vid);
+       m_deviceData.setAttribute("usb_hid_manufacturer", "BpTru");
+       m_deviceData.setAttribute("usb_hid_serial_number", "simulated");
+       m_deviceData.setAttribute("usb_hid_product", "BPM200");
        emit message(tr("Ready to connect..."));
        emit canConnectDevice();
        return;
@@ -239,19 +254,19 @@ void BloodPressureManager::setDevice(const QUsb::Id &info)
     QHidDevice device;
     if(device.open(info.pid,info.vid))
     {
-        // signal the GUI that the device is connectable so that
-        // the connect button can be clicked
-        //
         QString serial = device.serialNumber();
         QString manufacturer = device.manufacturer();
         QString product = device.product();
-        m_deviceData.setCharacteristic("usb_hid_product_id", info.pid);
-        m_deviceData.setCharacteristic("usb_hid_vendor_id", info.vid);
-        m_deviceData.setCharacteristic("usb_hid_manufacturer", manufacturer);
-        m_deviceData.setCharacteristic("usb_hid_serial_number", serial);
-        m_deviceData.setCharacteristic("usb_hid_product", product);
+        m_deviceData.setAttribute("usb_hid_product_id", info.pid);
+        m_deviceData.setAttribute("usb_hid_vendor_id", info.vid);
+        m_deviceData.setAttribute("usb_hid_manufacturer", manufacturer);
+        m_deviceData.setAttribute("usb_hid_serial_number", serial);
+        m_deviceData.setAttribute("usb_hid_product", product);
         m_device = info;
 
+        // signal the GUI that the device is connectable so that
+        // the connect button can be clicked
+        //
         emit message(tr("Ready to connect..."));
         emit canConnectDevice();
         device.close();
@@ -260,12 +275,24 @@ void BloodPressureManager::setDevice(const QUsb::Id &info)
 
 void BloodPressureManager::setCuffSize(const QString &size)
 {
-  m_test.setCuffSize(size);
+  if(size.isNull() || 0 == size.length()) return;
+  if(size.toLower() != m_cuffSize)
+  {
+    m_cuffSize = size.toLower();
+    m_test.setCuffSize(m_cuffSize);
+    emit cuffSizeChanged(m_cuffSize);
+  }
 }
 
 void BloodPressureManager::setSide(const QString &side)
 {
-  m_test.setSide(side);
+  if(side.isNull() || 0 == side.length()) return;
+  if(side.toLower() != m_side)
+  {
+    m_side = side.toLower();
+    m_test.setSide(m_side);
+    emit sideChanged(m_side);
+  }
 }
 
 QJsonObject BloodPressureManager::toJsonObject() const
@@ -280,69 +307,34 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
     // add measurements one row of one columns at a time
     //
     int n_total = m_test.getNumberOfMeasurements();
-    int n_row = qMax(1, n_total);
-    if(model->rowCount() != n_row)
+    for(int row = 0; row < n_total; row++)
     {
-        model->setRowCount(n_row);
-    }
-    
-    // Add first measurement
-    int row = 0;
-    QString firstMeasurement = m_test.firstMeasurementToString();
-    if(!firstMeasurement.isEmpty() && 0 < firstMeasurement.length())
-    {
-        QStandardItem* firstItem = model->item(row);
-        if(Q_NULLPTR == firstItem)
-        {
-            firstItem = new QStandardItem();
-            model->setItem(row, 0, firstItem);
-        }
-        firstItem->setData(firstMeasurement, Qt::DisplayRole);
-        row++;
-    }    
+        BloodPressureMeasurement m = m_test.getMeasurement(row);
+        if(m_verbose)
+          qDebug() <<"model build" << m;
 
-    for(int i = 0; i < n_total; i++)
-    {
-        BloodPressureMeasurement measurement = m_test.getMeasurement(i);
-        QString measurementStr = measurement.isValid() ? measurement.toString() : "NA";
-        QStandardItem* item = model->item(row);
-        if(Q_NULLPTR == item)
+        QStringList list = (QStringList()
+          << m.getAttribute("reading_number").toString()
+          << m.getAttribute("start_time").toString()
+          << m.getAttribute("end_time").toString()
+          << m.getAttribute("systolic").toString()
+          << m.getAttribute("diastolic").toString()
+          << m.getAttribute("pulse").toString());
+        for(int col = 0; col < m_col; col ++)
         {
-            item = new QStandardItem();
-            model->setItem(row, 0, item);
+            QStandardItem* item = model->item(row,col);
+            if(Q_NULLPTR == item)
+            {
+                item = new QStandardItem();
+                model->setItem(row, col, item);
+            }
+            item->setData(list.at(col), Qt::DisplayRole);
         }
-        item->setData(measurementStr, Qt::DisplayRole);
-        row++;
-    }
-
-    // Add avg measurement
-    QString avgMeasurement = m_test.avgMeasurementToString();
-    if(!avgMeasurement.isEmpty() && 0 < avgMeasurement.length())
-    {
-        QStandardItem* avgItem = model->item(row);
-        if(Q_NULLPTR == avgItem)
-        {
-            avgItem = new QStandardItem();
-            model->setItem(row, 0, avgItem);
-        }
-        avgItem->setData(avgMeasurement, Qt::DisplayRole);
-        row++;
-    }
-
-    // Add all avg measurement
-    QString allAvgMeasurement = m_test.allAvgMeasurementToString();
-    if(!allAvgMeasurement.isEmpty() && 0 < allAvgMeasurement.length())
-    {
-        QStandardItem* allAvgItem = model->item(row);
-        if(Q_NULLPTR == allAvgItem)
-        {
-            allAvgItem = new QStandardItem();
-            model->setItem(row, 0, allAvgItem);
-        }
-        allAvgItem->setData(allAvgMeasurement, Qt::DisplayRole);
     }
 }
 
+// slot for UI communication
+//
 void BloodPressureManager::measure()
 {
     if(m_verbose)
@@ -350,10 +342,15 @@ void BloodPressureManager::measure()
 
     emit message(tr("Measuring blood pressure..."));
     clearData();
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-      //TODO: generate simulated readings and emit canWrite signal
-      //
+      m_test.simulate();
+      emit dataChanged();
+      if(m_test.isValid())
+      {
+        emit message(tr("Ready to save results..."));
+        emit canWrite();
+      }
       return;
     }
 
@@ -362,25 +359,42 @@ void BloodPressureManager::measure()
 
 void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    if (CypressConstants::RunMode::Simulate == m_mode)
+    m_inputData = input;
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-        m_inputData["barcode"] = "00000000";
-        m_inputData["language"] = "english";
-        return;
+        if(!input.contains("barcode"))
+          m_inputData["barcode"] = Constants::DefaultBarcode;
+        if(!input.contains("language"))
+          m_inputData["language"] = "english";
     }
     bool ok = true;
-    for(auto&& x : m_inputKeyList)
+    foreach(auto key, m_inputKeyList)
     {
-        if(!input.contains(x))
-        {
-            ok = false;
-            break;
-        }
-        else
-            m_inputData[x] = input[x];
+      if(!m_inputData.contains(key))
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
     }
     if(!ok)
-        m_inputData.clear();
+    {
+      if(m_verbose)
+        qDebug() << "ERROR: invalid input data";
+
+      emit message(tr("ERROR: the input data is incorrect"));
+      m_inputData.clear();
+    }
+    else
+    {
+      // optional json inputs
+      //
+      if(m_inputData.contains("side"))
+          setSide(m_inputData["side"].toString());
+      if(m_inputData.contains("cuff_size"))
+          setCuffSize(m_inputData["cuff_size"].toString());
+    }
 }
 
 void BloodPressureManager::clearData()
@@ -389,10 +403,12 @@ void BloodPressureManager::clearData()
     emit dataChanged();
 }
 
+// slot for UI communication
+//
 void BloodPressureManager::disconnectDevice()
 {
     m_aborted = false;
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
       emit message(tr("Ready to connect..."));
       emit canConnectDevice();
@@ -409,6 +425,8 @@ void BloodPressureManager::disconnectDevice()
     emit canConnectDevice();
 }
 
+// slot for UI communication
+//
 void BloodPressureManager::finish()
 {
     disconnectDevice();
@@ -420,10 +438,14 @@ void BloodPressureManager::finish()
 // slot for BPMCommunication
 //
 void BloodPressureManager::measurementAvailable(
-  const int& sbp, const int& dbp, const int& pulse,
-  const QDateTime& start, const QDateTime& end, const int& readingNum)
+  const int& readingNum, const int& sbp, const int& dbp, const int& pulse,
+  const QDateTime& start, const QDateTime& end)
 {
-    m_test.addMeasurement(sbp, dbp, pulse, start, end, readingNum);
+    BloodPressureMeasurement m(readingNum, sbp, dbp, pulse, start, end);
+    if(m.isValid())
+    {
+      m_test.addMeasurement(m);
+    }
     emit dataChanged();
 }
 
@@ -432,7 +454,7 @@ void BloodPressureManager::measurementAvailable(
 void BloodPressureManager::averageAvailable(
   const int& sbp, const int& dbp, const int& pulse)
 {
-    m_test.addAverageMeasurement(sbp, dbp, pulse);
+    m_test.addDeviceAverage(sbp, dbp, pulse);
     emit dataChanged();
 }
 
@@ -441,7 +463,7 @@ void BloodPressureManager::averageAvailable(
 void BloodPressureManager::finalReviewAvailable(
   const int& sbp, const int& dbp, const int& pulse)
 {
-    if(m_test.verifyReviewData(sbp, dbp, pulse))
+    if(m_test.verifyDeviceAverage(sbp, dbp, pulse))
     {
         // emit the can write signal
         emit message(tr("Ready to save results..."));
@@ -455,9 +477,11 @@ void BloodPressureManager::finalReviewAvailable(
     }
 }
 
+// slot for UI communication
+//
 void BloodPressureManager::connectDevice()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         if(m_test.armInformationSet())
         {
@@ -508,20 +532,21 @@ void BloodPressureManager::deviceInfoAvailable()
     QString manufacturer = m_comm->manufacturer();
     QString version = m_comm->version();
     if(!product.isEmpty() && 0 < product.length())
-      m_deviceData.setCharacteristic("usb_hid__product",product);
+      m_deviceData.setAttribute("usb_hid_product",product);
     if(!serial.isEmpty() && 0 < serial.length())
-      m_deviceData.setCharacteristic("usb_hid_serial_number",serial);
+      m_deviceData.setAttribute("usb_hid_serial_number",serial);
     if(!manufacturer.isEmpty() && 0 < manufacturer.length())
-      m_deviceData.setCharacteristic("usb_hid_manufacturer",manufacturer);
+      m_deviceData.setAttribute("usb_hid_manufacturer",manufacturer);
     if(!version.isEmpty() && 0 < version.length())
-      m_deviceData.setCharacteristic("usb_hid_version",version);
+      m_deviceData.setAttribute("usb_hid_version",version);
 }
 
+// slot for BPMCommunication
+//
 void BloodPressureManager::abortComplete(const bool& success)
 {
     Q_UNUSED(success)
-    //TODO: remove debug or refactor into manager class
-    //
+
     if(m_verbose)
       qDebug() << "BPM200: Abort complete";
 

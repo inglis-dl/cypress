@@ -12,13 +12,13 @@
  * class specialization.  This class parses the binary data stream
  * obtained as a QByteArray from the RS232 interface controlled by the AudiometerManager
  * class.  Test parameters such as participant ID (barcode) are stored
- * as meta data (see MeasurementBase) while hearing threshold levels (HTL)
- * are stored 8 frequeency tests per side left and right for a total of
+ * as meta data (see Measurement) while hearing threshold levels (HTL)
+ * are stored 8 frequency tests per side left and right for a total of
  * 16 tests.  In case of a HTL error code received in the byte array,
  * the measurement data for the frequency in question consists of an
  * error code string and a resolution outcome string.
  *
- * \sa AudiometerManager, HearingMeasurement, MeasurementBase
+ * \sa AudiometerManager, HearingMeasurement, Measurement
  *
  */
 

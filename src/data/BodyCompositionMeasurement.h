@@ -1,17 +1,18 @@
 #ifndef BODYCOMPOSITIONMEASUREMENT_H
 #define BODYCOMPOSITIONMEASUREMENT_H
 
-#include "MeasurementBase.h"
+#include "Measurement.h"
 
-class BodyCompositionMeasurement : public MeasurementBase
+class BodyCompositionMeasurement : public Measurement
 {
 public:
     BodyCompositionMeasurement() = default;
     ~BodyCompositionMeasurement() = default;
 
-    QString toString() const override;
-
     bool isValid() const override;
+
+    static QStringList variableList;
+    static QStringList initVariableList();
 };
 
 Q_DECLARE_METATYPE(BodyCompositionMeasurement);

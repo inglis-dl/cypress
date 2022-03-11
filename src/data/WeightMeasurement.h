@@ -1,7 +1,7 @@
 #ifndef WEIGHTMEASUREMENT_H
 #define WEIGHTMEASUREMENT_H
 
-#include "MeasurementBase.h"
+#include "Measurement.h"
 
 /*!
  * \class WeightMeasurement
@@ -13,10 +13,10 @@
  * QByteArray input from the QSerialPort of the WeighScaleManager
  * class into measurement characteristics, such as value, units etc.
  *
- * \sa MeasurementBase
+ * \sa Measurement
  */
 
-class WeightMeasurement :  public MeasurementBase
+class WeightMeasurement : public Measurement
 {   
 public:
     WeightMeasurement() = default;

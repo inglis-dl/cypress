@@ -26,10 +26,10 @@ CONFIG += c++11 console
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-    ../../auxiliary/CypressConstants.cpp \
+    ../../auxiliary/Constants.cpp \
     ../../data/HearingMeasurement.cpp \
     ../../data/HearingTest.cpp \
-    ../../data/MeasurementBase.cpp \
+    ../../data/Measurement.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
     ../../managers/AudiometerManager.cpp \
@@ -39,9 +39,9 @@ SOURCES += \
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
-    ../../auxiliary/CypressConstants.h \
+    ../../auxiliary/Constants.h \
     ../../data/HearingTest.h \
-    ../../data/MeasurementBase.h \
+    ../../data/Measurement.h \
     ../../data/HearingMeasurement.h \
     ../../data/TestBase.h \
     ../../managers/ManagerBase.h \

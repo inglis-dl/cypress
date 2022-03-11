@@ -1,7 +1,7 @@
 #ifndef CDTTMEASUREMENT_H
 #define CDTTMEASUREMENT_H
 
-#include "MeasurementBase.h"
+#include "Measurement.h"
 
 /*!
 * \class CDTTTMeasurement
@@ -12,16 +12,18 @@
 * This class facilitates parsing comma delimited data from
 * the xlsx output of a test run.
 *
-* \sa MeasurementBase
+* \sa Measurement
 */
 
-class CDTTMeasurement : public MeasurementBase
+class CDTTMeasurement : public Measurement
 {
 public:
     CDTTMeasurement() = default;
     ~CDTTMeasurement() = default;
 
     bool isValid() const override;
+
+    void simulate(const quint16&);
 
     QString toString() const override;
 };

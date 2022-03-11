@@ -5,18 +5,17 @@
 #include <QDate>
 #include <QDebug>
 #include <QDir>
-#include <QFileDialog>
 #include <QFileInfo>
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QSettings>
-#include <QTimeLine>
 
 MainWindow::MainWindow(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::MainWindow)
     , m_verbose(false)
+    , m_manager(this)
 {
     ui->setupUi(this);
 }
@@ -34,24 +33,21 @@ void MainWindow::initialize()
 
 void MainWindow::initializeModel()
 {
-    // allocate 2 columns x 8 rows of hearing measurement items
+    // example of 1 row 1 column display of 1 measurement test
     //
-    for (int col = 0; col < 2; col++)
+    for(int row = 0;row < m_manager.getNumberOfModelRows(); row++)
     {
-        for (int row = 0; row < 8; row++)
-        {
-            QStandardItem* item = new QStandardItem();
-            m_model.setItem(row, col, item);
-        }
+      QStandardItem* item = new QStandardItem();
+      m_model.setItem(row,0,item);
     }
-    m_model.setHeaderData(0, Qt::Horizontal, "Left Test Results", Qt::DisplayRole);
-    m_model.setHeaderData(1, Qt::Horizontal, "Right Test Results", Qt::DisplayRole);
+    m_model.setHeaderData(0,Qt::Horizontal,"Weight Tests",Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
 
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->testdataTableView->verticalHeader()->hide();
+
 }
 
 // set up signal slot connections between GUI front end
@@ -61,15 +57,15 @@ void MainWindow::initializeConnections()
 {
   // Disable all buttons by default
   //
-  for(auto&& x : this->findChildren<QPushButton *>())
-  {
-      x->setEnabled(false);
+    foreach(auto button, this->findChildren<QPushButton *>())
+    {
+        button->setEnabled(false);
 
-      // disable enter key press event passing onto auto focus buttons
-      //
-      x->setDefault(false);
-      x->setAutoDefault(false);
-  }
+        // disable enter key press event passing onto auto focus buttons
+        //
+        button->setDefault(false);
+        button->setAutoDefault(false);
+    }
 
   // Close the application
   //
@@ -91,37 +87,16 @@ void MainWindow::initializeConnections()
   // TODO: for DCS interviews, the first digit corresponds the the wave rank
   // for inhome interviews there is a host dependent prefix before the barcode
   //
-  if(CypressConstants::RunMode::Simulate == m_mode)
+  if(Constants::RunMode::modeSimulate == m_mode)
   {
-    ui->barcodeLineEdit->setText("00000000");
+    ui->barcodeWidget->setBarcode(Constants::DefaultBarcode);
   }
 
-  //TODO: handle the case for in home DCS visits where
-  // the barcode is prefixed with a host name code
-  //
-  QRegExp rx("\\d{8}");
-  QRegExpValidator *v_barcode = new QRegExpValidator(rx);
-  ui->barcodeLineEdit->setValidator(v_barcode);
-
-  connect(ui->barcodeLineEdit, &QLineEdit::returnPressed,
-          this,[this](){
-      bool valid = false;
-      if(m_inputData.contains("barcode"))
-      {
-          QString str = ui->barcodeLineEdit->text().simplified();
-          str.replace(" ","");
-          valid = str == m_inputData["barcode"].toString();
-      }
-      auto p = this->findChild<QTimeLine *>("timer");
+  connect(ui->barcodeWidget,&BarcodeWidget::validated,
+          this,[this](const bool& valid)
+    {
       if(valid)
       {
-          p->stop();
-          p->setCurrentTime(0);
-          auto p = ui->barcodeLineEdit->palette();
-          p.setBrush(QPalette::Base,QBrush(QColor(0,255,0,128)));
-          ui->barcodeLineEdit->setPalette(p);
-          ui->barcodeLineEdit->repaint();
-
           // launch the manager
           //
           this->run();
@@ -133,19 +108,6 @@ void MainWindow::initializeConnections()
             tr("The input does not match the expected barcode for this participant."));
       }
   });
-
-  auto timeLine = new QTimeLine(2000,this);
-  timeLine->setFrameRange(0,255);
-  timeLine->setLoopCount(0);
-  timeLine->setObjectName("timer");
-  connect(timeLine, &QTimeLine::frameChanged,
-          this,[this](int frame){
-      auto p = ui->barcodeLineEdit->palette();
-      p.setBrush(QPalette::Base,QBrush(QColor(255,255,0,frame)));
-      ui->barcodeLineEdit->setPalette(p);
-  });
-  connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
-  timeLine->start();
 
     // Available to start measuring
     //
@@ -241,57 +203,62 @@ void MainWindow::readInput()
 {
     // TODO: if the run mode is not debug, an input file name is mandatory, throw an error
     //
-    if (m_inputFileName.isEmpty())
+    if(m_inputFileName.isEmpty())
     {
-        if(CypressConstants::RunMode::Simulate == m_mode)
+        if(Constants::RunMode::modeSimulate == m_mode)
         {
-            m_inputData["barcode"]="00000000";
+          m_inputData["barcode"] = Constants::DefaultBarcode;
         }
         else
         {
+          if(m_verbose)
             qDebug() << "ERROR: no input json file";
         }
         return;
     }
     QFileInfo info(m_inputFileName);
-    if (info.exists())
+    if(info.exists())
     {
-        QFile file;
-        file.setFileName(m_inputFileName);
-        file.open(QIODevice::ReadOnly | QIODevice::Text);
-        QString val = file.readAll();
-        file.close();
+      QFile file;
+      file.setFileName(m_inputFileName);
+      file.open(QIODevice::ReadOnly | QIODevice::Text);
+      QString val = file.readAll();
+      file.close();
 
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
-        QJsonObject jsonObj = jsonDoc.object();
-        QList<QString> keys = jsonObj.keys();
-        for (int i = 0; i < keys.size(); i++)
-        {
-            QJsonValue v = jsonObj.value(keys[i]);
-            // TODO: error report all missing expected key values
-            //
-            if (!v.isUndefined())
-            {
-                m_inputData[keys[i]] = v.toVariant();
-                qDebug() << keys[i] << v.toVariant();
-            }
-        }
+      QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
+      QJsonObject jsonObj = jsonDoc.object();
+      foreach(auto key, jsonObj.keys())
+      {
+          QJsonValue v = jsonObj.value(key);
+          // TODO: error report all missing expected key values
+          //
+          if(!v.isUndefined())
+          {
+              m_inputData[key] = v.toVariant();
+              qDebug() << key << v.toVariant();
+          }
+      }
+      if(m_inputData.contains("barcode"))
+          ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }
     else
+    {
+      if(m_verbose)
         qDebug() << m_inputFileName << " file does not exist";
+    }
 }
 
 void MainWindow::writeOutput()
 {
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "begin write process ... ";
 
     QJsonObject jsonObj = m_manager.toJsonObject();
 
-    QString barcode = ui->barcodeLineEdit->text().simplified().remove(" ");
-    jsonObj.insert("verification_barcode", QJsonValue(barcode));
+    QString barcode = ui->barcodeWidget->barcode();
+    jsonObj.insert("verification_barcode",QJsonValue(barcode));
 
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "determine file output name ... ";
 
     QString fileName;
@@ -305,40 +272,41 @@ void MainWindow::writeOutput()
 
     // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
     //
-    if (m_outputFileName.isEmpty())
+    if(m_outputFileName.isEmpty())
         constructDefault = true;
     else
     {
-        QFileInfo info(m_outputFileName);
-        QDir dir = info.absoluteDir();
-        if (dir.exists())
-            fileName = m_outputFileName;
-        else
-            constructDefault = true;
+      QFileInfo info(m_outputFileName);
+      QDir dir = info.absoluteDir();
+      if(dir.exists())
+        fileName = m_outputFileName;
+      else
+        constructDefault = true;
     }
-    if (constructDefault)
+    if(constructDefault)
     {
         QDir dir = QCoreApplication::applicationDirPath();
-        if (m_outputFileName.isEmpty())
+        if(m_outputFileName.isEmpty())
         {
-            QStringList list;
-            list
-                << m_manager.getInputDataValue("barcode").toString()
-                << QDate().currentDate().toString("yyyyMMdd")
-                << m_manager.getGroup()
-                << "test.json";
-            fileName = dir.filePath(list.join("_"));
+          QStringList list;
+          list
+            << m_manager.getInputDataValue("barcode").toString()
+            << QDate().currentDate().toString("yyyyMMdd")
+            << m_manager.getGroup()
+            << "test.json";
+          fileName = dir.filePath( list.join("_") );
         }
         else
-            fileName = dir.filePath(m_outputFileName);
+          fileName = dir.filePath( m_outputFileName );
     }
 
-    QFile saveFile(fileName);
+    QFile saveFile( fileName );
     saveFile.open(QIODevice::WriteOnly);
     saveFile.write(QJsonDocument(jsonObj).toJson());
 
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "wrote to file " << fileName;
 
-    ui->statusBar->showMessage("Test data recorded.  Close when ready.");
+    ui->statusBar->showMessage("Weigh scale data recorded.  Close when ready.");
+
 }

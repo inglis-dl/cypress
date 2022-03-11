@@ -1,8 +1,10 @@
 #include "TemperatureMeasurement.h"
 
+#include "../auxiliary/Utilities.h"
 #include <QBitArray>
 #include <QDateTime>
 #include <QDebug>
+#include <QRandomGenerator>
 
 void TemperatureMeasurement::fromArray(const QByteArray &arr)
 {
@@ -70,8 +72,7 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      // temperature type if bit 2 is on , no type if off
      //
      QBitArray f_arr = QBitArray::fromBits(arr.data(),3);
-     QString t_format_str = f_arr.at(0) ? "F" : "C";
-     setCharacteristic("units", t_format_str);
+     QString t_units_str = f_arr.at(0) ? "F" : "C";
 
      // Temperature:
      //
@@ -81,7 +82,7 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      char buffer[10];
      sprintf(buffer,"%5.1f",t_value);
      QVariant t_var = QString::fromLatin1(buffer).toDouble();
-     setCharacteristic("temperature", t_var);
+     setAttribute("temperature", t_var, t_units_str, 1);
 
      // Datetime:
      //
@@ -93,7 +94,7 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      int h_value = arr.mid(9,1).toHex().toInt(Q_NULLPTR,16);
      int j_value = arr.mid(10,1).toHex().toInt(Q_NULLPTR,16);
      int s_value = arr.mid(11,1).toHex().toInt(Q_NULLPTR,16);
-     setCharacteristic("timestamp",
+     setAttribute("timestamp",
        QDateTime(
          QDate(y_value,m_value,d_value),
          QTime(h_value,j_value,s_value)
@@ -104,19 +105,26 @@ void TemperatureMeasurement::fromArray(const QByteArray &arr)
      //
      int t_type = arr.mid(12,1).toHex().toInt(Q_NULLPTR,16);
      QString m_str = 1 == t_type ? "body" : "surface/room";
-     setCharacteristic("mode", m_str);
+     setAttribute("mode", m_str);
 
      qDebug() << "received byte array: " << toString();
   }
 }
 
-TemperatureMeasurement TemperatureMeasurement::simulate()
+TemperatureMeasurement TemperatureMeasurement::simulate(const Constants::UnitsSystem &system)
 {
+   double mu = QRandomGenerator::global()->generateDouble();
+   double t = Utilities::interp(36.1f,37.2f,mu);
+   QString units = "C";
+   if(Constants::UnitsSystem::systemImperial == system)
+   {
+       t = t*9.0f/5.0f + 32.0f;
+       units = "F";
+   }
    TemperatureMeasurement m;
-   m.setCharacteristic("mode","body");
-   m.setCharacteristic("units","C");
-   m.setCharacteristic("temperature",36.1f);
-   m.setCharacteristic("timestamp",QDateTime::currentDateTime());
+   m.setAttribute("mode","body");
+   m.setAttribute("temperature", t, units, 1);
+   m.setAttribute("timestamp",QDateTime::currentDateTime());
    return m;
 }
 
@@ -124,31 +132,30 @@ bool TemperatureMeasurement::isValid() const
 {
   bool ok = false;
 
-  if(hasCharacteristic("temperature"))
+  if(hasAttribute("temperature"))
   {
-    getCharacteristic("temperature").toFloat(&ok);
+    getAttribute("temperature").value().toDouble(&ok);
     ok = ok &&
-    hasCharacteristic("units") &&
-    hasCharacteristic("mode") &&
-    hasCharacteristic("timestamp");
+    getAttribute("temperature").hasUnits() &&
+    hasAttribute("mode") &&
+    hasAttribute("timestamp");
   }
   return ok;
 }
 
 QString TemperatureMeasurement::toString() const
 {
-    QString s;
+    QString str;
     if(isValid())
     {
-      QString w = QString::number(getCharacteristic("temperature").toFloat(),'f',1);
-      QString u = getCharacteristic("units").toString();
-      QString m = getCharacteristic("mode").toString();
-      QDateTime dt = getCharacteristic("timestamp").toDateTime();
+      QString w = getAttribute("temperature").toString();
+      QString m = getAttributeValue("mode").toString();
+      QDateTime dt = getAttributeValue("timestamp").toDateTime();
       QString d = dt.date().toString("yyyy-MM-dd");
       QString t = dt.time().toString("HH:mm:ss");
-      QStringList l;
-      l << w << u << m << d << t;
-      s = l.join(" ");
+      QStringList list;
+      list << w << m << d << t;
+      str = list.join(" ");
     }
-    return s;
+    return str;
 }

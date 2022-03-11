@@ -32,6 +32,8 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
+    QStringList toStringList() const;
+
 private:
 
     QList<QString> m_outputKeyList;

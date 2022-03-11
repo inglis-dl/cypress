@@ -1,4 +1,5 @@
 #include "AccessQueryHelper.h"
+
 #include <QSqlDatabase>
 #include <QSqlField>
 #include <QSqlQuery>

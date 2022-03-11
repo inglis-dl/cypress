@@ -8,6 +8,25 @@
 #include <QThread>
 #include <QUsb>
 
+/*!
+ * \class BloodPressureManager
+ * \brief A Blood Presssure HID Device manager class
+ *
+ * Concrete child class implementation of a USB human interface device (HID)
+ * manager.  This class facilitates connection to a blood pressure monitor
+ * such as the BpTru BPM200.  Devices are identified and selected by product
+ * and vendor ID pairs (ie., QUsb::Id).  Signals and slots are implemented
+ * for UI selection from a list of discovered devices and for running a
+ * blood pressure test.
+ *
+ * Communication with the device is facilitated by a worker class on a
+ * separate thread with signal and slot connections between worker and manager.
+ * The default vendor ID for BpTru can be overridden.
+ *
+ * \sa ManagerBase, BPMCommunication, BPMMessage, CRC8
+ *
+ */
+
 QT_FORWARD_DECLARE_CLASS(BPMCommunication)
 
 class BloodPressureManager : public ManagerBase
@@ -15,6 +34,8 @@ class BloodPressureManager : public ManagerBase
     Q_OBJECT
 
     Q_PROPERTY(QString deviceName MEMBER m_deviceName NOTIFY deviceNameChanged)
+    Q_PROPERTY(QString cuffSize MEMBER m_cuffSize NOTIFY cuffSizeChanged)
+    Q_PROPERTY(QString side MEMBER m_side NOTIFY sideChanged)
 
 public:
     explicit BloodPressureManager(QObject *parent = Q_NULLPTR);
@@ -38,6 +59,8 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
+    // TODO: consider adding cuff size and arm side as json inputs
+    //
     void setInputData(const QMap<QString,QVariant>&) override;
 
     //TODO: use cypress constant for all use of size and side
@@ -46,7 +69,7 @@ public:
     //TODO: use cypress constant for all use of size and side
     void setSide(const QString&);
 
-    bool connectionInfoSet() const;
+    void setVendorIdFilter(const quint16& vid);
 
 public slots:
 
@@ -78,18 +101,17 @@ private slots:
 
     // slot for signals coming from BPMCommunication
     //
-    void measurementAvailable(const int &, const int &, const int &,
-                              const QDateTime &, const QDateTime &,
-                              const int &);
-    void averageAvailable(const int &, const int &, const int &);
-    void finalReviewAvailable(const int &, const int &, const int &);
-    void connectionStatusChanged(const bool &);
-    void abortComplete(const bool &);
+    void measurementAvailable(const int&, const int&, const int&, const int&,
+                              const QDateTime&, const QDateTime&);
+    void averageAvailable(const int&, const int&, const int&);
+    void finalReviewAvailable(const int&, const int&, const int&);
+    void connectionStatusChanged(const bool&);
+    void abortComplete(const bool&);
     void deviceInfoAvailable();
 
     // set the device
     //
-    void setDevice(const QUsb::Id &);
+    void setDevice(const QUsb::Id&);
 
 signals:
 
@@ -104,7 +126,10 @@ signals:
     void deviceDiscovered(const QString&);
     void canSelectDevice();
     void deviceSelected(const QString&);
+
     void deviceNameChanged(const QString&);
+    void sideChanged(const QString&);
+    void cuffSizeChanged(const QString&);
 
 private:
     BloodPressureTest m_test;
@@ -118,7 +143,7 @@ private:
     void clearData() override;
 
     // device data is separate from test data
-    MeasurementBase m_deviceData;
+    Measurement m_deviceData;
 
     // the usb hid device
     QString m_deviceName;
@@ -126,6 +151,11 @@ private:
 
     // usb hid devices plugged in and openable
     QMap<QString,QUsb::Id> m_deviceList;
+
+    quint16 m_vendorIDFilter { 0 };
+
+    QString m_cuffSize { "" };
+    QString m_side { "" };
 
     // called when loading from settings
     void selectDeviceById(const QUsb::Id&);

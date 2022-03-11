@@ -26,10 +26,10 @@ CONFIG += c++11 console
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-    ../../auxiliary/CypressConstants.cpp \
+    ../../auxiliary/Constants.cpp \
     ../../data/BodyCompositionMeasurement.cpp \
     ../../data/BodyCompositionTest.cpp \
-    ../../data/MeasurementBase.cpp \
+    ../../data/Measurement.cpp \
     ../../managers/BodyCompositionAnalyzerManager.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
@@ -39,10 +39,10 @@ SOURCES += \
 
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
-    ../../auxiliary/CypressConstants.h \
+    ../../auxiliary/Constants.h \
     ../../data/BodyCompositionMeasurement.h \
     ../../data/BodyCompositionTest.h \
-    ../../data/MeasurementBase.h \
+    ../../data/Measurement.h \
     ../../data/TestBase.h \
     ../../managers/BodyCompositionAnalyzerManager.h \
     ../../managers/ManagerBase.h \

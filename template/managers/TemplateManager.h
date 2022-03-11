@@ -41,8 +41,6 @@ public slots:
     //
     void finish() override;
 
-    void readOutput();
-
 private:
     TemplateTest m_test;
 

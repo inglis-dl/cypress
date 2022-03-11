@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     QMap<QString, QVariant> args = parser.getArgs();
     window.setInputFileName(args["inputFileName"].toString());
     window.setOutputFileName(args["outputFileName"].toString());
-    window.setRunMode(args["runMode"].value<CypressConstants::RunMode>());
+    window.setRunMode(args["runMode"].value<Constants::RunMode>());
     window.setVerbose(args["verbose"].toBool());
 
     window.show();

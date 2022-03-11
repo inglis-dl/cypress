@@ -1,6 +1,6 @@
 #include "CommandLineParser.h"
 
-#include "CypressConstants.h"
+#include "Constants.h"
 #include <QCommandLineOption>
 #include <QDebug>
 #include <QDir>
@@ -9,10 +9,10 @@
 CommandLineParser::CommandLineParser(QObject* parent) : QObject(parent)
 {
    m_args["verbose"] = QVariant(true);
-   m_args["runMode"] = QVariant::fromValue(CypressConstants::RunMode::Unknown);
+   m_args["runMode"] = QVariant::fromValue(Constants::RunMode::modeUnknown);
    m_args["inputFileName"] = QVariant();
    m_args["outputFileName"] = QVariant();
-   m_args["measureType"] = QVariant::fromValue(CypressConstants::MeasureType::None);
+   m_args["measureType"] = QVariant::fromValue(Constants::MeasureType::typeUnknown);
 }
 
 CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
@@ -98,8 +98,8 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
     {
         QString s = m_parser.value(modeOption).toLower();
         s.replace(0,1,s[0].toUpper());
-        CypressConstants::RunMode runMode = CypressConstants::getRunMode(s);
-        if(CypressConstants::RunMode::Unknown != runMode)
+        Constants::RunMode runMode = Constants::getRunMode(s);
+        if(Constants::RunMode::modeUnknown != runMode)
         {
           m_args["runMode"] = QVariant::fromValue(runMode);
           if(m_args["verbose"].toBool())
@@ -162,8 +162,8 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
         qDebug() << "Measure type option parsing " << s;
         // determine which manager and dialog is needed based on measure type
         //
-        CypressConstants::MeasureType measureType = CypressConstants::getMeasureType(s);
-        if(CypressConstants::MeasureType::None != measureType)
+        Constants::MeasureType measureType = Constants::getMeasureType(s);
+        if(Constants::MeasureType::typeUnknown != measureType)
         {
             m_args["measureType"] = QVariant::fromValue(measureType);
             if(m_args["verbose"].toBool())
@@ -180,7 +180,7 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
 
     if(Ok == result)
     {
-        if(CypressConstants::RunMode::Live == m_args["runMode"].value<CypressConstants::RunMode>())
+        if(Constants::RunMode::modeLive == m_args["runMode"].value<Constants::RunMode>())
         {
             if(!(hasValidInput && hasValidOutput))
             {

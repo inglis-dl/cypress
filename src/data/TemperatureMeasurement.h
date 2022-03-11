@@ -1,7 +1,9 @@
 #ifndef TEMPERATUREMEASUREMENT_H
 #define TEMPERATUREMEASUREMENT_H
 
-#include "MeasurementBase.h"
+#include "Measurement.h"
+#include "../auxiliary/Constants.h"
+
 
 /*!
  * \class TemperatureMeasurement
@@ -13,10 +15,10 @@
  * QByteArray input from the the BluetoothLEManager
  * class into measurement characteristics, such as value, units etc.
  *
- * \sa MeasurementBase
+ * \sa Measurement
  */
 
-class TemperatureMeasurement :  public MeasurementBase
+class TemperatureMeasurement : public Measurement
 {   
 public:
     void fromArray(const QByteArray &);
@@ -27,11 +29,11 @@ public:
 
     bool isValid() const override;
 
-    static TemperatureMeasurement simulate();
+    static TemperatureMeasurement simulate(const Constants::UnitsSystem&);
 };
 
 Q_DECLARE_METATYPE(TemperatureMeasurement);
 
-QDebug operator<<(QDebug dbg, const MeasurementBase &);
+QDebug operator<<(QDebug dbg, const Measurement &);
 
 #endif // TEMPERATUREMEASUREMENT_H

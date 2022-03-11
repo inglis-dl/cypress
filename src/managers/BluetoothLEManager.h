@@ -169,7 +169,7 @@ private slots:
 
     void setLocalDevice(const QString &);
 
-    MeasurementBase m_deviceData;
+    Measurement m_deviceData;
 
     TemperatureTest m_test;
 

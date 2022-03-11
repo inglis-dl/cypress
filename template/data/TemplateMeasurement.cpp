@@ -1,17 +1,6 @@
 #include "TemplateMeasurement.h"
 
 #include <QDebug>
-#include <QRandomGenerator>
-
-/**
- * sample input
- *
- *
- */
-
-void TemplateMeasurement::fromString(const QString& commaSeperatedLine)
-{
-}
 
 bool TemplateMeasurement::isValid() const
 {
@@ -20,7 +9,7 @@ bool TemplateMeasurement::isValid() const
 
 QString TemplateMeasurement::toString() const
 {
-    return "";
+    return QString();
 }
 
 TemplateMeasurement TemplateMeasurement::simulate()

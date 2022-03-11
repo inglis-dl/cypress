@@ -9,9 +9,9 @@ bool WeighScaleTest::isValid() const
     bool okTest = getNumberOfMeasurements() == getMaximumNumberOfMeasurements();
     if(okTest)
     {
-      for(auto&& x : m_measurementList)
+      foreach(auto m, m_measurementList)
       {
-        if(!x.isValid())
+        if(!m.isValid())
         {
           okTest = false;
           break;
@@ -23,17 +23,17 @@ bool WeighScaleTest::isValid() const
 
 QString WeighScaleTest::toString() const
 {
-    QString s;
+    QString str;
     if(isValid())
     {
-        QStringList l;
-        for(auto&& x : m_measurementList)
-        {
-            l << x.toString();
-        }
-        s = l.join("\n");
+      QStringList list;
+      foreach(auto m, m_measurementList)
+      {
+        list << m.toString();
+      }
+      str = list.join("\n");
     }
-    return s;
+    return str;
 }
 
 void WeighScaleTest::fromArray(const QByteArray &arr)
@@ -54,13 +54,13 @@ void WeighScaleTest::fromArray(const QByteArray &arr)
 QJsonObject WeighScaleTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    for(auto&& x : m_measurementList)
+    foreach(auto m, m_measurementList)
     {
-        QJsonObject test = x.toJsonObject();
-        jsonArr.append(test);
+      jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    json.insert("test_meta_data",m_metaData.toJsonObject());
+    if(hasMetaData())
+      json.insert("test_meta_data",m_metaData.toJsonObject());
     json.insert("test_results",jsonArr);
     return json;
 }

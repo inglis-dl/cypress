@@ -3,7 +3,6 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QRegExp>
-#include <QStringBuilder>
 
 const QMap<QString,QString> HearingMeasurement::codeLookup = HearingMeasurement::initCodeLookup();
 const QMap<QString,QString> HearingMeasurement::outcomeLookup = HearingMeasurement::initOutcomeLookup();
@@ -120,6 +119,14 @@ QMap<int,QString> HearingMeasurement::initFrequencyLookup()
     return map;
 }
 
+HearingMeasurement::HearingMeasurement(
+        const QString &side,
+        const int &index,
+        const QString &code)
+{
+  fromCode(side,index,code);
+}
+
 // index is the position 0-7 in the returned HTL string from
 // the RA300 RS232 port data
 //
@@ -128,23 +135,20 @@ void HearingMeasurement::fromCode(const QString &side, const int &index, const Q
     reset();
     if(frequencyLookup.contains(index))
     {
-      setCharacteristic("side",side.toLower());
-      setCharacteristic("test",frequencyLookup[index]);
-      setCharacteristic("units","dB");
-      setCharacteristic("error",QVariant());
-      setCharacteristic("outcome",QVariant());
+      setAttribute("side", side.toLower());
+      setAttribute("test", frequencyLookup[index]);
       if(codeLookup.contains(code))
       {
         QString err = codeLookup[code];
-        setCharacteristic("error",err);
-        setCharacteristic("outcome",outcomeLookup[err]);
+        setAttribute("error", err);
+        setAttribute("outcome", outcomeLookup[err]);
       }
       else
       {
         QRegExp r("\\d*");
         if(r.exactMatch(code))
         {
-          setCharacteristic("level",code.toInt());
+          setAttribute("level", code.toInt(), "dB");
         }
       }
     }
@@ -154,14 +158,13 @@ bool HearingMeasurement::isValid() const
 {
     // side test: level(units) OR error (outcome)
     bool ok =
-      hasCharacteristic("side") &&
-      hasCharacteristic("test") &&
-      hasCharacteristic("units") &&
+      hasAttribute("side") &&
+      hasAttribute("test") &&
       (
-        hasCharacteristic("level") ||
+        hasAttribute("level") ||
         (
-          hasCharacteristic("error") &&
-          hasCharacteristic("outcome")
+          hasAttribute("error") &&
+          hasAttribute("outcome")
         )
       );
     return ok;
@@ -172,20 +175,20 @@ QString HearingMeasurement::toString() const
   QString s;
   if(isValid())
   {
-    s = getCharacteristic("side").toString() %
-      QString(" ") %
-      getCharacteristic("test").toString() %
-      QString(": ") %
-      (hasCharacteristic("level") ?
-        getCharacteristic("level").toString() %
-        QString(" (") %
-        getCharacteristic("units").toString() %
-        QString(")") :
-        getCharacteristic("error").toString() %
-        QString(" (") %
-        getCharacteristic("outcome").toString() %
-        QString(")")
-      );
+    s = QString("%1 %2").arg(
+      getAttribute("side").toString(),
+      getAttribute("test").toString());
+
+    if(hasAttribute("level"))
+    {
+      s = QString("%1 %2").arg(s,getAttribute("level").toString());
+    }
+    else
+    {
+      s = QString("%1 %2 %3").arg(s,
+          getAttribute("error").toString(),
+          getAttribute("outcome").toString());
+    }
   }
   return s;
 }

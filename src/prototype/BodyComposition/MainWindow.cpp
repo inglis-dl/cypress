@@ -54,15 +54,15 @@ void MainWindow::initializeConnections()
 {
   // Disable all buttons by default
   //
-  for(auto&& x : this->findChildren<QPushButton *>())
-  {
-      x->setEnabled(false);
+    foreach(auto button, this->findChildren<QPushButton *>())
+    {
+        button->setEnabled(false);
 
-      // disable enter key press event passing onto auto focus buttons
-      //
-      x->setDefault(false);
-      x->setAutoDefault(false);
-  }
+        // disable enter key press event passing onto auto focus buttons
+        //
+        button->setDefault(false);
+        button->setAutoDefault(false);
+    }
 
   // Close the application
   //
@@ -76,7 +76,7 @@ void MainWindow::initializeConnections()
   // Every instrument stage launched by an interviewer requires input
   // of the interview barcode that accompanies a participant.
   // The expected barcode is passed from upstream via .json file.
-  // In simulate mode this value is ignored and a default barcode "00000000" is
+  // In simulate mode this value is ignored and a default barcode Constants::DefaultBarcode is
   // assigned instead.
   // In production mode the input to the barcodeLineEdit is verified against
   // the content held by the manager and a message or exception is thrown accordingly
@@ -84,9 +84,9 @@ void MainWindow::initializeConnections()
   // TODO: for DCS interviews, the first digit corresponds the the wave rank
   // for inhome interviews there is a host dependent prefix before the barcode
   //
-  if(CypressConstants::RunMode::Simulate == m_mode)
+  if(Constants::RunMode::modeSimulate == m_mode)
   {
-    ui->barcodeWidget->setBarcode("00000000");
+    ui->barcodeWidget->setBarcode(Constants::DefaultBarcode);
   }
 
   connect(ui->barcodeWidget,&BarcodeWidget::validated,
@@ -259,7 +259,7 @@ void MainWindow::initializeConnections()
 
       qDebug() << inputs;
 
-      m_manager.setInputData(inputs);
+      m_manager.updateInputData(inputs);
   });
 
   // Confirm inputs and check if measurement can proceed
@@ -348,6 +348,10 @@ void MainWindow::initializeConnections()
   //
   connect(ui->closeButton, &QPushButton::clicked,
           this, &MainWindow::close);
+
+  // Read inputs, such as interview barcode
+  //
+  readInput();
 }
 
 void MainWindow::run()
@@ -360,10 +364,6 @@ void MainWindow::run()
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
     m_manager.loadSettings(settings);
-
-    // Read inputs, such as interview barcode
-    //
-    readInput();
 
     // Pass the input to the manager for verification
     //
@@ -389,9 +389,9 @@ void MainWindow::readInput()
     //
     if(m_inputFileName.isEmpty())
     {
-        if(CypressConstants::RunMode::Simulate == m_mode)
+        if(Constants::RunMode::modeSimulate == m_mode)
         {
-            m_inputData["barcode"]="00000000";
+            m_inputData["barcode"] = Constants::DefaultBarcode;
         }
         else
         {
@@ -410,23 +410,25 @@ void MainWindow::readInput()
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject jsonObj = jsonDoc.object();
-      QList<QString> keys = jsonObj.keys();
-      for(int i=0;i<keys.size();i++)
+      foreach(auto key, jsonObj.keys())
       {
-          QJsonValue v = jsonObj.value(keys[i]);
+          QJsonValue v = jsonObj.value(key);
           // TODO: error report all missing expected key values
           //
           if(!v.isUndefined())
           {
-              m_inputData[keys[i]] = v.toVariant();
-              qDebug() << keys[i] << v.toVariant();
+              m_inputData[key] = v.toVariant();
+              qDebug() << key << v.toVariant();
           }
       }
       if(m_inputData.contains("barcode"))
           ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }
     else
+    {
+      if(m_verbose)
         qDebug() << m_inputFileName << " file does not exist";
+    }
 }
 
 void MainWindow::writeOutput()

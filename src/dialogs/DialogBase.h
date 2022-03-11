@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QStandardItemModel>
 #include "../managers/ManagerBase.h"
-#include "../auxiliary/CypressConstants.h"
+#include "../auxiliary/Constants.h"
 
 class DialogBase : public QDialog
 {
@@ -29,8 +29,8 @@ public:
     void setOutputFileName(const QString& name) { m_outputFileName = name; }
     QString outputFileName() { return m_outputFileName; }
 
-    void setRunMode(const CypressConstants::RunMode& mode) { m_mode = mode; }
-    CypressConstants::RunMode runMode() { return m_mode; }
+    void setRunMode(const Constants::RunMode& mode) { m_mode = mode; }
+    Constants::RunMode runMode() { return m_mode; }
 
     void setVerbose(const bool& verbose) { m_verbose = verbose; }
     bool isVerbose(){ return m_verbose; }
@@ -48,7 +48,7 @@ protected:
     QStandardItemModel m_model;
     QString m_inputFileName;
     QString m_outputFileName;
-    CypressConstants::RunMode m_mode;
+    Constants::RunMode m_mode;
     bool m_verbose;
 
     QMap<QString,QVariant> m_inputData;

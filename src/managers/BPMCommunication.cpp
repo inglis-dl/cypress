@@ -7,14 +7,14 @@
 
 BPMCommunication::BPMCommunication(QObject* parent) : QObject(parent)
     , m_bpm200(new QHidDevice(this))
-    , m_msgQueue(new QQueue<BPMMessage>())
+    , m_queue(new QQueue<BPMMessage>())
 {
 }
 
 BPMCommunication::~BPMCommunication()
 {
     delete m_bpm200;
-    delete m_msgQueue;
+    delete m_queue;
 }
 
 /*
@@ -172,7 +172,7 @@ bool BPMCommunication::startBpm()
 	// Wait up to 30 seconds before giving up
     bool result = timedReadLoop(600,
 		[this]() -> bool {
-			BPMMessage msg = m_msgQueue->dequeue();
+            BPMMessage msg = m_queue->dequeue();
 			quint8 msgId = msg.getMsgId();
 			quint8 data0 = msg.getData0();
 			// If review data is received
@@ -316,7 +316,7 @@ bool BPMCommunication::cycleBpm()
 	// Wait up to 30 seconds before giving up
 	bool result = timedReadLoop(5,
 		[this]() -> bool {
-			BPMMessage nextMessage = m_msgQueue->dequeue();
+            BPMMessage nextMessage = m_queue->dequeue();
             if(6 == nextMessage.getMsgId() && 3 == nextMessage.getData0())
             {
 				m_cycleTime = nextMessage.getData1();
@@ -377,7 +377,7 @@ bool BPMCommunication::reviewBpm()
 	// Wait up to 30 seconds before giving up
 	int result = timedReadLoop(5,
 		[this]() -> bool {
-			BPMMessage nextMessage = m_msgQueue->dequeue();
+            BPMMessage nextMessage = m_queue->dequeue();
             if(nextMessage.getMsgId() == 6 && nextMessage.getData0() == 2)
             { // Non generic condition
                 qDebug() << "Ack received for review: " << nextMessage.toString() << Qt::endl;
@@ -413,7 +413,7 @@ bool BPMCommunication::handshakeBpm()
 	// Wait up to 5 seconds before giving up
 	bool result = timedReadLoop(5,
 		[this]() -> bool {
-			BPMMessage msg = m_msgQueue->dequeue();
+            BPMMessage msg = m_queue->dequeue();
             if(6 == msg.getMsgId() && 0 == msg.getData0())
             {
                 m_version = QString("%1.%2.%3").arg(msg.getData1()).arg(msg.getData2()).arg(msg.getData3());
@@ -462,7 +462,7 @@ bool BPMCommunication::timedWriteBpm(
 }
 
 /*
-* Reads data from the bpm and stores the data as BPMMessages into m_msgQueue
+* Reads data from the bpm and stores the data as BPMMessages into m_queue
 */
 void BPMCommunication::readFromBpm()
 {
@@ -510,7 +510,7 @@ void BPMCommunication::readFromBpm()
                 qDebug() << "CRC Valid: " << crcValid << Qt::endl;
                 if(crcValid)
                 {
-					m_msgQueue->enqueue(msg);
+                    m_queue->enqueue(msg);
 				}
 				i += 8;
 			}
@@ -572,7 +572,7 @@ bool BPMCommunication::timedReadLoop(const int& timeout,
 			}
 
 			readFromBpm();
-            if(!m_msgQueue->isEmpty())
+            if(!m_queue->isEmpty())
             {
 				m_lastBpmMessageTime = QTime::currentTime();
 				bool successful = func();
@@ -603,7 +603,7 @@ bool BPMCommunication::timedReadLoop(const int& timeout,
 bool BPMCommunication::ackCheck(const int& expectedData0, const QString& logName)
 {
 	int acknowledgmentMsgId = 6;
-	BPMMessage nextMessage = m_msgQueue->dequeue();
+    BPMMessage nextMessage = m_queue->dequeue();
     if(nextMessage.getMsgId() == acknowledgmentMsgId &&
        nextMessage.getData0() == expectedData0)
     {
@@ -640,7 +640,7 @@ void BPMCommunication::endReading(const int& sbp, const int& dbp, const int& pul
 {
     if(QDateTime::fromMSecsSinceEpoch(0) != m_readingStartTime)
     {
-		emit measurementReady(sbp, dbp, pulse, m_readingStartTime, QDateTime::currentDateTime(), m_readingNumberCalc);
+        emit measurementReady(m_readingNumberCalc, sbp, dbp, pulse, m_readingStartTime, QDateTime::currentDateTime());
 		m_readingStartTime = QDateTime::fromMSecsSinceEpoch(0);
 	}
 }

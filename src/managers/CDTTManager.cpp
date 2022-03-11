@@ -81,7 +81,7 @@ void CDTTManager::saveSettings(QSettings* settings) const
 QJsonObject CDTTManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if(CypressConstants::RunMode::Simulate != m_mode)
+    if(Constants::RunMode::modeSimulate != m_mode)
     {
         QFile ofile(m_outputFile);
         ofile.open(QIODevice::ReadOnly);
@@ -94,7 +94,8 @@ QJsonObject CDTTManager::toJsonObject() const
 
 void CDTTManager::buildModel(QStandardItemModel* model) const
 {
-    for(int row = 0; row < m_test.getNumberOfMeasurements(); row++)
+    int row = 0;
+    foreach(auto str, m_test.toStringList())
     {
         QStandardItem* item = model->item(row, 0);
         if(Q_NULLPTR == item)
@@ -102,7 +103,8 @@ void CDTTManager::buildModel(QStandardItemModel* model) const
             item = new QStandardItem();
             model->setItem(row, 0, item);
         }
-        item->setData(m_test.getMeasurement(row).toString(), Qt::DisplayRole);
+        item->setData(str, Qt::DisplayRole);
+        row++;
     }
 }
 
@@ -154,7 +156,7 @@ void CDTTManager::selectRunnable(const QString &runnableName)
 void CDTTManager::measure()
 {
     clearData();
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         readOutput();
         return;
@@ -166,30 +168,40 @@ void CDTTManager::measure()
 
 void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    m_inputData = input;
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-        m_inputData["barcode"] = "00000000";
-        m_inputData["language"] = "english";
+        if(!input.contains("barcode"))
+          m_inputData["barcode"] = Constants::DefaultBarcode;
+        if(!input.contains("language"))
+          m_inputData["language"] = "english";
     }
     bool ok = true;
-    m_inputData = input;
-    for(auto&& x : m_inputKeyList)
+    foreach(auto key, m_inputKeyList)
     {
-        if(!input.contains(x))
-        {
-            ok = false;
-            break;
-        }
+      if(!m_inputData.contains(key))
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
     }
-    if (!ok)
-        m_inputData.clear();
+    if(!ok)
+    {
+      if(m_verbose)
+        qDebug() << "ERROR: invalid input data";
+
+      emit message(tr("ERROR: the input data is incorrect"));
+      m_inputData.clear();
+    }
     else
-        configureProcess();
+      configureProcess();
 }
 
 void CDTTManager::readOutput()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         m_test.simulate(m_inputData["barcode"].toString());
         if(m_test.isValid())
@@ -197,6 +209,8 @@ void CDTTManager::readOutput()
           emit message(tr("Ready to save results..."));
           emit canWrite();
         }
+        else
+            qDebug() << "invalid test results";
         emit dataChanged();
         return;
     }
@@ -263,7 +277,7 @@ void CDTTManager::clearData()
 void CDTTManager::finish()
 {
     m_test.reset();
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         return;
     }
@@ -281,7 +295,7 @@ void CDTTManager::finish()
 
 void CDTTManager::configureProcess()
 {
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
         if(!m_inputData.isEmpty())
         {
