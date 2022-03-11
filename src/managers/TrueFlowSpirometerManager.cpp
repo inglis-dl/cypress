@@ -76,9 +76,13 @@ void TrueFlowSpirometerManager::saveSettings(QSettings* settings) const
 QJsonObject TrueFlowSpirometerManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    if(CypressConstants::RunMode::Simulate == m_mode)
+    if (CypressConstants::RunMode::Simulate != m_mode)
     {
-        // Simulate mode code
+        QFile ofile(getTransferOutFilePath());
+        ofile.open(QIODevice::ReadOnly);
+        QByteArray buffer = ofile.readAll();
+        json.insert("test_output_file", QString(buffer.toBase64()));
+        json.insert("test_output_file_mime_type", "xml");
     }
     QJsonObject jsonInput;
     for(auto&& x : m_inputData.toStdMap())
