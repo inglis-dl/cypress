@@ -15,10 +15,10 @@ void OnyxInXml::setParticipantInfo(const QString& gender, const QDate dateOfBirt
 	//m_copd = copd;
 }
 
-void OnyxInXml::write(const QString & dirPath) const
+void OnyxInXml::write(const QString & transferInFilePath) const
 {
-	//QFile file("C:/ProgramData/ndd/Easy on-PC/OnyxIn.xml");
-	QFile file(dirPath + "/OnyxIn.xml");
+	//"C:/ProgramData/ndd/Easy on-PC/OnyxIn.xml"
+	QFile file(transferInFilePath);
 	if (file.open(QIODevice::WriteOnly | QIODevice::Text) == false) return;
 	
 	QXmlStreamWriter stream(&file);
@@ -35,7 +35,7 @@ void OnyxInXml::write(const QString & dirPath) const
 	file.close();
 }
 
-void OnyxInXml::addParameter(QXmlStreamWriter &stream, QString name, QString text) const
+void OnyxInXml::addParameter(QXmlStreamWriter &stream, const QString& name, const QString& text) const
 {
 	stream.writeStartElement("Parameter");
 	stream.writeAttribute("Name", name);

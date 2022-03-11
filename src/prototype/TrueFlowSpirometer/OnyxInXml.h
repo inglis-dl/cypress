@@ -11,7 +11,7 @@ public:
 private:
 	void startNddElement(QXmlStreamWriter &stream) const;
 	void addCommand(QXmlStreamWriter &stream) const;
-	void addParameter(QXmlStreamWriter &stream, QString name, QString text) const;
+	void addParameter(QXmlStreamWriter &stream, const QString& name, const QString & text) const;
 	void addPatients(QXmlStreamWriter &stream) const;
 	void addPatientDataAtPresent(QXmlStreamWriter &stream) const;
 

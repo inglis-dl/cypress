@@ -4,10 +4,11 @@
 #include <QDebug>
 #include <QFile>
 
-OutDataModel OnyxOutXml::ReadImportantValues()
+OutDataModel OnyxOutXml::readImportantValues(const QString& transferOutPath)
 {
     OutDataModel outData;
-    QFile file("C:/ProgramData/ndd/Easy on-PC/OnyxOutTest.xml");
+    //QFile file("C:/ProgramData/ndd/Easy on-PC/OnyxOutTest.xml");
+    QFile file(transferOutPath);
     if (!file.open(QFile::ReadOnly)) {
         qDebug() << "Cannot read file" << file.errorString();
         exit(0);
@@ -24,14 +25,14 @@ OutDataModel OnyxOutXml::ReadImportantValues()
             name = reader.name();
             qDebug() << "(Top2)Name: " << name << endl;
             if (name == "Command") {
-                QString commandType = ReadCommand(&reader);
+                QString commandType = readCommand(&reader);
                 // TODO: do something if commandType != "TestResult"
             }
             else if (name == "Patients") {
-                ReadPatients(&reader, &outData, "ONYX");
+                readPatients(&reader, &outData, "ONYX");
             }
             else {
-                SkipToEndElement(&reader, name.toString());
+                skipToEndElement(&reader, name.toString());
             }
         }
     }
@@ -39,7 +40,7 @@ OutDataModel OnyxOutXml::ReadImportantValues()
     return outData;
 }
 
-void OnyxOutXml::SkipToEndElement(QXmlStreamReader* reader, QString name)
+void OnyxOutXml::skipToEndElement(QXmlStreamReader* reader, const QString& name)
 {
     qDebug() << "Skip" << endl;
     if (reader->isEndElement() && reader->name() == name) {
@@ -55,7 +56,7 @@ void OnyxOutXml::SkipToEndElement(QXmlStreamReader* reader, QString name)
     }
 }
 
-QString OnyxOutXml::ReadCommand(QXmlStreamReader* reader)
+QString OnyxOutXml::readCommand(QXmlStreamReader* reader)
 {
     QStringRef name = reader->name();
     QStringRef type = reader->attributes().value("Type");
@@ -69,7 +70,7 @@ QString OnyxOutXml::ReadCommand(QXmlStreamReader* reader)
     return type.toString();
 }
 
-void OnyxOutXml::ReadPatients(QXmlStreamReader* reader, OutDataModel* outData, QString patientId)
+void OnyxOutXml::readPatients(QXmlStreamReader* reader, OutDataModel* outData, const QString& patientId)
 {
     QStringRef name = reader->name();
     QStringRef id;
@@ -80,18 +81,18 @@ void OnyxOutXml::ReadPatients(QXmlStreamReader* reader, OutDataModel* outData, Q
         qDebug() << "(Patients2)Name: " << name << endl;
         qDebug() << "Id Attribute: " << id << endl;
         if ( name == "Patient" && id == patientId) {
-            ReadPatient(reader, outData);
+            readPatient(reader, outData);
             break;
         }
         else {
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
     }
 
-    SkipToEndElement(reader, "Patients");
+    skipToEndElement(reader, "Patients");
 }
 
-void OnyxOutXml::ReadPatient(QXmlStreamReader* reader, OutDataModel* outData)
+void OnyxOutXml::readPatient(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     qDebug() << "(Patient)Name: " << name << endl;
@@ -99,16 +100,16 @@ void OnyxOutXml::ReadPatient(QXmlStreamReader* reader, OutDataModel* outData)
         name = reader->name();
         qDebug() << "(Patient2)Name: " << name << endl;
         if (name == "Intervals") {
-            ReadIntervals(reader, outData);
+            readIntervals(reader, outData);
         }
         else {
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
     }
-    SkipToEndElement(reader, "Patient");
+    skipToEndElement(reader, "Patient");
 }
 
-void OnyxOutXml::ReadIntervals(QXmlStreamReader* reader, OutDataModel* outData)
+void OnyxOutXml::readIntervals(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     int numIntervals = 0;
@@ -118,7 +119,7 @@ void OnyxOutXml::ReadIntervals(QXmlStreamReader* reader, OutDataModel* outData)
         qDebug() << "(Intervals2)Name: " << name << endl;
         if (name == "Interval") {
             if (numIntervals == 0) {
-                ReadInterval(reader, outData);
+                readInterval(reader, outData);
                 numIntervals++;
             }
             else {
@@ -126,13 +127,13 @@ void OnyxOutXml::ReadIntervals(QXmlStreamReader* reader, OutDataModel* outData)
             }
         }
         else {
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
     }
-    SkipToEndElement(reader, "Intervals");
+    skipToEndElement(reader, "Intervals");
 }
 
-void OnyxOutXml::ReadInterval(QXmlStreamReader* reader, OutDataModel* outData)
+void OnyxOutXml::readInterval(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     qDebug() << "(Interval)Name: " << name << endl;
@@ -140,16 +141,16 @@ void OnyxOutXml::ReadInterval(QXmlStreamReader* reader, OutDataModel* outData)
         name = reader->name();
         qDebug() << "(Interval2)Name: " << name << endl;
         if (name == "Tests") {
-            ReadTests(reader, outData);
+            readTests(reader, outData);
         }
         else {
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
     }
-    SkipToEndElement(reader, "Interval");
+    skipToEndElement(reader, "Interval");
 }
 
-void OnyxOutXml::ReadTests(QXmlStreamReader* reader, OutDataModel* outData)
+void OnyxOutXml::readTests(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     qDebug() << "(Tests)Name: " << name << endl;
@@ -160,17 +161,17 @@ void OnyxOutXml::ReadTests(QXmlStreamReader* reader, OutDataModel* outData)
             QString typeOfTest = reader->attributes().value("TypeOfTest").toString();
             qDebug() << "(Tests2)TypeOfTest: " << typeOfTest << endl;
             if (typeOfTest == "FVC") {
-                ReadFVCTest(reader, outData);
+                readFVCTest(reader, outData);
             }
         }
         else {
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
     }
-    SkipToEndElement(reader, "Tests");
+    skipToEndElement(reader, "Tests");
 }
 
-void OnyxOutXml::ReadFVCTest(QXmlStreamReader* reader, OutDataModel* outData)
+void OnyxOutXml::readFVCTest(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     qDebug() << "(FVC)Name: " << name << endl;
@@ -185,14 +186,14 @@ void OnyxOutXml::ReadFVCTest(QXmlStreamReader* reader, OutDataModel* outData)
         }
         else if (name == "BestValues") {
             // TODO: Finish this
-            outData->bestValues = ReadResultParameters(reader, "BestValues");
+            outData->bestValues = readResultParameters(reader, "BestValues");
             qDebug() << "Best values stored mock " << endl;
         }
         else if (name == "SWVersion") {
             outData->softwareVersion = reader->readElementText();
         }
         else if (name == "PatientDataAtTestTime") {
-            ReadPatientDataAtTestTime(reader, outData);
+            readPatientDataAtTestTime(reader, outData);
             continue;
         }
         else if (name == "QualityGradeOriginal") {
@@ -203,15 +204,15 @@ void OnyxOutXml::ReadFVCTest(QXmlStreamReader* reader, OutDataModel* outData)
             outData->qualityGrade = reader->readElementText();
         }
         else if (name == "Trials") {
-            ReadTrials(reader, outData);
+            readTrials(reader, outData);
             continue;
         }
-        SkipToEndElement(reader, name.toString());
+        skipToEndElement(reader, name.toString());
     }
-    SkipToEndElement(reader, "Test");
+    skipToEndElement(reader, "Test");
 }
 
-void OnyxOutXml::ReadPatientDataAtTestTime(QXmlStreamReader* reader, OutDataModel* outData)
+void OnyxOutXml::readPatientDataAtTestTime(QXmlStreamReader* reader, OutDataModel* outData)
 {
     qDebug() << "PatientDataAtTestTime stored mock " << endl;
     QStringRef name = reader->name();
@@ -221,44 +222,44 @@ void OnyxOutXml::ReadPatientDataAtTestTime(QXmlStreamReader* reader, OutDataMode
         qDebug() << "(pData)Name: " << name << endl;
         if (name == "Height") {
             outData->height = reader->readElementText().toDouble();
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
         else if (name == "Weight") {
             outData->weight = reader->readElementText().toDouble();
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
         else if (name == "Ethnicity") {
             outData->ethnicity = reader->readElementText();
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
         else if (name == "Smoker") {
             outData->smoker = reader->readElementText();
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
         else if (name == "COPD") {
             outData->copd = reader->readElementText();
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
         else if (name == "Asthma") {
             outData->asthma = reader->readElementText();
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
         else if (name == "Gender") {
             outData->gender = reader->readElementText();
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
         else if (name == "DateOfBirth") {
             outData->birthDate = QDate::fromString(reader->readElementText(), "yyyy-MM-dd");
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
         else {
-            SkipToEndElement(reader, name.toString());
+            skipToEndElement(reader, name.toString());
         }
     }
-    SkipToEndElement(reader, "PatientDataAtTestTime");
+    skipToEndElement(reader, "PatientDataAtTestTime");
 }
 
-void OnyxOutXml::ReadTrials(QXmlStreamReader* reader, OutDataModel* outData)
+void OnyxOutXml::readTrials(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     qDebug() << "(Trials)Name: " << name << endl;
@@ -266,13 +267,13 @@ void OnyxOutXml::ReadTrials(QXmlStreamReader* reader, OutDataModel* outData)
         name = reader->name();
         qDebug() << "(Trials)Name: " << name << endl;
         if (name == "Trial") {
-            ReadTrial(reader, outData);
+            readTrial(reader, outData);
         }
     }
-    SkipToEndElement(reader, "Trials");
+    skipToEndElement(reader, "Trials");
 }
 
-void OnyxOutXml::ReadTrial(QXmlStreamReader* reader, OutDataModel* outData)
+void OnyxOutXml::readTrial(QXmlStreamReader* reader, OutDataModel* outData)
 {
     TrialDataModel trialData;
     QStringRef name = reader->name();
@@ -304,24 +305,24 @@ void OnyxOutXml::ReadTrial(QXmlStreamReader* reader, OutDataModel* outData)
             trialData.manualAmbientOverride = reader->readElementText();
         }
         else if (name == "ResultParameters") {
-            trialData.resultParameters = ReadResultParameters(reader, "ResultParameters");
+            trialData.resultParameters = readResultParameters(reader, "ResultParameters");
             continue;
         }
         else if (name == "ChannelFlow") {
-            ReadChannelFlow(reader, &trialData);
+            readChannelFlow(reader, &trialData);
             continue;
         }
         else if (name == "ChannelVolume") {
-            ReadChannelVolume(reader, &trialData);
+            readChannelVolume(reader, &trialData);
             continue;
         }
-        SkipToEndElement(reader, name.toString());
+        skipToEndElement(reader, name.toString());
     }
     outData->trials.append(trialData);
-    SkipToEndElement(reader, "Trial");
+    skipToEndElement(reader, "Trial");
 }
 
-ResultParametersModel OnyxOutXml::ReadResultParameters(QXmlStreamReader* reader,  QString closingTagName)
+ResultParametersModel OnyxOutXml::readResultParameters(QXmlStreamReader* reader, const QString& closingTagName)
 {
     ResultParametersModel parameters;
     QStringRef name;
@@ -333,14 +334,14 @@ ResultParametersModel OnyxOutXml::ReadResultParameters(QXmlStreamReader* reader,
             QString idStr = id.toString();
             qDebug() << "idStr = " << idStr << endl;
 
-            parameters.results[idStr] = ReadResultParameter(reader);
+            parameters.results[idStr] = readResultParameter(reader);
         }
     }
-    SkipToEndElement(reader, closingTagName);
+    skipToEndElement(reader, closingTagName);
     return parameters;
 }
 
-ResultParameterModel OnyxOutXml::ReadResultParameter(QXmlStreamReader* reader)
+ResultParameterModel OnyxOutXml::readResultParameter(QXmlStreamReader* reader)
 {
     ResultParameterModel resultParameter;
     QStringRef name;
@@ -358,13 +359,13 @@ ResultParameterModel OnyxOutXml::ReadResultParameter(QXmlStreamReader* reader)
         else if (name == "LLNormalValue") {
             resultParameter._llNormalValue = reader->readElementText().toDouble();
         }
-        SkipToEndElement(reader, name.toString());
+        skipToEndElement(reader, name.toString());
     }
-    SkipToEndElement(reader, "ResultParameter");
+    skipToEndElement(reader, "ResultParameter");
     return resultParameter;
 }
 
-void OnyxOutXml::ReadChannelFlow(QXmlStreamReader* reader, TrialDataModel* trialData)
+void OnyxOutXml::readChannelFlow(QXmlStreamReader* reader, TrialDataModel* trialData)
 {
     QStringRef name = reader->name();
     qDebug() << "(flow)Name: " << name << endl;
@@ -380,11 +381,11 @@ void OnyxOutXml::ReadChannelFlow(QXmlStreamReader* reader, TrialDataModel* trial
                 trialData->flowValues.append(strValues[i].toDouble());
             }
         }
-        SkipToEndElement(reader, name.toString());
+        skipToEndElement(reader, name.toString());
     }
 }
 
-void OnyxOutXml::ReadChannelVolume(QXmlStreamReader* reader, TrialDataModel* trialData)
+void OnyxOutXml::readChannelVolume(QXmlStreamReader* reader, TrialDataModel* trialData)
 {
     QStringRef name = reader->name();
     qDebug() << "(volume)Name: " << name << endl;
@@ -400,6 +401,6 @@ void OnyxOutXml::ReadChannelVolume(QXmlStreamReader* reader, TrialDataModel* tri
                 trialData->volumeValues.append(strValues[i].toDouble());
             }
         }
-        SkipToEndElement(reader, name.toString());
+        skipToEndElement(reader, name.toString());
     }
 }

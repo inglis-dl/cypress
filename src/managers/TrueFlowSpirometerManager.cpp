@@ -45,14 +45,32 @@ void TrueFlowSpirometerManager::loadSettings(const QSettings& settings)
     // eg., C:/Program Files (x86)/ndd Medizintechnik/Easy on-PC/Application/EasyWarePro.exe
     //
     QString exeName = settings.value(getGroup() + "/client/exe").toString();
-    QString transferDir = settings.value(getGroup() + "/client/transferDir").toString();
-    QString transferInFilename = settings.value(getGroup() + "/client/transferInFilename").toString();
-    QString transferOutFilename = settings.value(getGroup() + "/client/transferOutFilename").toString();
+    QString emrTransferDir = settings.value(getGroup() + "/client/transferDir").toString();
     selectRunnable(exeName);
+    selectEmrTransferDir(emrTransferDir);
 }
 
 void TrueFlowSpirometerManager::saveSettings(QSettings* settings) const
 {
+    if (!m_runnableFullPath.isEmpty())
+    {
+        settings->beginGroup(getGroup());
+        settings->setValue("client/exe", m_runnableFullPath);
+        settings->endGroup();
+        if (m_verbose)
+            qDebug() << "wrote jar fullspec path to settings file";
+    }
+
+    if (!m_emrTransferDir.isEmpty())
+    {
+        settings->beginGroup(getGroup());
+        settings->setValue("client/transferDir", m_emrTransferDir);
+        settings->endGroup();
+        if (m_verbose)
+            qDebug() << "wrote emr transfer directory path to settings file";
+    }
+
+    resetEmrTransferFiles();
 }
 
 QJsonObject TrueFlowSpirometerManager::toJsonObject() const
@@ -133,12 +151,9 @@ void TrueFlowSpirometerManager::measure()
     // launch the process
     qDebug() << "starting process from measure";
     
-    
-
-    QString easyOnPcDirPath = "C:/ProgramData/ndd/Easy on-PC";
-    ResetEasyOnPcFiles(easyOnPcDirPath);
-    m_onyxInXml.write(easyOnPcDirPath);
-    LaunchEasyOnPc();
+    resetEmrTransferFiles();
+    m_onyxInXml.write(getTransferInFilePath());
+    launchEasyOnPc();
     readOutput();
 }
 
@@ -189,11 +204,26 @@ void TrueFlowSpirometerManager::selectRunnable(const QString& runnableFullPath)
         m_runnableFullPath = runnableFullPath;
         m_runnableDir = info.absolutePath();
 
-        emit runnableSelected();
-        configureProcess();
+        if(inputDataInitialized()){
+            configureProcess();
+        }
     }
     else
         emit canSelectRunnable();
+}
+
+void TrueFlowSpirometerManager::selectEmrTransferDir(const QString& emrTransferDir)
+{
+    if (emrTransferDir.isEmpty() == false && QDir(emrTransferDir).exists())
+    {
+        m_emrTransferDir = emrTransferDir;
+
+        if (inputDataInitialized()) {
+            configureProcess();
+        }
+    }
+    else
+        emit canSelectEmrTransferDir();
 }
 
 void TrueFlowSpirometerManager::readOutput()
@@ -205,7 +235,7 @@ void TrueFlowSpirometerManager::readOutput()
     }
 
     // Read the output for non simulate mode
-    bool loaded = m_test.loadData();
+    bool loaded = m_test.loadData(getTransferOutFilePath());
     if (loaded) {
         emit canWrite();
     }
@@ -220,30 +250,82 @@ void TrueFlowSpirometerManager::clearData()
     emit dataChanged();
 }
 
-void TrueFlowSpirometerManager::LaunchEasyOnPc() 
+void TrueFlowSpirometerManager::launchEasyOnPc() 
 {
+    createDatabaseCopies();
+
     m_process.start();
     bool launched = m_process.waitForFinished(100000000);
     m_process.close();
     qDebug() << "Easy on pc launched = " << launched << endl;
 }
 
-void TrueFlowSpirometerManager::ResetEasyOnPcFiles(const QString& dirPath) const
+void TrueFlowSpirometerManager::resetEmrTransferFiles() const
 {
     // Delete OnyxOut.xml if it exists
-    QString onyxOutFilePath = QString("%1/OnyxOut.xml").arg(dirPath);
-    if (QFile::exists(onyxOutFilePath)) {
-        QFile::remove(onyxOutFilePath);
+    if (QFile::exists(getTransferOutFilePath())) {
+        QFile::remove(getTransferOutFilePath());
     }
 
     // Delete OnyxIn.xml if it exists
-    QString onyxInFilePath = QString("%1/OnyxIn.xml").arg(dirPath);
-    if (QFile::exists(onyxInFilePath)) {
-        QFile::remove(onyxInFilePath);
+    if (QFile::exists(getTransferInFilePath())) {
+        QFile::remove(getTransferInFilePath());
     }
 
-    // TODO: Remove patient entries from EasyOnPc
-    // NOTE: Not sure where this data is stored
+    // Reset copied database
+    QString dbPath = getDbPath();
+    QString dbCopyPath = getDbCopyPath();
+    if (QFile::exists(dbCopyPath)) {
+        // Remove the current db file if it exists
+        if (QFile::exists(dbPath)) {
+            QFile::remove(dbPath);
+        }
+
+        // Rename copy to be the current database
+        QFile::rename(dbCopyPath, dbPath);
+    }
+
+    // Reset copied database options
+    QString dbOptionsPath = getDbOptionsPath();
+    QString dbOptionsCopyPath = getDbOptionsCopyPath();
+    if (QFile::exists(dbOptionsCopyPath)) {
+        // Remove the current db file if it exists
+        if (QFile::exists(dbOptionsPath)) {
+            QFile::remove(dbOptionsPath);
+        }
+
+        // Rename copy to be the current database
+        QFile::rename(dbOptionsCopyPath, dbOptionsPath);
+    }
+}
+
+void TrueFlowSpirometerManager::createDatabaseCopies() const
+{
+    // Create database copy
+    QString dbPath = getDbPath();
+    QString dbCopyPath = getDbCopyPath();
+    if (QFile::exists(dbPath)) {
+        // Create the copy
+        QFile::copy(dbPath, dbCopyPath);
+    }
+
+    // Create database options copy
+    QString dbOptionsPath = getDbOptionsPath();
+    QString dbOptionsCopyPath = getDbOptionsCopyPath();
+    if (QFile::exists(dbOptionsPath)) {
+        // Create the copy
+        QFile::copy(dbOptionsPath, dbOptionsCopyPath);
+    }
+}
+
+bool TrueFlowSpirometerManager::inputDataInitialized() const
+{
+    bool initialized =
+        m_runnableDir.isEmpty() == false
+        && QDir(m_runnableDir).exists()
+        && isDefined(m_runnableFullPath)
+        && m_emrTransferDir.isEmpty() == false;
+    return initialized;
 }
 
 void TrueFlowSpirometerManager::configureProcess()
@@ -264,19 +346,9 @@ void TrueFlowSpirometerManager::configureProcess()
     {
         qDebug() << "OK: configuring command";
 
-        // TODO: Check that a correct version of java is installed
         QString command = QString("\"%1\"").arg(m_runnableFullPath);
-        //command = QString("\"C:\\Program Files (x86)\\ndd Medizintechnik\\Easy on-PC\\Application\\EasyWarePro.exe\"");
-        QStringList arguments;
-        //arguments << "-jar"
-        //    << m_runnableFullPath
-        //    << getInputDataValue("barcode").toString();
-
         m_process.setProgram(command);
-        //m_process.setArguments(arguments);
         m_process.setWorkingDirectory(working.absolutePath());
-
-        //qDebug() << "process config args: " << m_process.arguments().join(" ");
         qDebug() << "process working dir: " << working.absolutePath();
 
         emit message(tr("Ready to measure..."));
@@ -289,4 +361,5 @@ void TrueFlowSpirometerManager::configureProcess()
 void TrueFlowSpirometerManager::finish()
 {
     m_test.reset();
+    resetEmrTransferFiles();
 }

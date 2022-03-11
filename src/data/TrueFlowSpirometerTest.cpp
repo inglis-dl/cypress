@@ -38,9 +38,9 @@ TrueFlowSpirometerTest::TrueFlowSpirometerTest()
     m_outputKeyList << resFev1FvcLlnormal2;
 }
 
-bool TrueFlowSpirometerTest::loadData()
+bool TrueFlowSpirometerTest::loadData(const QString& transferOutPath)
 {
-    OutDataModel outData = OnyxOutXml::ReadImportantValues();
+    OutDataModel outData = OnyxOutXml::readImportantValues(transferOutPath);
     m_metaData.setCharacteristic(outputHeight, outData.height);
     m_metaData.setCharacteristic(outputWeight, outData.weight);
     m_metaData.setCharacteristic(outputEthnicity, outData.ethnicity);

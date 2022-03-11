@@ -205,20 +205,63 @@ void MainWindow::initializeConnections()
 
     connect(&m_manager, &TrueFlowSpirometerManager::canSelectRunnable,
         this, [this]() {
+            bool openTransferDirButtonEnabled = ui->openTransferDirButton->isEnabled();
             for (auto&& x : this->findChildren<QPushButton*>())
                 x->setEnabled(false);
             ui->closeButton->setEnabled(true);
-            //ui->openButton->setEnabled(true);
+            ui->openButton->setEnabled(true);
+            ui->openTransferDirButton->setEnabled(openTransferDirButtonEnabled);
             static bool warn = true;
             if (warn)
             {
                 QMessageBox::warning(
                     this, QApplication::applicationName(),
                     tr("Select the exe by clicking Open and browsing to the "
-                        "required executable (CDTTStereo.jar) and selecting the file.  If the executable "
+                        "required executable (EasyWarePro.exe) and selecting the file.  If the executable "
                         "is valid click the Run button to start the test otherwise check the installation."));
                 warn = false;
             }
+        });
+
+    connect(ui->openButton, &QPushButton::clicked,
+        this, [this]() {
+            QString fileName =
+                QFileDialog::getOpenFileName(
+                    this, tr("Open File"),
+                    QCoreApplication::applicationDirPath(),
+                    tr("Applications (*.jar, *)"));
+
+            m_manager.selectRunnable(fileName);
+        });
+
+    connect(&m_manager, &TrueFlowSpirometerManager::canSelectEmrTransferDir,
+        this, [this]() {
+            bool openButtonEnabled = ui->openButton->isEnabled();
+            for (auto&& x : this->findChildren<QPushButton*>())
+                x->setEnabled(false);
+            ui->closeButton->setEnabled(true);
+            ui->openTransferDirButton->setEnabled(true);
+            ui->openButton->setEnabled(openButtonEnabled);
+            static bool warn = true;
+            if (warn)
+            {
+                QMessageBox::warning(
+                    this, QApplication::applicationName(),
+                    tr("Select the emr transfer directory by clicking Open and browsing to the "
+                        "required transfer directory (likely C:/ProgramData/ndd/Easy on-PC) and selecting the it. "
+                        "Click the Run button to start the test otherwise check the installation."));
+                warn = false;
+            }
+        });
+
+    connect(ui->openTransferDirButton, &QPushButton::clicked,
+        this, [this]() {
+            QString fileName =
+                QFileDialog::getExistingDirectory(
+                    this, tr("Open Directory"),
+                    QCoreApplication::applicationDirPath());
+
+            m_manager.selectEmrTransferDir(fileName);
         });
 
     // Read inputs required to launch frax test
@@ -325,8 +368,10 @@ void MainWindow::writeOutput()
 
     // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
     //
-    if (m_outputFileName.isEmpty())
+    if (m_outputFileName.isEmpty()) 
+    {
         constructDefault = true;
+    }     
     else
     {
         QFileInfo info(m_outputFileName);

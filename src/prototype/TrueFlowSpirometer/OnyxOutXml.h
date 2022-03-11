@@ -9,22 +9,22 @@
 class OnyxOutXml
 {
 public:
-	static OutDataModel ReadImportantValues();
+	static OutDataModel readImportantValues(const QString &transferOutPath);
 private:
-	static void SkipToEndElement(QXmlStreamReader* reader, QString name);
-	static QString ReadCommand(QXmlStreamReader* reader);
-	static void ReadPatients(QXmlStreamReader* reader, OutDataModel* outData, QString patientId);
-	static void ReadPatient(QXmlStreamReader* reader, OutDataModel* outData);
-	static void ReadIntervals(QXmlStreamReader* reader, OutDataModel* outData);
-	static void ReadInterval(QXmlStreamReader* reader, OutDataModel* outData);
-	static void ReadTests(QXmlStreamReader* reader, OutDataModel* outData);
-	static void ReadFVCTest(QXmlStreamReader* reader, OutDataModel* outData);
-	static void ReadPatientDataAtTestTime(QXmlStreamReader* reader, OutDataModel* outData);
-	static void ReadTrials(QXmlStreamReader* reader, OutDataModel* outData);
-	static void ReadTrial(QXmlStreamReader* reader, OutDataModel* outData);
-	static ResultParametersModel ReadResultParameters(QXmlStreamReader* reader, QString closingTagName);
-	static ResultParameterModel ReadResultParameter(QXmlStreamReader* reader);
-	static void ReadChannelFlow(QXmlStreamReader* reader, TrialDataModel* outData);
-	static void ReadChannelVolume(QXmlStreamReader* reader, TrialDataModel* outData);
+	static void skipToEndElement(QXmlStreamReader* reader, const QString &name);
+	static QString readCommand(QXmlStreamReader* reader);
+	static void readPatients(QXmlStreamReader* reader, OutDataModel* outData, const QString& patientId);
+	static void readPatient(QXmlStreamReader* reader, OutDataModel* outData);
+	static void readIntervals(QXmlStreamReader* reader, OutDataModel* outData);
+	static void readInterval(QXmlStreamReader* reader, OutDataModel* outData);
+	static void readTests(QXmlStreamReader* reader, OutDataModel* outData);
+	static void readFVCTest(QXmlStreamReader* reader, OutDataModel* outData);
+	static void readPatientDataAtTestTime(QXmlStreamReader* reader, OutDataModel* outData);
+	static void readTrials(QXmlStreamReader* reader, OutDataModel* outData);
+	static void readTrial(QXmlStreamReader* reader, OutDataModel* outData);
+	static ResultParametersModel readResultParameters(QXmlStreamReader* reader, const QString& closingTagName);
+	static ResultParameterModel readResultParameter(QXmlStreamReader* reader);
+	static void readChannelFlow(QXmlStreamReader* reader, TrialDataModel* outData);
+	static void readChannelVolume(QXmlStreamReader* reader, TrialDataModel* outData);
 };
 

@@ -57,26 +57,38 @@ public slots:
     //
     void selectRunnable(const QString&);
 
+    // set the emr transfer directory full path and name
+    // check if the passed in dir is a directory,
+    // but does not have any way of knowing if the directory is correct or not
+    //
+    void selectEmrTransferDir(const QString& emrTransferDir);
+
     void readOutput();
 
 signals:
-
-    // a valid runnable was selected
-    // manager attempts to configure the process and may emit canMeasure on success
-    //
-    void runnableSelected();
 
     // no runnable available or the selected runnable is invalid
     // signal can be connected to a ui slot to launch a File select dialog
     //
     void canSelectRunnable();
 
+    // no valid EMR transfer directory available 
+    // signal can be connected to a ui slot to launch a directory select dialog
+    //
+    void canSelectEmrTransferDir();
+
 private:
     QString m_runnableFullPath;// full pathspec to EasyWarePro.exe
     QString m_runnableDir; // path to EasyWarePro.exe directory
 
-    QString m_transferInFilePath;     // path to output .csv files
-    QString m_transferOutFilePath;     // path to output .csv files
+    QString m_emrTransferDir; // Path to the emr transfer directory
+    QString getTransferInFilePath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("OnyxIn.xml"); }
+    QString getTransferOutFilePath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("OnyxOut.xml"); }
+    QString getDbPath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("EasyWarePro.mdb"); }
+    QString getDbCopyPath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("EasyWareProCopy.mdb"); }
+    QString getDbOptionsPath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("EwpOptions.mdb"); }
+    QString getDbOptionsCopyPath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("EwpOptionsCopy.mdb");}
+
     QProcess m_process;
 
     TrueFlowSpirometerTest m_test;
@@ -85,8 +97,18 @@ private:
 
     void clearData() override;
 
-    void LaunchEasyOnPc();
-    void ResetEasyOnPcFiles(const QString& dirPath) const;
+    // Completes setup required before launching 
+    // and then launches easy on PC
+    void launchEasyOnPc();
+
+    // Reset the files in the emr transfer folder 
+    // so it is as if easy on pc has never been run before
+    void resetEmrTransferFiles() const;
+
+    // Create a copy of the two databases used in the emr transfer folder
+    void createDatabaseCopies() const;
+
+    bool inputDataInitialized() const;
 
     void configureProcess();
 };
