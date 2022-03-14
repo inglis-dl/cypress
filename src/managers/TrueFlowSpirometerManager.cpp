@@ -79,10 +79,21 @@ QJsonObject TrueFlowSpirometerManager::toJsonObject() const
     if (Constants::RunMode::modeSimulate != m_mode)
     {
         QFile ofile(getTransferOutFilePath());
-        ofile.open(QIODevice::ReadOnly);
-        QByteArray buffer = ofile.readAll();
-        json.insert("test_output_file", QString(buffer.toBase64()));
-        json.insert("test_output_file_mime_type", "xml");
+        if (ofile.exists()) {
+            ofile.open(QIODevice::ReadOnly);
+            QByteArray buffer = ofile.readAll();
+            json.insert("test_output_file", QString(buffer.toBase64()));
+            json.insert("test_output_file_mime_type", "xml");
+        }
+        
+
+        QFile pdfFile(getOutPdfFilePath());
+        if (pdfFile.exists()) {
+            pdfFile.open(QIODevice::ReadOnly);
+            QByteArray bufferPdf = pdfFile.readAll();
+            json.insert("test_output_pdf_file", QString(bufferPdf.toBase64()));
+            json.insert("test_output_pdf_file_mime_type", "pdf");
+        }
     }
     QJsonObject jsonInput;
     for(auto&& x : m_inputData.toStdMap())
@@ -300,6 +311,12 @@ void TrueFlowSpirometerManager::resetEmrTransferFiles() const
 
         // Rename copy to be the current database
         QFile::rename(dbOptionsCopyPath, dbOptionsPath);
+    }
+
+    // Delete pdf output file
+    QString pdfFilePatyh = getOutPdfFilePath();
+    if (QFile::exists(pdfFilePatyh)) {
+        QFile::remove(pdfFilePatyh);
     }
 }
 
