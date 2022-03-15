@@ -422,7 +422,7 @@ void BodyCompositionManager::setInputData(const QMap<QString,QVariant> &input)
       if(!input.contains("barcode"))
         m_inputData["barcode"] = Constants::DefaultBarcode;
       if(!input.contains("language"))
-        m_inputData["language"] = "english";
+        m_inputData["language"] = "en";
       if(!input.contains("age"))
         m_inputData["age"] = 50;
       if(!input.contains("gender"))
@@ -431,6 +431,13 @@ void BodyCompositionManager::setInputData(const QMap<QString,QVariant> &input)
         m_inputData["height"] = 170;
     }
     bool ok = true;
+    QMap<QString,QMetaType::Type> typeMap {
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString},
+        {"age",QMetaType::Type::UInt },
+        {"height",QMetaType::Type::UInt},
+        {"gender",QMetaType::Type::QString}
+    };
     foreach(auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
@@ -439,6 +446,24 @@ void BodyCompositionManager::setInputData(const QMap<QString,QVariant> &input)
         if(m_verbose)
           qDebug() << "ERROR: missing expected input " << key;
         break;
+      }
+      else
+      {
+        QVariant value = m_inputData[key];
+        bool valueOk = true;
+        QMetaType::Type type;
+        if(typeMap.contains(key))
+        {
+          type = typeMap[key];
+          valueOk = value.canConvert(type);
+        }
+        if(!valueOk)
+        {
+          ok = false;
+          if(m_verbose)
+            qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
+          break;
+        }
       }
     }
     if(!ok)
@@ -836,5 +861,11 @@ QJsonObject BodyCompositionManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
+    QJsonObject jsonInput;
+    foreach(auto x, m_inputData.toStdMap())
+    {
+      jsonInput.insert(x.first, x.second.toJsonValue());
+    }
+    json.insert("test_input",jsonInput);
     return json;
 }

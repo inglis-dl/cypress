@@ -22,7 +22,7 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
-    void simulate();
+    void simulate(const QMap<QString,QVariant>&);
 
 private:
 

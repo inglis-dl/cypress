@@ -40,7 +40,7 @@ FraxTest::FraxTest()
     m_outputKeyList << "country_code";
     m_outputKeyList << "age";
     m_outputKeyList << "sex";
-    m_outputKeyList << "bmi";
+    m_outputKeyList << "body_mass_index";
     m_outputKeyList << "previous_fracture";
     m_outputKeyList << "parent_hip_fracture";
     m_outputKeyList << "current_smoker";
@@ -88,7 +88,7 @@ void FraxTest::fromFile(const QString &fileName)
            addMetaData("country_code",list.at(1).toUInt());
            addMetaData("age",list.at(2).toDouble(),"yr");
            addMetaData("sex",list.at(3).toUInt());
-           addMetaData("bmi",list.at(4).toDouble(),"kg/m2");
+           addMetaData("body_mass_index",list.at(4).toDouble(),"kg/m2");
            addMetaData("previous_fracture",list.at(5).toUInt());
            addMetaData("parent_hip_fracture",list.at(6).toUInt());
            addMetaData("current_smoker",list.at(7).toUInt());
@@ -101,8 +101,31 @@ void FraxTest::fromFile(const QString &fileName)
     }
 }
 
-void FraxTest::simulate()
+void FraxTest::simulate(const QMap<QString,QVariant>& input)
 {
+    foreach(auto x, input.toStdMap())
+    {
+      QString key = x.first;
+      if("barcode" == key || "language" == key) continue;
+
+      QVariant value = x.second;
+      if("sex" == key)
+        value = "male" == value.toString() ? 0 : 1;
+      else
+      {
+        if(QVariant::Bool == value.type())
+        {
+          value = value.toUInt();
+        }
+      }
+      if("age" == key)
+        addMetaData(key,value,"yr");
+      else if("body_mass_index" == key)
+        addMetaData(key,value,"kg/m2");
+      else
+        addMetaData(key,value);
+    }
+
     FraxMeasurement m;
     double mu = QRandomGenerator::global()->generateDouble();
 
@@ -151,6 +174,7 @@ bool FraxTest::isValid() const
     {
       if(!hasMetaData(key))
       {
+         qDebug() << "ERROR: test missing meta data" << key;
          okMeta = false;
          break;
        }

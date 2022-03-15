@@ -146,9 +146,13 @@ void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
         if(!input.contains("barcode"))
           m_inputData["barcode"] = Constants::DefaultBarcode;
         if(!input.contains("language"))
-          m_inputData["language"] = "english";
+          m_inputData["language"] = "en";
     }
     bool ok = true;
+    QMap<QString,QMetaType::Type> typeMap {
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString}
+    };
     foreach(auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
@@ -156,6 +160,21 @@ void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
         ok = false;
         if(m_verbose)
           qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
+      QVariant value = m_inputData[key];
+      bool valueOk = true;
+      QMetaType::Type type;
+      if(typeMap.contains(key))
+      {
+        type = typeMap[key];
+        valueOk = value.canConvert(type);
+      }
+      if(!valueOk)
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
         break;
       }
     }
@@ -236,7 +255,7 @@ void ChoiceReactionManager::configureProcess()
       //
       command << "/c" + CCB_CLINIC;
 
-      // required language "english" or "french" converted to E or F
+      // required language "en" or "fr" converted to E or F
       //
       QString s = getInputDataValue("language").toString().toUpper();
       if(!s.isEmpty())

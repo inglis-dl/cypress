@@ -165,7 +165,8 @@ void TonometerTest::simulate(const QMap<QString, QVariant> &input)
     reset();
     qDebug() << "generating simulated data";
     addMetaData("id",input["barcode"]);
-    addMetaData("sex",input["sex"]);
+    QVariant value = input["sex"].toString().toLower().startsWith("f") ? 0 : -1;
+    addMetaData("sex",value);
     addMetaData("date_of_birth",input["date_of_birth"].toDateTime());
 
     double mu = QRandomGenerator::global()->generateDouble();

@@ -93,6 +93,10 @@ void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
         m_inputData["language"] = "english";
     }
     bool ok = true;
+    QMap<QString,QMetaType::Type> typeMap {
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString}
+    };
     foreach(auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
@@ -100,6 +104,21 @@ void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
         ok = false;
         if(m_verbose)
           qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
+      QVariant value = m_inputData[key];
+      bool valueOk = true;
+      QMetaType::Type type;
+      if(typeMap.contains(key))
+      {
+        type = typeMap[key];
+        valueOk = value.canConvert(type);
+      }
+      if(!valueOk)
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
         break;
       }
     }

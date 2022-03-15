@@ -89,6 +89,12 @@ QJsonObject CDTTManager::toJsonObject() const
         json.insert("test_output_file", QString(buffer.toBase64()));
         json.insert("test_output_file_mime_type", "xlsx");
     }
+    QJsonObject jsonInput;
+    foreach(auto x, m_inputData.toStdMap())
+    {
+      jsonInput.insert(x.first, x.second.toJsonValue());
+    }
+    json.insert("test_input",jsonInput);
     return json;
 }
 
@@ -174,9 +180,13 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
         if(!input.contains("barcode"))
           m_inputData["barcode"] = Constants::DefaultBarcode;
         if(!input.contains("language"))
-          m_inputData["language"] = "english";
+          m_inputData["language"] = "en";
     }
     bool ok = true;
+    QMap<QString,QMetaType::Type> typeMap {
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString}
+    };
     foreach(auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
@@ -184,6 +194,21 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
         ok = false;
         if(m_verbose)
           qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
+      QVariant value = m_inputData[key];
+      bool valueOk = true;
+      QMetaType::Type type;
+      if(typeMap.contains(key))
+      {
+        type = typeMap[key];
+        valueOk = value.canConvert(type);
+      }
+      if(!valueOk)
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
         break;
       }
     }

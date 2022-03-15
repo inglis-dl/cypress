@@ -25,7 +25,7 @@ FraxManager::FraxManager(QObject* parent):
     m_inputKeyList << "country_code";
     m_inputKeyList << "age";
     m_inputKeyList << "sex";
-    m_inputKeyList << "bmi";
+    m_inputKeyList << "body_mass_index";
     m_inputKeyList << "previous_fracture";
     m_inputKeyList << "parent_hip_fracture";
     m_inputKeyList << "current_smoker";
@@ -99,8 +99,8 @@ void FraxManager::saveSettings(QSettings* settings) const
         settings->beginGroup(getGroup());
         settings->setValue("client/exe", m_runnableName);
         settings->endGroup();
-        if (m_verbose)
-            qDebug() << "wrote exe fullspec path to settings file";
+        if(m_verbose)
+          qDebug() << "wrote exe fullspec path to settings file";
     }
 }
 
@@ -116,8 +116,10 @@ QJsonObject FraxManager::toJsonObject() const
       json.insert("test_output_file_mime_type","txt");
     }
     QJsonObject jsonInput;
-    jsonInput.insert("barcode",m_inputData["barcode"].toJsonValue());
-    jsonInput.insert("language",m_inputData["language"].toJsonValue());
+    foreach(auto x, m_inputData.toStdMap())
+    {
+      jsonInput.insert(x.first, x.second.toJsonValue());
+    }
     json.insert("test_input",jsonInput);
     return json;
 }
@@ -179,7 +181,7 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
       if(!input.contains("barcode"))
         m_inputData["barcode"] = Constants::DefaultBarcode;
       if(!input.contains("language"))
-        m_inputData["language"] = "english";
+        m_inputData["language"] = "en";
 
       if(!input.contains("type"))
         m_inputData["type"] = "t";
@@ -188,32 +190,44 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
       if(!input.contains("age"))
         m_inputData["age"] = 84.19;
       if(!input.contains("sex"))
-        m_inputData["sex"] = 0;
-      if(!input.contains("bmi"))
-        m_inputData["bmi"] = 24.07;
+        m_inputData["sex"] = "male";
+      if(!input.contains("body_mass_index"))
+        m_inputData["body_mass_index"] = 24.07;
       if(!input.contains("previous_fracture"))
-        m_inputData["previous_fracture"] = 0;
+        m_inputData["previous_fracture"] = false;
       if(!input.contains("parent_hip_fracture"))
-        m_inputData["parent_hip_fracture"] = 0;
+        m_inputData["parent_hip_fracture"] = false;
       if(!input.contains("current_smoker"))
-        m_inputData["current_smoker"] = 0;
+        m_inputData["current_smoker"] = false;
       if(!input.contains("gluccocorticoid"))
-        m_inputData["gluccocorticoid"] = 0;
+        m_inputData["gluccocorticoid"] = false;
       if(!input.contains("rheumatoid_arthritis"))
-        m_inputData["rheumatoid_arthritis"] = 0;
+        m_inputData["rheumatoid_arthritis"] = false;
       if(!input.contains("secondary_osteoporosis"))
-        m_inputData["secondary_osteoporosis"] = 0;
+        m_inputData["secondary_osteoporosis"] = false;
       if(!input.contains("alcohol"))
-        m_inputData["alcohol"] = 0;
+        m_inputData["alcohol"] = false;
       if(!input.contains("femoral_neck_bmd"))
         m_inputData["femoral_neck_bmd"] = -1.1;
     }
     bool ok = true;
-    QStringList intKeys = {
-        "sex","previous_fracture","parent_hip_fracture",
-        "current_smoker","gluccocorticoid","rheumatoid_arthritis",
-        "secondary_osteoporosis","alcohol"};
-    QStringList doubleKeys = {"age","bmi","femoral_neck_bmd"};
+    QMap<QString,QMetaType::Type> typeMap {
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString},
+        {"type",QMetaType::Type::QString},
+        {"country_code",QMetaType::Type::Int},
+        {"sex",QMetaType::Type::QString},
+        {"previous_fracture",QMetaType::Type::Bool},
+        {"parent_hip_fracture",QMetaType::Type::Bool},
+        {"current_smoker",QMetaType::Type::Bool},
+        {"gluccocorticoid",QMetaType::Type::Bool},
+        {"rheumatoid_arthritis",QMetaType::Type::Bool},
+        {"secondary_osteoporosis",QMetaType::Type::Bool},
+        {"alcohol",QMetaType::Type::Bool},
+        {"age",QMetaType::Type::Double},
+        {"body_mass_index",QMetaType::Type::Double},
+        {"femoral_neck_bmd",QMetaType::Type::Double}
+    };
     foreach(auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
@@ -225,29 +239,19 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
       }
       else
       {
-        if("barcode" == key || "language" == key) continue;
         QVariant value = m_inputData[key];
         bool valueOk = true;
-        if(intKeys.contains(key))
+        QMetaType::Type type;
+        if(typeMap.contains(key))
         {
-          if((valueOk = value.canConvert(QMetaType::Int)))
-          {
-            int v = value.toInt();
-            if(!(1 == v || 0 == v))
-            {
-              valueOk = false;
-            }
-          }
-        }
-        else if(doubleKeys.contains(key))
-        {
-          valueOk = value.canConvert(QMetaType::Double);
+          type = typeMap[key];
+          valueOk = value.canConvert(type);
         }
         if(!valueOk)
         {
           ok = false;
           if(m_verbose)
-            qDebug() << "ERROR: invalid input" << key << value.toString();
+            qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
           break;
         }
       }
@@ -271,17 +275,7 @@ void FraxManager::readOutput()
         if(m_verbose)
           qDebug() << "simulating read out";
 
-        foreach(auto x, m_inputData.toStdMap())
-        {
-          if("language" == x.first || "barcode" == x.first) continue;
-          if("age" == x.first)
-            m_test.addMetaData(x.first,x.second,"yr");
-          else if("bmi" == x.first)
-            m_test.addMetaData(x.first,x.second,"kg/m2");
-          else
-            m_test.addMetaData(x.first,x.second);
-        }
-        m_test.simulate();
+        m_test.simulate(m_inputData);
         emit message(tr("Ready to save results..."));
         emit canWrite();
         emit dataChanged();
@@ -354,8 +348,18 @@ void FraxManager::configureProcess()
         foreach(auto key, m_inputKeyList)
         {
             if("barcode" == key || "language" == key) continue;
-            if(m_inputData.contains(key))
-              list << m_inputData[key].toString();
+
+            QVariant value = m_inputData[key];
+            if("sex" == key)
+              value = "male" == value.toString() ? 0 : 1;
+            else
+            {
+              if(QVariant::Bool == value.type())
+              {
+                value = value.toUInt();
+              }
+            }
+            list << value.toString();
         }
         QString line = list.join(",");
         QFile ofile(m_inputFile);

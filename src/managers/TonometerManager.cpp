@@ -113,6 +113,12 @@ void TonometerManager::saveSettings(QSettings* settings) const
 QJsonObject TonometerManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
+    QJsonObject jsonInput;
+    foreach(auto x, m_inputData.toStdMap())
+    {
+      jsonInput.insert(x.first, x.second.toJsonValue());
+    }
+    json.insert("test_input",jsonInput);
     return json;
 }
 
@@ -229,33 +235,46 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
       if(!input.contains("barcode"))
         m_inputData["barcode"] = Constants::DefaultBarcode;
       if(!input.contains("language"))
-          m_inputData["language"] = "english";
+          m_inputData["language"] = "en";
       if(!input.contains("date_of_birth"))
-        m_inputData["date_of_birth"] = "1965-12-17";
+        m_inputData["date_of_birth"] = QDate::fromString("1965-12-17","yyyy-MM-dd");
       if(!input.contains("sex"))
-        m_inputData["sex"] = -1;
+        m_inputData["sex"] = "male";
     }
     bool ok = true;
+    QMap<QString,QMetaType::Type> typeMap {
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString},
+        {"sex",QMetaType::Type::QString},
+        {"date_of_birth",QMetaType::Type::QDate }
+    };
     foreach(auto key, m_inputKeyList)
     {
-        if(m_inputData.contains(key))
+      if(!m_inputData.contains(key))
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: missing expected input " << key;
+        break;
+      }
+      else
+      {
+        QVariant value = m_inputData[key];
+        bool valueOk = true;
+        QMetaType::Type type;
+        if(typeMap.contains(key))
         {
-           QVariant value = m_inputData[key];
-           if("sex" == key)
-           {
-             if(QVariant::Type::String == value.type())
-             {
-                m_inputData[key] = value.toString().toLower().startsWith("f") ? 0 : -1;
-             }
-           }
+          type = typeMap[key];
+          valueOk = value.canConvert(type);
         }
-        else
+        if(!valueOk)
         {
           ok = false;
           if(m_verbose)
-            qDebug() << "ERROR: missing expected input" << key;
+            qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
           break;
         }
+      }
     }
     if(!ok)
     {
@@ -389,10 +408,19 @@ void TonometerManager::configureProcess()
             // case 3) - db has 1 record in the Patients table, no records in the Measures table
             // - no insert required
             //
+
+            // require sex and date_of_birth
+            //
+            QMap<QString,QVariant> input;
+            input.insert("barcode",m_inputData["barcode"]);
+            QVariant value = m_inputData["sex"].toString().toLower().startsWith("f") ? 0 : -1;
+            input.insert("sex",value);
+            input.insert("date_of_birth",m_inputData["date_of_birth"]);
+
             bool insert = true;
             AccessQueryHelper helper;
             helper.setOperation(AccessQueryHelper::Operation::CountMeasures);
-            QVariant result = helper.processQuery(m_inputData,db);
+            QVariant result = helper.processQuery(input,db);
             // first check if the query failed
             if(-1 == result.toInt())
             {
@@ -403,7 +431,7 @@ void TonometerManager::configureProcess()
             {
               // clear out participant data from Measures
               helper.setOperation(AccessQueryHelper::Operation::DeleteMeasures);
-              result = helper.processQuery(m_inputData,db);
+              result = helper.processQuery(input,db);
               if(!result.toBool())
               {
                 qDebug() << "ERROR: configuration failed delete query";
@@ -412,7 +440,7 @@ void TonometerManager::configureProcess()
             }
 
             helper.setOperation(AccessQueryHelper::Operation::Count);
-            result = helper.processQuery(m_inputData,db);
+            result = helper.processQuery(input,db);
             // first check if the query failed
             if(-1 == result.toInt())
             {
@@ -423,7 +451,7 @@ void TonometerManager::configureProcess()
             {
               // clear out participant data from Patients
               helper.setOperation(AccessQueryHelper::Operation::Delete);
-              result = helper.processQuery(m_inputData,db);
+              result = helper.processQuery(input,db);
               if(!result.toBool())
               {
                 qDebug() << "ERROR: configuration failed delete query";
@@ -438,12 +466,12 @@ void TonometerManager::configureProcess()
             if(insert)
             {
               helper.setOperation(AccessQueryHelper::Operation::Insert);
-              result = helper.processQuery(m_inputData,db);
+              result = helper.processQuery(input,db);
               if(result.toBool())
               {
                 // verify we have only 1 entry in the Patients table
                 helper.setOperation(AccessQueryHelper::Operation::Count);
-                result = helper.processQuery(m_inputData,db);
+                result = helper.processQuery(input,db);
                 if(1 != result.toInt())
                 {
                   qDebug() << "ERROR: configuration failed insert non-unary"
