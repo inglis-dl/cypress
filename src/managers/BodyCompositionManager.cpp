@@ -414,7 +414,7 @@ void BodyCompositionManager::measure()
     writeDevice();
 }
 
-void BodyCompositionManager::setInputData(const QMap<QString,QVariant> &input)
+void BodyCompositionManager::setInputData(const QJsonObject &input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -449,7 +449,7 @@ void BodyCompositionManager::setInputData(const QMap<QString,QVariant> &input)
       }
       else
       {
-        QVariant value = m_inputData[key];
+        const QVariant value = m_inputData[key].toVariant();
         bool valueOk = true;
         QMetaType::Type type;
         if(typeMap.contains(key))
@@ -472,7 +472,13 @@ void BodyCompositionManager::setInputData(const QMap<QString,QVariant> &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
+    }
+    else
+    {
+        emit notifyAgeInput(QString::number(m_inputData["age"].toInt()));
+        emit notifyGenderInput(m_inputData["gender"].toString());
+        emit notifyHeightInput(QString::number(m_inputData["height"].toInt()));
     }
 }
 
@@ -861,11 +867,6 @@ QJsonObject BodyCompositionManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
-    QJsonObject jsonInput;
-    foreach(auto x, m_inputData.toStdMap())
-    {
-      jsonInput.insert(x.first, x.second.toJsonValue());
-    }
-    json.insert("test_input",jsonInput);
+    json.insert("test_input",m_inputData);
     return json;
 }

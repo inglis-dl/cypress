@@ -101,14 +101,13 @@ void FraxTest::fromFile(const QString &fileName)
     }
 }
 
-void FraxTest::simulate(const QMap<QString,QVariant>& input)
+void FraxTest::simulate(const QJsonObject& input)
 {
-    foreach(auto x, input.toStdMap())
+    foreach(auto key, input.keys())
     {
-      QString key = x.first;
       if("barcode" == key || "language" == key) continue;
 
-      QVariant value = x.second;
+      QVariant value = input[key].toVariant();
       if("sex" == key)
         value = "male" == value.toString() ? 0 : 1;
       else

@@ -299,12 +299,7 @@ QJsonObject BloodPressureManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
-    QJsonObject jsonInput;
-    foreach(auto x, m_inputData.toStdMap())
-    {
-      jsonInput.insert(x.first, x.second.toJsonValue());
-    }
-    json.insert("test_input",jsonInput);
+    json.insert("test_input",m_inputData);
     return json;
 }
 
@@ -363,7 +358,7 @@ void BloodPressureManager::measure()
     emit startMeasurement();
 }
 
-void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
+void BloodPressureManager::setInputData(const QJsonObject& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -387,7 +382,7 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
-      QVariant value = m_inputData[key];
+      const QVariant value = m_inputData[key].toVariant();
       bool valueOk = true;
       QMetaType::Type type;
       if(typeMap.contains(key))
@@ -409,7 +404,7 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
     }
     else
     {

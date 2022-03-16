@@ -26,7 +26,8 @@ CONFIG += c++11 console
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-    ../../auxiliary/Constants.cpp \    
+    ../../auxiliary/Constants.cpp \
+    ../../auxiliary/JsonSettings.cpp \
     ../../data/BodyCompositionMeasurement.cpp \
     ../../data/BodyCompositionTest.cpp \
     ../../data/Measurement.cpp \
@@ -40,6 +41,7 @@ SOURCES += \
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
     ../../auxiliary/Constants.h \
+    ../../auxiliary/JsonSettings.h \
     ../../auxiliary/Utilities.h \
     ../../data/BodyCompositionMeasurement.h \
     ../../data/BodyCompositionTest.h \

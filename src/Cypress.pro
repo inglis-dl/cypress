@@ -12,6 +12,7 @@ SOURCES += \
     auxiliary/Constants.cpp \
     auxiliary/CRC8.cpp \
     auxiliary/CommandLineParser.cpp \
+    auxiliary/JsonSettings.cpp \
     data/Measurement.cpp \
     data/HearingTest.cpp \
     data/BloodPressureTest.cpp \
@@ -63,6 +64,7 @@ SOURCES += \
 
 HEADERS += \
     auxiliary/Constants.h \
+    auxiliary/JsonSettings.h \
     auxiliary/Utilities.h \
     auxiliary/CRC8.h \
     auxiliary/CommandLineParser.h \

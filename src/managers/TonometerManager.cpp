@@ -113,12 +113,7 @@ void TonometerManager::saveSettings(QSettings* settings) const
 QJsonObject TonometerManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    QJsonObject jsonInput;
-    foreach(auto x, m_inputData.toStdMap())
-    {
-      jsonInput.insert(x.first, x.second.toJsonValue());
-    }
-    json.insert("test_input",jsonInput);
+    json.insert("test_input",m_inputData);
     return json;
 }
 
@@ -227,7 +222,7 @@ void TonometerManager::measure()
     m_process.start();
 }
 
-void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
+void TonometerManager::setInputData(const QJsonObject &input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -237,7 +232,8 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
       if(!input.contains("language"))
           m_inputData["language"] = "en";
       if(!input.contains("date_of_birth"))
-        m_inputData["date_of_birth"] = QDate::fromString("1965-12-17","yyyy-MM-dd");
+        m_inputData["date_of_birth"] =
+          QJsonValue::fromVariant(QVariant(QDate::fromString("1965-12-17","yyyy-MM-dd")));
       if(!input.contains("sex"))
         m_inputData["sex"] = "male";
     }
@@ -259,7 +255,7 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
       }
       else
       {
-        QVariant value = m_inputData[key];
+        const QVariant value = m_inputData[key].toVariant();
         bool valueOk = true;
         QMetaType::Type type;
         if(typeMap.contains(key))
@@ -282,7 +278,7 @@ void TonometerManager::setInputData(const QMap<QString, QVariant> &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
     }
 }
 
@@ -314,9 +310,16 @@ void TonometerManager::readOutput()
         db.open();
     if(db.isOpen())
     {
+      // TODO: check if QJsonObject can convert variant back to date
+      //
+      QMap<QString,QVariant> input;
+      input.insert("barcode",m_inputData["barcode"].toString());
+      QVariant value = m_inputData["sex"].toString().toLower().startsWith("f") ? 0 : -1;
+      input.insert("sex",value);
+      input.insert("date_of_birth",m_inputData["date_of_birth"].toVariant());
       AccessQueryHelper helper;
       helper.setOperation(AccessQueryHelper::Operation::Results);
-      QVariant result = helper.processQuery(m_inputData,db);
+      QVariant result = helper.processQuery(input,db);
       if(result.isValid() && !result.isNull())
       {
         QJsonArray arr = QJsonValue::fromVariant(result).toArray();
@@ -412,10 +415,10 @@ void TonometerManager::configureProcess()
             // require sex and date_of_birth
             //
             QMap<QString,QVariant> input;
-            input.insert("barcode",m_inputData["barcode"]);
+            input.insert("barcode",m_inputData["barcode"].toString());
             QVariant value = m_inputData["sex"].toString().toLower().startsWith("f") ? 0 : -1;
             input.insert("sex",value);
-            input.insert("date_of_birth",m_inputData["date_of_birth"]);
+            input.insert("date_of_birth",m_inputData["date_of_birth"].toVariant());
 
             bool insert = true;
             AccessQueryHelper helper;
@@ -512,13 +515,20 @@ void TonometerManager::finish()
     {
       AccessQueryHelper helper;
       helper.setOperation(AccessQueryHelper::Operation::DeleteMeasures);
-      QVariant result = helper.processQuery(m_inputData,db);
+
+      QMap<QString,QVariant> input;
+      input.insert("barcode",m_inputData["barcode"].toString());
+      QVariant value = m_inputData["sex"].toString().toLower().startsWith("f") ? 0 : -1;
+      input.insert("sex",value);
+      input.insert("date_of_birth",m_inputData["date_of_birth"].toVariant());
+
+      QVariant result = helper.processQuery(input,db);
       if(!result.toBool())
       {
         qDebug() << "ERROR: finish failed during delete measures query";
       }
       helper.setOperation(AccessQueryHelper::Operation::Delete);
-      result = helper.processQuery(m_inputData,db);
+      result = helper.processQuery(input,db);
       if(!result.toBool())
       {
         qDebug() << "ERROR: finish failed during delete patient query";

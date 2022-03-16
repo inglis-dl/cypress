@@ -138,7 +138,7 @@ void ChoiceReactionManager::selectRunnable(const QString &exeName)
        emit canSelectRunnable();
 }
 
-void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
+void ChoiceReactionManager::setInputData(const QJsonObject &input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -162,7 +162,7 @@ void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
-      QVariant value = m_inputData[key];
+      const QVariant value = m_inputData[key].toVariant();
       bool valueOk = true;
       QMetaType::Type type;
       if(typeMap.contains(key))
@@ -184,7 +184,7 @@ void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
     }
     else
       configureProcess();
@@ -285,7 +285,7 @@ void ChoiceReactionManager::readOutput()
         m_test.reset();
         m_test.addMetaData("start_datetime",QDateTime::currentDateTime());
         m_test.addMetaData("version","simulated");
-        m_test.addMetaData("user_id",m_inputData["barcode"]);
+        m_test.addMetaData("user_id",m_inputData["barcode"].toString());
         m_test.addMetaData("interviewer_id","simulated");
         m_test.addMetaData("end_datetime",QDateTime::currentDateTime());
         m_test.addMetaData("number_of_measurements",60);
@@ -385,5 +385,6 @@ QJsonObject ChoiceReactionManager::toJsonObject() const
       json.insert("test_output_file",QString(buffer.toBase64()));
       json.insert("test_output_file_mime_type","csv");
     }
+    json.insert("test_input",m_inputData);
     return json;
 }

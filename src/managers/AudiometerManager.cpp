@@ -79,7 +79,7 @@ void AudiometerManager::saveSettings(QSettings *settings) const
     }
 }
 
-void AudiometerManager::setInputData(const QMap<QString, QVariant> &input)
+void AudiometerManager::setInputData(const QJsonObject &input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -103,7 +103,7 @@ void AudiometerManager::setInputData(const QMap<QString, QVariant> &input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
-      QVariant value = m_inputData[key];
+      const QVariant value = m_inputData[key].toVariant();
       bool valueOk = true;
       QMetaType::Type type;
       if(typeMap.contains(key))
@@ -125,7 +125,7 @@ void AudiometerManager::setInputData(const QMap<QString, QVariant> &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
     }
 }
 
@@ -224,11 +224,6 @@ QJsonObject AudiometerManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
-    QJsonObject jsonInput;
-    foreach(auto x, m_inputData.toStdMap())
-    {
-      jsonInput.insert(x.first, x.second.toJsonValue());
-    }
-    json.insert("test_input",jsonInput);
+    json.insert("test_input",m_inputData);
     return json;
 }

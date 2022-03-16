@@ -26,14 +26,15 @@ CONFIG += c++11 console
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 HEADERS += ./MainWindow.h \
+    ../../auxiliary/CRC8.h \
+    ../../auxiliary/JsonSettings.h \
+    ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/Constants.h \
     ../../data/Measurement.h \
     ../../data/BloodPressureMeasurement.h \
     ../../data/TestBase.h \
     ../../data/BloodPressureTest.h \
-    ../../auxiliary/CommandLineParser.h \
-    ../../auxiliary/Constants.h \
     ../../widgets/BarcodeWidget.h \
-    ../../auxiliary/CRC8.h \
     ../../managers/BPMMessage.h \
     ../../managers/BPMCommunication.h \
     ../../managers/ManagerBase.h \
@@ -41,15 +42,16 @@ HEADERS += ./MainWindow.h \
 
 SOURCES += ./MainWindow.cpp \
     ./main.cpp \
-    ../../auxiliary/CRC8.cpp \
-    ../../managers/BPMMessage.cpp \
-    ../../managers/BPMCommunication.cpp \
     ../../auxiliary/CommandLineParser.cpp \
     ../../auxiliary/Constants.cpp \
+    ../../auxiliary/JsonSettings.cpp \
+     ../../auxiliary/CRC8.cpp \
     ../../data/Measurement.cpp \
     ../../data/BloodPressureMeasurement.cpp \
     ../../data/BloodPressureTest.cpp \
     ../../widgets/BarcodeWidget.cpp \
+    ../../managers/BPMMessage.cpp \
+    ../../managers/BPMCommunication.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/BloodPressureManager.cpp 
 

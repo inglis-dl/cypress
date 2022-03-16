@@ -29,6 +29,7 @@ HEADERS += ./MainWindow.h \
     ../../../src/data/TestBase.h \
     ../../../src/auxiliary/CommandLineParser.h \
     ../../../src/auxiliary/Constants.h \
+    ../../../src/auxiliary/JsonSettings.h \
     ../../../src/managers/ManagerBase.h \
     ../../data/TemplateMeasurement.h \
     ../../data/TemplateTest.h \
@@ -39,6 +40,7 @@ SOURCES += ./MainWindow.cpp \
     ./main.cpp \
     ../../../src/auxiliary/CommandLineParser.cpp \
     ../../../src/auxiliary/Constants.cpp \
+    ../../../src/auxiliary/JsonSettings.cpp \
     ../../../src/data/Measurement.cpp \
     ../../../src/managers/ManagerBase.cpp \
     ../../data/TemplateMeasurement.cpp \

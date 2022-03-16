@@ -139,15 +139,15 @@ void BluetoothLEManager::saveSettings(QSettings *settings) const
     }
 }
 
-void BluetoothLEManager::setInputData(const QMap<QString, QVariant> &input)
+void BluetoothLEManager::setInputData(const QJsonObject &input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
     {
-      if(!input.contains("barcode"))
-        m_inputData["barcode"] = Constants::DefaultBarcode;
-      if(!input.contains("language"))
-        m_inputData["language"] = "en";
+        if(!input.contains("barcode"))
+          m_inputData["barcode"] = Constants::DefaultBarcode;
+        if(!input.contains("language"))
+          m_inputData["language"] = "en";
     }
     bool ok = true;
     QMap<QString,QMetaType::Type> typeMap {
@@ -163,7 +163,7 @@ void BluetoothLEManager::setInputData(const QMap<QString, QVariant> &input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
-      QVariant value = m_inputData[key];
+      const QVariant value = m_inputData[key].toVariant();
       bool valueOk = true;
       QMetaType::Type type;
       if(typeMap.contains(key))
@@ -185,7 +185,7 @@ void BluetoothLEManager::setInputData(const QMap<QString, QVariant> &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
     }
 }
 
@@ -788,11 +788,6 @@ QJsonObject BluetoothLEManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
-    QJsonObject jsonInput;
-    foreach(auto x, m_inputData.toStdMap())
-    {
-      jsonInput.insert(x.first, x.second.toJsonValue());
-    }
-    json.insert("test_input",jsonInput);
+    json.insert("test_input",m_inputData);
     return json;
 }

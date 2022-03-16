@@ -27,10 +27,12 @@ void TemplateManager::start()
 
 void TemplateManager::loadSettings(const QSettings& settings)
 {
+    Q_UNUSED(settings)
 }
 
 void TemplateManager::saveSettings(QSettings* settings) const
 {
+    Q_UNUSED(settings)
 }
 
 QJsonObject TemplateManager::toJsonObject() const
@@ -40,15 +42,7 @@ QJsonObject TemplateManager::toJsonObject() const
     {
         // simulate mode code
     }
-    QJsonObject jsonInput;
-    foreach(auto x, m_inputData.toStdMap())
-    {
-        // convert to space delimited phrases to snake_case
-        //
-        jsonInput.insert(QString(x.first).toLower().replace(QRegExp("[\\s]+"),"_"),
-                         QJsonValue::fromVariant(x.second));
-    }
-    json.insert("test_input",jsonInput);
+    json.insert("test_input",m_inputData);
     return json;
 }
 
@@ -72,7 +66,6 @@ void TemplateManager::measure()
 {
     if(Constants::RunMode::modeSimulate == m_mode)
     {
-        readOutput();
         return;
     }
 
@@ -82,7 +75,7 @@ void TemplateManager::measure()
       qDebug() << "starting process from measure";
 }
 
-void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
+void TemplateManager::setInputData(const QJsonObject& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -106,7 +99,7 @@ void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
-      QVariant value = m_inputData[key];
+      const QVariant value = m_inputData[key].toVariant();
       bool valueOk = true;
       QMetaType::Type type;
       if(typeMap.contains(key))
@@ -128,7 +121,7 @@ void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
     }
 }
 

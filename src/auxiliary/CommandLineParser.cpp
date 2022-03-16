@@ -188,6 +188,14 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
                *errMessage = "One or more expected arguments are missng";
             }
         }
+        else if(Constants::RunMode::modeHeadless == m_args["runMode"].value<Constants::RunMode>())
+        {
+            if(!(hasValidInput && hasValidOutput))
+            {
+               result = Error;
+               *errMessage = "One or more expected arguments are missng";
+            }
+        }
     }
 
     qDebug() << "parser result: " << result;

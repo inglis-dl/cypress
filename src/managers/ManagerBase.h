@@ -2,10 +2,10 @@
 #define MANAGERBASE_H
 
 #include "../auxiliary/Constants.h"
+
+#include <QJsonObject>
 #include <QObject>
 #include <QWidget>
-#include <QMap>
-#include <QVariant>
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
 QT_FORWARD_DECLARE_CLASS(QStandardItemModel)
@@ -56,7 +56,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    virtual void setInputData(const QMap<QString,QVariant> &) = 0;
+    virtual void setInputData(const QJsonObject &) = 0;
 
     QVariant getInputDataValue(const QString &);
 
@@ -118,7 +118,7 @@ protected:
 
     // key value pairs sorted by key
     //
-    QMap<QString,QVariant> m_inputData;
+    QJsonObject m_inputData;
 
     // an ordered set of input keys
     //

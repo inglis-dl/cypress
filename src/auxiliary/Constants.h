@@ -13,7 +13,8 @@ public:
         modeUnknown,
         modeDefault,
         modeLive,
-        modeSimulate
+        modeSimulate,
+        modeHeadless
     };
     Q_ENUM(RunMode)
 

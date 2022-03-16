@@ -27,6 +27,7 @@ CONFIG += c++11 console
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../auxiliary/Constants.cpp \
+    ../../auxiliary/JsonSettings.cpp \
     ../../data/HearingMeasurement.cpp \
     ../../data/HearingTest.cpp \
     ../../data/Measurement.cpp \
@@ -40,6 +41,7 @@ SOURCES += \
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
     ../../auxiliary/Constants.h \
+    ../../auxiliary/JsonSettings.h \
     ../../data/HearingTest.h \
     ../../data/Measurement.h \
     ../../data/HearingMeasurement.h \

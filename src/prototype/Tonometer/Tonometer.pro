@@ -27,6 +27,7 @@ CONFIG += c++11 console
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
     ../../auxiliary/Constants.h \
+    ../../auxiliary/JsonSettings.h \
     ../../data/AccessQueryHelper.h \
     ../../data/TonometerMeasurement.h \
     ../../data/TonometerTest.h \
@@ -40,6 +41,7 @@ HEADERS += \
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../auxiliary/Constants.cpp \
+    ../../auxiliary/JsonSettings.cpp \
     ../../data/AccessQueryHelper.cpp \
     ../../data/TonometerMeasurement.cpp \
     ../../data/TonometerTest.cpp \

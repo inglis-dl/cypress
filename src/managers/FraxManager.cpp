@@ -115,12 +115,7 @@ QJsonObject FraxManager::toJsonObject() const
       json.insert("test_output_file",QString(buffer.toBase64()));
       json.insert("test_output_file_mime_type","txt");
     }
-    QJsonObject jsonInput;
-    foreach(auto x, m_inputData.toStdMap())
-    {
-      jsonInput.insert(x.first, x.second.toJsonValue());
-    }
-    json.insert("test_input",jsonInput);
+    json.insert("test_input",m_inputData);
     return json;
 }
 
@@ -173,7 +168,7 @@ void FraxManager::measure()
     m_process.start();
 }
 
-void FraxManager::setInputData(const QMap<QString, QVariant> &input)
+void FraxManager::setInputData(const QJsonObject &input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -239,7 +234,7 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
       }
       else
       {
-        QVariant value = m_inputData[key];
+        const QVariant value = m_inputData[key].toVariant();
         bool valueOk = true;
         QMetaType::Type type;
         if(typeMap.contains(key))
@@ -262,7 +257,7 @@ void FraxManager::setInputData(const QMap<QString, QVariant> &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
     }
     else
       configureProcess();
@@ -349,7 +344,7 @@ void FraxManager::configureProcess()
         {
             if("barcode" == key || "language" == key) continue;
 
-            QVariant value = m_inputData[key];
+            QVariant value = m_inputData[key].toVariant();
             if("sex" == key)
               value = "male" == value.toString() ? 0 : 1;
             else

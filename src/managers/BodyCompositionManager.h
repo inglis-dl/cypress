@@ -26,7 +26,7 @@ public:
 
     // set inputs from json file or by default
     //
-    void setInputData(const QMap<QString,QVariant> &) override;
+    void setInputData(const QJsonObject &) override;
 
     // update inputs from the UI
     //
@@ -48,6 +48,12 @@ signals:
    void canConfirm();
 
    void error(const QString &);
+
+   // notify the UI to fill in the age, height and gender
+   //
+   void notifyGenderInput(const QString&);
+   void notifyAgeInput(const QString&);
+   void notifyHeightInput(const QString&);
 
 public slots:
 
