@@ -1,0 +1,17 @@
+{
+        "age": 56.19,
+        "alcohol": false,
+        "barcode": "12345678",
+        "language": "en",
+        "body_mass_index": 34.07,
+        "country_code": 19,
+        "current_smoker": false,
+        "femoral_neck_bmd": 0.9537,
+        "gluccocorticoid": false,
+        "parent_hip_fracture": false,
+        "previous_fracture": false,
+        "rheumatoid_arthritis": false,
+        "secondary_osteoporosis": false,
+        "sex": "male",
+        "type": "t"
+}
