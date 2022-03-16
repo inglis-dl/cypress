@@ -48,7 +48,7 @@ FraxTest::FraxTest()
     m_outputKeyList << "rheumatoid_arthritis";
     m_outputKeyList << "secondary_osteoporosis";
     m_outputKeyList << "alcohol";
-    m_outputKeyList << "femoral_neck_bmd";
+    m_outputKeyList << "femoral_neck_tscore";
 }
 
 void FraxTest::fromFile(const QString &fileName)
@@ -96,7 +96,7 @@ void FraxTest::fromFile(const QString &fileName)
            addMetaData("rheumatoid_arthritis",list.at(9).toUInt());
            addMetaData("secondary_osteoporosis",list.at(10).toUInt());
            addMetaData("alcohol",list.at(11).toUInt());
-           addMetaData("femoral_neck_bmd",list.at(12).toDouble());
+           addMetaData("femoral_neck_tscore",list.at(12).toDouble());
         }
     }
 }
@@ -109,7 +109,14 @@ void FraxTest::simulate(const QJsonObject& input)
 
       QVariant value = input[key].toVariant();
       if("sex" == key)
+      {
         value = "male" == value.toString() ? 0 : 1;
+      }
+      else if("femoral_neck_bmd" == key)
+      {
+        value = Utilities::tscore(value.toDouble());
+        key = "femoral_neck_tscore";
+      }
       else
       {
         if(QVariant::Bool == value.type())

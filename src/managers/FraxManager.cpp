@@ -1,5 +1,7 @@
 #include "FraxManager.h"
 
+#include "../auxiliary/Utilities.h"
+
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
@@ -347,6 +349,10 @@ void FraxManager::configureProcess()
             QVariant value = m_inputData[key].toVariant();
             if("sex" == key)
               value = "male" == value.toString() ? 0 : 1;
+            else if("femoral_neck_bmd" == key)
+            {
+                value = Utilities::tscore(value.toDouble());
+            }
             else
             {
               if(QVariant::Bool == value.type())

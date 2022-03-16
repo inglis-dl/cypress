@@ -38,7 +38,7 @@ QMap<QByteArray,QString> BodyCompositionManager::confirmLUT= BodyCompositionMana
 
 BodyCompositionManager::BodyCompositionManager(QObject *parent) : SerialPortManager(parent)
 {
-  setGroup("body_composition_analyzer");
+  setGroup("body_composition");
   m_col = 1;
   m_row = 8;
 
