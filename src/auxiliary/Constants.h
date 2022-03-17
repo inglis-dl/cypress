@@ -31,7 +31,9 @@ public:
         typeSpirometer,
         typeThermometer,
         typeTonometer,
-        typeWeigh_Scale
+        typeWeigh_Scale,
+        typeUltrasound,
+        typeDexa
     };
     Q_ENUM(MeasureType)
 

@@ -1,0 +1,7 @@
+{
+    "choice_reaction": {
+        "client": {
+            "exe": "/home/dean/Documents/builds/cypress/cognitivetest/emulator/ccb_emulator"
+        }
+    }
+}

@@ -1,0 +1,797 @@
+{
+    "test_input": {
+        "barcode": "12345678",
+        "language": "en"
+    },
+    "test_meta_data": {
+        "end_datetime": "2022-03-17T14:53:31.126",
+        "interviewer_id": "simulated",
+        "number_of_measurements": 60,
+        "start_datetime": "2022-03-17T14:53:31.126",
+        "user_id": "12345678",
+        "version": "simulated"
+    },
+    "test_results": [
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 101
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 50
+            },
+            "screen_id": "RT08"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 212
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 150
+            },
+            "screen_id": "RT09"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 751
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 600
+            },
+            "screen_id": "RT10"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 749
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 600
+            },
+            "screen_id": "RT11"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 469
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 400
+            },
+            "screen_id": "RT12"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 728
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT13"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 328
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 300
+            },
+            "screen_id": "RT14"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 214
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 100
+            },
+            "screen_id": "RT15"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 702
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT16"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 685
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT17"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 171
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 200
+            },
+            "screen_id": "RT18"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 529
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 500
+            },
+            "screen_id": "RT19"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 515
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT20"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 401
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 250
+            },
+            "screen_id": "RT21"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 161
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 200
+            },
+            "screen_id": "RT22"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 333
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 250
+            },
+            "screen_id": "RT23"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 511
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT24"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 210
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 50
+            },
+            "screen_id": "RT25"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 663
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 500
+            },
+            "screen_id": "RT26"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 667
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 650
+            },
+            "screen_id": "RT27"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 288
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 100
+            },
+            "screen_id": "RT28"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 517
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 350
+            },
+            "screen_id": "RT29"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 752
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 700
+            },
+            "screen_id": "RT30"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 788
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 650
+            },
+            "screen_id": "RT31"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 525
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 400
+            },
+            "screen_id": "RT32"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 508
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT33"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 745
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT34"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 616
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT35"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 217
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 100
+            },
+            "screen_id": "RT36"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 687
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT37"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 716
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT38"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 481
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 350
+            },
+            "screen_id": "RT39"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 639
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 500
+            },
+            "screen_id": "RT40"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 593
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT41"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 210
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 50
+            },
+            "screen_id": "RT42"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 318
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 150
+            },
+            "screen_id": "RT43"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 60
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 50
+            },
+            "screen_id": "RT44"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 678
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 550
+            },
+            "screen_id": "RT45"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 140
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 100
+            },
+            "screen_id": "RT46"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 828
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 700
+            },
+            "screen_id": "RT47"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 377
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 350
+            },
+            "screen_id": "RT48"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 692
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 500
+            },
+            "screen_id": "RT49"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 857
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 700
+            },
+            "screen_id": "RT50"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 233
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 150
+            },
+            "screen_id": "RT51"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 132
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 150
+            },
+            "screen_id": "RT52"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 269
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 100
+            },
+            "screen_id": "RT53"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 441
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 400
+            },
+            "screen_id": "RT54"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 739
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 600
+            },
+            "screen_id": "RT55"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 288
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 200
+            },
+            "screen_id": "RT56"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 170
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 150
+            },
+            "screen_id": "RT57"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 451
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 300
+            },
+            "screen_id": "RT58"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 416
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 300
+            },
+            "screen_id": "RT59"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 437
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 300
+            },
+            "screen_id": "RT60"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 449
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 400
+            },
+            "screen_id": "RT61"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 217
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 100
+            },
+            "screen_id": "RT62"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 347
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 250
+            },
+            "screen_id": "RT63"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 797
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 700
+            },
+            "screen_id": "RT64"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 692
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 500
+            },
+            "screen_id": "RT65"
+        },
+        {
+            "correct_position": "right",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 329
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 150
+            },
+            "screen_id": "RT66"
+        },
+        {
+            "correct_position": "left",
+            "elapsed_time": {
+                "units": "ms",
+                "value": 74
+            },
+            "response_correct": true,
+            "response_stimulus_interval": {
+                "units": "ms",
+                "value": 100
+            },
+            "screen_id": "RT67"
+        }
+    ],
+    "verification_barcode": "12345678"
+}

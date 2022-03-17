@@ -23,7 +23,7 @@ public:
     virtual void loadSettings(const QSettings &) = 0;
     virtual void saveSettings(QSettings*) const = 0;
 
-    // the ini file group heading for derived manager classes
+    // the settings file group heading for derived manager classes
     //
     void setGroup(const QString& group) { m_group = group.toLower(); }
     QString getGroup() const { return m_group; }
@@ -130,9 +130,9 @@ protected:
 private:
 
     // the group name for a manager to write settings into
+    // TODO: use MeasureType enum converted to string for group names
     //
     QString m_group;
-
 };
 
 #endif // MANAGERBASE_H
