@@ -1,0 +1,31 @@
+{
+    "device": {
+        "device_firmware_revision": "V2.3.1",
+        "device_mac_address": "C0:26:DA:13:B0:DF",
+        "device_name": "PRO-TF300B",
+        "device_software_revision": "V1.0.0"
+    },
+    "test_input": {
+        "barcode": "12345678",
+        "language": "en"
+    },
+    "test_results": [
+        {
+            "mode": "body",
+            "temperature": {
+                "units": "C",
+                "value": 36.7
+            },
+            "timestamp": "2022-03-17T13:26:00.000"
+        },
+        {
+            "mode": "body",
+            "temperature": {
+                "units": "C",
+                "value": 36.1
+            },
+            "timestamp": "2022-03-17T13:26:00.000"
+        }
+    ],
+    "verification_barcode": "12345678"
+}

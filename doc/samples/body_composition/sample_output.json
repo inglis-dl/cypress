@@ -1,0 +1,64 @@
+{
+    "device": {
+        "port_description": "USB-Serial Controller D",
+        "port_manufacturer": "Prolific Technology Inc.",
+        "port_name": "ttyUSB0",
+        "port_product_id": 8963,
+        "port_system_location": "/dev/ttyUSB0",
+        "port_vendor_id": 1659
+    },
+    "test_input": {
+        "age": 56,
+        "barcode": "12345678",
+        "gender": "male",
+        "height": 170,
+        "language": "en"
+    },
+    "test_meta_data": {
+        "age": 56,
+        "body_type": "standard",
+        "gender": "male",
+        "height": {
+            "units": "cm",
+            "value": 170
+        },
+        "test_datetime": "2022-03-17T13:53:00.776"
+    },
+    "test_results": [
+        {
+            "basal_metabolic_rate": {
+                "units": "kJ",
+                "value": 8065
+            },
+            "body_mass_index": {
+                "units": "kg/cm2",
+                "value": 34.8
+            },
+            "fat_free_mass": {
+                "units": "kg",
+                "value": 64.8
+            },
+            "fat_mass": {
+                "units": "kg",
+                "value": 35.9
+            },
+            "impedance": {
+                "units": "ohm",
+                "value": 419
+            },
+            "percent_fat": {
+                "units": "%",
+                "value": 35.6
+            },
+            "total_body_water": {
+                "units": "kg",
+                "value": 47.4
+            },
+            "weight": {
+                "units": "kg",
+                "value": 100.7
+            }
+        }
+    ],
+    "verification_barcode": "12345678"
+}

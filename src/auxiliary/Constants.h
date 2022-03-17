@@ -21,17 +21,17 @@ public:
     enum MeasureType {
         typeUnknown,
         typeAudiometer,
-        typeBloodPressure,
-        typeBodyComposition,
+        typeBlood_Pressure,
+        typeBody_Composition,
         typeCDTT,
-        typeChoiceReaction,
+        typeChoice_Reaction,
         typeECG,
         typeFrax,
-        typeRetinalCamera,
+        typeRetinal_Camera,
         typeSpirometer,
         typeThermometer,
         typeTonometer,
-        typeWeighScale
+        typeWeigh_Scale
     };
     Q_ENUM(MeasureType)
 

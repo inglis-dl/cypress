@@ -87,7 +87,7 @@ void BodyCompositionTest::simulate(
     addMetaData("gender", gender);
     addMetaData("age", age, "yr"); // integer
 
-    QString sys = Constants::getUnitsSystemName(m_unitsSystem).toLower();
+    QString sys = Constants::getUnitsSystemName(m_unitsSystem);
     QString units = "metric" == sys ? "cm" : "in";
     addMetaData("height", height, units);
 

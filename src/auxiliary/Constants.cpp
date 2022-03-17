@@ -34,18 +34,18 @@ Constants::UnitsSystem Constants::getUnitsSystem(const QString& name)
 QString Constants::getMeasureTypeName(const Constants::MeasureType &type)
 {
   QMetaEnum meta = QMetaEnum::fromType<MeasureType>();
-  return QString(meta.valueToKey(type)).replace("type","");
+  return QString(meta.valueToKey(type)).replace("type","").toLower();
 }
 
 QString Constants::getRunModeName(const Constants::RunMode &mode)
 {
   QMetaEnum meta = QMetaEnum::fromType<RunMode>();
-  return QString(meta.valueToKey(mode)).replace("mode","");
+  return QString(meta.valueToKey(mode)).replace("mode","").toLower();
 }
 
 QString Constants::getUnitsSystemName(const Constants::UnitsSystem &system)
 {
   QMetaEnum meta = QMetaEnum::fromType<UnitsSystem>();
-  return QString(meta.valueToKey(system)).replace("system","");
+  return QString(meta.valueToKey(system)).replace("system","").toLower();
 }
 

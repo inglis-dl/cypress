@@ -555,9 +555,9 @@ void BodyCompositionManager::updateInputData(const QMap<QString,QVariant> &input
     if(input.contains("gender"))
     {
         QByteArray request =
-          (("female" == input["gender"].toString().toLower()) | (0 == input["gender"].toUInt())) ?
+          ("female" == input["gender"].toString().toLower() ?
           BodyCompositionManager::defaultLUT["set_gender_female"] :
-          BodyCompositionManager::defaultLUT["set_gender_male"];
+          BodyCompositionManager::defaultLUT["set_gender_male"]);
         m_queue.enqueue(request);
         qDebug() << "enqueued gender input " << request << "from " << input["gender"].toString();
     }
