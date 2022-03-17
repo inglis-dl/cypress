@@ -32,16 +32,16 @@ DialogBase* DialogFactory::instantiate(const Constants::MeasureType &type)
     DialogBase* dialog = Q_NULLPTR;
     switch(type)
     {
-      case Constants::MeasureType::typeWeighScale:
+      case Constants::MeasureType::typeWeigh_Scale:
         dialog = new WeighScaleDialog();
         break;
-      case Constants::MeasureType::typeBodyComposition:
+      case Constants::MeasureType::typeBody_Composition:
         dialog = new BodyCompositionDialog();
         break;
       case Constants::MeasureType::typeAudiometer:
         dialog = new AudiometerDialog();
         break;
-      case Constants::MeasureType::typeChoiceReaction:
+      case Constants::MeasureType::typeChoice_Reaction:
         dialog = new ChoiceReactionDialog();
         break;
       case Constants::MeasureType::typeThermometer:
@@ -59,13 +59,19 @@ DialogBase* DialogFactory::instantiate(const Constants::MeasureType &type)
       case Constants::MeasureType::typeSpirometer:
         //dialog = Q_NULLPTR;
         break;
-      case Constants::MeasureType::typeBloodPressure:
+      case Constants::MeasureType::typeBlood_Pressure:
         dialog = new BloodPressureDialog();
         break;
-      case Constants::MeasureType::typeRetinalCamera:
+      case Constants::MeasureType::typeRetinal_Camera:
         //dialog = Q_NULLPTR;
         break;
       case Constants::MeasureType::typeECG:
+        //dialog = Q_NULLPTR;
+        break;
+      case Constants::MeasureType::typeUltrasound:
+        //dialog = Q_NULLPTR;
+        break;
+      case Constants::MeasureType::typeDexa:
         //dialog = Q_NULLPTR;
         break;
       case Constants::MeasureType::typeUnknown:
