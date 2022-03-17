@@ -231,7 +231,6 @@ bool TonometerTest::isValid() const
     {
       if(!hasMetaData(key))
       {
-         qDebug() << "error, test is missing metadata" << key;
          okMeta = false;
          break;
        }

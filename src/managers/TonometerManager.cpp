@@ -317,6 +317,7 @@ void TonometerManager::readOutput()
       QVariant value = m_inputData["sex"].toString().toLower().startsWith("f") ? 0 : -1;
       input.insert("sex",value);
       input.insert("date_of_birth",m_inputData["date_of_birth"].toVariant());
+
       AccessQueryHelper helper;
       helper.setOperation(AccessQueryHelper::Operation::Results);
       QVariant result = helper.processQuery(input,db);

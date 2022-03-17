@@ -14,7 +14,7 @@ BloodPressureManager::BloodPressureManager(QObject* parent)
     : ManagerBase(parent)
     , m_comm(new BPMCommunication())
 {
-    setGroup("bloodpressure");
+    setGroup("blood_pressure");
 
     // test number, start time, end time, systolic, diastolic, pulse
     //
