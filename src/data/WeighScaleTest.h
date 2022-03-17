@@ -13,6 +13,9 @@
  * obtained as a QByteArray from the RS232 interface controlled by the WeighScaleManager
  * class.
  *
+ * NOTES: measurements are restricted to being a minimum of DELAY seconds
+ * apart.
+ *
  * \sa WeighScaleManager, WeightMeasurement, Measurement
  *
  */
@@ -34,6 +37,8 @@ public:
     // String keys are converted to snake_case
     //
     QJsonObject toJsonObject() const override;
+
+    static const qint64 DELAY { 5 };
 
 };
 

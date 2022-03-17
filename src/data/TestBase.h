@@ -132,6 +132,8 @@ public:
       return m_maximumNumberOfMeasurements;
     }
 
+    T lastMeasurement() const;
+
 protected:
     QVector<T> m_measurementList;
     Measurement m_metaData;
@@ -146,14 +148,16 @@ void TestBase<T>::reset()
     m_measurementList.clear();
 }
 
+// FIFO addition of measurements
+//
 template <class T>
 void TestBase<T>::addMeasurement(const T &item)
 {
     if(!m_measurementList.contains(item))
     {
-        m_measurementList.append(item);
-        if(m_maximumNumberOfMeasurements < m_measurementList.size())
-            m_measurementList.pop_front();
+      m_measurementList.append(item);
+      if(m_maximumNumberOfMeasurements < m_measurementList.size())
+        m_measurementList.pop_front();
     }
 }
 
@@ -171,6 +175,15 @@ bool TestBase<T>::hasMeasurement(const int& index) const
 {
     T m = getMeasurement(index);
     return !m.isEmpty();
+}
+
+template <class T>
+T TestBase<T>::lastMeasurement() const
+{
+   T m;
+   if(!m_measurementList.isEmpty())
+     m = m_measurementList.last();
+   return m;
 }
 
 #endif // TESTBASE_H
