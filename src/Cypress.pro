@@ -10,9 +10,9 @@ CONFIG += c++11
 
 SOURCES += \
     auxiliary/Constants.cpp \
-    auxiliary/CRC8.cpp \
     auxiliary/CommandLineParser.cpp \
     auxiliary/JsonSettings.cpp \
+    auxiliary/Utilities.cpp \
     data/Measurement.cpp \
     data/HearingTest.cpp \
     data/BloodPressureTest.cpp \
@@ -66,7 +66,6 @@ HEADERS += \
     auxiliary/Constants.h \
     auxiliary/JsonSettings.h \
     auxiliary/Utilities.h \
-    auxiliary/CRC8.h \
     auxiliary/CommandLineParser.h \
     data/Measurement.h \
     data/TestBase.h \

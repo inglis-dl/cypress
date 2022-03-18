@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+QT_FORWARD_DECLARE_CLASS(QTextStream)
+
 class Utilities
 {
    Q_GADGET
@@ -45,6 +47,51 @@ public:
 
    static const quint8 crcLUT[256];
 
+};
+
+/**
+* Interface into Qt's logging system
+* @author: Yale Dedis 2011
+* Adapted from DeDiS project.
+* Adaped from KStars.
+*/
+class Logging
+{
+    public:
+
+        // Store all logs into the specified file
+        //
+        static void useFile(const QString& filename = QString());
+
+        // Output logs to stdout
+        //
+        static void useStdout();
+
+        // Output logs to stderr
+        //
+        static void useStderr();
+
+        // Use the default logging mechanism
+        //
+        static void useDefault();
+
+        // Disable logging
+        //
+        static void disable();
+
+    private:
+        static QString _filename;
+
+        static void disabled(QtMsgType type, const QMessageLogContext &context,
+                             const QString &msg);
+        static void toFile(QtMsgType type, const QMessageLogContext &context,
+                         const QString &msg);
+        static void toStdout(QtMsgType type, const QMessageLogContext &context,
+                           const QString &msg);
+        static void toStderr(QtMsgType type, const QMessageLogContext &context,
+                           const QString &msg);
+        static void write(QTextStream &stream, QtMsgType type,
+                          const QMessageLogContext &context, const QString &msg);
 };
 
 #endif // UTILITIES_H

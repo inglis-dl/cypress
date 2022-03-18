@@ -1,5 +1,11 @@
 #include "Utilities.h"
 
+#include <QDir>
+#include <QDateTime>
+#include <QStandardPaths>
+#include <QTextStream>
+#include <QLoggingCategory>
+
 /*CRC-8 Lookup table based on:
     poly = x^8 + x^2 + x^1 + x^0 (100000111)
     init = 0
@@ -23,3 +29,118 @@ const quint8 Utilities::crcLUT[256] =
     0xAE,0xA9,0xA0,0xA7,0xB2,0xB5,0xBC,0xBB,0x96,0x91,0x98,0x9F,0x8A,0x8D,0x84,0x83,
     0xDE,0xD9,0xD0,0xD7,0xC2,0xC5,0xCC,0xCB,0xE6,0xE1,0xE8,0xEF,0xFA,0xFD,0xF4,0xF3
 };
+
+QString Logging::_filename;
+
+void Logging::useFile(const QString& filename)
+{
+    if(!filename.isEmpty())
+    {
+        _filename = filename;
+    }
+    if(_filename.isEmpty())
+    {
+        QDir dir;
+        QString path =
+            QDir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation))
+            .filePath("logs/" + QDateTime::currentDateTime().toString("yyyy-MM-dd"));
+        dir.mkpath(path);
+        QString name =
+            "log_" + QDateTime::currentDateTime().toString("HH-mm-ss") + "_cypress.txt";
+        _filename = path + QStringLiteral("/") + name;
+
+        // Clear file contents
+        QFile file(_filename);
+        file.open(QFile::WriteOnly);
+        file.close();
+    }
+
+    qSetMessagePattern("[%{time yyyy-MM-dd h:mm:ss.zzz t} "
+                       "%{if-debug}DEBG%{endif}%{if-info}INFO%{endif}%{if-warning}WARN%{"
+                       "endif}%{if-critical}CRIT%{endif}%{if-fatal}FATL%{endif}] "
+                       "%{if-category}[%{category}]%{endif} - %{message}");
+    qInstallMessageHandler(toFile);
+}
+
+void Logging::toFile(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    QFile file(_filename);
+    if(file.open(QFile::Append | QIODevice::Text))
+    {
+        QTextStream stream(&file);
+        write(stream, type, context, msg);
+    }
+}
+
+void Logging::useStdout()
+{
+    qSetMessagePattern("[%{time yyyy-MM-dd h:mm:ss.zzz t} "
+                       "%{if-debug}DEBG%{endif}%{if-info}INFO%{endif}%{if-warning}WARN%{"
+                       "endif}%{if-critical}CRIT%{endif}%{if-fatal}FATL%{endif}] "
+                       "%{if-category}[%{category}]%{endif} - %{message}");
+    qInstallMessageHandler(toStdout);
+}
+
+void Logging::toStdout(QtMsgType type, const QMessageLogContext &context,
+                     const QString &msg)
+{
+    QTextStream stream(stdout, QIODevice::WriteOnly);
+    write(stream, type, context, msg);
+}
+
+void Logging::useStderr()
+{
+    qInstallMessageHandler(toStderr);
+}
+
+void Logging::toStderr(QtMsgType type, const QMessageLogContext &context,
+                     const QString &msg)
+{
+    QTextStream stream(stderr, QIODevice::WriteOnly);
+    write(stream, type, context, msg);
+}
+
+void Logging::write(QTextStream &stream, QtMsgType type,
+                    const QMessageLogContext &context, const QString &msg)
+{
+    stream << QDateTime::currentDateTime().toString("[yyyy-MM-ddThh:mm:ss.zzz t ");
+
+    switch(type)
+    {
+        case QtInfoMsg:
+            stream << "INFO ]";
+            break;
+        case QtDebugMsg:
+            stream << "DEBG ]";
+            break;
+        case QtWarningMsg:
+            stream << "WARN ]";
+            break;
+        case QtCriticalMsg:
+            stream << "CRIT ]";
+            break;
+        case QtFatalMsg:
+            stream << "FATL ]";
+            break;
+        default:
+            stream << "UNKN ]";
+    }
+
+    stream << "[" << qSetFieldWidth(30) << context.category << qSetFieldWidth(0)
+           << "] - ";
+    stream << msg << '\n';
+    stream.flush();
+    //stream << qFormatLogMessage(type, context, msg) << endl;
+}
+
+void Logging::useDefault()
+{
+    qInstallMessageHandler(Q_NULLPTR);
+}
+
+void Logging::disable()
+{
+    qInstallMessageHandler(disabled);
+}
+
+void Logging::disabled(QtMsgType, const QMessageLogContext &, const QString &) {}

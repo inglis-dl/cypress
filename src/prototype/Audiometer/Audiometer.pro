@@ -28,6 +28,7 @@ SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../auxiliary/Constants.cpp \
     ../../auxiliary/JsonSettings.cpp \
+    ../../auxiliary/Utilities.cpp \
     ../../data/HearingMeasurement.cpp \
     ../../data/HearingTest.cpp \
     ../../data/Measurement.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
     ../../auxiliary/CommandLineParser.h \
     ../../auxiliary/Constants.h \
     ../../auxiliary/JsonSettings.h \
+    ../../auxiliary/Utilities.h \
     ../../data/HearingTest.h \
     ../../data/Measurement.h \
     ../../data/HearingMeasurement.h \

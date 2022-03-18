@@ -1,6 +1,6 @@
 #include "BPMMessage.h"
 
-#include "../../auxiliary/Utilities.h"
+#include "../auxiliary/Utilities.h"
 #include <QList>
 
 /*

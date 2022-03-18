@@ -12,15 +12,15 @@ public:
     explicit CommandLineParser(QObject* parent = Q_NULLPTR);
 
     enum ParseResult {
-        Ok,
-        Error,
-        MissingArg,
-        RunModeError,
-        InputFileError,
-        OutputPathError,
-        MeasureTypeError,
-        VersionRequested,
-        HelpRequested
+        parseOk,
+        parseError,
+        parseMissingArg,
+        parseRunModeError,
+        parseInputFileError,
+        parseOutputPathError,
+        parseMeasureTypeError,
+        parseVersionRequested,
+        parseHelpRequested
     };
     Q_ENUM(ParseResult)
 
