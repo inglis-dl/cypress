@@ -271,6 +271,14 @@ void BloodPressureManager::setDevice(const QUsb::Id &info)
         emit canConnectDevice();
         device.close();
     }
+    else
+    {
+        //TODO: QHidDevice implentation of open accepts vid, pid
+        // and optional serial number as string
+        // try connecting with serial number string "??"
+        //
+        qDebug() << "ERROR: failed to set and open device";
+    }
 }
 
 void BloodPressureManager::setCuffSize(const QString &size)

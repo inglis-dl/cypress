@@ -493,7 +493,7 @@ void BPMCommunication::readFromBpm()
 	int numBytes = bytes.size();
     if(0 < numBytes)
     {
-        qDebug() << ". NumBytes: " << numBytes << Qt::endl;
+        qDebug() << "NumBytes:" << numBytes;
         for(int i = 0; i + 7 < numBytes;)
         {
 			quint8 firstByte = bytes[i];
@@ -509,8 +509,8 @@ void BPMCommunication::readFromBpm()
 				BPMMessage msg(id, data0, data1, data2, data3);
 
                 bool crcValid = Utilities::checksumIsValid(msg.getFullMsg(), 5, crc);
-                qDebug() << "Message: " << msg.toString() << Qt::endl;
-                qDebug() << "CRC Valid: " << crcValid << Qt::endl;
+                qDebug() << "Message:" << msg.toString();
+                qDebug() << "CRC Valid:" << crcValid;
                 if(crcValid)
                 {
                     m_queue->enqueue(msg);
@@ -519,7 +519,7 @@ void BPMCommunication::readFromBpm()
 			}
             else
             {
-                qDebug() << i << " : " << readData[i] << " " << (i + 7) << " : " << readData[i + 7] << Qt::endl;
+                qDebug() << i << " : " << readData[i] << " " << (i + 7) << " : " << readData[i + 7];
 				i++;
 			}
 		}
@@ -544,11 +544,11 @@ bool BPMCommunication::timedLoop(const int& timeout,
 		}
 
 		currTime = QTime::currentTime();
-        qDebug() << debugName << currTime << Qt::endl;
+        qDebug() << debugName << currTime;
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 	}
 
-    qDebug() << "Did not receive the expected data back from BPM within the time frame given" << Qt::endl;
+    qDebug() << "Did not receive the expected data back from BPM within the time frame given";
 	return false;
 }
 
@@ -610,12 +610,12 @@ bool BPMCommunication::ackCheck(const int& expectedData0, const QString& logName
     if(nextMessage.getMsgId() == acknowledgmentMsgId &&
        nextMessage.getData0() == expectedData0)
     {
-        qDebug() << "Ack received for " << logName << Qt::endl;
+        qDebug() << "Ack received for " << logName;
 		return true;
 	}
     else
     {
-        qDebug() << "WARNING: Expected a " << logName << " ack but received " << nextMessage.toString() << Qt::endl;
+        qDebug() << "WARNING: Expected a " << logName << " ack but received " << nextMessage.toString();
 		return false;
 	}
 }
@@ -647,5 +647,3 @@ void BPMCommunication::endReading(const int& sbp, const int& dbp, const int& pul
 		m_readingStartTime = QDateTime::fromMSecsSinceEpoch(0);
 	}
 }
-
-
