@@ -5,9 +5,9 @@
 class ResultParameterModel
 {
 public:
-	double _dataValue;
-	QString _unit;
-	double _predictedValue;
-	double _llNormalValue;
+	double dataValue;
+	QString unit;
+	double predictedValue;
+	double llNormalValue;
 };
 

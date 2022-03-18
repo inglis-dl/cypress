@@ -24,6 +24,10 @@ public:
     QString toString() const override;
 
     static TrueFlowSpirometerMeasurement simulate();
+
+    ResultParametersModel getMetaResults() { return metaResults; }
+private:
+    ResultParametersModel metaResults;
 };
 
 Q_DECLARE_METATYPE(TrueFlowSpirometerMeasurement);

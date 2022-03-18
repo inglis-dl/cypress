@@ -7,7 +7,6 @@
 OutDataModel OnyxOutXml::readImportantValues(const QString& transferOutPath)
 {
     OutDataModel outData;
-    //QFile file("C:/ProgramData/ndd/Easy on-PC/OnyxOutTest.xml");
     QFile file(transferOutPath);
     if (!file.open(QFile::ReadOnly)) {
         qDebug() << "Cannot read file" << file.errorString();
@@ -25,7 +24,8 @@ OutDataModel OnyxOutXml::readImportantValues(const QString& transferOutPath)
             name = reader.name();
             qDebug() << "(Top2)Name: " << name << endl;
             if (name == "Command") {
-                QString commandType = readCommand(&reader);
+                QString commandType = readCommand(&reader, &outData);
+                qDebug() << "commandType: " << commandType << endl;
                 // TODO: do something if commandType != "TestResult"
             }
             else if (name == "Patients") {
@@ -56,15 +56,27 @@ void OnyxOutXml::skipToEndElement(QXmlStreamReader* reader, const QString& name)
     }
 }
 
-QString OnyxOutXml::readCommand(QXmlStreamReader* reader)
+QString OnyxOutXml::readCommand(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     QStringRef type = reader->attributes().value("Type");
     qDebug() << "Name: " << name << endl;
     qDebug() << "Type Attribute: " << type << endl;
     while (reader->readNext()) {
+        name = reader->name();
+        qDebug() << "Name: " << name << endl;
         if (reader->isEndElement() && name == "Command") {
             break;
+        }
+        else if (reader->isStartElement() && name == "Parameter") {
+            QStringRef nameAttribute = reader->attributes().value("Name");
+            if ("Attachment" == nameAttribute) {
+                QString pdfPath = reader->readElementText();
+                qDebug() << "Pdf path: " << pdfPath << endl;
+                if (QFile::exists(pdfPath)) {
+                    outData->pdfPath = pdfPath;
+                }
+            }
         }
     }
     return type.toString();
@@ -348,16 +360,16 @@ ResultParameterModel OnyxOutXml::readResultParameter(QXmlStreamReader* reader)
     while (reader->readNextStartElement()) {
         name = reader->name();
         if (name == "DataValue") {
-            resultParameter._dataValue = reader->readElementText().toDouble();
+            resultParameter.dataValue = reader->readElementText().toDouble();
         }
         else if (name == "Unit") {
-            resultParameter._unit = reader->readElementText();
+            resultParameter.unit = reader->readElementText();
         }
         else if (name == "PredictedValue") {
-            resultParameter._predictedValue = reader->readElementText().toDouble();
+            resultParameter.predictedValue = reader->readElementText().toDouble();
         }
         else if (name == "LLNormalValue") {
-            resultParameter._llNormalValue = reader->readElementText().toDouble();
+            resultParameter.llNormalValue = reader->readElementText().toDouble();
         }
         skipToEndElement(reader, name.toString());
     }

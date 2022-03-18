@@ -12,7 +12,7 @@ public:
 	static OutDataModel readImportantValues(const QString &transferOutPath);
 private:
 	static void skipToEndElement(QXmlStreamReader* reader, const QString &name);
-	static QString readCommand(QXmlStreamReader* reader);
+	static QString readCommand(QXmlStreamReader* reader, OutDataModel* outData);
 	static void readPatients(QXmlStreamReader* reader, OutDataModel* outData, const QString& patientId);
 	static void readPatient(QXmlStreamReader* reader, OutDataModel* outData);
 	static void readIntervals(QXmlStreamReader* reader, OutDataModel* outData);

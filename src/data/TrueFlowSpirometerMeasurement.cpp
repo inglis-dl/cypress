@@ -15,6 +15,15 @@ const QString trialNumber = "trial_number";
 const QString volumeInterval = "volume_interval";
 const QString volumeValues = "volume_values";
 
+// These are the result parameters that should have there normal
+// and predicted values stored as measurements
+const QList<QString> storeNormalPredictedAsMeasureList = 
+    {"fef2575", "fev1_fev6","fev6","mmef", "pef","pef_l_min"};
+
+// These are the result parameters that should have there normal
+// and predicted values stored as meta data
+const QList<QString> storeNormalPredictedAsMetaList = { "fev1", "fev1_fvc","fvc" };
+
 /**
  * sample input
  *
@@ -41,9 +50,19 @@ void TrueFlowSpirometerMeasurement::fromTrialData(const TrialDataModel& trialDat
     {
         qDebug() << key << endl;
         ResultParameterModel result = trialData.resultParameters.results[key];
-        setAttribute(QString("%1_data_value").arg(key.toLower()), result._dataValue, result._unit);
-        setAttribute(QString("%1_ll_normal_value").arg(key.toLower()), result._llNormalValue, result._unit);
-        setAttribute(QString("%1_predicted_value").arg(key.toLower()), result._predictedValue, result._unit);
+        setAttribute(QString("%1_data_value").arg(key.toLower()), result.dataValue, result.unit);
+
+        // If the key is in the list of elements that need to store normal 
+        // and predicted values as measurements, then store those vales as well
+        if (storeNormalPredictedAsMeasureList.contains(key.toLower()) ) {
+            setAttribute(QString("%1_ll_normal_value").arg(key.toLower()), result.llNormalValue, result.unit);
+            setAttribute(QString("%1_predicted_value").arg(key.toLower()), result.predictedValue, result.unit);
+        }
+        // If the key is in the list of elements that need to store normal 
+        // and predicted values in meta, then store those vales in a temp meta list
+        else if (storeNormalPredictedAsMetaList.contains(key.toLower())) {
+            metaResults.results.insert(key, result);
+        }
     }
 }
 

@@ -9,6 +9,10 @@
 
 class TrueFlowSpirometerManager : public ManagerBase
 {
+    enum FileType {
+        EasyWareExe,
+        TransferDir
+    };
     Q_OBJECT
 
 public:
@@ -25,7 +29,7 @@ public:
     // is the passed string a jar file
     // with the correct path elements ?
     //
-    bool isDefined(const QString&) const;
+    bool isDefined(const QString&, const TrueFlowSpirometerManager::FileType&) const;
 
     // Set the input data.
     // The input data is read from the input
@@ -51,6 +55,8 @@ public slots:
     // data has been retrieved and processed by any upstream classes
     //
     void finish() override;
+
+    void select();
 
     // set the executable full path and name
     // calls isDefined to validate the passed arg

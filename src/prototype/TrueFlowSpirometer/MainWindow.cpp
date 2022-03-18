@@ -161,12 +161,10 @@ void MainWindow::initializeConnections()
 
     connect(&m_manager, &TrueFlowSpirometerManager::canSelectRunnable,
         this, [this]() {
-            bool openTransferDirButtonEnabled = ui->openTransferDirButton->isEnabled();
             for (auto&& x : this->findChildren<QPushButton*>())
                 x->setEnabled(false);
             ui->closeButton->setEnabled(true);
             ui->openButton->setEnabled(true);
-            ui->openTransferDirButton->setEnabled(openTransferDirButtonEnabled);
             static bool warn = true;
             if (warn)
             {
@@ -180,24 +178,14 @@ void MainWindow::initializeConnections()
         });
 
     connect(ui->openButton, &QPushButton::clicked,
-        this, [this]() {
-            QString fileName =
-                QFileDialog::getOpenFileName(
-                    this, tr("Open File"),
-                    QCoreApplication::applicationDirPath(),
-                    tr("Applications (*.jar, *)"));
-
-            m_manager.selectRunnable(fileName);
-        });
+        &m_manager, &TrueFlowSpirometerManager::select);
 
     connect(&m_manager, &TrueFlowSpirometerManager::canSelectEmrTransferDir,
         this, [this]() {
-            bool openButtonEnabled = ui->openButton->isEnabled();
             for (auto&& x : this->findChildren<QPushButton*>())
                 x->setEnabled(false);
             ui->closeButton->setEnabled(true);
-            ui->openTransferDirButton->setEnabled(true);
-            ui->openButton->setEnabled(openButtonEnabled);
+            ui->openButton->setEnabled(true);
             static bool warn = true;
             if (warn)
             {
@@ -208,16 +196,6 @@ void MainWindow::initializeConnections()
                         "Click the Run button to start the test otherwise check the installation."));
                 warn = false;
             }
-        });
-
-    connect(ui->openTransferDirButton, &QPushButton::clicked,
-        this, [this]() {
-            QString fileName =
-                QFileDialog::getExistingDirectory(
-                    this, tr("Open Directory"),
-                    QCoreApplication::applicationDirPath());
-
-            m_manager.selectEmrTransferDir(fileName);
         });
 
     // Read inputs required to launch frax test
@@ -364,5 +342,5 @@ void MainWindow::writeOutput()
     if (m_verbose)
         qDebug() << "wrote to file " << fileName;
 
-    ui->statusBar->showMessage("Weigh scale data recorded.  Close when ready.");
+    ui->statusBar->showMessage("Spirometer data recorded.  Close when ready.");
 }

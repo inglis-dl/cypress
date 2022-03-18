@@ -25,5 +25,6 @@ public:
 	QString qualityGrade = "";
 	QString qualityGradeOriginal = "";
 	QList<TrialDataModel> trials;
+	QString pdfPath = "";
 };
 

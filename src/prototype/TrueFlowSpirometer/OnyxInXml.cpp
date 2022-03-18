@@ -69,7 +69,7 @@ void OnyxInXml::addPatients(QXmlStreamWriter& stream) const
 
 	//stream.writeEmptyElement("LastName");
 	//stream.writeEmptyElement("FirstName");
-	stream.writeTextElement("LastName", "91827364");
+	stream.writeTextElement("LastName", "participant");
 	stream.writeTextElement("FirstName", "clsa");
 
 	stream.writeTextElement("IsBioCal", "false");

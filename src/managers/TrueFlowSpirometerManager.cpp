@@ -11,6 +11,7 @@
 #include <QFile>
 
 #include "../prototype/TrueFlowSpirometer/OnyxOutXml.h"
+#include <QFileDialog>
 
 TrueFlowSpirometerManager::TrueFlowSpirometerManager(QObject* parent) : ManagerBase(parent)
 {
@@ -136,21 +137,27 @@ void TrueFlowSpirometerManager::buildModel(QStandardItemModel* model) const
     }
 }
 
-bool TrueFlowSpirometerManager::isDefined(const QString& runnableFullPath) const
+bool TrueFlowSpirometerManager::isDefined(const QString& value, const TrueFlowSpirometerManager::FileType &fileType) const
 {
-    bool ok = false;
-    if (!runnableFullPath.isEmpty())
+    if (value.isEmpty())
     {
-        QFileInfo info(runnableFullPath);
+        return false;
+    }
+
+    bool ok = false;
+    if (fileType == TrueFlowSpirometerManager::FileType::EasyWareExe) {
+        QFileInfo info(value);
         if (info.exists() && "exe" == info.completeSuffix())
         {
             ok = true;
         }
-        else
-            qDebug() << "ERROR: info does not exist for file " << runnableFullPath;
     }
-    else
-        qDebug() << "ERROR: isDefined check on empty string";
+    else if (fileType == TrueFlowSpirometerManager::FileType::TransferDir) {
+        if (QDir(value).exists()) {
+            ok = true;
+        }
+    }
+    
     return ok;
 }
 
@@ -211,9 +218,50 @@ void TrueFlowSpirometerManager::setInputData(const QMap<QString, QVariant>& inpu
     }
 }
 
+void TrueFlowSpirometerManager::select()
+{
+    // which do we need to select first ?
+    QString caption;
+    QStringList filters;
+    bool selectingRunnable = false;
+    if (!isDefined(m_runnableFullPath, TrueFlowSpirometerManager::FileType::EasyWareExe))
+    {
+        filters << "Applications (*.exe)" << "Any files (*)";
+        caption = tr("Select EasyWarePro.exe File");
+        selectingRunnable = true;
+    }
+    else if (!isDefined(m_emrTransferDir, TrueFlowSpirometerManager::FileType::TransferDir))
+    {
+        caption = tr("Select EMR Transfer Directory");
+    }
+    else
+        return;
+
+    QFileDialog dialog;
+    dialog.setNameFilters(filters);
+    dialog.setFileMode(selectingRunnable ? QFileDialog::ExistingFile: QFileDialog::Directory);
+    dialog.setWindowTitle(caption);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        if (selectingRunnable) {
+            QStringList files = dialog.selectedFiles();
+            QString fileName = files.first();
+            if (isDefined(fileName, FileType::EasyWareExe)) {
+                selectRunnable(fileName);
+            }
+        }
+        else {
+            QString dirName = dialog.directory().absolutePath();
+            if (isDefined(dirName, FileType::TransferDir)) {
+                selectEmrTransferDir(dirName);
+            }
+        }
+    }
+}
+
 void TrueFlowSpirometerManager::selectRunnable(const QString& runnableFullPath)
 {
-    if (isDefined(runnableFullPath))
+    if (isDefined(runnableFullPath, TrueFlowSpirometerManager::FileType::EasyWareExe))
     {
         QFileInfo info(runnableFullPath);
         m_runnableFullPath = runnableFullPath;
@@ -229,7 +277,7 @@ void TrueFlowSpirometerManager::selectRunnable(const QString& runnableFullPath)
 
 void TrueFlowSpirometerManager::selectEmrTransferDir(const QString& emrTransferDir)
 {
-    if (emrTransferDir.isEmpty() == false && QDir(emrTransferDir).exists())
+    if (isDefined(emrTransferDir, TrueFlowSpirometerManager::FileType::TransferDir))
     {
         m_emrTransferDir = emrTransferDir;
 
@@ -253,9 +301,6 @@ void TrueFlowSpirometerManager::readOutput()
     bool loaded = m_test.loadData(getTransferOutFilePath());
     if (loaded) {
         emit canWrite();
-    }
-    else {
-        // Todo: do something here
     }
 }
 
@@ -341,11 +386,8 @@ void TrueFlowSpirometerManager::createDatabaseCopies() const
 
 bool TrueFlowSpirometerManager::inputDataInitialized() const
 {
-    bool initialized =
-        m_runnableDir.isEmpty() == false
-        && QDir(m_runnableDir).exists()
-        && isDefined(m_runnableFullPath)
-        && m_emrTransferDir.isEmpty() == false;
+    bool initialized = isDefined(m_runnableFullPath, TrueFlowSpirometerManager::FileType::EasyWareExe)
+        && isDefined(m_runnableDir, TrueFlowSpirometerManager::FileType::TransferDir);
     return initialized;
 }
 
@@ -362,7 +404,7 @@ void TrueFlowSpirometerManager::configureProcess()
     }
 
     QDir working(m_runnableDir);
-    if (isDefined(m_runnableFullPath) &&
+    if (isDefined(m_runnableFullPath, TrueFlowSpirometerManager::FileType::EasyWareExe) &&
         working.exists())
     {
         qDebug() << "OK: configuring command";

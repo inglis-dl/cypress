@@ -49,21 +49,32 @@ bool TrueFlowSpirometerTest::loadData(const QString& transferOutPath)
     addMetaData(outputCopd, outData.copd);
     addMetaData(outputQualityGrade, outData.qualityGrade);
 
-    // TODO: Figure out what these are
-    addMetaData(resFvcPred2, "?");
-    addMetaData(resFvcLlnormal2, "?");
-    addMetaData(resFev1Pred2, "?");
-    addMetaData(resFev1Llnormal2, "?");
-    addMetaData(resFev1FvcPred2, "?");
-    addMetaData(resFev1FvcLlnormal2, "?");
+    if (outData.trials.count() > 0) {
+        for (TrialDataModel trial : outData.trials)
+        {
+            TrueFlowSpirometerMeasurement measurement;
+            measurement.fromTrialData(trial);
+            m_measurementList.append(measurement);
+        }
 
-    for(TrialDataModel trial: outData.trials) 
-    {
-        TrueFlowSpirometerMeasurement measurement;
-        measurement.fromTrialData(trial);
-        m_measurementList.append(measurement);
+        ResultParametersModel metaResults = getMeasurement(0).getMetaResults();
+        if (metaResults.results.contains("FVC")) {
+            ResultParameterModel fvc = metaResults.results["FVC"];
+            addMetaData(resFvcPred2, fvc.predictedValue);
+            addMetaData(resFvcLlnormal2, fvc.llNormalValue);
+        }
+        if (metaResults.results.contains("FEV1")) {
+            ResultParameterModel fev1 = metaResults.results["FEV1"];
+            addMetaData(resFev1Pred2, fev1.predictedValue, fev1.unit);
+            addMetaData(resFev1Llnormal2, fev1.llNormalValue, fev1.unit);
+        }
+        if (metaResults.results.contains("FEV1_FVC")) {
+            ResultParameterModel fev1Fvc = metaResults.results["FEV1_FVC"];
+            addMetaData(resFev1FvcPred2, fev1Fvc.predictedValue);
+            addMetaData(resFev1FvcLlnormal2, fev1Fvc.llNormalValue);
+        }
     }
-
+    
     // TODO: return false if output is not satisfactory
     return true;
 }
