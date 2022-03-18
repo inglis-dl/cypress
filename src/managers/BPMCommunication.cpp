@@ -1,6 +1,8 @@
 #include "BPMCommunication.h"
 
 #include "BPMMessage.h"
+#include "../../auxiliary/Utilities.h"
+
 #include <QCoreApplication>
 #include <QHidDevice>
 #include <QThread>
@@ -505,7 +507,8 @@ void BPMCommunication::readFromBpm()
 				quint8 data3 = bytes[i + 5];
 				quint8 crc = bytes[i + 6];
 				BPMMessage msg(id, data0, data1, data2, data3);
-				bool crcValid = msg.checkCRCValid(crc);
+
+                bool crcValid = Utilities::checksumIsValid(msg.getFullMsg(), 5, crc);
                 qDebug() << "Message: " << msg.toString() << Qt::endl;
                 qDebug() << "CRC Valid: " << crcValid << Qt::endl;
                 if(crcValid)

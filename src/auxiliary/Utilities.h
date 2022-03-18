@@ -17,6 +17,7 @@ public:
    }
 
    // compute the femoral neck T-Score for caucasian white female population
+   // from femoral neck bmd
    //
    static inline double tscore(const double& bmd)
    {
@@ -25,6 +26,25 @@ public:
        double sigma = 0.111f; // age matched population standard deviation
        return ((M * ((bmd / M ) - 1.0f))/(L * sigma));
    }
+
+   static inline quint8 checksum(const QByteArray& array, const int& length)
+   {
+       unsigned char crc = 0;
+       for(int i = 0; i < length; i++)
+       {
+         crc = crcLUT[(crc ^ array.at(i)) & 0xFF];
+       }
+       return crc;
+   }
+
+   static inline bool checksumIsValid(const QByteArray& array, const int& length, const quint8& crc)
+   {
+       quint8 correctCRC = checksum(array, length);
+       return (crc == correctCRC);
+   }
+
+   static const quint8 crcLUT[256];
+
 };
 
 #endif // UTILITIES_H

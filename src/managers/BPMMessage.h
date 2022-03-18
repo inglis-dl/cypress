@@ -2,7 +2,6 @@
 #define BPMMESSAGE_H
 
 #include <QString>
-#include "../auxiliary/CRC8.h"
 
 class BPMMessage
 {
@@ -25,17 +24,12 @@ public:
         return *this;
     }
 
-    bool checkCRCValid(const quint8& crcReceived)
-    {
-        return CRC8::isValid(m_msgBytes, 5, crcReceived);
-    };
-
-	quint8 getMsgId() const { return m_msgBytes[0]; };
-	quint8 getData0() const { return m_msgBytes[1]; };
-	quint8 getData1() const { return m_msgBytes[2]; };
-	quint8 getData2() const { return m_msgBytes[3]; };
-	quint8 getData3() const { return m_msgBytes[4]; };
-	QByteArray getFullMsg() const { return m_msgBytes; };
+    quint8 getMsgId() const { return m_msgBytes[0]; }
+    quint8 getData0() const { return m_msgBytes[1]; }
+    quint8 getData1() const { return m_msgBytes[2]; }
+    quint8 getData2() const { return m_msgBytes[3]; }
+    quint8 getData3() const { return m_msgBytes[4]; }
+    QByteArray getFullMsg() const { return m_msgBytes; }
     QString toString() const;
 
     static BPMMessage baseMessage()

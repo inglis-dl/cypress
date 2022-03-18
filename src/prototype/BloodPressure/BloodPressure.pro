@@ -26,10 +26,10 @@ CONFIG += c++11 console
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 HEADERS += ./MainWindow.h \
-    ../../auxiliary/CRC8.h \
     ../../auxiliary/JsonSettings.h \
     ../../auxiliary/CommandLineParser.h \
     ../../auxiliary/Constants.h \
+    ../../auxiliary/Utilities.h \
     ../../data/Measurement.h \
     ../../data/BloodPressureMeasurement.h \
     ../../data/TestBase.h \
@@ -45,7 +45,7 @@ SOURCES += ./MainWindow.cpp \
     ../../auxiliary/CommandLineParser.cpp \
     ../../auxiliary/Constants.cpp \
     ../../auxiliary/JsonSettings.cpp \
-     ../../auxiliary/CRC8.cpp \
+    ../../auxiliary/Utilities.cpp \
     ../../data/Measurement.cpp \
     ../../data/BloodPressureMeasurement.cpp \
     ../../data/BloodPressureTest.cpp \

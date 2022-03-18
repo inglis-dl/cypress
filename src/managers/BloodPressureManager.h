@@ -23,7 +23,7 @@
  * separate thread with signal and slot connections between worker and manager.
  * The default vendor ID for BpTru can be overridden.
  *
- * \sa ManagerBase, BPMCommunication, BPMMessage, CRC8
+ * \sa ManagerBase, BPMCommunication, BPMMessage
  *
  */
 

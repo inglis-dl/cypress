@@ -1,6 +1,8 @@
 #include "BPMMessage.h"
 
+#include "../../auxiliary/Utilities.h"
 #include <QList>
+
 /*
 * NOTE: The previous version of this constructor caused the following warning:
      Using QByteRef with an index pointing outside the valid range of a QByteArray. 
@@ -43,7 +45,7 @@ QByteArray BPMMessage::packMessage() const
     packedMsg.append(getData1()); // Data 1
     packedMsg.append(getData2()); // Data 2
     packedMsg.append(getData3()); // Data 3
-    packedMsg.append(CRC8::calculate(m_msgBytes, 5)); // CRC8
+    packedMsg.append(Utilities::checksum(m_msgBytes, 5)); // CRC8
     packedMsg.append(m_etx); // ETX
     return packedMsg;
 }
