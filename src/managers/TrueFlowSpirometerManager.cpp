@@ -11,6 +11,7 @@
 #include <QFile>
 
 #include "../prototype/TrueFlowSpirometer/OnyxOutXml.h"
+#include "../auxiliary/JsonSettings.h"
 #include <QFileDialog>
 
 TrueFlowSpirometerManager::TrueFlowSpirometerManager(QObject* parent) : ManagerBase(parent)
@@ -87,25 +88,23 @@ QJsonObject TrueFlowSpirometerManager::toJsonObject() const
             json.insert("test_output_file_mime_type", "xml");
         }
 
-        bool hasPdfPath = m_test.getMetaData().getAttributes().contains("pdfPath");
-        if (hasPdfPath) {
-            QFile pdfFile(m_test.getMetaData().getAttribute("pdfPath").toString());
-            if (pdfFile.exists()) {
-                pdfFile.open(QIODevice::ReadOnly);
-                QByteArray bufferPdf = pdfFile.readAll();
-                json.insert("test_output_pdf_file", QString(bufferPdf.toBase64()));
-                json.insert("test_output_pdf_file_mime_type", "pdf");
-            }
+        if(outputPdfExists()){
+            QFile pdfFile(getOutputPdfPath());
+            pdfFile.open(QIODevice::ReadOnly);
+            QByteArray bufferPdf = pdfFile.readAll();
+            json.insert("test_output_pdf_file", QString(bufferPdf.toBase64()));
+            json.insert("test_output_pdf_file_mime_type", "pdf");
         }
     }
-    QJsonObject jsonInput;
-    for(auto&& x : m_inputData.toStdMap())
-    {
-        // convert to space delimited phrases to snake_case
-        //
-        jsonInput.insert(QString(x.first).toLower().replace(QRegExp("[\\s]+"),"_"), QJsonValue::fromVariant(x.second));
-    }
-    json.insert("test_input",jsonInput);
+    //QJsonObject jsonInput;
+    //for(auto&& x : m_inputData.toStdMap())
+    //{
+    //    // convert to space delimited phrases to snake_case
+    //    //
+    //    jsonInput.insert(QString(x.first).toLower().replace(QRegExp("[\\s]+"),"_"), QJsonValue::fromVariant(x.second));
+    //}
+    //json.insert("test_input", jsonInput);
+    json.insert("test_input",m_inputData);
     return json;
 }
 
@@ -181,36 +180,69 @@ void TrueFlowSpirometerManager::measure()
     readOutput();
 }
 
-void TrueFlowSpirometerManager::setInputData(const QMap<QString, QVariant>& input)
+void TrueFlowSpirometerManager::setInputData(const QJsonObject& input)
 {
-    if(Constants::RunMode::modeSimulate == m_mode)
+    m_inputData = input;
+    if (Constants::RunMode::modeSimulate == m_mode)
     {
-        m_inputData["barcode"] = "00000000";
-        m_inputData["language"] = "english";
-        m_inputData["gender"] = "Male";
-        m_inputData["date_of_birth"] = "1950-12-25";
-        m_inputData["height"] = 1.8;
-        m_inputData["weight"] = 100;
-        m_inputData["smoker"] = false;
-        return;
+        if (!input.contains("barcode"))
+            m_inputData["barcode"] = Constants::DefaultBarcode;
+        if (!input.contains("language"))
+            m_inputData["language"] = "en";
+        if (!input.contains("barcode"))
+            m_inputData["gender"] = "Male";
+        if (!input.contains("barcode"))
+            m_inputData["date_of_birth"] = "1950-12-25";
+        if (!input.contains("barcode"))
+            m_inputData["height"] = 1.5;
+        if (!input.contains("barcode"))
+            m_inputData["weight"] = 80;
+        if (!input.contains("barcode"))
+            m_inputData["smoker"] = false;
     }
     bool ok = true;
-    m_inputData = input;
-    for(auto&& x : m_inputKeyList)
+    QMap<QString, QMetaType::Type> typeMap{
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString}
+    };
+    foreach(auto key, m_inputKeyList)
     {
-        if(!input.contains(x))
+        if (!m_inputData.contains(key))
         {
             ok = false;
+            if (m_verbose)
+                qDebug() << "ERROR: missing expected input " << key;
+            break;
+        }
+        const QVariant value = m_inputData[key].toVariant();
+        bool valueOk = true;
+        QMetaType::Type type;
+        if (typeMap.contains(key))
+        {
+            type = typeMap[key];
+            valueOk = value.canConvert(type);
+        }
+        if (!valueOk)
+        {
+            ok = false;
+            if (m_verbose)
+                qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
             break;
         }
     }
-    if(!ok)
-        m_inputData.clear();
+    if (!ok)
+    {
+        if (m_verbose)
+            qDebug() << "ERROR: invalid input data";
+
+        emit message(tr("ERROR: the input data is incorrect"));
+        m_inputData = QJsonObject();
+    }
     else
     {
         // Get participat info from inputs
         QString gender = m_inputData["gender"].toString();
-        QDate birthDate = m_inputData["date_of_birth"].toDate();
+        QDate birthDate = m_inputData["date_of_birth"].toVariant().toDate();
         double height = m_inputData["height"].toDouble();
         double weight = m_inputData["weight"].toDouble();
         bool smoker = m_inputData["smoker"].toBool();
@@ -361,9 +393,9 @@ void TrueFlowSpirometerManager::resetEmrTransferFiles() const
     }
 
     // Delete pdf output file
-    QString pdfFilePatyh = getOutPdfFilePath();
-    if (QFile::exists(pdfFilePatyh)) {
-        QFile::remove(pdfFilePatyh);
+    QString pdfFilePath = getOutputPdfPath();
+    if (QFile::exists(pdfFilePath)) {
+        QFile::remove(pdfFilePath);
     }
 }
 
@@ -423,8 +455,28 @@ void TrueFlowSpirometerManager::configureProcess()
         qDebug() << "failed to configure process";
 }
 
+
 void TrueFlowSpirometerManager::finish()
 {
     m_test.reset();
     resetEmrTransferFiles();
+}
+
+QString TrueFlowSpirometerManager::getOutputPdfPath() const
+{
+    bool hasPdfPath = m_test.getMetaData().getAttributes().contains("pdfPath");
+    if (hasPdfPath) {
+        return m_test.getMetaData().getAttribute("pdfPath").toString();
+    }
+    return QString();
+}
+
+bool TrueFlowSpirometerManager::outputPdfExists() const{
+    bool pdfExists = false;
+    QString outPdfPath = getOutputPdfPath();
+    if (outPdfPath != QString()) {
+        QFile pdfFile(outPdfPath);
+        pdfExists = pdfFile.exists();
+    }
+    return pdfExists;
 }

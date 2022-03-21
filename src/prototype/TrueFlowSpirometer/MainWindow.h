@@ -58,7 +58,7 @@ private:
     Constants::RunMode m_mode;
     bool m_verbose;
 
-    QMap<QString, QVariant> m_inputData;
+    QJsonObject  m_inputData;
     QMap<QString, QVariant> m_outputData;
 
     TrueFlowSpirometerManager m_manager;

@@ -35,7 +35,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QMap<QString, QVariant> &) override;
+    void setInputData(const QJsonObject &) override;
 
 public slots:
 
@@ -114,6 +114,9 @@ private:
     bool inputDataInitialized() const;
 
     void configureProcess();
+
+    QString getOutputPdfPath() const;
+    bool outputPdfExists() const;
 };
 
 #endif // TRUEFLOWSPIROMETERMANAGER_H
