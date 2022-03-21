@@ -86,14 +86,16 @@ QJsonObject TrueFlowSpirometerManager::toJsonObject() const
             json.insert("test_output_file", QString(buffer.toBase64()));
             json.insert("test_output_file_mime_type", "xml");
         }
-        
 
-        QFile pdfFile(getOutPdfFilePath());
-        if (pdfFile.exists()) {
-            pdfFile.open(QIODevice::ReadOnly);
-            QByteArray bufferPdf = pdfFile.readAll();
-            json.insert("test_output_pdf_file", QString(bufferPdf.toBase64()));
-            json.insert("test_output_pdf_file_mime_type", "pdf");
+        bool hasPdfPath = m_test.getMetaData().getAttributes().contains("pdfPath");
+        if (hasPdfPath) {
+            QFile pdfFile(m_test.getMetaData().getAttribute("pdfPath").toString());
+            if (pdfFile.exists()) {
+                pdfFile.open(QIODevice::ReadOnly);
+                QByteArray bufferPdf = pdfFile.readAll();
+                json.insert("test_output_pdf_file", QString(bufferPdf.toBase64()));
+                json.insert("test_output_pdf_file_mime_type", "pdf");
+            }
         }
     }
     QJsonObject jsonInput;

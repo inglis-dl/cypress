@@ -26,9 +26,6 @@ public:
 
     void buildModel(QStandardItemModel*) const override;
 
-    // is the passed string a jar file
-    // with the correct path elements ?
-    //
     bool isDefined(const QString&, const TrueFlowSpirometerManager::FileType&) const;
 
     // Set the input data.
@@ -90,7 +87,6 @@ private:
     QString m_emrTransferDir; // Path to the emr transfer directory
     QString getTransferInFilePath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("OnyxIn.xml"); }
     QString getTransferOutFilePath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("OnyxOut.xml"); }
-    QString getOutPdfFilePath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("ONYX.pdf"); }
     QString getDbPath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("EasyWarePro.mdb"); }
     QString getDbCopyPath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("EasyWareProCopy.mdb"); }
     QString getDbOptionsPath() const { return QString("%1/%2").arg(m_emrTransferDir).arg("EwpOptions.mdb"); }

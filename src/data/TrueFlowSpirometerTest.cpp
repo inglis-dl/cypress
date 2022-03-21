@@ -48,6 +48,7 @@ bool TrueFlowSpirometerTest::loadData(const QString& transferOutPath)
     addMetaData(outputSmoker, outData.smoker);
     addMetaData(outputCopd, outData.copd);
     addMetaData(outputQualityGrade, outData.qualityGrade);
+    addMetaData("pdfPath", outData.pdfPath);
 
     if (outData.trials.count() > 0) {
         for (TrialDataModel trial : outData.trials)

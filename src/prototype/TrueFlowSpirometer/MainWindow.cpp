@@ -147,6 +147,7 @@ void MainWindow::initializeConnections()
     connect(&m_manager, &TrueFlowSpirometerManager::canWrite,
         this, [this]() {
             ui->saveButton->setEnabled(true);
+            ui->statusBar->showMessage("Measurement complete. Data ready to save");
         });
 
     // Close the application
