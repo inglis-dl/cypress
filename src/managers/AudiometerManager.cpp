@@ -145,7 +145,18 @@ void AudiometerManager::finish()
 
 bool AudiometerManager::hasEndCode(const QByteArray &arr)
 {
-    return arr.endsWith(END_CODE);
+    bool ok = false;
+    int len = arr.size() - 1;
+    if(5 < len)
+    {
+      ok = (
+        END_CODE.at(5) == arr.at(len) &&
+        END_CODE.at(2) == arr.at(len-3) &&
+        END_CODE.at(1) == arr.at(len-4) &&
+        END_CODE.at(0) == arr.at(len-5)
+        );
+    }
+    return ok;
 }
 
 void AudiometerManager::readDevice()
