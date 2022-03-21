@@ -27,6 +27,7 @@ CONFIG += c++11 console
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
     ../../auxiliary/Constants.h \
+    ../../auxiliary/JsonSettings.h \
     ../../data/ChoiceReactionMeasurement.h \
     ../../data/ChoiceReactionTest.h \
     ../../data/Measurement.h \
@@ -39,6 +40,7 @@ HEADERS += \
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../auxiliary/Constants.cpp \
+    ../../auxiliary/JsonSettings.cpp \
     ../../data/Measurement.cpp \
     ../../data/ChoiceReactionMeasurement.cpp \
     ../../data/ChoiceReactionTest.cpp \

@@ -138,9 +138,17 @@ QString Measurement::Value::toString() const
         {
           QStringList values = str.split(",");
           if(Constants::DefaultSplitLength <= values.size())
-            str = values.join(",") + "...";
+          {
+            QStringList list;
+            for(int i=0;i<Constants::DefaultSplitLength;i++)
+                list.push_back(values.at(i));
+
+            str = list.join(",") + "...";
+          }
           else
+          {
             str = values.join(",");
+          }
         }
       }
     }

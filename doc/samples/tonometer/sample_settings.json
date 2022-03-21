@@ -1,0 +1,8 @@
+{
+    "tonometer": {
+        "client": {
+            "exe": "C:/Program Files (x86)/Reichert/ORA/ora.exe",
+            "mdb": "C:/ORA/ora.mdb"
+        }
+    }
+}

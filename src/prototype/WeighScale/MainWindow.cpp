@@ -1,6 +1,8 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
+#include "../../auxiliary/JsonSettings.h"
+
 #include <QCloseEvent>
 #include <QDate>
 #include <QDebug>
@@ -247,7 +249,7 @@ void MainWindow::run()
     // Read the .ini file for cached device data
     //
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath(m_manager.getGroup() + ".json"), JsonSettings::JsonFormat);
     m_manager.loadSettings(settings);
 
     // Pass the input to the manager for verification
@@ -262,7 +264,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if(m_verbose)
         qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath(m_manager.getGroup() + ".json"), JsonSettings::JsonFormat);
     m_manager.saveSettings(&settings);
     m_manager.finish();
     event->accept();
@@ -296,17 +298,8 @@ void MainWindow::readInput()
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
       QJsonObject jsonObj = jsonDoc.object();
-      foreach(auto key, jsonObj.keys())
-      {
-          QJsonValue v = jsonObj.value(key);
-          // TODO: error report all missing expected key values
-          //
-          if(!v.isUndefined())
-          {
-              m_inputData[key] = v.toVariant();
-              qDebug() << key << v.toVariant();
-          }
-      }
+      m_inputData = jsonDoc.object();
+
       if(m_inputData.contains("barcode"))
           ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }

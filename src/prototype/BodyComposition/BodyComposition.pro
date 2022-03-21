@@ -27,10 +27,11 @@ CONFIG += c++11 console
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../auxiliary/Constants.cpp \
+    ../../auxiliary/JsonSettings.cpp \
     ../../data/BodyCompositionMeasurement.cpp \
     ../../data/BodyCompositionTest.cpp \
     ../../data/Measurement.cpp \
-    ../../managers/BodyCompositionAnalyzerManager.cpp \
+    ../../managers/BodyCompositionManager.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SerialPortManager.cpp \
     ../../widgets/BarcodeWidget.cpp \
@@ -40,11 +41,13 @@ SOURCES += \
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
     ../../auxiliary/Constants.h \
+    ../../auxiliary/JsonSettings.h \
+    ../../auxiliary/Utilities.h \
     ../../data/BodyCompositionMeasurement.h \
     ../../data/BodyCompositionTest.h \
     ../../data/Measurement.h \
     ../../data/TestBase.h \
-    ../../managers/BodyCompositionAnalyzerManager.h \
+    ../../managers/BodyCompositionManager.h \
     ../../managers/ManagerBase.h \
     ../../managers/SerialPortManager.h \
     ../../widgets/BarcodeWidget.h \

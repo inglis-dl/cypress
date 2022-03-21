@@ -1,0 +1,7 @@
+{
+    "body_composition": {
+        "client": {
+            "port": "ttyUSB0"
+        }
+    }
+}

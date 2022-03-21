@@ -27,10 +27,12 @@ void TemplateManager::start()
 
 void TemplateManager::loadSettings(const QSettings& settings)
 {
+    Q_UNUSED(settings)
 }
 
 void TemplateManager::saveSettings(QSettings* settings) const
 {
+    Q_UNUSED(settings)
 }
 
 QJsonObject TemplateManager::toJsonObject() const
@@ -40,15 +42,7 @@ QJsonObject TemplateManager::toJsonObject() const
     {
         // simulate mode code
     }
-    QJsonObject jsonInput;
-    foreach(auto x, m_inputData.toStdMap())
-    {
-        // convert to space delimited phrases to snake_case
-        //
-        jsonInput.insert(QString(x.first).toLower().replace(QRegExp("[\\s]+"),"_"),
-                         QJsonValue::fromVariant(x.second));
-    }
-    json.insert("test_input",jsonInput);
+    json.insert("test_input",m_inputData);
     return json;
 }
 
@@ -72,7 +66,6 @@ void TemplateManager::measure()
 {
     if(Constants::RunMode::modeSimulate == m_mode)
     {
-        readOutput();
         return;
     }
 
@@ -82,7 +75,7 @@ void TemplateManager::measure()
       qDebug() << "starting process from measure";
 }
 
-void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
+void TemplateManager::setInputData(const QJsonObject& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -93,6 +86,10 @@ void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
         m_inputData["language"] = "english";
     }
     bool ok = true;
+    QMap<QString,QMetaType::Type> typeMap {
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString}
+    };
     foreach(auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
@@ -102,6 +99,21 @@ void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
+      const QVariant value = m_inputData[key].toVariant();
+      bool valueOk = true;
+      QMetaType::Type type;
+      if(typeMap.contains(key))
+      {
+        type = typeMap[key];
+        valueOk = value.canConvert(type);
+      }
+      if(!valueOk)
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
+        break;
+      }
     }
     if(!ok)
     {
@@ -109,7 +121,7 @@ void TemplateManager::setInputData(const QMap<QString, QVariant>& input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
     }
 }
 

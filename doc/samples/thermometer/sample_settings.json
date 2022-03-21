@@ -1,0 +1,13 @@
+{
+    "thermometer": {
+        "client": {
+            "address": "38:BA:F8:EF:1A:E0",
+            "hostmode": 2,
+            "name": "dean-ThinkPad-P51"
+        },
+        "peripheral": {
+            "address": "C0:26:DA:13:B0:DF",
+            "name": "PRO-TF300B"
+        }
+    }
+}

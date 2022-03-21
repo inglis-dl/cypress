@@ -25,14 +25,15 @@ CONFIG += c++11 console
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 HEADERS += \
+    ../../auxiliary/CommandLineParser.h \
+    ../../auxiliary/Constants.h \
+    ../../auxiliary/JsonSettings.h \
+    ../../auxiliary/Utilities.h \
     ../../data/CDTTMeasurement.h \
     ../../data/CDTTTest.h \
     ../../data/ExcelQueryHelper.h \
     ../../data/Measurement.h \
     ../../data/TestBase.h \
-    ../../auxiliary/CommandLineParser.h \
-    ../../auxiliary/Constants.h \
-    ../../auxiliary/Utilities.h \
     ../../managers/ManagerBase.h \
     ../../managers/CDTTManager.h \
     ../../widgets/BarcodeWidget.h \
@@ -41,6 +42,7 @@ HEADERS += \
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../auxiliary/Constants.cpp \
+    ../../auxiliary/JsonSettings.cpp \
     ../../data/CDTTMeasurement.cpp \
     ../../data/CDTTTest.cpp \
     ../../data/ExcelQueryHelper.cpp \

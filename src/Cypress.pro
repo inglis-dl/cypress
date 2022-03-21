@@ -10,8 +10,9 @@ CONFIG += c++11
 
 SOURCES += \
     auxiliary/Constants.cpp \
-    auxiliary/CRC8.cpp \
     auxiliary/CommandLineParser.cpp \
+    auxiliary/JsonSettings.cpp \
+    auxiliary/Utilities.cpp \
     data/Measurement.cpp \
     data/HearingTest.cpp \
     data/BloodPressureTest.cpp \
@@ -45,7 +46,7 @@ SOURCES += \
     managers/TonometerManager.cpp \
     managers/CDTTManager.cpp \
     managers/WeighScaleManager.cpp \
-    managers/BodyCompositionAnalyzerManager.cpp \
+    managers/BodyCompositionManager.cpp \
     widgets/BarcodeWidget.cpp \
     dialogs/AudiometerDialog.cpp \
     dialogs/BodyCompositionDialog.cpp \
@@ -63,8 +64,8 @@ SOURCES += \
 
 HEADERS += \
     auxiliary/Constants.h \
+    auxiliary/JsonSettings.h \
     auxiliary/Utilities.h \
-    auxiliary/CRC8.h \
     auxiliary/CommandLineParser.h \
     data/Measurement.h \
     data/TestBase.h \
@@ -97,7 +98,7 @@ HEADERS += \
     managers/BPMMessage.h \
     managers/BPMCommunication.h \
     managers/FraxManager.h \
-    managers/BodyCompositionAnalyzerManager.h \
+    managers/BodyCompositionManager.h \
     managers/TonometerManager.h \
     managers/CDTTManager.h \
     managers/WeighScaleManager.h \

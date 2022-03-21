@@ -43,7 +43,7 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
           "AND BirthDate=#%2# "
           "AND Sex=%3").arg(
           input["barcode"].toString(),
-          input["date_of_birth"].toString(),
+          input["date_of_birth"].toDate().toString("yyyy-MM-dd"),
           input["sex"].toString()
         );
       else
@@ -54,7 +54,7 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
           "AND BirthDate=#%2# "
           "AND Sex=%3").arg(
           input["barcode"].toString(),
-          input["date_of_birth"].toString(),
+          input["date_of_birth"].toDate().toString("yyyy-MM-dd"),
           input["sex"].toString()
         );
 
@@ -82,7 +82,7 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
           "AND BirthDate=#%2# "
           "AND Sex=%3)").arg(
           input["barcode"].toString(),
-          input["date_of_birth"].toString(),
+          input["date_of_birth"].toDate().toString("yyyy-MM-dd"),
           input["sex"].toString()
           );
         if(query.exec(q_str))
@@ -98,7 +98,7 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
           "AND BirthDate=#%2# "
           "AND Sex=%3").arg(
           input["barcode"].toString(),
-          input["date_of_birth"].toString(),
+          input["date_of_birth"].toDate().toString("yyyy-MM-dd"),
           input["sex"].toString()
         );
         if(query.exec(q_str))
@@ -112,7 +112,7 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
       q_str = QString(
         "INSERT INTO Patients (BirthDate, Sex, GroupID, ID, RaceID)"
         "VALUES (#%1#,%2,%3,%4,%5)").arg(
-        input["date_of_birth"].toString(),
+        input["date_of_birth"].toDate().toString("yyyy-MM-dd"),
         input["sex"].toString(),
         QString::number(2),
         input["barcode"].toString(),
@@ -133,7 +133,7 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
         "AND BirthDate=#%3#").arg(
         input["barcode"].toString(),
         input["sex"].toString(),
-        input["date_of_birth"].toString()
+        input["date_of_birth"].toDate().toString("yyyy-MM-dd")
       );
       if(query.exec(q_str))
       {

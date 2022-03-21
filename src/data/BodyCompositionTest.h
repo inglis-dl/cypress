@@ -12,6 +12,8 @@ public:
 
     void fromArray(const QByteArray &);
 
+    void simulate(const double&, const QString&, double);
+
     // String representation for debug and GUI display purposes
     //
     QString toString() const override;
@@ -33,7 +35,7 @@ private:
     QString  readGender() const;
     QVariant readHeight() const;
     QVariant readWeight() const;
-    QVariant readImpedence() const;
+    QVariant readImpedance() const;
     QVariant readFatPercent() const;
     QVariant readFatMass() const;
     QVariant readFatFreeMass() const;

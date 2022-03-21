@@ -1,0 +1,35 @@
+{
+    "device": {
+        "port_description": "simulated",
+        "port_manufacturer": "simulated",
+        "port_name": "ttyUSB0",
+        "port_product_id": "simulated",
+        "port_serial_number": "simulated",
+        "port_system_location": "simulated",
+        "port_vendor_id": "simulated",
+        "software_id": "999999"
+    },
+    "test_input": {
+        "barcode": "12345678",
+        "language": "en"
+    },
+    "test_results": [
+        {
+            "mode": "gross",
+            "timestamp": "2022-03-17T13:03:22.965",
+            "weight": {
+                "units": "kg",
+                "value": 77.2
+            }
+        },
+        {
+            "mode": "gross",
+            "timestamp": "2022-03-17T13:03:29.635",
+            "weight": {
+                "units": "kg",
+                "value": 77
+            }
+        }
+    ],
+    "verification_barcode": "12345678"
+}

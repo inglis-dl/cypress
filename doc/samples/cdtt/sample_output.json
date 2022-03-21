@@ -1,0 +1,350 @@
+{
+    "test_input": {
+        "barcode": "12345678",
+        "language": "en"
+    },
+    "test_meta_data": {
+        "datetime": "2022-03-17T14:48:56.438",
+        "digits": "TRIPLET-80",
+        "language": "EN_CA",
+        "list_number": 1,
+        "mode": "Adaptive",
+        "msk_level": {
+            "units": "dB",
+            "value": 65
+        },
+        "msk_signal": "SSNOISE",
+        "reversal_count": 7,
+        "sp_level": {
+            "units": "dB",
+            "value": 65
+        },
+        "speech_reception_threshold": {
+            "units": "dB",
+            "value": -0.5991114777077335
+        },
+        "standard_deviation": {
+            "units": "dB",
+            "value": 4.350222130573067
+        },
+        "subject_id": "12345678",
+        "talker": "Male",
+        "test_ear": "Binaural",
+        "trial_count": 24
+    },
+    "test_results": [
+        {
+            "response": [
+                8,
+                0,
+                6
+            ],
+            "stimulus": [
+                0,
+                7,
+                6
+            ],
+            "trial": 1
+        },
+        {
+            "response": [
+                0,
+                0,
+                1
+            ],
+            "stimulus": [
+                4,
+                4,
+                3
+            ],
+            "trial": 2
+        },
+        {
+            "response": [
+                6,
+                3,
+                6
+            ],
+            "stimulus": [
+                5,
+                2,
+                1
+            ],
+            "trial": 3
+        },
+        {
+            "response": [
+                4,
+                4,
+                4
+            ],
+            "stimulus": [
+                0,
+                4,
+                2
+            ],
+            "trial": 4
+        },
+        {
+            "response": [
+                1,
+                3,
+                1
+            ],
+            "stimulus": [
+                6,
+                3,
+                8
+            ],
+            "trial": 5
+        },
+        {
+            "response": [
+                2,
+                2,
+                3
+            ],
+            "stimulus": [
+                3,
+                4,
+                1
+            ],
+            "trial": 6
+        },
+        {
+            "response": [
+                7,
+                2,
+                6
+            ],
+            "stimulus": [
+                7,
+                2,
+                8
+            ],
+            "trial": 7
+        },
+        {
+            "response": [
+                0,
+                4,
+                8
+            ],
+            "stimulus": [
+                0,
+                8,
+                6
+            ],
+            "trial": 8
+        },
+        {
+            "response": [
+                4,
+                5,
+                8
+            ],
+            "stimulus": [
+                3,
+                1,
+                4
+            ],
+            "trial": 9
+        },
+        {
+            "response": [
+                3,
+                7,
+                8
+            ],
+            "stimulus": [
+                3,
+                3,
+                8
+            ],
+            "trial": 10
+        },
+        {
+            "response": [
+                8,
+                5,
+                0
+            ],
+            "stimulus": [
+                2,
+                0,
+                1
+            ],
+            "trial": 11
+        },
+        {
+            "response": [
+                5,
+                8,
+                2
+            ],
+            "stimulus": [
+                4,
+                1,
+                6
+            ],
+            "trial": 12
+        },
+        {
+            "response": [
+                1,
+                3,
+                6
+            ],
+            "stimulus": [
+                5,
+                6,
+                1
+            ],
+            "trial": 13
+        },
+        {
+            "response": [
+                5,
+                1,
+                6
+            ],
+            "stimulus": [
+                2,
+                8,
+                4
+            ],
+            "trial": 14
+        },
+        {
+            "response": [
+                8,
+                3,
+                7
+            ],
+            "stimulus": [
+                7,
+                6,
+                8
+            ],
+            "trial": 15
+        },
+        {
+            "response": [
+                3,
+                2,
+                1
+            ],
+            "stimulus": [
+                1,
+                2,
+                6
+            ],
+            "trial": 16
+        },
+        {
+            "response": [
+                0,
+                0,
+                3
+            ],
+            "stimulus": [
+                5,
+                8,
+                8
+            ],
+            "trial": 17
+        },
+        {
+            "response": [
+                3,
+                2,
+                3
+            ],
+            "stimulus": [
+                6,
+                5,
+                2
+            ],
+            "trial": 18
+        },
+        {
+            "response": [
+                2,
+                3,
+                4
+            ],
+            "stimulus": [
+                6,
+                8,
+                3
+            ],
+            "trial": 19
+        },
+        {
+            "response": [
+                8,
+                7,
+                3
+            ],
+            "stimulus": [
+                0,
+                6,
+                2
+            ],
+            "trial": 20
+        },
+        {
+            "response": [
+                1,
+                4,
+                6
+            ],
+            "stimulus": [
+                6,
+                3,
+                6
+            ],
+            "trial": 21
+        },
+        {
+            "response": [
+                3,
+                2,
+                7
+            ],
+            "stimulus": [
+                2,
+                6,
+                5
+            ],
+            "trial": 22
+        },
+        {
+            "response": [
+                5,
+                1,
+                6
+            ],
+            "stimulus": [
+                4,
+                8,
+                7
+            ],
+            "trial": 23
+        },
+        {
+            "response": [
+                6,
+                3,
+                8
+            ],
+            "stimulus": [
+                1,
+                4,
+                0
+            ],
+            "trial": 24
+        }
+    ],
+    "verification_barcode": "12345678"
+}

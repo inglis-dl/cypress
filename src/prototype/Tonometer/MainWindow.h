@@ -3,7 +3,9 @@
 
 #include "../../managers/TonometerManager.h"
 #include "../../auxiliary/Constants.h"
+
 #include <QDialog>
+#include <QJsonObject>
 #include <QStandardItemModel>
 
 QT_FORWARD_DECLARE_CLASS(QCloseEvent)
@@ -58,11 +60,8 @@ private:
     Constants::RunMode m_mode;
     bool m_verbose;
 
-    QMap<QString,QVariant> m_inputData;
-    QMap<QString,QVariant> m_outputData;
-
+    QJsonObject m_inputData;
     TonometerManager m_manager;
-
     QStandardItemModel m_model;
 };
 

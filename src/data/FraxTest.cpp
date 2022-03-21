@@ -40,7 +40,7 @@ FraxTest::FraxTest()
     m_outputKeyList << "country_code";
     m_outputKeyList << "age";
     m_outputKeyList << "sex";
-    m_outputKeyList << "bmi";
+    m_outputKeyList << "body_mass_index";
     m_outputKeyList << "previous_fracture";
     m_outputKeyList << "parent_hip_fracture";
     m_outputKeyList << "current_smoker";
@@ -48,7 +48,7 @@ FraxTest::FraxTest()
     m_outputKeyList << "rheumatoid_arthritis";
     m_outputKeyList << "secondary_osteoporosis";
     m_outputKeyList << "alcohol";
-    m_outputKeyList << "femoral_neck_bmd";
+    m_outputKeyList << "femoral_neck_tscore";
 }
 
 void FraxTest::fromFile(const QString &fileName)
@@ -88,7 +88,7 @@ void FraxTest::fromFile(const QString &fileName)
            addMetaData("country_code",list.at(1).toUInt());
            addMetaData("age",list.at(2).toDouble(),"yr");
            addMetaData("sex",list.at(3).toUInt());
-           addMetaData("bmi",list.at(4).toDouble(),"kg/m2");
+           addMetaData("body_mass_index",list.at(4).toDouble(),"kg/m2");
            addMetaData("previous_fracture",list.at(5).toUInt());
            addMetaData("parent_hip_fracture",list.at(6).toUInt());
            addMetaData("current_smoker",list.at(7).toUInt());
@@ -96,13 +96,42 @@ void FraxTest::fromFile(const QString &fileName)
            addMetaData("rheumatoid_arthritis",list.at(9).toUInt());
            addMetaData("secondary_osteoporosis",list.at(10).toUInt());
            addMetaData("alcohol",list.at(11).toUInt());
-           addMetaData("femoral_neck_bmd",list.at(12).toDouble());
+           addMetaData("femoral_neck_tscore",list.at(12).toDouble());
         }
     }
 }
 
-void FraxTest::simulate()
+void FraxTest::simulate(const QJsonObject& input)
 {
+    foreach(auto key, input.keys())
+    {
+      if("barcode" == key || "language" == key) continue;
+
+      QVariant value = input[key].toVariant();
+      if("sex" == key)
+      {
+        value = "male" == value.toString() ? 0 : 1;
+      }
+      else if("femoral_neck_bmd" == key)
+      {
+        value = Utilities::tscore(value.toDouble());
+        key = "femoral_neck_tscore";
+      }
+      else
+      {
+        if(QVariant::Bool == value.type())
+        {
+          value = value.toUInt();
+        }
+      }
+      if("age" == key)
+        addMetaData(key,value,"yr");
+      else if("body_mass_index" == key)
+        addMetaData(key,value,"kg/m2");
+      else
+        addMetaData(key,value);
+    }
+
     FraxMeasurement m;
     double mu = QRandomGenerator::global()->generateDouble();
 
@@ -151,6 +180,7 @@ bool FraxTest::isValid() const
     {
       if(!hasMetaData(key))
       {
+         qDebug() << "ERROR: test missing meta data" << key;
          okMeta = false;
          break;
        }

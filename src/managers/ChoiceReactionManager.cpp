@@ -138,7 +138,7 @@ void ChoiceReactionManager::selectRunnable(const QString &exeName)
        emit canSelectRunnable();
 }
 
-void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
+void ChoiceReactionManager::setInputData(const QJsonObject &input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -146,9 +146,13 @@ void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
         if(!input.contains("barcode"))
           m_inputData["barcode"] = Constants::DefaultBarcode;
         if(!input.contains("language"))
-          m_inputData["language"] = "english";
+          m_inputData["language"] = "en";
     }
     bool ok = true;
+    QMap<QString,QMetaType::Type> typeMap {
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString}
+    };
     foreach(auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
@@ -158,6 +162,21 @@ void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
+      const QVariant value = m_inputData[key].toVariant();
+      bool valueOk = true;
+      QMetaType::Type type;
+      if(typeMap.contains(key))
+      {
+        type = typeMap[key];
+        valueOk = value.canConvert(type);
+      }
+      if(!valueOk)
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
+        break;
+      }
     }
     if(!ok)
     {
@@ -165,7 +184,7 @@ void ChoiceReactionManager::setInputData(const QMap<QString, QVariant> &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
     }
     else
       configureProcess();
@@ -236,7 +255,7 @@ void ChoiceReactionManager::configureProcess()
       //
       command << "/c" + CCB_CLINIC;
 
-      // required language "english" or "french" converted to E or F
+      // required language "en" or "fr" converted to E or F
       //
       QString s = getInputDataValue("language").toString().toUpper();
       if(!s.isEmpty())
@@ -266,7 +285,7 @@ void ChoiceReactionManager::readOutput()
         m_test.reset();
         m_test.addMetaData("start_datetime",QDateTime::currentDateTime());
         m_test.addMetaData("version","simulated");
-        m_test.addMetaData("user_id",m_inputData["barcode"]);
+        m_test.addMetaData("user_id",m_inputData["barcode"].toString());
         m_test.addMetaData("interviewer_id","simulated");
         m_test.addMetaData("end_datetime",QDateTime::currentDateTime());
         m_test.addMetaData("number_of_measurements",60);
@@ -366,5 +385,6 @@ QJsonObject ChoiceReactionManager::toJsonObject() const
       json.insert("test_output_file",QString(buffer.toBase64()));
       json.insert("test_output_file_mime_type","csv");
     }
+    json.insert("test_input",m_inputData);
     return json;
 }

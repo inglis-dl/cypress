@@ -77,15 +77,14 @@ QMap<QString,QString> TonometerMeasurement::initUnitsLUT()
 bool TonometerMeasurement::isValid() const
 {
     bool ok = true;
-    QMap<QString,QString>::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
-    while(it != TonometerMeasurement::variableLUT.constEnd())
+    QList<QString> list = TonometerMeasurement::variableLUT.keys();
+    foreach(auto key, list)
     {
-      if(!hasAttribute(it.key()))
+      if(!hasAttribute(key))
       {
         ok = false;
         break;
       }
-      it++;
     }
     return ok;
 }

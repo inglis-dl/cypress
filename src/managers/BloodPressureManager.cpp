@@ -14,7 +14,7 @@ BloodPressureManager::BloodPressureManager(QObject* parent)
     : ManagerBase(parent)
     , m_comm(new BPMCommunication())
 {
-    setGroup("bloodpressure");
+    setGroup("blood_pressure");
 
     // test number, start time, end time, systolic, diastolic, pulse
     //
@@ -271,6 +271,14 @@ void BloodPressureManager::setDevice(const QUsb::Id &info)
         emit canConnectDevice();
         device.close();
     }
+    else
+    {
+        //TODO: QHidDevice implentation of open accepts vid, pid
+        // and optional serial number as string
+        // try connecting with serial number string "??"
+        //
+        qDebug() << "ERROR: failed to set and open device";
+    }
 }
 
 void BloodPressureManager::setCuffSize(const QString &size)
@@ -299,6 +307,7 @@ QJsonObject BloodPressureManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
+    json.insert("test_input",m_inputData);
     return json;
 }
 
@@ -357,7 +366,7 @@ void BloodPressureManager::measure()
     emit startMeasurement();
 }
 
-void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
+void BloodPressureManager::setInputData(const QJsonObject& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -365,9 +374,13 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
         if(!input.contains("barcode"))
           m_inputData["barcode"] = Constants::DefaultBarcode;
         if(!input.contains("language"))
-          m_inputData["language"] = "english";
+          m_inputData["language"] = "en";
     }
     bool ok = true;
+    QMap<QString,QMetaType::Type> typeMap {
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString}
+    };
     foreach(auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
@@ -377,6 +390,21 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
+      const QVariant value = m_inputData[key].toVariant();
+      bool valueOk = true;
+      QMetaType::Type type;
+      if(typeMap.contains(key))
+      {
+        type = typeMap[key];
+        valueOk = value.canConvert(type);
+      }
+      if(!valueOk)
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
+        break;
+      }
     }
     if(!ok)
     {
@@ -384,7 +412,7 @@ void BloodPressureManager::setInputData(const QMap<QString, QVariant>& input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData = QJsonObject();
     }
     else
     {

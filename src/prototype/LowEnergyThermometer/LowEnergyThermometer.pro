@@ -28,6 +28,7 @@ SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
     ../../auxiliary/Constants.cpp \
     ../../auxiliary/BluetoothUtil.cpp \
+    ../../auxiliary/JsonSettings.cpp \
     ../../data/Measurement.cpp \
     ../../data/TemperatureMeasurement.cpp \
     ../../data/TemperatureTest.cpp \
@@ -41,6 +42,7 @@ HEADERS += \
     ../../auxiliary/CommandLineParser.h \
     ../../auxiliary/Constants.h \
     ../../auxiliary/BluetoothUtil.h \
+    ../../auxiliary/JsonSettings.h \
     ../../data/Measurement.h \
     ../../data/TemperatureMeasurement.h \
     ../../data/TemperatureTest.h \

@@ -13,24 +13,27 @@ public:
         modeUnknown,
         modeDefault,
         modeLive,
-        modeSimulate
+        modeSimulate,
+        modeHeadless
     };
     Q_ENUM(RunMode)
 
     enum MeasureType {
         typeUnknown,
         typeAudiometer,
-        typeBloodPressure,
-        typeBodyCompositionAnalyzer,
+        typeBlood_Pressure,
+        typeBody_Composition,
         typeCDTT,
-        typeChoiceReaction,
+        typeChoice_Reaction,
         typeECG,
         typeFrax,
-        typeRetinalCamera,
+        typeRetinal_Camera,
         typeSpirometer,
         typeThermometer,
         typeTonometer,
-        typeWeighScale
+        typeWeigh_Scale,
+        typeUltrasound,
+        typeDexa
     };
     Q_ENUM(MeasureType)
 

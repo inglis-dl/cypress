@@ -160,13 +160,14 @@ QStringList TonometerTest::getMeasurementStrings(const QString &side) const
     return list;
 }
 
-void TonometerTest::simulate(const QMap<QString, QVariant> &input)
+void TonometerTest::simulate(const QJsonObject &input)
 {
     reset();
     qDebug() << "generating simulated data";
-    addMetaData("id",input["barcode"]);
-    addMetaData("sex",input["sex"]);
-    addMetaData("date_of_birth",input["date_of_birth"].toDateTime());
+    addMetaData("id",input["barcode"].toString());
+    QVariant value = input["sex"].toString().toLower().startsWith("f") ? 0 : -1;
+    addMetaData("sex",value);
+    addMetaData("date_of_birth",input["date_of_birth"].toVariant().toDateTime());
 
     double mu = QRandomGenerator::global()->generateDouble();
 
@@ -230,7 +231,6 @@ bool TonometerTest::isValid() const
     {
       if(!hasMetaData(key))
       {
-         qDebug() << "error, test is missing metadata" << key;
          okMeta = false;
          break;
        }

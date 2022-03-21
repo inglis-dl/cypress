@@ -469,8 +469,8 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="genderGroup"/>
   <buttongroup name="unitsGroup"/>
+  <buttongroup name="genderGroup"/>
   <buttongroup name="bodyTypeGroup"/>
  </buttongroups>
 </ui>

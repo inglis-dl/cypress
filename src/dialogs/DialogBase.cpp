@@ -1,4 +1,6 @@
 #include "DialogBase.h"
+
+#include "./auxiliary/JsonSettings.h"
 #include "./managers/ManagerBase.h"
 
 #include <QCoreApplication>
@@ -28,10 +30,10 @@ void DialogBase::run()
     m_manager->setVerbose(m_verbose);
     m_manager->setRunMode(m_mode);
 
-    // Read the .ini file for cached device data
+    // Read the .json file for cached device data
     //
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath(m_manager->getGroup() + ".ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath(m_manager->getGroup() + ".json"), JsonSettings::JsonFormat);
     m_manager->loadSettings(settings);
 
     // Pass the input to the manager for verification
@@ -46,7 +48,7 @@ void DialogBase::closeEvent(QCloseEvent *event)
     if(m_verbose)
         qDebug() << "close event called";
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath(m_manager->getGroup() + ".ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath(m_manager->getGroup() + ".json"), JsonSettings::JsonFormat);
     m_manager->saveSettings(&settings);
     m_manager->finish();
     event->accept();
@@ -79,18 +81,7 @@ void DialogBase::readInput()
       file.close();
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
-      QJsonObject jsonObj = jsonDoc.object();
-      foreach(auto key, jsonObj.keys())
-      {
-          QJsonValue v = jsonObj.value(key);
-          // TODO: error report all missing expected key values
-          //
-          if(!v.isUndefined())
-          {
-              m_inputData[key] = v.toVariant();
-              qDebug() << key << v.toVariant();
-          }
-      }
+      m_inputData = jsonDoc.object();
       if(m_inputData.contains("barcode"))
           this->setVerificationBarcode(m_inputData["barcode"].toString());
     }
@@ -123,8 +114,6 @@ void DialogBase::writeOutput()
    //
    bool constructDefault = false;
 
-   // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
-   //
    if(m_outputFileName.isEmpty())
        constructDefault = true;
    else
@@ -155,7 +144,9 @@ void DialogBase::writeOutput()
 
    QFile saveFile( fileName );
    saveFile.open(QIODevice::WriteOnly);
-   saveFile.write(QJsonDocument(jsonObj).toJson());
+   QJsonDocument::JsonFormat format = (m_mode == Constants::RunMode::modeLive) ?
+               QJsonDocument::JsonFormat::Compact : QJsonDocument::JsonFormat::Indented;
+   saveFile.write(QJsonDocument(jsonObj).toJson(format));
 
    if(m_verbose)
        qDebug() << "wrote to file " << fileName;

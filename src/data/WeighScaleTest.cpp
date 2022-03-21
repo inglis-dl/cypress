@@ -44,9 +44,19 @@ void WeighScaleTest::fromArray(const QByteArray &arr)
        //
        WeightMeasurement m;
        m.fromArray(arr);
+
        if(m.isValid())
        {
-         addMeasurement(m);
+         bool ok = true;
+         if(0 < getNumberOfMeasurements())
+         {
+           WeightMeasurement last = lastMeasurement();
+           QDateTime prev = last.getAttributeValue("timestamp").toDateTime();
+           QDateTime curr = m.getAttributeValue("timestamp").toDateTime();
+           ok =  DELAY < prev.secsTo(curr);
+         }
+         if(ok)
+           addMeasurement(m);
        }
     }
 }

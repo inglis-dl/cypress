@@ -64,10 +64,10 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
     m_parser.process(app);
 
     if (m_parser.isSet(versionOption))
-        return VersionRequested;
+        return parseVersionRequested;
 
     if (m_parser.isSet(helpOption))
-        return HelpRequested;
+        return parseHelpRequested;
 
     // Default when not run from command line we assume verbose is desired
     //
@@ -80,7 +80,7 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
 
     // Catch the first parser error
     //
-    ParseResult result = Ok;
+    ParseResult result = parseOk;
 
     // Default mode is "default"
     // - simulate runs the app with GUI interaction but without
@@ -107,7 +107,7 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
         }
         else
         {
-          result = RunModeError;
+          result = parseRunModeError;
           *errMessage = "Invalid run mode: " + s;
         }
     }
@@ -115,7 +115,7 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
     bool hasValidInput = false;
     bool hasValidOutput = false;
 
-    if(m_parser.isSet(inputOption) && Ok == result)
+    if(m_parser.isSet(inputOption) && parseOk == result)
     {
         QString s = m_parser.value(inputOption);
         QFileInfo info(s);
@@ -129,7 +129,7 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
         else
         {
             qDebug() << "ERROR: input file does not exist: " <<  s;
-            result = InputFileError;
+            result = parseInputFileError;
             *errMessage = "Invalid input file " + s;
         }
     }
@@ -137,7 +137,7 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
     // if command line parsing determined an error do not continue
     // and report on the next potential error
     //
-    if(m_parser.isSet(outputOption) && Ok == result)
+    if(m_parser.isSet(outputOption) && parseOk == result)
     {
         QString s = m_parser.value(outputOption);
         QFileInfo info(s);
@@ -151,12 +151,12 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
         else
         {
             qDebug() << "ERROR: output file path does not exist: " <<  info.dir().canonicalPath();
-            result = OutputPathError;
+            result = parseOutputPathError;
             *errMessage = "Invalid output file path " + info.dir().canonicalPath();
         }
     }
 
-    if(m_parser.isSet(typeOption) && Ok == result)
+    if(m_parser.isSet(typeOption) && parseOk == result)
     {
         QString s = m_parser.value(typeOption);
         qDebug() << "Measure type option parsing " << s;
@@ -172,19 +172,27 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
         else
         {
             qDebug() << "ERROR: input measure type does not exist: " <<  s;
-            result = MeasureTypeError;
+            result = parseMeasureTypeError;
             *errMessage = "Invalid input measure type " + s;
         }
     }
     else {qDebug() << "measure type option not set";}
 
-    if(Ok == result)
+    if(parseOk == result)
     {
         if(Constants::RunMode::modeLive == m_args["runMode"].value<Constants::RunMode>())
         {
             if(!(hasValidInput && hasValidOutput))
             {
-               result = Error;
+               result = parseError;
+               *errMessage = "One or more expected arguments are missng";
+            }
+        }
+        else if(Constants::RunMode::modeHeadless == m_args["runMode"].value<Constants::RunMode>())
+        {
+            if(!(hasValidInput && hasValidOutput))
+            {
+               result = parseError;
                *errMessage = "One or more expected arguments are missng";
             }
         }

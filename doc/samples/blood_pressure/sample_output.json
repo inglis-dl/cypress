@@ -1,0 +1,164 @@
+{
+    "device": {
+        "usb_hid_manufacturer": "BpTru",
+        "usb_hid_product": "BPM200",
+        "usb_hid_product_id": 1,
+        "usb_hid_serial_number": "simulated",
+        "usb_hid_vendor_id": 4279
+    },
+    "test_input": {
+        "barcode": "12345678",
+        "cuff_size": "small",
+        "language": "en",
+        "side": "left"
+    },
+    "test_meta_data": {
+        "avg_count": 5,
+        "avg_diastolic": {
+            "units": "mmHg",
+            "value": 67
+        },
+        "avg_pulse": {
+            "units": "bpm",
+            "value": 81
+        },
+        "avg_systolic": {
+            "units": "mmHg",
+            "value": 104
+        },
+        "cuff_size": "small",
+        "first_diastolic": {
+            "units": "mmHg",
+            "value": 61
+        },
+        "first_end_time": "2022-03-17T14:45:49.309",
+        "first_pulse": {
+            "units": "bpm",
+            "value": 93
+        },
+        "first_start_time": "2022-03-17T14:44:55.832",
+        "first_systolic": {
+            "units": "mmHg",
+            "value": 110
+        },
+        "side": "left",
+        "total_avg_count": 7,
+        "total_avg_diastolic": {
+            "units": "mmHg",
+            "value": 57
+        },
+        "total_avg_pulse": {
+            "units": "bpm",
+            "value": 71
+        },
+        "total_avg_systolic": {
+            "units": "mmHg",
+            "value": 90
+        }
+    },
+    "test_results": [
+        {
+            "diastolic": {
+                "units": "mmHg",
+                "value": 61
+            },
+            "end_time": "2022-03-17T14:45:49.309",
+            "pulse": {
+                "units": "bpm",
+                "value": 93
+            },
+            "reading_number": 1,
+            "start_time": "2022-03-17T14:44:55.832",
+            "systolic": {
+                "units": "mmHg",
+                "value": 110
+            }
+        },
+        {
+            "diastolic": {
+                "units": "mmHg",
+                "value": 72
+            },
+            "end_time": "2022-03-17T14:46:55.345",
+            "pulse": {
+                "units": "bpm",
+                "value": 85
+            },
+            "reading_number": 2,
+            "start_time": "2022-03-17T14:45:49.309",
+            "systolic": {
+                "units": "mmHg",
+                "value": 90
+            }
+        },
+        {
+            "diastolic": {
+                "units": "mmHg",
+                "value": 61
+            },
+            "end_time": "2022-03-17T14:47:23.461",
+            "pulse": {
+                "units": "bpm",
+                "value": 62
+            },
+            "reading_number": 3,
+            "start_time": "2022-03-17T14:46:55.345",
+            "systolic": {
+                "units": "mmHg",
+                "value": 101
+            }
+        },
+        {
+            "diastolic": {
+                "units": "mmHg",
+                "value": 61
+            },
+            "end_time": "2022-03-17T14:48:22.810",
+            "pulse": {
+                "units": "bpm",
+                "value": 87
+            },
+            "reading_number": 4,
+            "start_time": "2022-03-17T14:47:23.461",
+            "systolic": {
+                "units": "mmHg",
+                "value": 103
+            }
+        },
+        {
+            "diastolic": {
+                "units": "mmHg",
+                "value": 65
+            },
+            "end_time": "2022-03-17T14:49:03.245",
+            "pulse": {
+                "units": "bpm",
+                "value": 91
+            },
+            "reading_number": 5,
+            "start_time": "2022-03-17T14:48:22.810",
+            "systolic": {
+                "units": "mmHg",
+                "value": 110
+            }
+        },
+        {
+            "diastolic": {
+                "units": "mmHg",
+                "value": 78
+            },
+            "end_time": "2022-03-17T14:50:39.796",
+            "pulse": {
+                "units": "bpm",
+                "value": 82
+            },
+            "reading_number": 6,
+            "start_time": "2022-03-17T14:49:03.245",
+            "systolic": {
+                "units": "mmHg",
+                "value": 115
+            }
+        }
+    ],
+    "verification_barcode": "12345678"
+}

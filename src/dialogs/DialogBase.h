@@ -2,7 +2,9 @@
 #define DIALOGBASE_H
 
 #include <QDialog>
+#include <QJsonObject>
 #include <QStandardItemModel>
+
 #include "../managers/ManagerBase.h"
 #include "../auxiliary/Constants.h"
 
@@ -51,8 +53,7 @@ protected:
     Constants::RunMode m_mode;
     bool m_verbose;
 
-    QMap<QString,QVariant> m_inputData;
-    QMap<QString,QVariant> m_outputData;
+    QJsonObject m_inputData;
     void readInput();
 
 private:

@@ -27,6 +27,7 @@ CONFIG += c++11 console
 HEADERS += \
     ../../auxiliary/CommandLineParser.h \
     ../../auxiliary/Constants.h \
+    ../../auxiliary/JsonSettings.h \
     ../../auxiliary/Utilities.h \
     ../../data/FraxMeasurement.h \
     ../../data/FraxTest.h \
@@ -39,7 +40,8 @@ HEADERS += \
 
 SOURCES += \
     ../../auxiliary/CommandLineParser.cpp \
-        ../../auxiliary/Constants.cpp \
+    ../../auxiliary/Constants.cpp \
+    ../../auxiliary/JsonSettings.cpp \
     ../../data/FraxMeasurement.cpp \
     ../../data/FraxTest.cpp \
     ../../data/Measurement.cpp \

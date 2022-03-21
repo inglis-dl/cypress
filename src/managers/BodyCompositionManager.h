@@ -1,16 +1,16 @@
-#ifndef BODYCOMPOSITIONANALYZERMANAGER_H
-#define BODYCOMPOSITIONANALYZERMANAGER_H
+#ifndef BODYCOMPOSITIONMANAGER_H
+#define BODYCOMPOSITIONMANAGER_H
 
 #include "SerialPortManager.h"
 #include "../data/BodyCompositionTest.h"
 #include <QQueue>
 
-class BodyCompositionAnalyzerManager : public SerialPortManager
+class BodyCompositionManager : public SerialPortManager
 {
     Q_OBJECT
 
 public:
-    explicit BodyCompositionAnalyzerManager(QObject *parent = Q_NULLPTR);
+    explicit BodyCompositionManager(QObject *parent = Q_NULLPTR);
 
     void loadSettings(const QSettings &) override;
     void saveSettings(QSettings*) const override;
@@ -26,7 +26,7 @@ public:
 
     // set inputs from json file or by default
     //
-    void setInputData(const QMap<QString,QVariant> &) override;
+    void setInputData(const QJsonObject &) override;
 
     // update inputs from the UI
     //
@@ -48,6 +48,12 @@ signals:
    void canConfirm();
 
    void error(const QString &);
+
+   // notify the UI to fill in the age, height and gender
+   //
+   void notifyGenderInput(const QString&);
+   void notifyAgeInput(const QString&);
+   void notifyHeightInput(const QString&);
 
 public slots:
 
@@ -93,7 +99,7 @@ private:
 
     bool hasEndCode(const QByteArray &) const;
 
-    void processResponse(const QByteArray &, QByteArray);
+    void processResponse();
 
     BodyCompositionTest m_test;
 
@@ -104,4 +110,4 @@ private:
     QQueue<QByteArray> m_queue;
 };
 
-#endif // BODYCOMPOSITIONANALYZERMANAGER_H
+#endif // BODYCOMPOSITIONMANAGER_H

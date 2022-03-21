@@ -23,7 +23,7 @@
  * separate thread with signal and slot connections between worker and manager.
  * The default vendor ID for BpTru can be overridden.
  *
- * \sa ManagerBase, BPMCommunication, BPMMessage, CRC8
+ * \sa ManagerBase, BPMCommunication, BPMMessage
  *
  */
 
@@ -61,7 +61,7 @@ public:
     //
     // TODO: consider adding cuff size and arm side as json inputs
     //
-    void setInputData(const QMap<QString,QVariant>&) override;
+    void setInputData(const QJsonObject&) override;
 
     //TODO: use cypress constant for all use of size and side
     void setCuffSize(const QString&);

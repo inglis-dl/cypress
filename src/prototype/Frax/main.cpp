@@ -31,24 +31,24 @@ int main(int argc, char *argv[])
     QString errMessage;
     switch(parser.parseCommandLine(app,&errMessage))
     {
-      case CommandLineParser::HelpRequested:
+      case CommandLineParser::parseHelpRequested:
         QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
                                  "<html><head/><body><pre>"
                                  + parser.helpText() + "</pre></body></html>");
         return 0;
-      case  CommandLineParser::VersionRequested:
+      case  CommandLineParser::parseVersionRequested:
         QMessageBox::information(0, QGuiApplication::applicationDisplayName(),
                                  QGuiApplication::applicationDisplayName() + ' '
                                  + QCoreApplication::applicationVersion());
         return 0;
-      case CommandLineParser::Ok:
+      case CommandLineParser::parseOk:
         break;
-      case CommandLineParser::Error:
-      case CommandLineParser::InputFileError:
-      case CommandLineParser::OutputPathError:
-      case CommandLineParser::MissingArg:
-      case CommandLineParser::MeasureTypeError:
-      case CommandLineParser::RunModeError:
+      case CommandLineParser::parseError:
+      case CommandLineParser::parseInputFileError:
+      case CommandLineParser::parseOutputPathError:
+      case CommandLineParser::parseMissingArg:
+      case CommandLineParser::parseMeasureTypeError:
+      case CommandLineParser::parseRunModeError:
         QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
                              "<html><head/><body><h2>" + errMessage + "</h2><pre>"
                              + parser.helpText() + "</pre></body></html>");

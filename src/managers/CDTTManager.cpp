@@ -89,6 +89,7 @@ QJsonObject CDTTManager::toJsonObject() const
         json.insert("test_output_file", QString(buffer.toBase64()));
         json.insert("test_output_file_mime_type", "xlsx");
     }
+    json.insert("test_input",m_inputData);
     return json;
 }
 
@@ -166,7 +167,7 @@ void CDTTManager::measure()
     m_process.start();
 }
 
-void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
+void CDTTManager::setInputData(const QJsonObject& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -174,9 +175,13 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
         if(!input.contains("barcode"))
           m_inputData["barcode"] = Constants::DefaultBarcode;
         if(!input.contains("language"))
-          m_inputData["language"] = "english";
+          m_inputData["language"] = "en";
     }
     bool ok = true;
+    QMap<QString,QMetaType::Type> typeMap {
+        {"barcode",QMetaType::Type::QString},
+        {"language",QMetaType::Type::QString}
+    };
     foreach(auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
@@ -186,6 +191,21 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
+      const QVariant value = m_inputData[key].toVariant();
+      bool valueOk = true;
+      QMetaType::Type type;
+      if(typeMap.contains(key))
+      {
+        type = typeMap[key];
+        valueOk = value.canConvert(type);
+      }
+      if(!valueOk)
+      {
+        ok = false;
+        if(m_verbose)
+          qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
+        break;
+      }
     }
     if(!ok)
     {
@@ -193,7 +213,7 @@ void CDTTManager::setInputData(const QMap<QString, QVariant>& input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData.clear();
+      m_inputData= QJsonObject();
     }
     else
       configureProcess();

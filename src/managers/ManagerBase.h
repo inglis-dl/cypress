@@ -2,10 +2,10 @@
 #define MANAGERBASE_H
 
 #include "../auxiliary/Constants.h"
+
+#include <QJsonObject>
 #include <QObject>
 #include <QWidget>
-#include <QMap>
-#include <QVariant>
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
 QT_FORWARD_DECLARE_CLASS(QStandardItemModel)
@@ -23,7 +23,7 @@ public:
     virtual void loadSettings(const QSettings &) = 0;
     virtual void saveSettings(QSettings*) const = 0;
 
-    // the ini file group heading for derived manager classes
+    // the settings file group heading for derived manager classes
     //
     void setGroup(const QString& group) { m_group = group.toLower(); }
     QString getGroup() const { return m_group; }
@@ -56,7 +56,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    virtual void setInputData(const QMap<QString,QVariant> &) = 0;
+    virtual void setInputData(const QJsonObject &) = 0;
 
     QVariant getInputDataValue(const QString &);
 
@@ -118,7 +118,7 @@ protected:
 
     // key value pairs sorted by key
     //
-    QMap<QString,QVariant> m_inputData;
+    QJsonObject m_inputData;
 
     // an ordered set of input keys
     //
@@ -130,9 +130,9 @@ protected:
 private:
 
     // the group name for a manager to write settings into
+    // TODO: use MeasureType enum converted to string for group names
     //
     QString m_group;
-
 };
 
 #endif // MANAGERBASE_H

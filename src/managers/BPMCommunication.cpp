@@ -1,6 +1,8 @@
 #include "BPMCommunication.h"
 
 #include "BPMMessage.h"
+#include "../auxiliary/Utilities.h"
+
 #include <QCoreApplication>
 #include <QHidDevice>
 #include <QThread>
@@ -196,19 +198,19 @@ bool BPMCommunication::startBpm()
 				m_cycleTime = msg.getData1();
                 if(0x04 == data0)
                 {
-                    qDebug() << "Ack received for start: " << msg.toString() << Qt::endl;
+                    qDebug() << "Ack received for start: " << msg.toString();
 					m_measuring = true;
 				}
                 else if(0x02 == data0)
                 {
-                    qDebug() << "Ack received for review: " << msg.toString() << Qt::endl;
+                    qDebug() << "Ack received for review: " << msg.toString();
 				}
 			}
 			// else if inflating ...
             else if(0x49 == msgId)
             {
 				m_cuffPressure = data0 + msg.getData1();
-                qDebug() << "Cuff pressure = " << m_cuffPressure << " (Inflating)" << Qt::endl;
+                qDebug() << "Cuff pressure = " << m_cuffPressure << " (Inflating)";
                 if(QDateTime::fromMSecsSinceEpoch(0) == m_readingStartTime)
                 {
 					startReading();
@@ -218,7 +220,7 @@ bool BPMCommunication::startBpm()
             else if(0x44 == msgId)
             {
 				m_cuffPressure = data0 + msg.getData1();
-                qDebug() << "Cuff pressure = " << m_cuffPressure << " (Deflating)" << Qt::endl;
+                qDebug() << "Cuff pressure = " << m_cuffPressure << " (Deflating)";
 			}
 			// else if bp average received ...
             else if(0x41 == msgId)
@@ -243,7 +245,7 @@ bool BPMCommunication::startBpm()
             {
                 // TODO: Possibly get specific and interpret the error as a string to tell user
 				emit measurementError("");
-                qDebug() << "Error occured from BPM" << Qt::endl;
+                qDebug() << "Error occured from BPM";
 				return true;
 			}
 			// else if review button clicked ...
@@ -251,11 +253,11 @@ bool BPMCommunication::startBpm()
 			// the physical button is not clicked
             else if(0x55 == msgId && 0x02 == data0)
             {
-                qDebug() << "Review initiated" << Qt::endl;
+                qDebug() << "Review initiated";
 			}
             else
             {
-                qDebug() << "WARNING: Received unexpected communication while preforming start: " << msg.toString() << Qt::endl;
+                qDebug() << "WARNING: Received unexpected communication while preforming start: " << msg.toString();
 			}
 			return false;
 		}, "Start");
@@ -320,12 +322,12 @@ bool BPMCommunication::cycleBpm()
             if(6 == nextMessage.getMsgId() && 3 == nextMessage.getData0())
             {
 				m_cycleTime = nextMessage.getData1();
-                qDebug() << "Ack received for cycle. Cycle Time set to " << m_cycleTime << Qt::endl;
+                qDebug() << "Ack received for cycle. Cycle Time set to " << m_cycleTime;
 				return true;
 			}
             else
             {
-                qDebug() << "WARNING: Expected a cycle ack. But got- " << nextMessage.toString() << Qt::endl;
+                qDebug() << "WARNING: Expected a cycle ack. But got- " << nextMessage.toString();
 				return false;
 			}
 		});
@@ -380,14 +382,14 @@ bool BPMCommunication::reviewBpm()
             BPMMessage nextMessage = m_queue->dequeue();
             if(nextMessage.getMsgId() == 6 && nextMessage.getData0() == 2)
             { // Non generic condition
-                qDebug() << "Ack received for review: " << nextMessage.toString() << Qt::endl;
+                qDebug() << "Ack received for review: " << nextMessage.toString();
 				m_cycleTime = nextMessage.getData1();
 				//m_readingNumber = nextMessage.GetData2();
 				//m_resultCode = nextMessage.GetData3();
 				return true;
 			}
 			else {
-                qDebug() << "WARNING: Expected a review ack but received " << nextMessage.toString() << Qt::endl;
+                qDebug() << "WARNING: Expected a review ack but received " << nextMessage.toString();
 				return false;
 			}
 		});
@@ -421,12 +423,12 @@ bool BPMCommunication::handshakeBpm()
                 m_serialNumber = m_bpm200->serialNumber();
                 m_manufacturer = m_bpm200->manufacturer();
                 emit deviceInfoReady();
-                qDebug() << "Ack received for handshake. Version = " << m_version << Qt::endl;
+                qDebug() << "Ack received for handshake. Version = " << m_version;
 				return true;
 			}
             else
             {
-                qDebug() << "WARNING: Expected a handshake ack but received " << msg.toString() << Qt::endl;
+                qDebug() << "WARNING: Expected a handshake ack but received " << msg.toString();
 				return false;
 			}
 		});
@@ -491,7 +493,7 @@ void BPMCommunication::readFromBpm()
 	int numBytes = bytes.size();
     if(0 < numBytes)
     {
-        qDebug() << ". NumBytes: " << numBytes << Qt::endl;
+        qDebug() << "NumBytes:" << numBytes;
         for(int i = 0; i + 7 < numBytes;)
         {
 			quint8 firstByte = bytes[i];
@@ -505,9 +507,10 @@ void BPMCommunication::readFromBpm()
 				quint8 data3 = bytes[i + 5];
 				quint8 crc = bytes[i + 6];
 				BPMMessage msg(id, data0, data1, data2, data3);
-				bool crcValid = msg.checkCRCValid(crc);
-                qDebug() << "Message: " << msg.toString() << Qt::endl;
-                qDebug() << "CRC Valid: " << crcValid << Qt::endl;
+
+                bool crcValid = Utilities::checksumIsValid(msg.getFullMsg(), 5, crc);
+                qDebug() << "Message:" << msg.toString();
+                qDebug() << "CRC Valid:" << crcValid;
                 if(crcValid)
                 {
                     m_queue->enqueue(msg);
@@ -516,7 +519,7 @@ void BPMCommunication::readFromBpm()
 			}
             else
             {
-                qDebug() << i << " : " << readData[i] << " " << (i + 7) << " : " << readData[i + 7] << Qt::endl;
+                qDebug() << i << " : " << readData[i] << " " << (i + 7) << " : " << readData[i + 7];
 				i++;
 			}
 		}
@@ -541,11 +544,11 @@ bool BPMCommunication::timedLoop(const int& timeout,
 		}
 
 		currTime = QTime::currentTime();
-        qDebug() << debugName << currTime << Qt::endl;
+        qDebug() << debugName << currTime;
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 	}
 
-    qDebug() << "Did not receive the expected data back from BPM within the time frame given" << Qt::endl;
+    qDebug() << "Did not receive the expected data back from BPM within the time frame given";
 	return false;
 }
 
@@ -607,12 +610,12 @@ bool BPMCommunication::ackCheck(const int& expectedData0, const QString& logName
     if(nextMessage.getMsgId() == acknowledgmentMsgId &&
        nextMessage.getData0() == expectedData0)
     {
-        qDebug() << "Ack received for " << logName << Qt::endl;
+        qDebug() << "Ack received for " << logName;
 		return true;
 	}
     else
     {
-        qDebug() << "WARNING: Expected a " << logName << " ack but received " << nextMessage.toString() << Qt::endl;
+        qDebug() << "WARNING: Expected a " << logName << " ack but received " << nextMessage.toString();
 		return false;
 	}
 }
@@ -644,5 +647,3 @@ void BPMCommunication::endReading(const int& sbp, const int& dbp, const int& pul
 		m_readingStartTime = QDateTime::fromMSecsSinceEpoch(0);
 	}
 }
-
-

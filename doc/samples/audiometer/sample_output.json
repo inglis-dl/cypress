@@ -1,0 +1,152 @@
+{
+    "device": {
+        "port_description": "USB-Serial Controller D",
+        "port_manufacturer": "Prolific Technology Inc.",
+        "port_name": "ttyUSB0",
+        "port_product_id": 8963,
+        "port_system_location": "/dev/ttyUSB0",
+        "port_vendor_id": 1659
+    },
+    "test_input": {
+        "barcode": "12345678",
+        "interviewer_id": "jdoe",
+        "language": "english"
+    },
+    "test_meta_data": {
+        "last_calibration_date": "2020-04-01",
+        "patient_id": "12345678",
+        "test_datetime": "2022-01-21T16:01:00.000",
+        "test_id": "00010611210224431"
+    },
+    "test_results": [
+        {
+            "level": {
+                "units": "dB",
+                "value": 10
+            },
+            "side": "left",
+            "test": "1 kHz Test"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 10
+            },
+            "side": "left",
+            "test": "500 Hz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 5
+            },
+            "side": "left",
+            "test": "1 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 5
+            },
+            "side": "left",
+            "test": "2 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 45
+            },
+            "side": "left",
+            "test": "3 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 60
+            },
+            "side": "left",
+            "test": "4 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 75
+            },
+            "side": "left",
+            "test": "6 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 70
+            },
+            "side": "left",
+            "test": "8 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 5
+            },
+            "side": "right",
+            "test": "1 kHz Test"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 15
+            },
+            "side": "right",
+            "test": "500 Hz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 10
+            },
+            "side": "right",
+            "test": "1 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 5
+            },
+            "side": "right",
+            "test": "2 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 10
+            },
+            "side": "right",
+            "test": "3 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 35
+            },
+            "side": "right",
+            "test": "4 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 65
+            },
+            "side": "right",
+            "test": "6 kHz"
+        },
+        {
+            "level": {
+                "units": "dB",
+                "value": 60
+            },
+            "side": "right",
+            "test": "8 kHz"
+        }
+    ],
+    "verification_barcode": "12345678"
+}
