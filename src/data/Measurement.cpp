@@ -132,7 +132,7 @@ QString Measurement::Value::toString() const
         }
         else
         {
-          qDebug() << "WARNING: value conversion to string may fail with type" << m_value.typeName();
+          qCritical() << "value conversion to string may fail with type" << m_value.typeName();
         }
         if(str.contains(","))
         {

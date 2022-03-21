@@ -73,7 +73,7 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
     //
     if(1<QCoreApplication::arguments().size())
     {
-      qDebug() << " not empty app args: " << QString::number(QCoreApplication::arguments().size());
+      qDebug() << "non-empty app args:" << QString::number(QCoreApplication::arguments().size());
       m_args["verbose"] = m_parser.isSet(verboseOption);
       qDebug() << (m_args["verbose"].toBool() ? "verbose option set" : "verbose option not set");
     }
@@ -111,6 +111,10 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
           *errMessage = "Invalid run mode: " + s;
         }
     }
+    else
+    {
+        qDebug() << "run mode option not set";
+    }
 
     bool hasValidInput = false;
     bool hasValidOutput = false;
@@ -124,14 +128,18 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
             hasValidInput = true;
             m_args["inputFileName"] = s;
             if(m_args["verbose"].toBool())
-              qDebug() << "Input file option set with " << s;
+              qDebug() << "input file option set with " << s;
         }
         else
         {
-            qDebug() << "ERROR: input file does not exist: " <<  s;
+            qCritical() << "ERROR: input file does not exist: " <<  s;
             result = parseInputFileError;
             *errMessage = "Invalid input file " + s;
         }
+    }
+    else
+    {
+        qDebug() << "input file option not set";
     }
 
     // if command line parsing determined an error do not continue
@@ -146,20 +154,24 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
             hasValidOutput = true;
             m_args["outputFileName"] = s;
             if(m_args["verbose"].toBool())
-              qDebug() << "Output file option set with " << s;
+              qDebug() << "output file option set with " << s;
         }
         else
         {
-            qDebug() << "ERROR: output file path does not exist: " <<  info.dir().canonicalPath();
+            qCritical() << "ERROR: output file path does not exist: " <<  info.dir().canonicalPath();
             result = parseOutputPathError;
             *errMessage = "Invalid output file path " + info.dir().canonicalPath();
         }
+    }
+    else
+    {
+        qDebug() << "output file option not set";
     }
 
     if(m_parser.isSet(typeOption) && parseOk == result)
     {
         QString s = m_parser.value(typeOption);
-        qDebug() << "Measure type option parsing " << s;
+        qDebug() << "measure type option parsing " << s;
         // determine which manager and dialog is needed based on measure type
         //
         Constants::MeasureType measureType = Constants::getMeasureType(s);
@@ -167,16 +179,19 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
         {
             m_args["measureType"] = QVariant::fromValue(measureType);
             if(m_args["verbose"].toBool())
-              qDebug() << "Measure type option set with " << s;
+              qDebug() << "measure type option set with " << s;
         }
         else
         {
-            qDebug() << "ERROR: input measure type does not exist: " <<  s;
+            qCritical() << "ERROR: input measure type does not exist: " <<  s;
             result = parseMeasureTypeError;
             *errMessage = "Invalid input measure type " + s;
         }
     }
-    else {qDebug() << "measure type option not set";}
+    else
+    {
+        qDebug() << "measure type option not set";
+    }
 
     if(parseOk == result)
     {
@@ -198,6 +213,6 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
         }
     }
 
-    qDebug() << "parser result: " << result;
+    qDebug() << "parser result:" << result;
     return result;
 }

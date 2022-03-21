@@ -43,11 +43,11 @@ void AudiometerManager::buildModel(QStandardItemModel* model) const
       for(int row = 0; row < m_row; row++)
       {
         HearingMeasurement m = m_test.getMeasurement(side,index);
-        if(m_verbose)
-            qDebug() << m.toString();
-
         if(!m.isValid())
            m.fromCode(side,index,"AA");
+
+        qDebug() << m.toString();
+
         QStandardItem* item = model->item(row,col);
         item->setData(m.toString(), Qt::DisplayRole);
         index++;
@@ -63,7 +63,7 @@ void AudiometerManager::loadSettings(const QSettings &settings)
       setProperty("deviceName", name);
       selectDevice(m_deviceName);
       if(m_verbose)
-          qDebug() << "using serial port " << m_deviceName << " from settings file";
+          qInfo() << "using serial port setting" << m_deviceName;
     }
 }
 
@@ -75,7 +75,7 @@ void AudiometerManager::saveSettings(QSettings *settings) const
       settings->setValue("client/port",m_deviceName);
       settings->endGroup();
       if(m_verbose)
-        qDebug() << "wrote serial port to settings file";
+        qInfo() << "wrote serial port to settings";
     }
 }
 
@@ -99,8 +99,7 @@ void AudiometerManager::setInputData(const QJsonObject &input)
       if(!m_inputData.contains(key))
       {
         ok = false;
-        if(m_verbose)
-          qDebug() << "ERROR: missing expected input " << key;
+        qCritical() << "ERROR: missing expected input " << key;
         break;
       }
       const QVariant value = m_inputData[key].toVariant();
@@ -114,16 +113,13 @@ void AudiometerManager::setInputData(const QJsonObject &input)
       if(!valueOk)
       {
         ok = false;
-        if(m_verbose)
-          qDebug() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
+        qCritical() << "ERROR: invalid input" << key << value.toString() << QMetaType::typeName(type);
         break;
       }
     }
     if(!ok)
     {
-      if(m_verbose)
-        qDebug() << "ERROR: invalid input data";
-
+      qCritical() << "ERROR: invalid input data";
       emit message(tr("ERROR: the input data is incorrect"));
       m_inputData = QJsonObject();
     }
@@ -137,6 +133,8 @@ void AudiometerManager::clearData()
 
 void AudiometerManager::finish()
 {
+    qDebug() << "slot finish";
+
     if(m_port.isOpen())
         m_port.close();
 
@@ -152,6 +150,8 @@ bool AudiometerManager::hasEndCode(const QByteArray &arr)
 
 void AudiometerManager::readDevice()
 {
+    qDebug() << "slot readDevice";
+
    if(Constants::RunMode::modeSimulate == m_mode)
     {
         QString sim;
@@ -179,7 +179,7 @@ void AudiometerManager::readDevice()
       m_buffer += data;
     }
     if(m_verbose)
-      qDebug() << "read device received buffer " << QString(m_buffer);
+      qInfo() << "read device received buffer " << QString(m_buffer);
 
     if(hasEndCode(m_buffer))
     {
@@ -187,6 +187,7 @@ void AudiometerManager::readDevice()
         if(m_test.isValid())
         {
             // emit the can write signal
+            qDebug() << "signal canWrite";
             emit message(tr("Ready to save results..."));
             emit canWrite();
         }
@@ -196,6 +197,7 @@ void AudiometerManager::readDevice()
 
 void AudiometerManager::measure()
 {
+    qDebug() << "slot measure";
     emit message(tr("Measuring hearing levels..."));
     clearData();
     const char cmd[] = {0x05,'4',0x0d};
@@ -208,11 +210,10 @@ void AudiometerManager::writeDevice()
     // prepare to receive data
     //
     m_buffer.clear();
-
+    qDebug() << "slot writeDevice";
     if(Constants::RunMode::modeSimulate == m_mode)
     {
-        if(m_verbose)
-          qDebug() << "in simulate mode writeDevice with request " << QString(m_request);
+        qDebug() << "simulate writeDevice with request " << QString(m_request);
         readDevice();
         return;
     }

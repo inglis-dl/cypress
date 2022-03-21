@@ -53,7 +53,7 @@ public:
 * Interface into Qt's logging system
 * @author: Yale Dedis 2011
 * Adapted from DeDiS project.
-* Adaped from KStars.
+* Adapted from KStars.
 */
 class Logging
 {
