@@ -10,15 +10,15 @@
 
 /*!
  * \class BloodPressureManager
- * \brief A Blood Presssure HID Device manager class
+ * \brief HID Device manager class for BpTru BPM200
  *
  * Concrete child class implementation of a USB human interface device (HID)
- * manager.  This class facilitates connection to a blood pressure monitor
- * such as the BpTru BPM200.  Devices are identified and selected by product
- * and vendor ID pairs (ie., QUsb::Id).  Signals and slots are implemented
- * for UI selection from a list of discovered devices and for running a
- * blood pressure test.
+ * manager. This class facilitates connection to a BpTru BPM200 blood pressure
+ * monitor for read/write instructions and test data retrieval.
  *
+ * HID devices are identified and selected by product and vendor ID pairs
+ * (ie., QUsb::Id).  Signals and slots are implemented for UI selection from a
+ * list of discovered devices and for running a blood pressure test.
  * Communication with the device is facilitated by a worker class on a
  * separate thread with signal and slot connections between worker and manager.
  * The default vendor ID for BpTru can be overridden.

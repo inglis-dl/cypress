@@ -5,6 +5,19 @@
 #include "../data/FraxTest.h"
 #include <QProcess>
 
+/*!
+ * \class FraxManager
+ * \brief The FraxManager class
+ *
+ * Concrete child class implementation of a device manager.
+ * This class facilitates launch of the Frax (fracture risk assessment)
+ * module (blackbox.exe) and reading the test output
+ * .txt files it produces.  QProcess is used to facilitate operations.
+ *
+ * \sa ManagerBase, CDTTManager, ChoiceReactionManager
+ *
+ */
+
 class FraxManager : public ManagerBase
 {
 	Q_OBJECT

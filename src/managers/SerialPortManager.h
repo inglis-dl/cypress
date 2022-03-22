@@ -7,6 +7,18 @@
 #include "ManagerBase.h"
 #include "../data/Measurement.h"
 
+/*!
+ * \class SerialPortManager
+ * \brief The SerialPortManager class
+ *
+ * Abstract parent class for all devices that communicate over
+ * serial RS232.  This class manages device selection, connectivity
+ * and communication with serial port devices.
+ *
+ * \sa ManagerBase, AudiometerManager, BodyCompositionManager
+ *
+*/
+
 class SerialPortManager : public ManagerBase
 {
     Q_OBJECT
