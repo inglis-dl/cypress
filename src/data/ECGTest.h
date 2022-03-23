@@ -4,6 +4,8 @@
 #include "TestBase.h"
 #include "ECGMeasurement.h"
 
+QT_FORWARD_DECLARE_CLASS(QDomNode)
+
 class ECGTest : public TestBase<ECGMeasurement>
 {
 public:
@@ -28,6 +30,10 @@ private:
 
     QList<QString> m_outputKeyList;
 
+    void readObservationDatetime(const QDomNode&);
+    void readClinicalInfo(const QDomNode&);
+    void readPatientInfo(const QDomNode&);
+    void readFilterSetting(const QDomNode&);
 };
 
 Q_DECLARE_METATYPE(ECGTest);

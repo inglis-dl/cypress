@@ -35,7 +35,7 @@ void MainWindow::initialize()
 
 void MainWindow::initializeModel()
 {
-    // allocate 1 columns x 4 rows of frax measurement items
+    // allocate 1 columns x 4 rows of ECG measurement items
     //
     for(int row=0; row<m_manager.getNumberOfModelRows(); row++)
     {
@@ -123,22 +123,33 @@ void MainWindow::initializeConnections()
             QMessageBox::warning(
             this, QApplication::applicationName(),
             tr("Select the exe by clicking Open and browsing to the "
-            "required executable (blackbox.exe) and selecting the file.  If the executable "
+            "required executable (Cardio.exe) and selecting the file.  If the executable "
             "is valid click the Run button to start the test otherwise check the installation."));
             warn = false;
         }
     });
 
     connect(ui->openButton, &QPushButton::clicked,
-        this, [this]() {
-            QString fileName =
-                QFileDialog::getOpenFileName(
-                    this, tr("Open File"),
-                    QCoreApplication::applicationDirPath(),
-                    tr("Applications (*.exe, *)"));
+            &m_manager, &ECGManager::select);
 
-            m_manager.selectRunnable(fileName);
-        });
+    connect(&m_manager,&ECGManager::canSelectWorking,
+            this,[this](){
+        foreach(auto button, this->findChildren<QPushButton *>())
+            button->setEnabled(false);
+        ui->closeButton->setEnabled(true);
+        ui->openButton->setEnabled(true);
+        static bool warn = true;
+        if(warn)
+        {
+            QMessageBox::warning(
+            this, QApplication::applicationName(),
+            tr("Select the path to the Cardiosoft database directory by clicking Open and browsing to "
+            "and selecting the folder (C:/CARDIO).  If the folder "
+            "is valid click the Run button to start the test otherwise check the installation."));
+            warn = false;
+        }
+    });
+
 
     // blackbox.exe was found and inputs valid
     //
@@ -202,7 +213,7 @@ void MainWindow::run()
     m_manager.setVerbose(m_verbose);
     m_manager.setRunMode(m_mode);
 
-     // read the path to blackbox.exe
+    // read the fullspec path to Cardio.exe and the path to C:/CARDIO
     //
     QDir dir = QCoreApplication::applicationDirPath();
     QSettings settings(dir.filePath(m_manager.getGroup() + ".json"), JsonSettings::JsonFormat);

@@ -10,16 +10,21 @@
  * \brief The ECGManager class
  *
  * Concrete child class implementation of a device manager.
- * This class facilitates launch of the ECG (fracture risk assessment)
- * module (blackbox.exe) and reading the test output
- * .txt files it produces.  QProcess is used to facilitate operations.
+ * This class facilitates launch of Cardiosoft
+ * and reading the test output .xml files it produces.
+ * QProcess is used to facilitate operations.
  *
- * \sa ManagerBase, CDTTManager, ChoiceReactionManager
+ * \sa ManagerBase, CDTTManager, TonometerManager
  *
  */
 
 class ECGManager : public ManagerBase
 {
+    enum FileType {
+        ECGApplication,
+        ECGWorkingDir
+    };
+
 	Q_OBJECT
 
 public:
@@ -35,7 +40,7 @@ public:
     // is the passed string an executable file
     // with the correct path elements ?
     //
-    bool isDefined(const QString &) const;
+    bool isDefined(const QString &, const FileType &type = ECGApplication) const;
 
     // Set the input data.
     // The input data is read from the input
@@ -67,6 +72,10 @@ public slots:
     //
     void selectRunnable(const QString &);
 
+    void selectWorking(const QString &);
+
+    void select();
+
     void readOutput();
 
 signals:
@@ -81,16 +90,39 @@ signals:
     //
     void canSelectRunnable();
 
-private:
-    QString m_runnableName;// full pathspec to blackbox.exe
-    QString m_runnablePath;// path to blackbox.exe
+    void workingSelected();
 
-    QString m_outputFile;    // full pathspec to working output.txt
-    QString m_inputFile;     // full pathspec to working input.txt
-    QString m_temporaryFile; // store a copy of the default input.txt
+    void canSelectWorking();
+
+private:
+
+    // full pathspec to Cardiosoft Cardio.exe
+    //
+    QString m_runnableName;
+
+    // path to backup db files
+    // C:/CARDIO
+    //
+    QString m_workingPath;
+
+    // C:/CARDIO/Export
+    //
+    QString m_exportPath;
+
+    // full pathspec to exported xml file
+    //
+    QString m_outputFile;
+
     QProcess m_process;
 
     ECGTest m_test;
+
+    // path for Cardiosoft database backup to and restore from
+    //
+    const QString INIT_PATH = "initecg";
+    const QString DATABASE_PATH = "DATABASE";
+
+    bool deleteDeviceData();
 
     void clearData() override;
 

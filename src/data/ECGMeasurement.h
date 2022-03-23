@@ -13,17 +13,24 @@
 * \sa Measurement
 */
 
+QT_FORWARD_DECLARE_CLASS(QDomNode)
+
 class ECGMeasurement : public Measurement
 {
 public:
     ECGMeasurement() = default;
     ~ECGMeasurement() = default;
 
-    void fromString(const QString &);
+    void fromDomNode(const QDomNode&);
 
     bool isValid() const override;
 
     QString toString() const override;
+
+private:
+
+    void readInterpretation(const QDomNode&);
+    void readRestingECGMeasurements(const QDomNode&);
 };
 
 Q_DECLARE_METATYPE(ECGMeasurement);

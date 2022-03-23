@@ -2,158 +2,224 @@
 
 #include <QDateTime>
 #include <QDebug>
+#include <QDomDocument>
 #include <QFile>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QRandomGenerator>
+#include <QDomDocument>
 #include "../auxiliary/Utilities.h"
-
-/**
- * sample contents of output.txt from blackbox.exe
- *
- * t,19,50.2,0,21.60494,1,0,1,0,0,0, 0, -1.1, 6.37,1.17,4.47,0.34
- *
- * 0 1  2  3 4        5 6 7 8 9 10 11 12 13   14   15   16
- * 0 : t or z (score input for field at position 12)
- * 1 : country code (19 = Canada)
- * 2 : Age in years (positive real number, can have decimals) Age should be 40-90.
- * 3 : Sex (0 : men, 1 : women)
- * 4 : BMI kg/m2 (positive real number, can have decimals)
- * 5 : Previous fracture (0 : no, 1 : yes)
- * 6 : Parental history of hip fracture (0 : no, 1 : yes)
- * 7 : Current smoker (0 : no, 1 : yes)
- * 8 : Gluccocorticoid (0 : no, 1 : yes)
- * 9 : Rheumatoid Arthritis (0 : no, 1 : yes)
- * 10: Secondary osteoporosis (0 : no, 1 : yes)
- * 11: Alcohol more than two drinks a day (0 : no, 1 : yes)
- * 12: Femoral neck BMD (real number, can have decimals). There are two inputs possible, T-score or Z-score
- * 13: 10 year probability (x 100) of osteoporotic fracture, calculated without knowing BMD (positive real number with decimals)
- * 14: 10 year probability (x 100) of hip fracture, calculated without knowing BMD (positive real number with decimals)
- * 15: 10 year probability (x 100) of osteoporotic fracture, calculated knowing BMD (real number with decimals)
- * 16: 10 year probability (x 100) of hip fracture, calculated knowing BMD (real number with decimals)
- *
- */
 
 ECGTest::ECGTest()
 {
-    m_outputKeyList << "type";
-    m_outputKeyList << "country_code";
-    m_outputKeyList << "age";
-    m_outputKeyList << "sex";
-    m_outputKeyList << "body_mass_index";
-    m_outputKeyList << "previous_fracture";
-    m_outputKeyList << "parent_hip_fracture";
-    m_outputKeyList << "current_smoker";
-    m_outputKeyList << "gluccocorticoid";
-    m_outputKeyList << "rheumatoid_arthritis";
-    m_outputKeyList << "secondary_osteoporosis";
-    m_outputKeyList << "alcohol";
-    m_outputKeyList << "femoral_neck_tscore";
+    m_outputKeyList << "observation_datetime";
+    m_outputKeyList << "device_description";
+    m_outputKeyList << "software_version";
+    m_outputKeyList << "gender";
+    m_outputKeyList << "race";
+    m_outputKeyList << "pacemaker";
+    m_outputKeyList << "cubic_spline";
+    m_outputKeyList << "filter_50_Hz";
+    m_outputKeyList << "filter_60_Hz";
+    m_outputKeyList << "low_pass";
 }
 
 void ECGTest::fromFile(const QString &fileName)
 {
     QFile ifile(fileName);
-    if(ifile.open(QIODevice::ReadOnly))
+    if(!ifile.open(QIODevice::ReadOnly))
     {
-        qDebug() << "OK, reading input file " << fileName;
+       qDebug() << "ERROR: failed to read xml file for parsing" << fileName;
+       return;
+    }
+    QDomDocument doc("ecgDocument");
+    if(!doc.setContent(&ifile))
+    {
+        ifile.close();
+        qDebug() << "ERROR: failed to set DOM content from xml file"<< fileName;
+        return;
+    }
+    ifile.close();
 
-        QTextStream instream(&ifile);
-        QString line = instream.readLine();
-        if(false == instream.atEnd())
+    QDomElement docElem = doc.documentElement();
+    QDomNode n = docElem.firstChild();
+    reset();
+    ECGMeasurement m;
+    while(!n.isNull())
+    {
+        QDomElement e = n.toElement(); // try to convert the node to an element.
+        if(!e.isNull())
         {
-          qDebug() << "ECG: More lines of content than expected";
-        }
-        ifile.close();        
-        reset();
+            qDebug() << e.tagName(); // the node really is an element.
 
-        QStringList list = line.split(",");
-        if(17 == list.size())
-        {
-           ECGMeasurement m;
-           m.setAttribute("type","osteoporotic_fracture");
-           m.setAttribute("probability", list.at(13).toDouble(), "%");
-           addMeasurement(m);
-           m.setAttribute("type","hip_fracture");
-           m.setAttribute("probability", list.at(14).toDouble(), "%");
-           addMeasurement(m);
-           m.setAttribute("type","osteoporotic_fracture_bmd");
-           m.setAttribute("probability", list.at(15).toDouble(), "%");
-           addMeasurement(m);
-           m.setAttribute("type","hip_fracture_bmd");
-           m.setAttribute("probability", list.at(16).toDouble(), "%");
-           addMeasurement(m);
-
-           addMetaData("type",list.at(0).toLower());
-           addMetaData("country_code",list.at(1).toUInt());
-           addMetaData("age",list.at(2).toDouble(),"yr");
-           addMetaData("sex",list.at(3).toUInt());
-           addMetaData("body_mass_index",list.at(4).toDouble(),"kg/m2");
-           addMetaData("previous_fracture",list.at(5).toUInt());
-           addMetaData("parent_hip_fracture",list.at(6).toUInt());
-           addMetaData("current_smoker",list.at(7).toUInt());
-           addMetaData("gluccocorticoid",list.at(8).toUInt());
-           addMetaData("rheumatoid_arthritis",list.at(9).toUInt());
-           addMetaData("secondary_osteoporosis",list.at(10).toUInt());
-           addMetaData("alcohol",list.at(11).toUInt());
-           addMetaData("femoral_neck_tscore",list.at(12).toDouble());
+            if("ClinicalInfo" == e.tagName())
+                readClinicalInfo(n);
+            else if("FilterSetting" == e.tagName())
+                readFilterSetting(n);
+            else if("ObservationDateTime" == e.tagName())
+                readObservationDatetime(n);
+            else if("PatientInfo" == e.tagName())
+                readPatientInfo(n);
+            else if("Interpretation" == e.tagName())
+                m.fromDomNode(n);
+            else if("RestingECGMeasurements" == e.tagName())
+                m.fromDomNode(n);
         }
+        n = n.nextSibling();
+    }
+    if(m.isValid())
+        addMeasurement(m);
+}
+
+void ECGTest::readObservationDatetime(const QDomNode& node)
+{
+    QDomNodeList list = node.childNodes();
+    if(list.isEmpty())
+    {
+        return;
+    }
+    QMap<QString,QString> map = {
+        {"Hour",""},
+        {"Minute",""},
+        {"Second",""},
+        {"Day",""},
+        {"Month",""},
+        {"Year",""}};
+    for(int i=0; i<list.count(); i++)
+    {
+       QDomElement elem = list.item(i).toElement();
+       QString tag = elem.tagName();
+       if(map.contains(tag))
+       {
+          QString s = elem.text();
+          if(!s.isEmpty())
+          {
+              map[tag] = s.simplified();
+          }
+       }
+    }
+
+    QString s = QString("%1-%2-%3 %4:%5:%6").arg(
+                    map["Year"],
+                    map["Month"],
+                    map["Day"],
+                    map["Hour"],
+                    map["Minute"],
+                    map["Second"]
+                    );
+    QDateTime d = QDateTime::fromString(s, "yyyy-M-d hh:mm:ss");
+    addMetaData("observation_datetime",d);
+}
+
+void ECGTest::readClinicalInfo(const QDomNode& node)
+{
+    QDomElement child = node.firstChildElement("DeviceInfo");
+    if(child.isNull())
+    {
+        return;
+    }
+    QDomNodeList list = child.childNodes();
+    if(list.isEmpty())
+    {
+        return;
+    }
+    QMap<QString,QString> map = {
+        {"Desc","device_description"},
+        {"SoftwareVer","software_version"},
+        {"AnalysisVer","analysis_version"}};
+    for(int i=0; i<list.count(); i++)
+    {
+       QDomElement elem = list.item(i).toElement();
+       QString tag = elem.tagName();
+       if(map.contains(tag))
+       {
+          QString s = elem.text().toLower();
+          if(!s.isEmpty())
+          {
+            if("no" == s || "yes" == s)
+              addMetaData(map[tag],"no" ==s ? false : true);
+            else
+            {
+                if(elem.hasAttribute("units"))
+                {
+                   addMetaData(map[tag],s.toInt(),elem.attribute("units"));
+                }
+                else
+                   addMetaData(map[tag],s);
+            }
+          }
+       }
+    }
+
+}
+
+void ECGTest::readPatientInfo(const QDomNode& node)
+{
+    QDomNodeList list = node.childNodes();
+    if(list.isEmpty())
+    {
+        return;
+    }
+    QStringList keys = {
+      "Gender","Race","PaceMaker" };
+    for(int i=0; i<list.count(); i++)
+    {
+       QDomElement elem = list.item(i).toElement();
+       QString tag = elem.tagName();
+       if(keys.contains(tag))
+       {
+          QString s = elem.text().toLower();
+          if(!s.isEmpty())
+          {
+            if("no" == s || "yes" == s)
+              addMetaData(tag.toLower(),"no" ==s ? false : true);
+            else
+              addMetaData(tag.toLower(),s);
+          }
+       }
+    }
+}
+
+void ECGTest::readFilterSetting(const QDomNode& node)
+{
+    QDomNodeList list = node.childNodes();
+    if(list.isEmpty())
+    {
+        return;
+    }
+    QMap<QString,QString> map = {
+        {"CubicSpline","cubic_spline"},
+        {"Filter50Hz","filter_50_Hz"},
+        {"Filter60Hz","filter_60_Hz"},
+        {"LowPass","low_pass"}};
+    for(int i=0; i<list.count(); i++)
+    {
+       QDomElement elem = list.item(i).toElement();
+       QString tag = elem.tagName();
+       if(map.contains(tag))
+       {
+          QString s = elem.text().toLower();
+          if(!s.isEmpty())
+          {
+            if("no" == s || "yes" == s)
+              addMetaData(map[tag],"no" ==s ? false : true);
+            else
+            {
+                if(elem.hasAttribute("units"))
+                {
+                   addMetaData(map[tag],s.toInt(),elem.attribute("units"));
+                }
+                else
+                   addMetaData(map[tag],s);
+            }
+          }
+       }
     }
 }
 
 void ECGTest::simulate(const QJsonObject& input)
 {
-    foreach(auto key, input.keys())
-    {
-      if("barcode" == key || "language" == key) continue;
-
-      QVariant value = input[key].toVariant();
-      if("sex" == key)
-      {
-        value = "male" == value.toString() ? 0 : 1;
-      }
-      else if("femoral_neck_bmd" == key)
-      {
-        value = Utilities::tscore(value.toDouble());
-        key = "femoral_neck_tscore";
-      }
-      else
-      {
-        if(QVariant::Bool == value.type())
-        {
-          value = value.toUInt();
-        }
-      }
-      if("age" == key)
-        addMetaData(key,value,"yr");
-      else if("body_mass_index" == key)
-        addMetaData(key,value,"kg/m2");
-      else
-        addMetaData(key,value);
-    }
-
-    ECGMeasurement m;
-    double mu = QRandomGenerator::global()->generateDouble();
-
-    m.setAttribute("type","osteoporotic_fracture");
-    double p = Utilities::interp(1.0f,30.0f,mu);
-    m.setAttribute("probability", p, "%");
-    addMeasurement(m);
-
-    m.setAttribute("type","hip_fracture");
-    p = Utilities::interp(0.0f,13.0f,mu);
-    m.setAttribute("probability", p, "%");
-    addMeasurement(m);
-
-    m.setAttribute("type","osteoporotic_fracture_bmd");
-    p = Utilities::interp(2.0f,22.0f,mu);
-    m.setAttribute("probability", p, "%");
-    addMeasurement(m);
-
-    m.setAttribute("type","hip_fracture_bmd");
-    p = Utilities::interp(0.0f,8.0f,mu);
-    m.setAttribute("probability", p, "%");
-    addMeasurement(m);
+    Q_UNUSED(input)
 }
 
 // String representation for debug and GUI display purposes
@@ -185,7 +251,7 @@ bool ECGTest::isValid() const
          break;
        }
     }
-    bool okTest = 4 == getNumberOfMeasurements();
+    bool okTest = 0 < getNumberOfMeasurements();
     if(okTest)
     {
       foreach(auto m, m_measurementList)
