@@ -69,7 +69,7 @@ void TonometerManager::start()
 void TonometerManager::buildModel(QStandardItemModel *model) const
 {
     QVector<QString> v_side({"left","right"});
-    foreach(auto side, v_side)
+    foreach(const auto side, v_side)
     {
       int col = "left" == side ? 0 : 1;
       QStringList list = m_test.getMeasurementStrings(side);
@@ -244,7 +244,7 @@ void TonometerManager::setInputData(const QJsonObject &input)
         {"sex",QMetaType::Type::QString},
         {"date_of_birth",QMetaType::Type::QDate }
     };
-    foreach(auto key, m_inputKeyList)
+    foreach(const auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
       {

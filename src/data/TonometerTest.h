@@ -30,7 +30,7 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
-    static QMap<QString,QString> metaLUT;
+    static const QMap<QString,QString> metaLUT;
     static QMap<QString,QString> initMetaLUT();
 
 private:

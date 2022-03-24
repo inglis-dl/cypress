@@ -27,7 +27,7 @@ void CDTTMeasurement::simulate(const quint16& trial)
     obj["trial"] = QJsonValue(trial);
     obj["stimulus"] = stimulus;
     obj["response"] = response;
-    foreach(auto key, obj.keys())
+    foreach(const auto key, obj.keys())
     {
       setAttribute(key,obj[key].toVariant());
     }

@@ -17,7 +17,7 @@ HearingTest::HearingTest()
 bool HearingTest::isValid() const
 {
     bool okMeta = true;
-    foreach(auto key, m_outputKeyList)
+    foreach(const auto key, m_outputKeyList)
     {
       if(!hasMetaData(key))
       {
@@ -28,7 +28,7 @@ bool HearingTest::isValid() const
     bool okTest = 16 == getNumberOfMeasurements();
     if(okTest)
     {
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         if(!m.isValid())
         {
@@ -45,7 +45,7 @@ bool HearingTest::isPartial() const
     bool okTest = 0 < getNumberOfMeasurements();
     if(okTest)
     {
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         if(!m.isValid())
         {
@@ -67,7 +67,7 @@ QString HearingTest::toString() const
         list << QString("test id: ") % getMetaData("test_id").toString();
         list << QString("test datetime: ") % getMetaData("test_datetime").toDateTime().toString("yyyy-MM-dd hh:mm:ss");
         list << QString("last calibration date: ") % getMetaData("last_calibration_date").toDate().toString("yyyy-MM-dd");
-        foreach(auto m, m_measurementList)
+        foreach(const auto m, m_measurementList)
         {
           list << m.toString();
         }
@@ -100,9 +100,9 @@ void HearingTest::fromArray(const QByteArray &arr)
         addMetaData("last_calibration_date",readCalibrationDate());
 
         QStringList sides = {"left","right"};
-        foreach(auto side, sides)
+        foreach(const auto side, sides)
         {
-          foreach(auto m, readHearingThresholdLevels(side))
+          foreach(const auto m, readHearingThresholdLevels(side))
           {
             addMeasurement(m);
           }
@@ -148,7 +148,7 @@ QList<HearingMeasurement> HearingTest::readHearingThresholdLevels(const QString&
 
   QStringList list = str.split(QRegExp("\\s+")).replaceInStrings(QRegExp("^\\s+|\\s+$"),"");
   int index = 0;
-  foreach(auto code, list)
+  foreach(const auto code, list)
   {
     HearingMeasurement m(side, index++, code);
     htl.append(m);
@@ -160,7 +160,7 @@ QList<HearingMeasurement> HearingTest::readHearingThresholdLevels(const QString&
 HearingMeasurement HearingTest::getMeasurement(const QString& side, const int& index) const
 {
     HearingMeasurement measure;
-    foreach(auto m, m_measurementList)
+    foreach(const auto m, m_measurementList)
     {
         if(side == m.getAttributeValue("side").toString() &&
            HearingMeasurement::frequencyLookup[index] == m.getAttributeValue("test").toString())
@@ -175,7 +175,7 @@ HearingMeasurement HearingTest::getMeasurement(const QString& side, const int& i
 QJsonObject HearingTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    foreach(auto m, m_measurementList)
+    foreach(const auto m, m_measurementList)
     {
       jsonArr.append(m.toJsonObject());
     }

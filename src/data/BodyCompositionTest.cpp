@@ -21,7 +21,7 @@ BodyCompositionTest::BodyCompositionTest()
 bool BodyCompositionTest::isValid() const
 {
     bool okMeta = true;
-    foreach(auto key, m_outputKeyList)
+    foreach(const auto key, m_outputKeyList)
     {
       if(!hasMetaData(key))
       {
@@ -32,7 +32,7 @@ bool BodyCompositionTest::isValid() const
     bool okTest = 1 == getNumberOfMeasurements();
     if(okTest)
     {
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         if(!m.isValid())
         {
@@ -376,7 +376,7 @@ QVariant BodyCompositionTest::readBMR() const
 QJsonObject BodyCompositionTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    foreach(auto m, m_measurementList)
+    foreach(const auto m, m_measurementList)
     {
       jsonArr.append(m.toJsonObject());
     }

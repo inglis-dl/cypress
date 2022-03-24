@@ -1,6 +1,6 @@
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport bluetooth sql usb
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport bluetooth sql usb xml
 
 CONFIG += c++11
 
@@ -9,111 +9,119 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    auxiliary/Constants.cpp \
     auxiliary/CommandLineParser.cpp \
+    auxiliary/Constants.cpp \
     auxiliary/JsonSettings.cpp \
     auxiliary/Utilities.cpp \
-    data/Measurement.cpp \
-    data/HearingTest.cpp \
-    data/BloodPressureTest.cpp \
-    data/TonometerTest.cpp \
-    data/BodyCompositionTest.cpp \
-    data/CDTTTest.cpp \
-    data/ExcelQueryHelper.cpp \
     data/AccessQueryHelper.cpp \
-    data/FraxTest.cpp \
-    data/WeighScaleTest.cpp \
-    data/ChoiceReactionTest.cpp \
-    data/TemperatureTest.cpp \
-    data/HearingMeasurement.cpp \
     data/BloodPressureMeasurement.cpp \
+    data/BloodPressureTest.cpp \
     data/BodyCompositionMeasurement.cpp \
+    data/BodyCompositionTest.cpp \
     data/CDTTMeasurement.cpp \
-    data/FraxMeasurement.cpp \
-    data/TonometerMeasurement.cpp \
-    data/WeightMeasurement.cpp \
+    data/CDTTTest.cpp \
     data/ChoiceReactionMeasurement.cpp \
+    data/ChoiceReactionTest.cpp \
+    data/ECGMeasurement.cpp \
+    data/ECGTest.cpp \
+    data/ExcelQueryHelper.cpp \
+    data/FraxMeasurement.cpp \
+    data/FraxTest.cpp \
+    data/HearingMeasurement.cpp \
+    data/HearingTest.cpp \
+    data/Measurement.cpp \
     data/TemperatureMeasurement.cpp \
-    managers/ManagerBase.cpp \
+    data/TemperatureTest.cpp \
+    data/TonometerMeasurement.cpp \
+    data/TonometerTest.cpp \
+    data/WeightMeasurement.cpp \
+    data/WeighScaleTest.cpp \
     managers/AudiometerManager.cpp \
+    managers/CDTTManager.cpp \
     managers/ChoiceReactionManager.cpp \
-    managers/SerialPortManager.cpp \
+    managers/BodyCompositionManager.cpp \
     managers/BluetoothLEManager.cpp \
     managers/BloodPressureManager.cpp \
-    managers/BPMMessage.cpp \
     managers/BPMCommunication.cpp \
+    managers/BPMMessage.cpp \
+    managers/ECGManager.cpp \
     managers/FraxManager.cpp \
+    managers/ManagerBase.cpp \
+    managers/SerialPortManager.cpp \
     managers/TonometerManager.cpp \
-    managers/CDTTManager.cpp \
     managers/WeighScaleManager.cpp \
-    managers/BodyCompositionManager.cpp \
     widgets/BarcodeWidget.cpp \
     dialogs/AudiometerDialog.cpp \
-    dialogs/BodyCompositionDialog.cpp \
     dialogs/BloodPressureDialog.cpp \
+    dialogs/BodyCompositionDialog.cpp \
     dialogs/CDTTDialog.cpp \
     dialogs/ChoiceReactionDialog.cpp \
+    dialogs/DialogBase.cpp \
+    dialogs/DialogFactory.cpp \
     dialogs/FraxDialog.cpp \
+    dialogs/ECGDialog.cpp \
     dialogs/ThermometerDialog.cpp \
     dialogs/TonometerDialog.cpp \
     dialogs/WeighScaleDialog.cpp \
-    dialogs/DialogBase.cpp \
-    dialogs/DialogFactory.cpp \
     CypressApplication.cpp \
     main.cpp 
 
 HEADERS += \
+    auxiliary/CommandLineParser.h \
     auxiliary/Constants.h \
     auxiliary/JsonSettings.h \
     auxiliary/Utilities.h \
-    auxiliary/CommandLineParser.h \
+    data/AccessQueryHelper.h \
+    data/BloodPressureMeasurement.h \
+    data/BloodPressureTest.h \
+    data/BodyCompositionMeasurement.h \
+    data/BodyCompositionTest.h \
+    data/CDTTMeasurement.h \
+    data/CDTTTest.h \
+    data/ChoiceReactionMeasurement.h \
+    data/ChoiceReactionTest.h \
+    data/ECGMeasurement.h \
+    data/ECGTest.h \
+    data/ExcelQueryHelper.h \
+    data/FraxMeasurement.h \
+    data/FraxTest.h \
+    data/HearingMeasurement.h \
+    data/HearingTest.h \
     data/Measurement.h \
     data/TestBase.h \
-    data/HearingTest.h \
-    data/BloodPressureTest.cpp \
-    data/TonometerTest.h \
-    data/BodyCompositionTest.h \
-    data/CDTTTest.h \
-    data/ExcelQueryHelper.h \
-    data/AccessQueryHelper.h \
-    data/FraxTest.h \
-    data/WeighScaleTest.h \
     data/TonometerMeasurement.h \
-    data/ChoiceReactionTest.h \
-    data/TemperatureTest.h \
-    data/HearingMeasurement.h \
-    data/BloodPressureMeasurement.h \
-    data/BodyCompositionMeasurement.h \
-    data/CDTTMeasurement.h \
-    data/FraxMeasurement.h \
-    data/WeightMeasurement.h \
-    data/ChoiceReactionMeasurement.h \
+    data/TonometerTest.h \
     data/TemperatureMeasurement.h \
-    managers/ManagerBase.h \
+    data/TemperatureTest.h \
+    data/WeightMeasurement.h \
+    data/WeighScaleTest.h \
     managers/AudiometerManager.h \
-    managers/ChoiceReactionManager.h \
-    managers/SerialPortManager.h \
-    managers/BluetoothLEManager.h \
     managers/BloodPressureManager.h \
-    managers/BPMMessage.h \
-    managers/BPMCommunication.h \
-    managers/FraxManager.h \
+    managers/BluetoothLEManager.h \
     managers/BodyCompositionManager.h \
-    managers/TonometerManager.h \
+    managers/BPMCommunication.h \
+    managers/BPMMessage.h \
     managers/CDTTManager.h \
+    managers/ChoiceReactionManager.h \
+    managers/ECGManager.h \
+    managers/FraxManager.h \
+    managers/ManagerBase.h \
+    managers/SerialPortManager.h \
+    managers/TonometerManager.h \
     managers/WeighScaleManager.h \
     widgets/BarcodeWidget.h \
     dialogs/AudiometerDialog.h \
-    dialogs/BodyCompositionDialog.h \
     dialogs/BloodPressureDialog.h \
+    dialogs/BodyCompositionDialog.h \
     dialogs/CDTTDialog.h \
     dialogs/ChoiceReactionDialog.h \
+    dialogs/DialogBase.h \
+    dialogs/DialogFactory.h \
+    dialogs/ECGDialog.h \
     dialogs/FraxDialog.h \
     dialogs/ThermometerDialog.h \
     dialogs/TonometerDialog.h \
     dialogs/WeighScaleDialog.h \
-    dialogs/DialogBase.h \
-    dialogs/DialogFactory.h \
     CypressApplication.h
 
 TRANSLATIONS += \

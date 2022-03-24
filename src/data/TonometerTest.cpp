@@ -8,36 +8,36 @@
 #include <QRandomGenerator>
 #include <algorithm>
 
-QMap<QString,QString> TonometerTest::metaLUT = TonometerTest::initMetaLUT();
+const QMap<QString,QString> TonometerTest::metaLUT = TonometerTest::initMetaLUT();
 
 QMap<QString,QString> TonometerTest::initMetaLUT()
 {
   QMap<QString,QString> map;
 
-  map["id"] = "ID";
-  map["date_of_birth"] = "BirthDate";
-  map["sex"] = "Sex";
-  map["measure_number"] = "MeasureNumber";
-  map["session_datetime"] = "SessionDate";
-  map["patient_id"] = "PatientID";
-  map["ora_serial_number"] = "ORASerialNumber";
-  map["ora_software"] = "ORASoftware";
-  map["pc_software"] = "PCSoftware";
-  map["meds"] = "Meds";
-  map["conditions"] = "Conditions";
-  map["notes_1"] = "Notes1";
-  map["notes_2"] = "Notes2";
-  map["notes_3"] = "Notes3";
-  map["m_g2"] = "m_G2";
-  map["b_g2"] = "b_G2";
-  map["m_g3"] = "m_G3";
-  map["b_g3"] = "b_G3";
-  map["iop_cc_coef"] = "iop_cc_coef";
-  map["crf_coef"] = "crf_coef";
-  map["m_abc"] = "m_ABC";
-  map["b_abc"] = "b_ABC";
-  map["b_pp"] = "b_PP";
-  map["best_weighted"] = "BestWeighted";
+  map["id"] = "ID";                             // in "ID" from Patients table
+  map["date_of_birth"] = "BirthDate";           // in "BirthDate" from Patients table
+  map["sex"] = "Sex";                           // in "Sex" from Patients table
+  map["measure_number"] = "MeasureNumber";      // int "MeasureNumber"
+  map["session_datetime"] = "SessionDate";      // datetime "SessionDate"
+  map["patient_id"] = "PatientID";              // int "PatientID" primary key in Patients table
+  map["ora_serial_number"] = "ORASerialNumber"; // string (unique to site) "ORASerialNmber"
+  map["ora_software"] = "ORASoftware";          // string "ORASoftware"
+  map["pc_software"] = "PCSoftware";            // string "PCSoftware"
+  map["meds"] = "Meds";                         // string (not applicable? never used) "Meds"
+  map["conditions"] = "Conditions";             // string (not applicable? never used) "Conditions"
+  map["notes_1"] = "Notes1";                    // string (not applicable? never used) "Notes1"
+  map["notes_2"] = "Notes2";                    // string (not applicable? never used) "Notes2"
+  map["notes_3"] = "Notes3";                    // string (not applicable? never used) "Notes3"
+  map["m_g2"] = "m_G2";                         // double (not applicable? always 6.711 for both eyes) "m_G2"
+  map["b_g2"] = "b_G2";                         // double (not applicable? always 68) "b_G2"
+  map["m_g3"] = "m_G3";                         // double (not applicable? always 4.444) "m_G3"
+  map["b_g3"] = "b_G3";                         // double (not applicable? always -22.9) "b_G3"
+  map["iop_cc_coef"] = "iop_cc_coef";           // double (not applicable? always 0.43) "iop_cc_coef"
+  map["crf_coef"] = "crf_coef";                 // double (not applicable? always 0.7) "crf_coef"
+  map["m_abc"] = "m_ABC";                       // double (range 1.03 - 1.09) "m_ABC"
+  map["b_abc"] = "b_ABC";                       // double (range -23.85 - -3.42) "b_ABC"
+  map["b_pp"] = "b_PP";                         // double (not applicable? always 6.12) "b_PP"
+  map["best_weighted"] = "BestWeighted";        // uint (not applicable? always 0 or false) "BestWeighted"
 
   return map;
 }
@@ -45,31 +45,7 @@ QMap<QString,QString> TonometerTest::initMetaLUT()
 TonometerTest::TonometerTest()
 {
     // exam meta data
-    m_outputKeyList << "id"; // in "ID" from Patients table
-    m_outputKeyList << "date_of_birth"; // in "BirthDate" from Patients table
-    m_outputKeyList << "sex"; // in "Sex" from Patients table
-
-    m_outputKeyList << "measure_number"; // int "MeasureNumber"
-    m_outputKeyList << "session_datetime";   // datetime "SessionDate"
-    m_outputKeyList << "patient_id";     //  int "PatientID" primary key in Patients table
-    m_outputKeyList << "ora_serial_number"; // string (unique to site) "ORASerialNmber"
-    m_outputKeyList << "ora_software";      // string "ORASoftware"
-    m_outputKeyList << "pc_software";       // string "PCSoftware"
-    m_outputKeyList << "meds";            // string (not applicable? never used) "Meds"
-    m_outputKeyList << "conditions";      // string (not applicable? never used) "Conditions"
-    m_outputKeyList << "notes_1";         // string (not applicable? never used) "Notes1"
-    m_outputKeyList << "notes_2";         // string (not applicable? never used) "Notes2"
-    m_outputKeyList << "notes_3";         // string (not applicable? never used) "Notes3"
-    m_outputKeyList << "m_g2";            // double (not applicable? always 6.711 for both eyes) "m_G2"
-    m_outputKeyList << "b_g2";            // double (not applicable? always 68) "b_G2"
-    m_outputKeyList << "m_g3";            // double (not applicable? always 4.444) "m_G3"
-    m_outputKeyList << "b_g3";            // double (not applicable? always -22.9) "b_G3"
-    m_outputKeyList << "iop_cc_coef";     // double (not applicable? always 0.43) "iop_cc_coef"
-    m_outputKeyList << "crf_coef";        // double (not applicable? always 0.7) "crf_coef"
-    m_outputKeyList << "m_abc";           // double (range 1.03 - 1.09) "m_ABC"
-    m_outputKeyList << "b_abc";           // double (range -23.85 - -3.42) "b_ABC"
-    m_outputKeyList << "b_pp";            // double (not applicable? always 6.12) "b_PP"
-    m_outputKeyList << "best_weighted";   // uint (not applicable? always 0 or false) "BestWeighted"
+    m_outputKeyList = TonometerTest::metaLUT.keys();
 }
 
 void TonometerTest::fromJson(const QJsonArray &json)
@@ -83,7 +59,7 @@ void TonometerTest::fromJson(const QJsonArray &json)
     // data from the most recent
     //
     QList<QDateTime> dateList;
-    foreach(auto x, json)
+    foreach(const auto x, json)
     {
         QJsonObject obj = x.toObject();
         if(obj.contains("SessionDate"))
@@ -95,14 +71,14 @@ void TonometerTest::fromJson(const QJsonArray &json)
     }
 
     std::sort(dateList.begin(),dateList.end());
-    foreach(auto x, dateList)
+    foreach(const auto x, dateList)
     {
       qDebug() << "sorted session" << x.toString();
     }
     QDateTime lastSession = dateList.last();
 
     bool meta = false;
-    foreach(auto x, json)
+    foreach(const auto x, json)
     {
         QJsonObject obj = x.toObject();
         if(obj.contains("SessionDate") && obj.contains("Eye"))
@@ -142,7 +118,7 @@ QStringList TonometerTest::getMeasurementStrings(const QString &side) const
     QStringList list;
     if(isValid())
     {
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         if(side == m.getAttribute("side").toString())
         {
@@ -194,7 +170,7 @@ void TonometerTest::simulate(const QJsonObject &input)
     addMetaData("best_weighted",0);
 
     QStringList sides = {"left","right"};
-    foreach(auto side, sides)
+    foreach(const auto side, sides)
     {
         TonometerMeasurement m;
         m.simulate(side);
@@ -215,7 +191,7 @@ QString TonometerTest::toString() const
     if(isValid())
     {
       QStringList list;
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
          list << m.toString();
       }
@@ -227,7 +203,7 @@ QString TonometerTest::toString() const
 bool TonometerTest::isValid() const
 {
     bool okMeta = true;
-    foreach(auto key, m_outputKeyList)
+    foreach(const auto key, m_outputKeyList)
     {
       if(!hasMetaData(key))
       {
@@ -238,7 +214,7 @@ bool TonometerTest::isValid() const
     bool okTest = 2 == getNumberOfMeasurements();
     if(okTest)
     {
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         if(!m.isValid())
         {
@@ -253,7 +229,7 @@ bool TonometerTest::isValid() const
 QJsonObject TonometerTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    foreach(auto m, m_measurementList)
+    foreach(const auto m, m_measurementList)
     {
       jsonArr.append(m.toJsonObject());
     }

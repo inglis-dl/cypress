@@ -2,11 +2,12 @@
 
 #include "AudiometerDialog.h"
 #include "BloodPressureDialog.h"
-#include "ThermometerDialog.h"
 #include "BodyCompositionDialog.h"
 #include "CDTTDialog.h"
 #include "ChoiceReactionDialog.h"
+#include "ECGDialog.h"
 #include "FraxDialog.h"
+#include "ThermometerDialog.h"
 #include "TonometerDialog.h"
 #include "WeighScaleDialog.h"
 
@@ -66,7 +67,7 @@ DialogBase* DialogFactory::instantiate(const Constants::MeasureType &type)
         //dialog = Q_NULLPTR;
         break;
       case Constants::MeasureType::typeECG:
-        //dialog = Q_NULLPTR;
+        dialog = new ECGDialog();
         break;
       case Constants::MeasureType::typeUltrasound:
         //dialog = Q_NULLPTR;
@@ -86,6 +87,5 @@ DialogBase* DialogFactory::instantiate(const Constants::MeasureType &type)
 
 DialogBase* DialogFactory::instantiate(const QString& name)
 {
-    qDebug() << "factory making a" << name;
     return instantiate(Constants::getMeasureType(name));
 }

@@ -275,16 +275,16 @@ void ExcelQueryHelper::processQuery()
           if(1 == n_row) // store header key QJsonValue pairs
           {
             int i = 0;
-            foreach(auto col, head)
+            foreach(const auto col, head)
               m_output.insert(m_header.at(i++),col.toJsonValue());
           }
           else // store header key QJsonArray pairs
           {
             QVector<QJsonArray> arr(n_col);
-            foreach(auto row, data)
+            foreach(const auto row, data)
             {
               QJsonArray *p = arr.data();
-              foreach(auto col, row)
+              foreach(const auto col, row)
               {
                 p->push_back(col.toJsonValue());
                 p++;
@@ -297,10 +297,10 @@ void ExcelQueryHelper::processQuery()
         else // row order
         {
           int i = 0;
-          foreach(auto row, data)
+          foreach(const auto row, data)
           {
             QJsonArray arr;
-            foreach(auto col, row)
+            foreach(const auto col, row)
                arr.push_back(QJsonValue::fromVariant(col));
 
              m_output.insert(m_header.at(i++),(1 == arr.size() ? arr.first() : arr));
@@ -325,11 +325,11 @@ void ExcelQueryHelper::processQuery()
         if(valid && 1 < n_row)
         {
           QVector<QJsonArray> arr(n_col);
-          foreach(auto row, data)
+          foreach(const auto row, data)
           {
             if(head == row) continue;
             QJsonArray *p = arr.data();
-            foreach(auto col, row)
+            foreach(const auto col, row)
             {
               p->push_back(QJsonValue::fromVariant(col));
               p++;
@@ -359,7 +359,7 @@ void ExcelQueryHelper::processQuery()
         else
         {
           int i = 0;
-          foreach(auto row, data)
+          foreach(const auto row, data)
           {
             valid = m_header.at(i++) == row.first().toString();
             if(!valid)
@@ -368,10 +368,10 @@ void ExcelQueryHelper::processQuery()
           if(valid && 1 < n_col)
           {
             i = 0;
-            foreach(auto row, data)
+            foreach(const auto row, data)
             {
               QJsonArray arr;
-              foreach(auto col, row)
+              foreach(const auto col, row)
               {
                 if(col == row.first()) continue;
                 arr.push_back(col.toJsonValue());
@@ -393,7 +393,7 @@ void ExcelQueryHelper::processQuery()
       QVector<QJsonArray> arr(sz);
       if(Order::Column == m_order)
       {
-        foreach(auto row, data)
+        foreach(const auto row, data)
         {
           QJsonArray *p = arr.data();
           int i = 0;
@@ -408,7 +408,7 @@ void ExcelQueryHelper::processQuery()
       else
       {
         QJsonArray *p = arr.data();
-        foreach(auto row, data)
+        foreach(const auto row, data)
         {
            int i = 0;
            foreach(auto col, row)
@@ -422,7 +422,7 @@ void ExcelQueryHelper::processQuery()
       int i = 0;
       if(m_prefix.isEmpty())
         m_prefix = Order::Column == m_order ? "column_" : "row_";
-      foreach(auto json, arr)
+      foreach(const auto json, arr)
         m_output.insert(m_prefix + QString::number(i++),(1 == json.size() ? json.first() : json));
   }
 

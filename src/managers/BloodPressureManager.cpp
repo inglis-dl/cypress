@@ -151,7 +151,7 @@ void BloodPressureManager::scanDevices()
     }
 
     QHidDevice hid_device;
-    foreach(auto info, QUsb::devices())
+    foreach(const auto info, QUsb::devices())
     {
       if(0 != m_vendorIDFilter && m_vendorIDFilter != info.vid)
           continue;
@@ -381,7 +381,7 @@ void BloodPressureManager::setInputData(const QJsonObject& input)
         {"barcode",QMetaType::Type::QString},
         {"language",QMetaType::Type::QString}
     };
-    foreach(auto key, m_inputKeyList)
+    foreach(const auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
       {

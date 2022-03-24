@@ -153,7 +153,7 @@ void ChoiceReactionManager::setInputData(const QJsonObject &input)
         {"barcode",QMetaType::Type::QString},
         {"language",QMetaType::Type::QString}
     };
-    foreach(auto key, m_inputKeyList)
+    foreach(const auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
       {

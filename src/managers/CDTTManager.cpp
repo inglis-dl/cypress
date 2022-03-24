@@ -96,7 +96,7 @@ QJsonObject CDTTManager::toJsonObject() const
 void CDTTManager::buildModel(QStandardItemModel* model) const
 {
     int row = 0;
-    foreach(auto str, m_test.toStringList())
+    foreach(const auto str, m_test.toStringList())
     {
         QStandardItem* item = model->item(row, 0);
         if(Q_NULLPTR == item)
@@ -182,7 +182,7 @@ void CDTTManager::setInputData(const QJsonObject& input)
         {"barcode",QMetaType::Type::QString},
         {"language",QMetaType::Type::QString}
     };
-    foreach(auto key, m_inputKeyList)
+    foreach(const auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
       {

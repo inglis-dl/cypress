@@ -36,7 +36,7 @@ AudiometerManager::AudiometerManager(QObject *parent)
 void AudiometerManager::buildModel(QStandardItemModel* model) const
 {
     QStringList sides = {"left","right"};
-    foreach(auto side, sides)
+    foreach(const auto side, sides)
     {
       int index = 0;
       int col = "left" == side ? 0 : 1;
@@ -94,7 +94,7 @@ void AudiometerManager::setInputData(const QJsonObject &input)
         {"barcode",QMetaType::Type::QString},
         {"language",QMetaType::Type::QString}
     };
-    foreach(auto key, m_inputKeyList)
+    foreach(const auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
       {

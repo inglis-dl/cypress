@@ -79,7 +79,7 @@ void SerialPortManager::scanDevices()
       return;
     }
 
-    foreach(auto info, QSerialPortInfo::availablePorts())
+    foreach(const auto info, QSerialPortInfo::availablePorts())
     {
         if(m_verbose)
         {

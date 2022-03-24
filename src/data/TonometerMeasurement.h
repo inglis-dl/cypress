@@ -29,9 +29,8 @@ public:
 
     void simulate(const QString&);
 
-    static QMap<QString,QString> variableLUT;
-    static QMap<QString,QString> unitsLUT;
-
+    static const QMap<QString,QString> variableLUT;
+    static const QMap<QString,QString> unitsLUT;
     static QMap<QString,QString> initVariableLUT();
     static QMap<QString,QString> initUnitsLUT();
 };

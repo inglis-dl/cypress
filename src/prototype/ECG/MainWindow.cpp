@@ -150,8 +150,7 @@ void MainWindow::initializeConnections()
         }
     });
 
-
-    // blackbox.exe was found and inputs valid
+    // Cardio.exe was found and inputs valid
     //
     connect(&m_manager, &ECGManager::canMeasure,
         this, [this]() {
@@ -178,7 +177,7 @@ void MainWindow::initializeConnections()
       ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
       ui->testdataTableView->resize(
         h->sectionSize(0) + 1,
-        4*(ui->testdataTableView->rowHeight(0)) + 1 +
+        12*(ui->testdataTableView->rowHeight(0)) + 1 +
         h->height());
       QSize ts_post = ui->testdataTableView->size();
       int dx = ts_post.width() - ts_pre.width();

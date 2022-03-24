@@ -37,7 +37,7 @@ QString BloodPressureTest::toString() const
     if(isValid())
     {
         QStringList list;
-        foreach(auto m, m_measurementList)
+        foreach(const auto m, m_measurementList)
         {
           list << m.toString();
         }
@@ -71,7 +71,7 @@ void BloodPressureTest::simulate()
 bool BloodPressureTest::isValid() const
 {
     bool okMeta = true;
-    foreach(auto key, m_outputKeyList)
+    foreach(const auto key, m_outputKeyList)
     {
       if(!hasMetaData(key))
       {
@@ -82,7 +82,7 @@ bool BloodPressureTest::isValid() const
     bool okTest = 1 <= getNumberOfMeasurements();
     if(okTest)
     {
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         if(!m.isValid())
         {
@@ -99,7 +99,7 @@ bool BloodPressureTest::isValid() const
 QJsonObject BloodPressureTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    foreach(auto m, m_measurementList)
+    foreach(const auto m, m_measurementList)
     {
       jsonArr.append(m.toJsonObject());
     }
