@@ -3,8 +3,9 @@
 #include <QFile>
 #include <QDebug>
 
-void OnyxInXml::setParticipantInfo(const QString& gender, const QDate dateOfBirth, const double height, const double& weight, const bool& smoker)
+void OnyxInXml::setParticipantInfo(const QString& barcode, const QString& gender, const QDate dateOfBirth, const double height, const double& weight, const bool& smoker)
 {
+	m_barcode = barcode;
 	m_gender = gender;
 	m_dateOfBirth = dateOfBirth;
 	m_height = height;
@@ -17,7 +18,6 @@ void OnyxInXml::setParticipantInfo(const QString& gender, const QDate dateOfBirt
 
 void OnyxInXml::write(const QString & transferInFilePath) const
 {
-	//"C:/ProgramData/ndd/Easy on-PC/OnyxIn.xml"
 	QFile file(transferInFilePath);
 	if (file.open(QIODevice::WriteOnly | QIODevice::Text) == false) return;
 	
@@ -65,10 +65,10 @@ void OnyxInXml::addPatients(QXmlStreamWriter& stream) const
 	stream.writeStartElement("Patients");
 
 	stream.writeStartElement("Patient");
-	stream.writeAttribute("ID", "ONYX"); // TODO: barcode
+	stream.writeAttribute("ID", m_barcode);
 
-	stream.writeTextElement("LastName", "participant"); // TODO: Leave empty
-	stream.writeTextElement("FirstName", "clsa"); // TODO: Leave empty
+	stream.writeEmptyElement("LastName");
+	stream.writeEmptyElement("FirstName"); 
 
 	stream.writeTextElement("IsBioCal", "false");
 	addPatientDataAtPresent(stream);

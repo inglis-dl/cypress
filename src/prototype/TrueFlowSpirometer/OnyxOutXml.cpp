@@ -4,7 +4,7 @@
 #include <QDebug>
 #include <QFile>
 
-OutDataModel OnyxOutXml::readImportantValues(const QString& transferOutPath)
+OutDataModel OnyxOutXml::readImportantValues(const QString& transferOutPath, const QString& barcode)
 {
     OutDataModel outData;
     QFile file(transferOutPath);
@@ -29,7 +29,8 @@ OutDataModel OnyxOutXml::readImportantValues(const QString& transferOutPath)
                 // TODO: do something if commandType != "TestResult"
             }
             else if (name == "Patients") {
-                readPatients(&reader, &outData, "ONYX");
+                //readPatients(&reader, &outData, "ONYX");
+                readPatients(&reader, &outData, barcode);
             }
             else {
                 skipToEndElement(&reader, name.toString());
@@ -388,10 +389,7 @@ void OnyxOutXml::readChannelFlow(QXmlStreamReader* reader, TrialDataModel* trial
             trialData->flowInterval = reader->readElementText().toDouble();
         }
         else if (name == "SamplingValues") {
-            QList<QString> strValues = reader->readElementText().split(" ");
-            for (int i = 0; i < strValues.count(); i++) {
-                trialData->flowValues.append(strValues[i].toDouble());
-            }
+            trialData->flowValues = reader->readElementText();
         }
         skipToEndElement(reader, name.toString());
     }
@@ -408,10 +406,7 @@ void OnyxOutXml::readChannelVolume(QXmlStreamReader* reader, TrialDataModel* tri
             trialData->volumeInterval = reader->readElementText().toDouble();
         }
         else if (name == "SamplingValues") {
-            QList<QString> strValues = reader->readElementText().split(" ");
-            for (int i = 0; i < strValues.count(); i++) {
-                trialData->volumeValues.append(strValues[i].toDouble());
-            }
+            trialData->volumeValues = reader->readElementText();
         }
         skipToEndElement(reader, name.toString());
     }

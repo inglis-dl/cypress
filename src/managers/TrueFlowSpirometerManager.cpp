@@ -246,6 +246,7 @@ void TrueFlowSpirometerManager::setInputData(const QJsonObject& input)
     else
     {
         // Get participat info from inputs
+        QString barcode = m_inputData["barcode"].toString();
         QString gender = m_inputData["gender"].toString();
         QDate birthDate = m_inputData["date_of_birth"].toVariant().toDate();
         double height = m_inputData["height"].toDouble();
@@ -253,7 +254,7 @@ void TrueFlowSpirometerManager::setInputData(const QJsonObject& input)
         bool smoker = m_inputData["smoker"].toBool();
 
         // load participant info
-        m_onyxInXml.setParticipantInfo(gender, birthDate, height, weight, smoker);
+        m_onyxInXml.setParticipantInfo(barcode, gender, birthDate, height, weight, smoker);
     }
 }
 
@@ -337,7 +338,7 @@ void TrueFlowSpirometerManager::readOutput()
     }
 
     // Read the output for non simulate mode
-    bool loaded = m_test.loadData(getTransferOutFilePath());
+    bool loaded = m_test.loadData(getTransferOutFilePath(), m_inputData["barcode"].toString());
     if (loaded) {
         emit canWrite();
     }
@@ -459,7 +460,6 @@ void TrueFlowSpirometerManager::configureProcess()
     else
         qDebug() << "failed to configure process";
 }
-
 
 void TrueFlowSpirometerManager::finish()
 {

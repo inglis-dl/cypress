@@ -18,8 +18,10 @@ public:
 	QString manualAmbientOverride;
 	ResultParametersModel resultParameters;
 	double flowInterval = -1;
-	QList<double> flowValues;
+	//QList<double> flowValues;
+	QString flowValues;
 	double volumeInterval = -1;
-	QList<double> volumeValues;
+	//QList<double> volumeValues;
+	QString volumeValues;
 };
 

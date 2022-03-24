@@ -16,7 +16,7 @@ public:
     TrueFlowSpirometerTest();
     ~TrueFlowSpirometerTest() = default;
 
-    bool loadData(const QString &transferOutPath);
+    bool loadData(const QString &transferOutPath, const QString& barcode);
 
     // String representation for debug and GUI display purposes
     //

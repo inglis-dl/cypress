@@ -9,7 +9,7 @@
 class OnyxOutXml
 {
 public:
-	static OutDataModel readImportantValues(const QString &transferOutPath);
+	static OutDataModel readImportantValues(const QString &transferOutPath, const QString& barcode);
 private:
 	static void skipToEndElement(QXmlStreamReader* reader, const QString &name);
 	static QString readCommand(QXmlStreamReader* reader, OutDataModel* outData);

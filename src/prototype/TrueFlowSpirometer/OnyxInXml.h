@@ -6,7 +6,7 @@ class OnyxInXml
 {
 
 public:
-	void setParticipantInfo(const QString& gender, const QDate dateOfBirth, const double height, const double& weight, const bool& smoker);
+	void setParticipantInfo(const QString& barcode, const QString& gender, const QDate dateOfBirth, const double height, const double& weight, const bool& smoker);
 	void write(const QString& dirPath) const;
 private:
 	void startNddElement(QXmlStreamWriter &stream) const;
@@ -15,6 +15,7 @@ private:
 	void addPatients(QXmlStreamWriter &stream) const;
 	void addPatientDataAtPresent(QXmlStreamWriter &stream) const;
 
+	QString m_barcode;
 	QString m_gender;
 	QDate m_dateOfBirth;
 	double m_height;

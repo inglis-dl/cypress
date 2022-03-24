@@ -39,12 +39,10 @@ void TrueFlowSpirometerMeasurement::fromTrialData(const TrialDataModel& trialDat
     setAttribute(acceptedOriginal, trialData.acceptedOriginal);
     setAttribute(manualAmbientOverride, trialData.manualAmbientOverride);
     setAttribute(flowInterval, trialData.flowInterval);
-    QVariant flowVals = QVariant::fromValue<QList<double>>(trialData.flowValues);
-    setAttribute(flowValues, flowVals);
+    setAttribute(flowValues, trialData.flowValues);
     setAttribute(trialNumber, trialData.number);
     setAttribute(volumeInterval, trialData.volumeInterval);
-    QVariant volumeVals = QVariant::fromValue<QList<double>>(trialData.volumeValues);
-    setAttribute(volumeValues, volumeVals);
+    setAttribute(volumeValues, trialData.volumeValues);
 
     for (QString key : trialData.resultParameters.results.keys())
     {
