@@ -26,49 +26,50 @@ ECGTest::ECGTest()
 
 void ECGTest::fromFile(const QString &fileName)
 {
-    QFile ifile(fileName);
-    if(!ifile.open(QIODevice::ReadOnly))
+    QFile file(fileName);
+    if(!file.open(QIODevice::ReadOnly))
     {
        qDebug() << "ERROR: failed to read xml file for parsing" << fileName;
        return;
     }
     QDomDocument doc("ecgDocument");
-    if(!doc.setContent(&ifile))
+    if(!doc.setContent(&file))
     {
-        ifile.close();
+        file.close();
         qDebug() << "ERROR: failed to set DOM content from xml file"<< fileName;
         return;
     }
-    ifile.close();
+    file.close();
 
     QDomElement docElem = doc.documentElement();
-    QDomNode n = docElem.firstChild();
+    QDomNode node = docElem.firstChild();
     reset();
     ECGMeasurement m;
-    while(!n.isNull())
+    while(!node.isNull())
     {
-        QDomElement e = n.toElement(); // try to convert the node to an element.
-        if(!e.isNull())
-        {
-            qDebug() << e.tagName(); // the node really is an element.
+      QDomElement elem = node.toElement();
+      if(!elem.isNull())
+      {
+        QString tag = elem.tagName();
+        qDebug() << tag;
 
-            if("ClinicalInfo" == e.tagName())
-                readClinicalInfo(n);
-            else if("FilterSetting" == e.tagName())
-                readFilterSetting(n);
-            else if("ObservationDateTime" == e.tagName())
-                readObservationDatetime(n);
-            else if("PatientInfo" == e.tagName())
-                readPatientInfo(n);
-            else if("Interpretation" == e.tagName())
-                m.fromDomNode(n);
-            else if("RestingECGMeasurements" == e.tagName())
-                m.fromDomNode(n);
-        }
-        n = n.nextSibling();
+        if("ClinicalInfo" == tag)
+          readClinicalInfo(node);
+        else if("FilterSetting" == tag)
+          readFilterSetting(node);
+        else if("ObservationDateTime" == tag)
+          readObservationDatetime(node);
+        else if("PatientInfo" == tag)
+          readPatientInfo(node);
+        else if("Interpretation" == tag)
+          m.fromDomNode(node);
+        else if("RestingECGMeasurements" == tag)
+          m.fromDomNode(node);
+      }
+      node = node.nextSibling();
     }
     if(m.isValid())
-        addMeasurement(m);
+      addMeasurement(m);
 }
 
 void ECGTest::readObservationDatetime(const QDomNode& node)
@@ -217,9 +218,36 @@ void ECGTest::readFilterSetting(const QDomNode& node)
     }
 }
 
-void ECGTest::simulate(const QJsonObject& input)
+void ECGTest::simulate()
 {
-    Q_UNUSED(input)
+   reset();
+   addMetaData("observation_datetime",QDateTime::currentDateTime());
+   addMetaData("device_description","CardioSoft");
+   addMetaData("software_version","V6.71");
+   addMetaData("gender","unknown");
+   addMetaData("race","unknown");
+   addMetaData("pacemaker",false);
+   addMetaData("cubic_spline",false);
+   addMetaData("filter_50_Hz",true);
+   addMetaData("filter_60_Hz",false);
+   addMetaData("low_pass",150,"Hz");
+
+   ECGMeasurement m;
+   m.simulate();
+   addMeasurement(m);
+}
+
+QStringList ECGTest::toStringList() const
+{
+    QStringList list;
+    if(isValid())
+    {
+      ECGMeasurement m = getMeasurement(0);
+      list = m.toStringList();
+      foreach(const auto key, m_outputKeyList)
+        list << QString("%1: %2").arg(key,getMetaDataAsString(key));
+    }
+    return list;
 }
 
 // String representation for debug and GUI display purposes
@@ -230,7 +258,7 @@ QString ECGTest::toString() const
     if(isValid())
     {
       QStringList list;
-      foreach(auto measurement, m_measurementList)
+      foreach(const auto measurement, m_measurementList)
       {
         list << measurement.toString();
       }
@@ -242,7 +270,7 @@ QString ECGTest::toString() const
 bool ECGTest::isValid() const
 {
     bool okMeta = true;
-    foreach(auto key, m_outputKeyList)
+    foreach(const auto key, m_outputKeyList)
     {
       if(!hasMetaData(key))
       {
@@ -251,31 +279,22 @@ bool ECGTest::isValid() const
          break;
        }
     }
-    bool okTest = 0 < getNumberOfMeasurements();
+    bool okTest = 1 == getNumberOfMeasurements();
     if(okTest)
     {
-      foreach(auto m, m_measurementList)
-      {
-        if(!m.isValid())
-        {
-          okTest = false;
-          break;
-        }
-      }
+      ECGMeasurement m = getMeasurement(0);
+      okTest = m.isValid();
     }
     return okMeta && okTest;
 }
 
 QJsonObject ECGTest::toJsonObject() const
 {
-    QJsonArray jsonArr;
-    foreach(auto m, m_measurementList)
-    {
-      jsonArr.append(m.toJsonObject());
-    }
     QJsonObject json;
     if(hasMetaData())
       json.insert("test_meta_data",m_metaData.toJsonObject());
-    json.insert("test_results",jsonArr);
+
+    ECGMeasurement m = getMeasurement(0);
+    json.insert("test_results",m.toJsonObject());
     return json;
 }

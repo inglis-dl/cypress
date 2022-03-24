@@ -27,6 +27,8 @@ public:
 
     QString toString() const override;
 
+    void simulate();
+
 private:
 
     void readInterpretation(const QDomNode&);

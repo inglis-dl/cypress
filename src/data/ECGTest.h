@@ -20,14 +20,15 @@ public:
 
     bool isValid() const override;
 
+    QStringList toStringList() const;
+
     // String keys are converted to snake_case
     //
     QJsonObject toJsonObject() const override;
 
-    void simulate(const QJsonObject&);
+    void simulate();
 
 private:
-
     QList<QString> m_outputKeyList;
 
     void readObservationDatetime(const QDomNode&);

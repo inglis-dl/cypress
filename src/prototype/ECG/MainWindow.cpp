@@ -35,7 +35,7 @@ void MainWindow::initialize()
 
 void MainWindow::initializeModel()
 {
-    // allocate 1 columns x 4 rows of ECG measurement items
+    // allocate 1 columns x n rows of ECG measurement items
     //
     for(int row=0; row<m_manager.getNumberOfModelRows(); row++)
     {

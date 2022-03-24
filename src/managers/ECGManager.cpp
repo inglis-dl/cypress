@@ -15,7 +15,7 @@ ECGManager::ECGManager(QObject* parent):
 {
     setGroup("ecg");
     m_col = 1;
-    m_row = 4;
+    m_row = 19;
 
     // all managers must check for barcode and language input values
     //
@@ -58,15 +58,16 @@ void ECGManager::buildModel(QStandardItemModel *model) const
 {
     // add the measurement output
     //
-    for(int row = 0; row < m_test.getNumberOfMeasurements(); row++)
+    QStringList list = m_test.toStringList();
+    for(int row = 0; row < list.size(); row++)
     {
-        QStandardItem* item = model->item(row, 0);
-        if(Q_NULLPTR == item)
-        {
-            item = new QStandardItem();
-            model->setItem(row, 0, item);
-        }
-        item->setData(m_test.getMeasurement(row).toString(), Qt::DisplayRole);
+      QStandardItem* item = model->item(row,0);
+      if(Q_NULLPTR == item)
+      {
+          item = new QStandardItem();
+          model->setItem(row,0,item);
+      }
+      item->setData(list.at(row), Qt::DisplayRole);
     }
 }
 
@@ -229,7 +230,7 @@ void ECGManager::setInputData(const QJsonObject &input)
         {"barcode",QMetaType::Type::QString},
         {"language",QMetaType::Type::QString}
     };
-    foreach(auto key, m_inputKeyList)
+    foreach(const auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
       {
@@ -276,17 +277,17 @@ void ECGManager::readOutput()
         if(m_verbose)
           qDebug() << "simulating read out";
 
-        m_test.simulate(m_inputData);
+        m_test.simulate();
         emit message(tr("Ready to save results..."));
         emit canWrite();
         emit dataChanged();
         return;
     }
 
-    if (QProcess::NormalExit != m_process.exitStatus())
+    if(QProcess::NormalExit != m_process.exitStatus())
     {
-        qDebug() << "ERROR: process failed to finish correctly: cannot read output";
-        return;
+      qDebug() << "ERROR: process failed to finish correctly: cannot read output";
+      return;
     }
     else
       qDebug() << "process finished successfully";
@@ -300,16 +301,16 @@ void ECGManager::readOutput()
         m_test.fromFile(m_outputFile);
         if(m_test.isValid())
         {
-            emit message(tr("Ready to save results..."));
-            emit canWrite();
+          emit message(tr("Ready to save results..."));
+          emit canWrite();
         }
         else
-            qDebug() << "ERROR: input from file produced invalid test results";
+          qDebug() << "ERROR: input from file produced invalid test results";
 
         emit dataChanged();
     }
     else
-        qDebug() << "ERROR: no output xml file found";
+      qDebug() << "ERROR: no output xml file found";
 }
 
 void ECGManager::configureProcess()
@@ -393,7 +394,7 @@ bool ECGManager::deleteDeviceData()
       if(!list.isEmpty())
       {
         path = QDir::cleanPath(QString("%1%2%3").arg(m_workingPath,QDir::separator(),DATABASE_PATH));
-        foreach(auto info, list)
+        foreach(const auto info, list)
         {
             QString toFile = QDir(path).filePath(info.fileName());
             QFile::copy(info.absoluteFilePath(), toFile);
