@@ -60,7 +60,7 @@ void TrueFlowSpirometerManager::saveSettings(QSettings* settings) const
         settings->setValue("client/exe", m_runnableFullPath);
         settings->endGroup();
         if (m_verbose)
-            qDebug() << "wrote jar fullspec path to settings file";
+            qDebug() << "wrote exe fullspec path to settings file";
     }
 
     if (!m_emrTransferDir.isEmpty())
@@ -189,21 +189,26 @@ void TrueFlowSpirometerManager::setInputData(const QJsonObject& input)
             m_inputData["barcode"] = Constants::DefaultBarcode;
         if (!input.contains("language"))
             m_inputData["language"] = "en";
-        if (!input.contains("barcode"))
+        if (!input.contains("gender"))
             m_inputData["gender"] = "Male";
-        if (!input.contains("barcode"))
+        if (!input.contains("date_of_birth"))
             m_inputData["date_of_birth"] = "1950-12-25";
-        if (!input.contains("barcode"))
+        if (!input.contains("height"))
             m_inputData["height"] = 1.5;
-        if (!input.contains("barcode"))
+        if (!input.contains("weight"))
             m_inputData["weight"] = 80;
-        if (!input.contains("barcode"))
+        if (!input.contains("smoker"))
             m_inputData["smoker"] = false;
     }
     bool ok = true;
     QMap<QString, QMetaType::Type> typeMap{
         {"barcode",QMetaType::Type::QString},
-        {"language",QMetaType::Type::QString}
+        {"language",QMetaType::Type::QString},
+        {"gender",QMetaType::Type::QString},
+        {"date_of_birth",QMetaType::Type::QDate},
+        {"height",QMetaType::Type::Double},
+        {"weight",QMetaType::Type::Double},
+        {"smoker",QMetaType::Type::Bool}
     };
     foreach(auto key, m_inputKeyList)
     {

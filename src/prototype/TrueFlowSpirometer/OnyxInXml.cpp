@@ -65,12 +65,10 @@ void OnyxInXml::addPatients(QXmlStreamWriter& stream) const
 	stream.writeStartElement("Patients");
 
 	stream.writeStartElement("Patient");
-	stream.writeAttribute("ID", "ONYX");
+	stream.writeAttribute("ID", "ONYX"); // TODO: barcode
 
-	//stream.writeEmptyElement("LastName");
-	//stream.writeEmptyElement("FirstName");
-	stream.writeTextElement("LastName", "participant");
-	stream.writeTextElement("FirstName", "clsa");
+	stream.writeTextElement("LastName", "participant"); // TODO: Leave empty
+	stream.writeTextElement("FirstName", "clsa"); // TODO: Leave empty
 
 	stream.writeTextElement("IsBioCal", "false");
 	addPatientDataAtPresent(stream);
@@ -87,7 +85,6 @@ void OnyxInXml::addPatientDataAtPresent(QXmlStreamWriter& stream) const
 	stream.writeTextElement("ComputedDateOfBirth", "false");
 	stream.writeTextElement("Height", QString::number(m_height));
 	stream.writeTextElement("Weight", QString::number(m_weight));
-	//stream.writeTextElement("Ethnicity", m_ethnicity);
 	//stream.writeTextElement("Ethnicity", m_ethnicity);
 	stream.writeTextElement("Smoker", QString(m_smoker));
 	//stream.writeTextElement("Asthma", QString(m_asthma));

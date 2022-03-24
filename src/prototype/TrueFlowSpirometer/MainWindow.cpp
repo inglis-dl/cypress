@@ -1,6 +1,8 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
+#include "../../auxiliary/JsonSettings.h"
+
 #include <QCloseEvent>
 #include <QDate>
 #include <QDebug>
@@ -213,7 +215,7 @@ void MainWindow::run()
      // read the path to
     //
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath(m_manager.getGroup() + ".json"), JsonSettings::JsonFormat);
     m_manager.loadSettings(settings);
 
     // Pass the input to the manager for verification
@@ -229,7 +231,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
         qDebug() << "close event called";
 
     QDir dir = QCoreApplication::applicationDirPath();
-    QSettings settings(dir.filePath(m_manager.getGroup() + ".ini"), QSettings::IniFormat);
+    QSettings settings(dir.filePath(m_manager.getGroup() + ".json"), JsonSettings::JsonFormat);
     m_manager.saveSettings(&settings);
     m_manager.finish();
     event->accept();

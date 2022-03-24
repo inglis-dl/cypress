@@ -112,7 +112,8 @@ QJsonObject TrueFlowSpirometerTest::toJsonObject() const
         jsonArr.append(measurement.toJsonObject());
     }
     QJsonObject json;
-    json.insert("test_meta_data", m_metaData.toJsonObject());
+    if(hasMetaData())
+        json.insert("test_meta_data", m_metaData.toJsonObject());
     json.insert("test_results", jsonArr);
     return json;
 }
