@@ -88,8 +88,10 @@ bool JsonSettings::readSettingsJson(QIODevice &device, QMap<QString, QVariant> &
     QJsonParseError jsonError;
     QJsonObject obj = QJsonDocument::fromJson(device.readAll(), &jsonError).object();
     if(jsonError.error != QJsonParseError::NoError)
+    {
+        qCritical() << "ERROR: failed to read json from IO device:" << jsonError.errorString();
         return false;
-
+    }
     paraseJsonObject(obj, QString(), map);
     return true;
 }

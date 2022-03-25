@@ -2,10 +2,23 @@
 #define MANAGERBASE_H
 
 #include "../auxiliary/Constants.h"
-
 #include <QJsonObject>
 #include <QObject>
 #include <QWidget>
+
+/*!
+ * \class ManagerBase
+ * \brief The base Manager class
+ *
+ * Abstract parent class for all device managers.
+ * Manager classes are the mediators for CLI and UI interactions
+ * with physical devices and/or executable programs.  Manager
+ * classes control device selection, connectivity, operation,
+ * test subject biographical injection and test data retrieval.
+ *
+ * \sa SerialPortManager, BloodPressureManager, CDTTManager, AudiometerManager
+ *
+ */
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
 QT_FORWARD_DECLARE_CLASS(QStandardItemModel)

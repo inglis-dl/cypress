@@ -4,6 +4,19 @@
 #include "SerialPortManager.h"
 #include "../data/WeighScaleTest.h"
 
+/*!
+ * \class WeighScaleManager
+ * \brief The WeighScaleManager class
+ *
+ * Concrete child class implementation of a RS232 serial
+ * device manager.  This class facilitates connection to a
+ * Rice Lake digital weigh scale for read/write instructions
+ * and test data retrieval.
+ *
+ * \sa ManagerBase, SerialPortManager, BodyCompositionManager
+ *
+ */
+
 class WeighScaleManager : public SerialPortManager
 {
     Q_OBJECT

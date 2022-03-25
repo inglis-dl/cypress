@@ -225,7 +225,7 @@ void FraxManager::setInputData(const QJsonObject &input)
         {"body_mass_index",QMetaType::Type::Double},
         {"femoral_neck_bmd",QMetaType::Type::Double}
     };
-    foreach(auto key, m_inputKeyList)
+    foreach(const auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
       {
@@ -342,7 +342,7 @@ void FraxManager::configureProcess()
         // exclude interview barcode and language
         //
         QStringList list;
-        foreach(auto key, m_inputKeyList)
+        foreach(const auto key, m_inputKeyList)
         {
             if("barcode" == key || "language" == key) continue;
 

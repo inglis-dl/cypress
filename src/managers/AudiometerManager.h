@@ -4,6 +4,25 @@
 #include "SerialPortManager.h"
 #include "../data/HearingTest.h"
 
+/*!
+ * \class AudiometerManager
+ * @brief The AudiometerManager class
+ *
+ * Concrete child class implementation of a RS232 serial
+ * device manager.  This class facilitates connection to a
+ * Tremetrics RA300 or RA300 Plus audiometer for read instructions
+ * and test data retrieval.
+ *
+ * Caveats:
+ * RA300 or RA300 Plus must be configured as follows:
+ * - pulsed stimulus mode [special 2]
+ * - baud rate set to 9600 [special 7]
+ * - RA500 interface [special 5]
+ *
+ * \sa ManagerBase, SerialPortManager, BodyCompositionManager
+ *
+ */
+
 class AudiometerManager : public SerialPortManager
 {
     Q_OBJECT

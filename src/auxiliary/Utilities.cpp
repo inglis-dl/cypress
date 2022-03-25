@@ -58,7 +58,7 @@ void Logging::useFile(const QString& filename)
     qSetMessagePattern("[%{time yyyy-MM-dd h:mm:ss.zzz t} "
                        "%{if-debug}DEBG%{endif}%{if-info}INFO%{endif}%{if-warning}WARN%{"
                        "endif}%{if-critical}CRIT%{endif}%{if-fatal}FATL%{endif}] "
-                       "%{if-category}[%{category}]%{endif} - %{message}");
+                       "[%{file} : %{function} (%{line})] - %{message}");
     qInstallMessageHandler(toFile);
 }
 
@@ -77,7 +77,7 @@ void Logging::useStdout()
     qSetMessagePattern("[%{time yyyy-MM-dd h:mm:ss.zzz t} "
                        "%{if-debug}DEBG%{endif}%{if-info}INFO%{endif}%{if-warning}WARN%{"
                        "endif}%{if-critical}CRIT%{endif}%{if-fatal}FATL%{endif}] "
-                       "%{if-category}[%{category}]%{endif} - %{message}");
+                       "[%{file} : %{function} (%{line})] - %{message}");
     qInstallMessageHandler(toStdout);
 }
 
@@ -103,6 +103,7 @@ void Logging::toStderr(QtMsgType type, const QMessageLogContext &context,
 void Logging::write(QTextStream &stream, QtMsgType type,
                     const QMessageLogContext &context, const QString &msg)
 {
+    if(msg.isEmpty()) return;
     stream << QDateTime::currentDateTime().toString("[yyyy-MM-ddThh:mm:ss.zzz t ");
 
     switch(type)
@@ -126,11 +127,21 @@ void Logging::write(QTextStream &stream, QtMsgType type,
             stream << "UNKN ]";
     }
 
-    stream << "[" << qSetFieldWidth(30) << context.category << qSetFieldWidth(0)
-           << "] - ";
+    QString file = "file";
+    QString func = "function";
+    if(context.file)
+    {
+      file = context.file;
+      file = QDir::fromNativeSeparators(file).split("/").last();
+    }
+    if(context.function)
+    {
+      func = context.function;
+      func = func.split("::").last();
+    }
+    stream << "[" << file << " : " << func << " (" << context.line << ")] - ";
     stream << msg << '\n';
     stream.flush();
-    //stream << qFormatLogMessage(type, context, msg) << endl;
 }
 
 void Logging::useDefault()

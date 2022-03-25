@@ -27,8 +27,8 @@
     m_outputKeyList << "indexes";         // string comma delim double vector "Indexes"
  *
 */
-QMap<QString,QString> TonometerMeasurement::variableLUT = TonometerMeasurement::initVariableLUT();
-QMap<QString,QString> TonometerMeasurement::unitsLUT = TonometerMeasurement::initUnitsLUT();
+const QMap<QString,QString> TonometerMeasurement::variableLUT = TonometerMeasurement::initVariableLUT();
+const QMap<QString,QString> TonometerMeasurement::unitsLUT = TonometerMeasurement::initUnitsLUT();
 
 QMap<QString,QString> TonometerMeasurement::initVariableLUT()
 {
@@ -78,7 +78,7 @@ bool TonometerMeasurement::isValid() const
 {
     bool ok = true;
     QList<QString> list = TonometerMeasurement::variableLUT.keys();
-    foreach(auto key, list)
+    foreach(const auto key, list)
     {
       if(!hasAttribute(key))
       {

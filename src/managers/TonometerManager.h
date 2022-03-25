@@ -5,6 +5,20 @@
 #include "../data/TonometerTest.h"
 #include <QProcess>
 
+/*!
+ * \class TonometerManager
+ * \brief The TonometerManager class
+ *
+ * Concrete child class implementation of a device manager.
+ * This class facilitates launch of the Reichert ORA software
+ * (ora.exe) and retrieval of test data from its MS Access database
+ * (ora.mdb).  QProcess is used to facilitate exe operations
+ * along with helper class AccessQueryHelper to read the MS Access file.
+ *
+ * \sa ManagerBase, CDTTManager, AccessQueryHelper
+ *
+ */
+
 class TonometerManager : public ManagerBase
 {
     enum FileType {

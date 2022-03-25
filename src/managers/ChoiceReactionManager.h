@@ -5,6 +5,19 @@
 #include "../data/ChoiceReactionTest.h"
 #include <QProcess>
 
+/*!
+ * \class ChoiceReactionManager
+ * \brief The ChoiceReactionManager class
+ *
+ * Concrete child class implementation of a device manager.
+ * This class facilitates launch of the Cardiff Cognitive Battery
+ * choice reaction test program (CCB.exe) and reading the test output
+ * .csv files it produces.   QProcess is used to facilitate operations.
+ *
+ * \sa ManagerBase, CDTTManager, FraxManager
+ *
+ */
+
 class ChoiceReactionManager: public ManagerBase
 {
     Q_OBJECT

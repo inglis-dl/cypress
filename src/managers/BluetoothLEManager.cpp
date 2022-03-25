@@ -154,7 +154,7 @@ void BluetoothLEManager::setInputData(const QJsonObject &input)
         {"barcode",QMetaType::Type::QString},
         {"language",QMetaType::Type::QString}
     };
-    foreach(auto key, m_inputKeyList)
+    foreach(const auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
       {
@@ -543,7 +543,7 @@ void BluetoothLEManager::serviceDiscoveryComplete()
   {
     qDebug() << "controller service discovery complete";
 
-    foreach(auto x, m_controller->services())
+    foreach(const auto x, m_controller->services())
     {
       qDebug() << x.toString();
       quint16 uid = x.toUInt16();

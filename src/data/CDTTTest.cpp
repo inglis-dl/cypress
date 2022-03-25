@@ -97,7 +97,7 @@ QStringList CDTTTest::toStringList() const
     {
       list << QString("Trials: %1").arg(getMetaDataAsString("trial_count"));
     }
-    foreach(auto m, m_measurementList)
+    foreach(const auto m, m_measurementList)
     {
       list << m.toString();
     }
@@ -314,7 +314,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
     }
     if(ok)
     {
-      foreach(auto m, measures)
+      foreach(const auto m, measures)
         addMeasurement(m);
     }
     return ok;
@@ -328,7 +328,7 @@ QString CDTTTest::toString() const
     if(isValid())
     {
         QStringList list;
-        foreach(auto m, m_measurementList)
+        foreach(const auto m, m_measurementList)
         {
           list << m.toString();
         }
@@ -340,7 +340,7 @@ QString CDTTTest::toString() const
 bool CDTTTest::isValid() const
 {
     bool okMeta = true;
-    foreach(auto key, m_outputKeyList)
+    foreach(const auto key, m_outputKeyList)
     {
       if(!hasMetaData(key))
       {
@@ -352,7 +352,7 @@ bool CDTTTest::isValid() const
     bool okTest = 0 < getNumberOfMeasurements();
     if(okTest)
     {
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         if(!m.isValid())
         {
@@ -370,7 +370,7 @@ bool CDTTTest::isValid() const
 QJsonObject CDTTTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    foreach(auto m, m_measurementList)
+    foreach(const auto m, m_measurementList)
     {
       jsonArr.append(m.toJsonObject());
     }

@@ -7,7 +7,7 @@
 bool Measurement::isValid() const
 {
     bool ok = true;
-    foreach(auto x, m_attributes.toStdMap())
+    foreach(const auto x, m_attributes.toStdMap())
     {
       if(x.second.isNull())
       {
@@ -26,11 +26,11 @@ void Measurement::reset()
 QStringList Measurement::toStringList() const
 {
     QStringList list;
-    foreach(auto x, m_attributes.toStdMap())
+    foreach(const auto x, m_attributes.toStdMap())
     {
       QString key = x.first; // the key
       Measurement::Value value = x.second; // the value
-      list << QString("%1 %2").arg(key,value.toString());
+      list << QString("%1: %2").arg(key,value.toString());
     }
     return list;
 }
@@ -43,7 +43,7 @@ QString Measurement::toString() const
 QJsonObject Measurement::toJsonObject() const
 {
     QJsonObject json;
-    foreach(auto x, m_attributes.toStdMap())
+    foreach(const auto x, m_attributes.toStdMap())
     {
       // convert to space delimited phrases to snake_case
       //
@@ -132,7 +132,7 @@ QString Measurement::Value::toString() const
         }
         else
         {
-          qDebug() << "WARNING: value conversion to string may fail with type" << m_value.typeName();
+          qCritical() << "value conversion to string may fail with type" << m_value.typeName();
         }
         if(str.contains(","))
         {

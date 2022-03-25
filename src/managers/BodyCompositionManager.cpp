@@ -438,7 +438,7 @@ void BodyCompositionManager::setInputData(const QJsonObject &input)
         {"height",QMetaType::Type::UInt},
         {"gender",QMetaType::Type::QString}
     };
-    foreach(auto key, m_inputKeyList)
+    foreach(const auto key, m_inputKeyList)
     {
       if(!m_inputData.contains(key))
       {

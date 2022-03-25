@@ -9,7 +9,7 @@ bool WeighScaleTest::isValid() const
     bool okTest = getNumberOfMeasurements() == getMaximumNumberOfMeasurements();
     if(okTest)
     {
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         if(!m.isValid())
         {
@@ -27,7 +27,7 @@ QString WeighScaleTest::toString() const
     if(isValid())
     {
       QStringList list;
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         list << m.toString();
       }
@@ -64,7 +64,7 @@ void WeighScaleTest::fromArray(const QByteArray &arr)
 QJsonObject WeighScaleTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    foreach(auto m, m_measurementList)
+    foreach(const auto m, m_measurementList)
     {
       jsonArr.append(m.toJsonObject());
     }

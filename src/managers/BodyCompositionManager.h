@@ -5,6 +5,19 @@
 #include "../data/BodyCompositionTest.h"
 #include <QQueue>
 
+/*!
+ * \class BodyCompositionManager
+ * @brief The BodyCompositionManager class
+ *
+ * Concrete child class implementation of a RS232 serial
+ * device manager.  This class facilitates connection to a
+ * Tanita BF-350 body composition analyzer for read/write instructions
+ * and test data retrieval.
+ *
+ * \sa ManagerBase, SerialPortManager, AudiometerManager
+ *
+ */
+
 class BodyCompositionManager : public SerialPortManager
 {
     Q_OBJECT

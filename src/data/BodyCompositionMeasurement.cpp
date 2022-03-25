@@ -23,7 +23,7 @@ QStringList BodyCompositionMeasurement::initVariableList()
 bool BodyCompositionMeasurement::isValid() const
 {
   bool ok = true;
-  foreach(auto key, BodyCompositionMeasurement::variableList)
+  foreach(const auto key, BodyCompositionMeasurement::variableList)
   {
      if(!hasAttribute(key) || getAttribute(key).isNull())
      {

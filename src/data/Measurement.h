@@ -87,7 +87,7 @@ public:
 
     void remove(const QStringList& list)
     {
-      foreach(auto key, list)
+      foreach(const auto key, list)
         removeAttribute(key);
     }
 

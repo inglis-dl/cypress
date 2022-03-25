@@ -9,7 +9,7 @@ bool TemperatureTest::isValid() const
     bool okTest = getNumberOfMeasurements() == getMaximumNumberOfMeasurements();
     if(okTest)
     {
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         if(!m.isValid())
         {
@@ -27,7 +27,7 @@ QString TemperatureTest::toString() const
     if(isValid())
     {
       QStringList list;
-      foreach(auto m, m_measurementList)
+      foreach(const auto m, m_measurementList)
       {
         list << m.toString();
       }
@@ -54,7 +54,7 @@ void TemperatureTest::fromArray(const QByteArray &arr)
 QJsonObject TemperatureTest::toJsonObject() const
 {
     QJsonArray jsonArr;
-    foreach(auto m, m_measurementList)
+    foreach(const auto m, m_measurementList)
     {
       jsonArr.append(m.toJsonObject());
     }
