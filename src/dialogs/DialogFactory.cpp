@@ -7,7 +7,7 @@
 #include "ChoiceReactionDialog.h"
 #include "ECGDialog.h"
 #include "FraxDialog.h"
-#include "ThermometerDialog.h"
+//#include "ThermometerDialog.h"
 #include "TonometerDialog.h"
 #include "WeighScaleDialog.h"
 
@@ -45,9 +45,11 @@ DialogBase* DialogFactory::instantiate(const Constants::MeasureType &type)
       case Constants::MeasureType::typeChoice_Reaction:
         dialog = new ChoiceReactionDialog();
         break;
+/*
       case Constants::MeasureType::typeThermometer:
         dialog = new ThermometerDialog();
         break;
+*/
       case Constants::MeasureType::typeFrax:
         dialog = new FraxDialog();
         break;

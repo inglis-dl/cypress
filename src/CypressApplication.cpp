@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
+#include <stdexcept>
 
 #include "./auxiliary/Constants.h"
 #include "./dialogs/DialogFactory.h"

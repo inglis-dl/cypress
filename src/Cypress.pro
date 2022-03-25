@@ -30,8 +30,8 @@ SOURCES += \
     data/HearingMeasurement.cpp \
     data/HearingTest.cpp \
     data/Measurement.cpp \
-    data/TemperatureMeasurement.cpp \
-    data/TemperatureTest.cpp \
+#    data/TemperatureMeasurement.cpp \
+#    data/TemperatureTest.cpp \
     data/TonometerMeasurement.cpp \
     data/TonometerTest.cpp \
     data/WeightMeasurement.cpp \
@@ -40,7 +40,7 @@ SOURCES += \
     managers/CDTTManager.cpp \
     managers/ChoiceReactionManager.cpp \
     managers/BodyCompositionManager.cpp \
-    managers/BluetoothLEManager.cpp \
+#    managers/BluetoothLEManager.cpp \
     managers/BloodPressureManager.cpp \
     managers/BPMCommunication.cpp \
     managers/BPMMessage.cpp \
@@ -60,7 +60,7 @@ SOURCES += \
     dialogs/DialogFactory.cpp \
     dialogs/FraxDialog.cpp \
     dialogs/ECGDialog.cpp \
-    dialogs/ThermometerDialog.cpp \
+#    dialogs/ThermometerDialog.cpp \
     dialogs/TonometerDialog.cpp \
     dialogs/WeighScaleDialog.cpp \
     CypressApplication.cpp \
@@ -91,13 +91,13 @@ HEADERS += \
     data/TestBase.h \
     data/TonometerMeasurement.h \
     data/TonometerTest.h \
-    data/TemperatureMeasurement.h \
-    data/TemperatureTest.h \
+#    data/TemperatureMeasurement.h \
+#    data/TemperatureTest.h \
     data/WeightMeasurement.h \
     data/WeighScaleTest.h \
     managers/AudiometerManager.h \
     managers/BloodPressureManager.h \
-    managers/BluetoothLEManager.h \
+#    managers/BluetoothLEManager.h \
     managers/BodyCompositionManager.h \
     managers/BPMCommunication.h \
     managers/BPMMessage.h \
@@ -119,7 +119,7 @@ HEADERS += \
     dialogs/DialogFactory.h \
     dialogs/ECGDialog.h \
     dialogs/FraxDialog.h \
-    dialogs/ThermometerDialog.h \
+#    dialogs/ThermometerDialog.h \
     dialogs/TonometerDialog.h \
     dialogs/WeighScaleDialog.h \
     CypressApplication.h
@@ -139,7 +139,7 @@ FORMS += \
   dialogs/audiometerdialog.ui \
   dialogs/bloodpressuredialog.ui \
   dialogs/bodycompositiondialog.ui \
-  dialogs/thermometerdialog.ui \
+#  dialogs/thermometerdialog.ui \
   dialogs/runnabledialog.ui \
   dialogs/weighscaledialog.ui
 
