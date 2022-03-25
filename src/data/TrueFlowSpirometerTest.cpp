@@ -97,9 +97,30 @@ QString TrueFlowSpirometerTest::toString() const
     return displayString;
 }
 
+QStringList TrueFlowSpirometerTest::getMeasurementHeaderValues() const
+{
+    QStringList headerValues;
+    if (isValid()){
+        headerValues = m_measurementList[0].getHeaderValues();
+    }
+    return headerValues;
+}
+
+QList<QStringList> TrueFlowSpirometerTest::getMeasurementsAsLists() const
+{
+    QList<QStringList> data;
+    if (isValid()) {
+        data.append(getMeasurementHeaderValues());
+        foreach(TrueFlowSpirometerMeasurement measurement, m_measurementList) {
+            data.append(measurement.toString().split(","));
+        }
+    }
+    return data;
+}
+
 bool TrueFlowSpirometerTest::isValid() const
 {
-    return true;
+    return m_measurementList.count() > 0;
 }
 
 // String keys are converted to snake_case

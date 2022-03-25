@@ -54,7 +54,7 @@ void MainWindow::initializeModel()
 
     ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     ui->testdataTableView->verticalHeader()->hide();
 }
 

@@ -22,6 +22,10 @@ public:
     //
     QString toString() const override;
 
+    QStringList getMeasurementHeaderValues() const;
+
+    QList<QStringList> getMeasurementsAsLists() const;
+
     bool isValid() const override;
 
     // String keys are converted to snake_case

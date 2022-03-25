@@ -89,11 +89,22 @@ QJsonObject TrueFlowSpirometerManager::toJsonObject() const
         }
 
         if(outputPdfExists()){
-            QFile pdfFile(getOutputPdfPath());
+            QString outputPdf = getOutputPdfPath();
+            QFile pdfFile(outputPdf);
+
+            // new stuff
+            QString oldName = pdfFile.fileName();
+            QString renamedName = QString("%1_spirometry_%2.pdf").arg(oldName.remove(".pdf")).arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
+            pdfFile.rename(renamedName);
+
             pdfFile.open(QIODevice::ReadOnly);
             QByteArray bufferPdf = pdfFile.readAll();
             json.insert("test_output_pdf_file", QString(bufferPdf.toBase64()));
             json.insert("test_output_pdf_file_mime_type", "pdf");
+
+            if (false == oldName.endsWith(".pdf")) {
+                pdfFile.rename(QString("%1.pdf").arg(oldName));
+            }  
         }
     }
     //QJsonObject jsonInput;
@@ -110,31 +121,44 @@ QJsonObject TrueFlowSpirometerManager::toJsonObject() const
 
 void TrueFlowSpirometerManager::buildModel(QStandardItemModel* model) const
 {
-    // add measurements one row of two columns at a time
-    //
-    int n_total = m_test.getNumberOfMeasurements();
-    int n_row = qMax(1, n_total / 2);
+    // Data from all measurements:
+    // First list is a header and each list after is a trial
+    QList<QStringList> data = m_test.getMeasurementsAsLists();
+    int numLists = data.count();
+    int numElementsPerList = numLists > 0 ? data[0].count() : 0;
+
+    // Set row count
+    int n_row = qMax(1, numElementsPerList);
     if (n_row != model->rowCount())
     {
         model->setRowCount(n_row);
     }
-    int row_left = 0;
-    int row_right = 0;
-    for (int i = 0; i < n_total; i++)
-    {
-        TrueFlowSpirometerMeasurement measurement = m_test.getMeasurement(i);
-        QString measurementStr = measurement.isValid() ? measurement.toString() : "NA";
 
-        int col = i % 2;
-        int* row = col == 0 ? &row_left : &row_right;
-        QStandardItem* item = model->item(*row, col);
-        if (nullptr == item)
-        {
-            item = new QStandardItem();
-            model->setItem(*row, col, item);
+    // set column count
+    int n_col = qMax(1, numLists);
+    if (n_col != model->columnCount())
+    {
+        model->setColumnCount(n_col);
+    }
+
+    for (int i = 0; i < n_col; i++) {
+        QString colName = 0 == i ? "Data Type": QString("Trial %1").arg(i);
+        model->setHeaderData(i, Qt::Horizontal, colName, Qt::DisplayRole);
+    }
+
+    for (int row = 0; row < numElementsPerList; row++)
+    {
+        for (int col = 0; col < numLists; col++) {
+            QString dataStr = data[col][row];
+
+            QStandardItem* item = model->item(row, col);
+            if (nullptr == item)
+            {
+                item = new QStandardItem();
+                model->setItem(row, col, item);
+            }
+            item->setData(dataStr, Qt::DisplayRole);
         }
-        item->setData(measurementStr, Qt::DisplayRole);
-        (*row)++;
     }
 }
 
@@ -178,6 +202,8 @@ void TrueFlowSpirometerManager::measure()
     m_onyxInXml.write(getTransferInFilePath());
     launchEasyOnPc();
     readOutput();
+    emit dataChanged();
+    m_test.toString();
 }
 
 void TrueFlowSpirometerManager::setInputData(const QJsonObject& input)

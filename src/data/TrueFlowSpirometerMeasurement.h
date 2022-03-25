@@ -23,11 +23,14 @@ public:
 
     QString toString() const override;
 
+    QStringList getHeaderValues() const;
+
     static TrueFlowSpirometerMeasurement simulate();
 
     ResultParametersModel getMetaResults() { return metaResults; }
 private:
     ResultParametersModel metaResults;
+    void appendMeasurementAttribute(QString* measurementStr, const QString& key) const;
 };
 
 Q_DECLARE_METATYPE(TrueFlowSpirometerMeasurement);

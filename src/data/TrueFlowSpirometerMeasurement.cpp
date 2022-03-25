@@ -15,6 +15,10 @@ const QString trialNumber = "trial_number";
 const QString volumeInterval = "volume_interval";
 const QString volumeValues = "volume_values";
 
+// Create a list of all the elements that should appear first when creating a string
+QStringList firstKeysToAddToString = { trialNumber, outputTrialDate, outputTrialRank, outputTrialRankOriginal, accepted,
+    acceptedOriginal, flowInterval, flowValues, volumeInterval, volumeValues, manualAmbientOverride };
+
 // These are the result parameters that should have there normal
 // and predicted values stored as measurements
 const QList<QString> storeNormalPredictedAsMeasureList = 
@@ -71,13 +75,72 @@ bool TrueFlowSpirometerMeasurement::isValid() const
 
 QString TrueFlowSpirometerMeasurement::toString() const
 {
-    return "";
+    QString output = "";
+
+    // add the first keys to the list
+    foreach(QString key, firstKeysToAddToString) {
+        appendMeasurementAttribute(&output, key);
+    }
+
+    // add the rest of the elements to the list
+    QStringList keys = getAttributes().keys();
+    foreach(QString key, keys) {
+        // Skip any of the previously entered values
+        if (firstKeysToAddToString.contains(key)) {
+            continue;
+        }
+        appendMeasurementAttribute(&output, key);
+    }
+
+    // an extra comma will likely be at the start unless there is nothing in the string
+    if (output.startsWith(",")) {
+        output.remove(0, 1);
+    }
+
+    return output;
+}
+
+QStringList TrueFlowSpirometerMeasurement::getHeaderValues() const
+{
+    QStringList output;
+
+    // add the first keys to the list
+    foreach(QString key, firstKeysToAddToString) {
+        output.append(key);
+    }
+
+    // add the rest of the elements to the list
+    QStringList keys = getAttributes().keys();
+    foreach(QString key, keys) {
+        // Skip any of the previously entered values
+        if (firstKeysToAddToString.contains(key)) {
+            continue;
+        }
+        output.append(key);
+    }
+
+    return output;
 }
 
 TrueFlowSpirometerMeasurement TrueFlowSpirometerMeasurement::simulate()
 {
     TrueFlowSpirometerMeasurement simulatedMeasurement;
     return simulatedMeasurement;
+}
+
+void TrueFlowSpirometerMeasurement::appendMeasurementAttribute(QString* measurementStr, const QString& key) const
+{
+    QString value = getAttribute(key).value().toString();
+    if (QStringList{ flowValues, volumeValues }.contains(key)) {
+        value = QString("%1 ...").arg(value.split(" ")[0]);
+    }
+    *measurementStr = QString("%1, %2").arg(*measurementStr).arg(value);
+
+    // Add the units if it is stored
+    if (getAttribute(key).hasUnits()) {
+        QString units = getAttribute(key).units();
+        *measurementStr = QString("%1 (%2)").arg(*measurementStr).arg(units);
+    }
 }
 
 QDebug operator<<(QDebug dbg, const TrueFlowSpirometerMeasurement& item)
