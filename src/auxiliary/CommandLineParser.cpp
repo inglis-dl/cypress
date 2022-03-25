@@ -174,6 +174,18 @@ CommandLineParser::ParseResult CommandLineParser::parseCommandLine(
         qDebug() << "measure type option parsing " << s;
         // determine which manager and dialog is needed based on measure type
         //
+        if(s.contains("_"))
+        {
+            QStringList list;
+            foreach(const auto word, s.split("_"))
+            {
+                list << word.at(0).toUpper() + word.mid(1);
+            }
+            s = list.join("_");
+        }
+        else
+            s = s.at(0).toUpper() + s.mid(1);
+
         Constants::MeasureType measureType = Constants::getMeasureType(s);
         if(Constants::MeasureType::typeUnknown != measureType)
         {
