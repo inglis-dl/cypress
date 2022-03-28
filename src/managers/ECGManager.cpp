@@ -176,7 +176,7 @@ void ECGManager::select()
     else if(!isDefined(m_workingPath, FileType::ECGWorkingDir))
     {
        dialog.setFileMode(QFileDialog::FileMode::DirectoryOnly);
-       caption = tr("Select path to Cardiosoft export directory");
+       caption = tr("Select Cardiosoft export directory");
     }
     else
       return;
@@ -363,7 +363,7 @@ void ECGManager::finish()
     m_test.reset();
     if(QProcess::NotRunning != m_process.state())
     {
-        m_process.close();
+        m_process.kill();
     }
 
     deleteDeviceData();

@@ -99,7 +99,7 @@ void TonometerManager::loadSettings(const QSettings& settings)
 
 void TonometerManager::saveSettings(QSettings* settings) const
 {
-    if (!m_runnableName.isEmpty())
+    if(!m_runnableName.isEmpty())
     {
         settings->beginGroup(getGroup());
         settings->setValue("client/exe", m_runnableName);
@@ -509,6 +509,12 @@ void TonometerManager::finish()
     {
       return;
     }
+
+    if(QProcess::NotRunning != m_process.state())
+    {
+      m_process.kill();
+    }
+
     QSqlDatabase db = QSqlDatabase::database("mdb_connection");
     if(db.isValid() && !db.isOpen())
         db.open();
@@ -535,11 +541,6 @@ void TonometerManager::finish()
         qDebug() << "ERROR: finish failed during delete patient query";
       }
       db.close();
-    }
-
-    if(QProcess::NotRunning != m_process.state())
-    {
-      m_process.close();
     }
 
     if(!m_temporaryFile.isEmpty() && QFileInfo::exists(m_temporaryFile))

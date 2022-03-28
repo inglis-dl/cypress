@@ -303,7 +303,7 @@ void CDTTManager::finish()
     }
     if(QProcess::NotRunning != m_process.state())
     {
-        m_process.close();
+        m_process.kill();
     }
     if(!m_outputFile.isEmpty() && QFileInfo::exists(m_outputFile))
     {
