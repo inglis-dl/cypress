@@ -1,18 +1,120 @@
-#include "OnyxOutXml.h"
+#include "EMRPluginHelper.h"
 
 #include <QDebug>
 #include <QFile>
+#include <QXmlStreamWriter>
 
-OutDataModel OnyxOutXml::readImportantValues(const QString& transferOutPath, const QString& barcode)
+// pre-validated input json from the spirometer manager
+//
+void EMRPluginHelper::setInputData(const QJsonObject& input)
+{
+    if(input.isEmpty())
+    {
+        qDebug() << "ERROR: empty json input";
+        return;
+    }
+    m_input = input;
+}
+
+void EMRPluginHelper::write(const QString& fileName) const
+{
+    QFile file(fileName);
+    if(!file.open(QIODevice::WriteOnly|QIODevice::Text))
+        return;
+
+    QXmlStreamWriter stream(&file);
+    stream.setAutoFormatting(true);
+    stream.writeStartDocument();
+
+    addHeader(stream);
+    addCommand(stream);
+    addPatients(stream);
+
+    stream.writeEndElement();
+    stream.writeEndDocument();
+    file.close();
+}
+
+void EMRPluginHelper::addParameter(QXmlStreamWriter &stream, const QString& name, const QString& text) const
+{
+    stream.writeStartElement("Parameter");
+    stream.writeAttribute("Name", name);
+    stream.writeCharacters(text);
+    stream.writeEndElement();
+}
+
+void EMRPluginHelper::addHeader(QXmlStreamWriter& stream) const
+{
+    stream.writeStartElement("ndd");
+    stream.writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+    stream.writeAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
+    stream.writeAttribute("Version", "ndd.EasyWarePro.V1");
+}
+
+void EMRPluginHelper::addCommand(QXmlStreamWriter& stream) const
+{
+    stream.writeStartElement("Command");
+    stream.writeAttribute("Type", "PerformTest");
+    addParameter(stream, "OrderID", "1");
+    addParameter(stream, "TestType", "FVC");
+    stream.writeEndElement();
+}
+
+void EMRPluginHelper::addPatients(QXmlStreamWriter& stream) const
+{
+    stream.writeStartElement("Patients");
+
+    stream.writeStartElement("Patient");
+    stream.writeAttribute("ID", m_input["barcode"].toString());
+    stream.writeEmptyElement("LastName");
+    stream.writeEmptyElement("FirstName");
+    stream.writeTextElement("IsBioCal", "false");
+
+    addPatientDataAtPresent(stream);
+
+    stream.writeEndElement();
+    stream.writeEndElement();
+}
+
+void EMRPluginHelper::addPatientDataAtPresent(QXmlStreamWriter& stream) const
+{
+    stream.writeStartElement("PatientDataAtPresent");
+
+    // enforce capitalized gender: eg., male => Male
+    //
+    QString gender = m_input["gender"].toString().toLower();
+    gender = gender.at(0).toUpper() + gender.mid(1);
+    stream.writeTextElement("Gender", gender);
+
+    stream.writeTextElement("DateOfBirth", m_input["date_of_birth"].toString("yyyy-MM-dd"));
+    stream.writeTextElement("ComputedDateOfBirth", "false");
+
+    // TODO: check that the units are decimal m ?
+    //
+    stream.writeTextElement("Height", QString::number(m_input["height"].toDouble()));
+    stream.writeTextElement("Weight", QString::number(m_input["weight"].toDouble()));
+
+    //stream.writeTextElement("Ethnicity", m_ethnicity);
+
+    stream.writeTextElement("Smoker", (m_input["smoker"].toBool() ? "Yes" : "No"));
+
+    //stream.writeTextElement("Asthma", QString(m_asthma));
+    stream.writeTextElement("Asthma", "No");
+
+    //stream.writeTextElement("COPD", QString(m_copd));
+    stream.writeTextElement("COPD", "No");
+
+    stream.writeEndElement();
+}
+
+EMRPluginHelper::OutDataModel EMRPluginHelper::read(const QString& fileName)
 {
     OutDataModel outData;
-    QFile file(transferOutPath);
+    QFile file(fileName);
     if(!file.open(QFile::ReadOnly))
     {
-        qDebug() << "Cannot read file" << file.errorString();
-
-        //TODO: should not be calling exit here!
-        exit(0);
+        qDebug() << "ERROR: cannot read file" << fileName << file.errorString();
+        return outData;
     }
 
     QXmlStreamReader reader(&file);
@@ -35,7 +137,7 @@ OutDataModel OnyxOutXml::readImportantValues(const QString& transferOutPath, con
             else if("Patients" == name)
             {
                 //readPatients(&reader, &outData, "ONYX");
-                readPatients(&reader, &outData, barcode);
+                readPatients(&reader, &outData);
             }
             else
             {
@@ -47,14 +149,14 @@ OutDataModel OnyxOutXml::readImportantValues(const QString& transferOutPath, con
     return outData;
 }
 
-void OnyxOutXml::skipToEndElement(QXmlStreamReader* reader, const QString& name)
+void EMRPluginHelper::skipToEndElement(QXmlStreamReader* reader, const QString& name)
 {
     qDebug() << "Skip";
     if(reader->isEndElement() && reader->name() == name)
     {
         qDebug() << "Already at end Skip on: " << reader->name();
         return;
-    } 
+    }
 
     while(reader->readNext())
     {
@@ -66,7 +168,7 @@ void OnyxOutXml::skipToEndElement(QXmlStreamReader* reader, const QString& name)
     }
 }
 
-QString OnyxOutXml::readCommand(QXmlStreamReader* reader, OutDataModel* outData)
+QString EMRPluginHelper::readCommand(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     QStringRef type = reader->attributes().value("Type");
@@ -97,7 +199,7 @@ QString OnyxOutXml::readCommand(QXmlStreamReader* reader, OutDataModel* outData)
     return type.toString();
 }
 
-void OnyxOutXml::readPatients(QXmlStreamReader* reader, OutDataModel* outData, const QString& patientId)
+void EMRPluginHelper::readPatients(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     QStringRef id;
@@ -108,7 +210,8 @@ void OnyxOutXml::readPatients(QXmlStreamReader* reader, OutDataModel* outData, c
         id = reader->attributes().value("ID");
         qDebug() << "(Patients2)Name: " << name;
         qDebug() << "Id Attribute: " << id;
-        if("Patient" == name && patientId == id)
+        outData->id = id.toString();
+        if("Patient" == name)
         {
             readPatient(reader, outData);
             break;
@@ -122,7 +225,7 @@ void OnyxOutXml::readPatients(QXmlStreamReader* reader, OutDataModel* outData, c
     skipToEndElement(reader, "Patients");
 }
 
-void OnyxOutXml::readPatient(QXmlStreamReader* reader, OutDataModel* outData)
+void EMRPluginHelper::readPatient(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     qDebug() << "(Patient)Name: " << name;
@@ -142,7 +245,7 @@ void OnyxOutXml::readPatient(QXmlStreamReader* reader, OutDataModel* outData)
     skipToEndElement(reader, "Patient");
 }
 
-void OnyxOutXml::readIntervals(QXmlStreamReader* reader, OutDataModel* outData)
+void EMRPluginHelper::readIntervals(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     int numIntervals = 0;
@@ -171,7 +274,7 @@ void OnyxOutXml::readIntervals(QXmlStreamReader* reader, OutDataModel* outData)
     skipToEndElement(reader, "Intervals");
 }
 
-void OnyxOutXml::readInterval(QXmlStreamReader* reader, OutDataModel* outData)
+void EMRPluginHelper::readInterval(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     qDebug() << "(Interval)Name: " << name;
@@ -191,7 +294,7 @@ void OnyxOutXml::readInterval(QXmlStreamReader* reader, OutDataModel* outData)
     skipToEndElement(reader, "Interval");
 }
 
-void OnyxOutXml::readTests(QXmlStreamReader* reader, OutDataModel* outData)
+void EMRPluginHelper::readTests(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     qDebug() << "(Tests)Name: " << name;
@@ -216,7 +319,7 @@ void OnyxOutXml::readTests(QXmlStreamReader* reader, OutDataModel* outData)
     skipToEndElement(reader, "Tests");
 }
 
-void OnyxOutXml::readFVCTest(QXmlStreamReader* reader, OutDataModel* outData)
+void EMRPluginHelper::readFVCTest(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     qDebug() << "(FVC)Name: " << name;
@@ -249,7 +352,7 @@ void OnyxOutXml::readFVCTest(QXmlStreamReader* reader, OutDataModel* outData)
         else if("QualityGradeOriginal" == name)
         {
             outData->qualityGradeOriginal = reader->readElementText();
-            
+
         }
         else if("QualityGrade" == name)
         {
@@ -265,7 +368,7 @@ void OnyxOutXml::readFVCTest(QXmlStreamReader* reader, OutDataModel* outData)
     skipToEndElement(reader, "Test");
 }
 
-void OnyxOutXml::readPatientDataAtTestTime(QXmlStreamReader* reader, OutDataModel* outData)
+void EMRPluginHelper::readPatientDataAtTestTime(QXmlStreamReader* reader, OutDataModel* outData)
 {
     qDebug() << "PatientDataAtTestTime stored mock ";
     QStringRef name = reader->name();
@@ -312,7 +415,7 @@ void OnyxOutXml::readPatientDataAtTestTime(QXmlStreamReader* reader, OutDataMode
     skipToEndElement(reader, "PatientDataAtTestTime");
 }
 
-void OnyxOutXml::readTrials(QXmlStreamReader* reader, OutDataModel* outData)
+void EMRPluginHelper::readTrials(QXmlStreamReader* reader, OutDataModel* outData)
 {
     QStringRef name = reader->name();
     qDebug() << "(Trials)Name: " << name;
@@ -328,7 +431,7 @@ void OnyxOutXml::readTrials(QXmlStreamReader* reader, OutDataModel* outData)
     skipToEndElement(reader, "Trials");
 }
 
-void OnyxOutXml::readTrial(QXmlStreamReader* reader, OutDataModel* outData)
+void EMRPluginHelper::readTrial(QXmlStreamReader* reader, OutDataModel* outData)
 {
     TrialDataModel trialData;
     QStringRef name = reader->name();
@@ -388,7 +491,7 @@ void OnyxOutXml::readTrial(QXmlStreamReader* reader, OutDataModel* outData)
     skipToEndElement(reader, "Trial");
 }
 
-ResultParametersModel OnyxOutXml::readResultParameters(QXmlStreamReader* reader, const QString& closingTagName)
+EMRPluginHelper::ResultParametersModel EMRPluginHelper::readResultParameters(QXmlStreamReader* reader, const QString& closingTagName)
 {
     ResultParametersModel parameters;
     QStringRef name;
@@ -409,7 +512,7 @@ ResultParametersModel OnyxOutXml::readResultParameters(QXmlStreamReader* reader,
     return parameters;
 }
 
-ResultParameterModel OnyxOutXml::readResultParameter(QXmlStreamReader* reader)
+EMRPluginHelper::ResultParameterModel EMRPluginHelper::readResultParameter(QXmlStreamReader* reader)
 {
     ResultParameterModel resultParameter;
     QStringRef name;
@@ -438,7 +541,7 @@ ResultParameterModel OnyxOutXml::readResultParameter(QXmlStreamReader* reader)
     return resultParameter;
 }
 
-void OnyxOutXml::readChannelFlow(QXmlStreamReader* reader, TrialDataModel* trialData)
+void EMRPluginHelper::readChannelFlow(QXmlStreamReader* reader, TrialDataModel* trialData)
 {
     QStringRef name = reader->name();
     qDebug() << "(flow)Name: " << name;
@@ -458,7 +561,7 @@ void OnyxOutXml::readChannelFlow(QXmlStreamReader* reader, TrialDataModel* trial
     }
 }
 
-void OnyxOutXml::readChannelVolume(QXmlStreamReader* reader, TrialDataModel* trialData)
+void EMRPluginHelper::readChannelVolume(QXmlStreamReader* reader, TrialDataModel* trialData)
 {
     QStringRef name = reader->name();
     qDebug() << "(volume)Name: " << name;

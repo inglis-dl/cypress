@@ -12,6 +12,10 @@ public:
 
     bool loadData(const QString &transferOutPath, const QString& barcode);
 
+    void fromFile(const QString&);
+
+    void simulate(const QJsonObject&);
+
     // String representation for debug and GUI display purposes
     //
     QString toString() const override;

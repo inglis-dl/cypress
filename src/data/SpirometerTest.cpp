@@ -1,10 +1,8 @@
 #include "SpirometerTest.h"
 
-#include "OnyxOutXml.h"
-#include "OutDataModel.h"
+#include "../managers/EMRPluginHelper.h"
 
 #include <QJsonArray>
-#include <QJsonObject>
 
 const QString barcode = "barcode";
 const QString outputHeight = "output_height";
@@ -41,9 +39,16 @@ SpirometerTest::SpirometerTest()
     m_outputKeyList << resFev1FvcLlnormal2;
 }
 
-bool SpirometerTest::loadData(const QString& transferOutPath, const QString& barcode)
+void SpirometerTest::simulate(const QJsonObject &obj)
 {
-    OutDataModel outData = OnyxOutXml::readImportantValues(transferOutPath, barcode);
+  Q_UNUSED(obj)
+}
+
+void SpirometerTest::fromFile(const QString& fileName)
+{
+    EMRPluginHelper helper;
+    EMRPluginHelper::OutDataModel outData = helper.read(fileName);
+
     addMetaData(outputHeight, outData.height);
     addMetaData(outputWeight, outData.weight);
     addMetaData(outputEthnicity, outData.ethnicity);
@@ -62,29 +67,26 @@ bool SpirometerTest::loadData(const QString& transferOutPath, const QString& bar
             m_measurementList.append(measurement);
         }
 
-        ResultParametersModel metaResults = getMeasurement(0).getMetaResults();
+        EMRPluginHelper::ResultParametersModel metaResults = getMeasurement(0).getMetaResults();
         if(metaResults.results.contains("FVC"))
         {
-            ResultParameterModel fvc = metaResults.results["FVC"];
+            EMRPluginHelper::ResultParameterModel fvc = metaResults.results["FVC"];
             addMetaData(resFvcPred2, fvc.predictedValue);
             addMetaData(resFvcLlnormal2, fvc.llNormalValue);
         }
         if(metaResults.results.contains("FEV1"))
         {
-            ResultParameterModel fev1 = metaResults.results["FEV1"];
+            EMRPluginHelper::ResultParameterModel fev1 = metaResults.results["FEV1"];
             addMetaData(resFev1Pred2, fev1.predictedValue, fev1.unit);
             addMetaData(resFev1Llnormal2, fev1.llNormalValue, fev1.unit);
         }
         if(metaResults.results.contains("FEV1_FVC"))
         {
-            ResultParameterModel fev1Fvc = metaResults.results["FEV1_FVC"];
+            EMRPluginHelper::ResultParameterModel fev1Fvc = metaResults.results["FEV1_FVC"];
             addMetaData(resFev1FvcPred2, fev1Fvc.predictedValue);
             addMetaData(resFev1FvcLlnormal2, fev1Fvc.llNormalValue);
         }
     }
-    
-    // TODO: return false if output is not satisfactory
-    return true;
 }
 
 // String representation for debug and GUI display purposes

@@ -1,35 +1,30 @@
 #include "SpirometerManager.h"
 
-#include <QDebug>
-#include <QDir>
-#include <QFileInfo>
-#include <QJsonObject>
-#include <QProcess>
-#include <QSettings>
-#include <QStandardItemModel>
-#include <QProcess>
-#include <QFile>
-
-#include "../data/OnyxOutXml.h"
-#include "../auxiliary/JsonSettings.h"
 #include <QFileDialog>
+#include <QStandardItemModel>
+
+#include "../auxiliary/JsonSettings.h"
+#include "EMRPluginHelper.h"
 
 SpirometerManager::SpirometerManager(QObject* parent) : ManagerBase(parent)
 {
-    setGroup("trueflowspirometer");
+    setGroup("spirometer");
 
     // all managers must check for barcode and language input values
     //
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
-    m_inputKeyList << "gender";
+    m_inputKeyList << "gender";  // male/female
     m_inputKeyList << "date_of_birth";
-    m_inputKeyList << "height";
-    m_inputKeyList << "weight";
-    //m_inputKeyList << "ethnicity";
-    m_inputKeyList << "smoker";
-    //m_inputKeyList << "asthma";
-    //m_inputKeyList << "copd";
+    m_inputKeyList << "height";  // m
+    m_inputKeyList << "weight";  // kg
+    m_inputKeyList << "smoker";  // true/false
+
+    //TODO: check if these upstream inputs are optinal or required
+    //
+    //m_inputKeyList << "asthma"; // true/false
+    //m_inputKeyList << "copd";   // true/false
+    //m_inputKeyList << "ethnicity"; // caucasian, asian, african, hispanic, other_ethnic
 }
 
 SpirometerManager::~SpirometerManager()
@@ -38,6 +33,30 @@ SpirometerManager::~SpirometerManager()
 
 void SpirometerManager::start()
 {
+    // connect signals and slots to QProcess one time only
+    //
+    connect(&m_process, &QProcess::started,
+        this, [this]() {
+            qDebug() << "process started: " << m_process.arguments().join(" ");
+        });
+
+    connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+        this, &SpirometerManager::readOutput);
+
+    connect(&m_process, &QProcess::errorOccurred,
+        this, [](QProcess::ProcessError error)
+        {
+            QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
+        });
+
+    connect(&m_process, &QProcess::stateChanged,
+        this, [](QProcess::ProcessState state) {
+            QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "process state: " << s.join(" ").toLower();
+        });
+
+    configureProcess();
     emit dataChanged();
 }
 
@@ -47,32 +66,30 @@ void SpirometerManager::loadSettings(const QSettings& settings)
     // eg., C:/Program Files (x86)/ndd Medizintechnik/Easy on-PC/Application/EasyWarePro.exe
     //
     QString exeName = settings.value(getGroup() + "/client/exe").toString();
-    QString emrTransferDir = settings.value(getGroup() + "/client/transferDir").toString();
+    QString path = settings.value(getGroup() + "/client/data").toString();
     selectRunnable(exeName);
-    selectEmrTransferDir(emrTransferDir);
+    selectDataPath(path);
 }
 
 void SpirometerManager::saveSettings(QSettings* settings) const
 {
-    if(!m_runnableFullPath.isEmpty())
+    if(!m_runnableName.isEmpty())
     {
         settings->beginGroup(getGroup());
-        settings->setValue("client/exe", m_runnableFullPath);
+        settings->setValue("client/exe", m_runnableName);
         settings->endGroup();
         if(m_verbose)
             qDebug() << "wrote exe fullspec path to settings file";
     }
 
-    if(!m_emrTransferDir.isEmpty())
+    if(!m_dataPath.isEmpty())
     {
         settings->beginGroup(getGroup());
-        settings->setValue("client/transferDir", m_emrTransferDir);
+        settings->setValue("client/data", m_dataPath);
         settings->endGroup();
         if(m_verbose)
             qDebug() << "wrote emr transfer directory path to settings file";
     }
-
-    resetEmrTransferFiles();
 }
 
 QJsonObject SpirometerManager::toJsonObject() const
@@ -80,7 +97,7 @@ QJsonObject SpirometerManager::toJsonObject() const
     QJsonObject json = m_test.toJsonObject();
     if(Constants::RunMode::modeSimulate != m_mode)
     {
-        QFile ofile(getTransferOutFilePath());
+        QFile ofile(getEMROutXmlName());
         if(ofile.exists())
         {
             ofile.open(QIODevice::ReadOnly);
@@ -93,31 +110,16 @@ QJsonObject SpirometerManager::toJsonObject() const
         {
             QString outputPdf = getOutputPdfPath();
             QFile pdfFile(outputPdf);
-
-            // new stuff
-            QString oldName = pdfFile.fileName();
-            QString renamedName = QString("%1_spirometry_%2.pdf").arg(oldName.remove(".pdf")).arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
-            pdfFile.rename(renamedName);
-
-            pdfFile.open(QIODevice::ReadOnly);
-            QByteArray bufferPdf = pdfFile.readAll();
-            json.insert("test_output_pdf_file", QString(bufferPdf.toBase64()));
-            json.insert("test_output_pdf_file_mime_type", "pdf");
-
-            if(false == oldName.endsWith(".pdf"))
+            if(pdfFile.open(QIODevice::ReadOnly))
             {
-                pdfFile.rename(QString("%1.pdf").arg(oldName));
-            }  
+              QByteArray bufferPdf = pdfFile.readAll();
+              json.insert("test_output_pdf_file", QString(bufferPdf.toBase64()));
+              json.insert("test_output_pdf_file_mime_type", "pdf");
+              pdfFile.close();
+            }
+
         }
     }
-    //QJsonObject jsonInput;
-    //for(auto&& x : m_inputData.toStdMap())
-    //{
-    //    // convert to space delimited phrases to snake_case
-    //    //
-    //    jsonInput.insert(QString(x.first).toLower().replace(QRegExp("[\\s]+"),"_"), QJsonValue::fromVariant(x.second));
-    //}
-    //json.insert("test_input", jsonInput);
     json.insert("test_input",m_inputData);
     return json;
 }
@@ -170,9 +172,7 @@ void SpirometerManager::buildModel(QStandardItemModel* model) const
 bool SpirometerManager::isDefined(const QString& value, const SpirometerManager::FileType &fileType) const
 {
     if(value.isEmpty())
-    {
         return false;
-    }
 
     bool ok = false;
     if(fileType == SpirometerManager::FileType::EasyWareExe)
@@ -183,14 +183,13 @@ bool SpirometerManager::isDefined(const QString& value, const SpirometerManager:
             ok = true;
         }
     }
-    else if(fileType == SpirometerManager::FileType::TransferDir)
+    else if(fileType == SpirometerManager::FileType::EMRDataPath)
     {
         if(QDir(value).exists())
         {
             ok = true;
         }
-    }
-    
+    }    
     return ok;
 }
 
@@ -198,20 +197,15 @@ void SpirometerManager::measure()
 {
     if(Constants::RunMode::modeSimulate == m_mode)
     {
-        readOutput();
-        return;
+      readOutput();
+      return;
     }
-
     clearData();
     // launch the process
-    qDebug() << "starting process from measure";
-    
-    resetEmrTransferFiles();
-    m_onyxInXml.write(getTransferInFilePath());
-    launchEasyOnPc();
-    readOutput();
-    emit dataChanged();
-    m_test.toString();
+    if(m_verbose)
+      qDebug() << "Starting process from measure";
+
+    m_process.start();
 }
 
 void SpirometerManager::setInputData(const QJsonObject& input)
@@ -224,15 +218,15 @@ void SpirometerManager::setInputData(const QJsonObject& input)
         if(!input.contains("language"))
             m_inputData["language"] = "en";
         if(!input.contains("gender"))
-            m_inputData["gender"] = "Male";
+            m_inputData["gender"] = "male";  // required
         if(!input.contains("date_of_birth"))
-            m_inputData["date_of_birth"] = "1950-12-25";
+            m_inputData["date_of_birth"] = "1950-12-25"; // required
         if(!input.contains("height"))
-            m_inputData["height"] = 1.5;
+            m_inputData["height"] = 1.8; // m, required
         if(!input.contains("weight"))
-            m_inputData["weight"] = 80;
+            m_inputData["weight"] = 80;  // kg, optional, no decimal
         if(!input.contains("smoker"))
-            m_inputData["smoker"] = false;
+            m_inputData["smoker"] = false; // optional
     }
     bool ok = true;
     QMap<QString, QMetaType::Type> typeMap{
@@ -278,108 +272,112 @@ void SpirometerManager::setInputData(const QJsonObject& input)
         m_inputData = QJsonObject();
     }
     else
-    {
-        // Get participat info from inputs
-        QString barcode = m_inputData["barcode"].toString();
-        QString gender = m_inputData["gender"].toString();
-        QDate birthDate = m_inputData["date_of_birth"].toVariant().toDate();
-        double height = m_inputData["height"].toDouble();
-        double weight = m_inputData["weight"].toDouble();
-        bool smoker = m_inputData["smoker"].toBool();
-
-        // load participant info
-        m_onyxInXml.setParticipantInfo(barcode, gender, birthDate, height, weight, smoker);
-    }
+      configureProcess();
 }
 
 void SpirometerManager::select()
 {
+    QFileDialog dialog;
     // which do we need to select first ?
     QString caption;
     QStringList filters;
     bool selectingRunnable = false;
-    if(!isDefined(m_runnableFullPath, SpirometerManager::FileType::EasyWareExe))
+    if(!isDefined(m_runnableName, SpirometerManager::FileType::EasyWareExe))
     {
         filters << "Applications (*.exe)" << "Any files (*)";
         caption = tr("Select EasyWarePro.exe File");
         selectingRunnable = true;
+        dialog.setNameFilters(filters);
+        dialog.setFileMode(QFileDialog::ExistingFile);
     }
-    else if(!isDefined(m_emrTransferDir, SpirometerManager::FileType::TransferDir))
+    else if(!isDefined(m_dataPath, SpirometerManager::FileType::EMRDataPath))
     {
-        caption = tr("Select EMR Transfer Directory");
+        dialog.setFileMode(QFileDialog::FileMode::DirectoryOnly);
+        caption = tr("Select EMR data transfer directory");
     }
     else
         return;
 
-    QFileDialog dialog;
-    dialog.setNameFilters(filters);
-    dialog.setFileMode(selectingRunnable ? QFileDialog::ExistingFile: QFileDialog::Directory);
     dialog.setWindowTitle(caption);
-    if(QDialog::Accepted == dialog.exec())
+    if(dialog.exec() == QDialog::Accepted)
     {
+      QStringList files = dialog.selectedFiles();
+      QString fileName = files.first();
+      FileType type =
+        (selectingRunnable ? FileType::EasyWareExe : FileType::EMRDataPath);
+      if(isDefined(fileName,type))
+      {
         if(selectingRunnable)
         {
-            QStringList files = dialog.selectedFiles();
-            QString fileName = files.first();
-            if(isDefined(fileName, FileType::EasyWareExe))
-            {
-                selectRunnable(fileName);
-            }
+          selectRunnable(fileName);
         }
-        else {
-            QString dirName = dialog.directory().absolutePath();
-            if(isDefined(dirName, FileType::TransferDir))
-            {
-                selectEmrTransferDir(dirName);
-            }
+        else
+        {
+          selectDataPath(fileName);
         }
-    }
+      }
+   }
 }
 
-void SpirometerManager::selectRunnable(const QString& runnableFullPath)
+void SpirometerManager::selectRunnable(const QString& exeName)
 {
-    if(isDefined(runnableFullPath, SpirometerManager::FileType::EasyWareExe))
+    if(isDefined(exeName, SpirometerManager::FileType::EasyWareExe))
     {
-        QFileInfo info(runnableFullPath);
-        m_runnableFullPath = runnableFullPath;
-        m_runnableDir = info.absolutePath();
-        if(inputDataInitialized())
-        {
-            configureProcess();
-        }
+        QFileInfo info(exeName);
+        m_runnableName = exeName;
+        m_runnablePath = info.absolutePath();
+        emit runnableSelected();
+        configureProcess();
     }
     else
         emit canSelectRunnable();
 }
 
-void SpirometerManager::selectEmrTransferDir(const QString& emrTransferDir)
+void SpirometerManager::selectDataPath(const QString& path)
 {
-    if(isDefined(emrTransferDir, SpirometerManager::FileType::TransferDir))
+    if(isDefined(path, SpirometerManager::FileType::EMRDataPath))
     {
-        m_emrTransferDir = emrTransferDir;
-        if(inputDataInitialized())
-        {
-            configureProcess();
-        }
+        m_dataPath = path;
+        dataPathSelected();
+        configureProcess();
     }
     else
-        emit canSelectEmrTransferDir();
+        emit canSelectDataPath();
 }
 
 void SpirometerManager::readOutput()
 {
     if(Constants::RunMode::modeSimulate == m_mode)
     {
-        // TODO: Implement simulate mode
+        m_test.simulate(m_inputData);
+        if(m_test.isValid())
+        {
+          // emit the can write signal
+          emit message(tr("Ready to save results..."));
+          emit canWrite();
+        }
+        emit dataChanged();
         return;
     }
 
-    // Read the output for non simulate mode
-    bool loaded = m_test.loadData(getTransferOutFilePath(), m_inputData["barcode"].toString());
-    if(loaded)
+    if(QProcess::NormalExit != m_process.exitStatus())
     {
-        emit canWrite();
+      qDebug() << "ERROR: process failed to finish correctly: cannot read output";
+      return;
     }
+    else
+      qDebug() << "process finished successfully";
+
+    m_test.fromFile(getEMROutXmlName());
+    if(m_test.isValid())
+    {
+      emit message(tr("Ready to save results..."));
+      emit canWrite();
+    }
+    else
+      qDebug() << "ERROR: ora database produced invalid test results";
+
+    emit dataChanged();
 }
 
 void SpirometerManager::clearData()
@@ -388,118 +386,92 @@ void SpirometerManager::clearData()
     emit dataChanged();
 }
 
-void SpirometerManager::launchEasyOnPc() 
-{
-    createDatabaseCopies();
-
-    m_process.start();
-    bool launched = m_process.waitForFinished(100000000);
-    m_process.close();
-    qDebug() << "Easy on-PC launched"<< launched;
-}
-
-void SpirometerManager::resetEmrTransferFiles() const
-{
-    // Delete OnyxOut.xml if it exists
-    if(QFile::exists(getTransferOutFilePath()))
-    {
-        QFile::remove(getTransferOutFilePath());
-    }
-
-    // Delete OnyxIn.xml if it exists
-    if(QFile::exists(getTransferInFilePath()))
-    {
-        QFile::remove(getTransferInFilePath());
-    }
-
-    // Reset copied database
-    QString dbPath = getDbPath();
-    QString dbCopyPath = getDbCopyPath();
-    if(QFile::exists(dbCopyPath))
-    {
-        // Remove the current db file if it exists
-        if(QFile::exists(dbPath))
-        {
-            QFile::remove(dbPath);
-        }
-
-        // Rename copy to be the current database
-        QFile::rename(dbCopyPath, dbPath);
-    }
-
-    // Reset copied database options
-    QString dbOptionsPath = getDbOptionsPath();
-    QString dbOptionsCopyPath = getDbOptionsCopyPath();
-    if(QFile::exists(dbOptionsCopyPath))
-    {
-        // Remove the current db file if it exists
-        if(QFile::exists(dbOptionsPath))
-        {
-            QFile::remove(dbOptionsPath);
-        }
-
-        // Rename copy to be the current database
-        QFile::rename(dbOptionsCopyPath, dbOptionsPath);
-    }
-
-    // Delete pdf output file
-    QString pdfFilePath = getOutputPdfPath();
-    if(QFile::exists(pdfFilePath))
-    {
-        QFile::remove(pdfFilePath);
-    }
-}
-
-void SpirometerManager::createDatabaseCopies() const
+void SpirometerManager::backupDatabases() const
 {
     // Create database copy
-    QString dbPath = getDbPath();
-    QString dbCopyPath = getDbCopyPath();
-    if(QFile::exists(dbPath))
+    QString fromFile = getEWPDbName();
+    QString toFile = getEWPDbCopyName();
+    if(QFile::exists(fromFile))
     {
+        qDebug() << "copied" << fromFile << "->" << toFile;
         // Create the copy
-        QFile::copy(dbPath, dbCopyPath);
+        QFile::copy(fromFile, toFile);
     }
 
     // Create database options copy
-    QString dbOptionsPath = getDbOptionsPath();
-    QString dbOptionsCopyPath = getDbOptionsCopyPath();
-    if(QFile::exists(dbOptionsPath))
+    fromFile = getEWPOptionsDbName();
+    toFile = getEWPOptionsDbCopyName();
+    if(QFile::exists(fromFile))
     {
+        qDebug() << "copied" << fromFile << "->" << toFile;
         // Create the copy
-        QFile::copy(dbOptionsPath, dbOptionsCopyPath);
+        QFile::copy(fromFile, toFile);
     }
 }
 
-bool SpirometerManager::inputDataInitialized() const
+void SpirometerManager::restoreDatabases() const
 {
-    bool initialized = isDefined(m_runnableFullPath, SpirometerManager::FileType::EasyWareExe)
-        && isDefined(m_runnableDir, SpirometerManager::FileType::TransferDir);
-    return initialized;
+    // Reset copied database
+    QString toFile = getEWPDbName();
+    QString fromFile = getEWPDbCopyName();
+    if(QFile::exists(fromFile))
+    {
+        // Remove the current db file if it exists
+        if(QFile::exists(toFile))
+        {
+            QFile::remove(toFile);
+        }
+
+        // Rename copy to be the current database
+        QFile::rename(fromFile, toFile);
+    }
+
+    // Reset copied database options
+    toFile = getEWPOptionsDbName();
+    fromFile = getEWPOptionsDbCopyName();
+    if(QFile::exists(fromFile))
+    {
+        // Remove the current db file if it exists
+        if(QFile::exists(toFile))
+        {
+            QFile::remove(toFile);
+        }
+
+        // Rename copy to be the current database
+        QFile::rename(fromFile, toFile);
+    }
 }
 
 void SpirometerManager::configureProcess()
 {
+    if(m_inputData.isEmpty()) return;
+
     if(Constants::RunMode::modeSimulate == m_mode)
     {
-        if(!m_inputData.isEmpty())
-        {
-            emit message(tr("Ready to measure..."));
-            emit canMeasure();
-        }
+        emit message(tr("Ready to measure..."));
+        emit canMeasure();
         return;
     }
 
-    QDir working(m_runnableDir);
-    if(isDefined(m_runnableFullPath, SpirometerManager::FileType::EasyWareExe) &&
-        working.exists())
+    QDir working(m_runnablePath);
+    if(isDefined(m_runnableName, SpirometerManager::FileType::EasyWareExe) &&
+       isDefined(m_dataPath, SpirometerManager::FileType::EMRDataPath) &&
+       working.exists())
     {
         qDebug() << "OK: configuring command";
 
-        QString command = QString("\"%1\"").arg(m_runnableFullPath);
-        m_process.setProgram(command);
-        m_process.setWorkingDirectory(working.absolutePath());
-        qDebug() << "process working dir: " << working.absolutePath();
+        m_process.setProgram(m_runnableName);
+        m_process.setWorkingDirectory(m_runnablePath);
+
+        removeXmlFiles();
+
+        backupDatabases();
+
+        // write the inputs to EMR xml
+        //
+        EMRPluginHelper helper;
+        helper.setInputData(m_inputData);
+        helper.write(m_dataPath);
 
         emit message(tr("Ready to measure..."));
         emit canMeasure();
@@ -509,9 +481,50 @@ void SpirometerManager::configureProcess()
 }
 
 void SpirometerManager::finish()
-{
+{   
+    if(Constants::RunMode::modeSimulate == m_mode)
+    {
+      return;
+    }
+
+    if(QProcess::NotRunning != m_process.state())
+    {
+       m_process.kill();
+    }
+
+    restoreDatabases();
+    removeXmlFiles();
+
+    // delete pdf output file
+    //
+    QString pdfFilePath = getOutputPdfPath();
+    if(QFile::exists(pdfFilePath))
+    {
+        QFile::remove(pdfFilePath);
+    }
+
     m_test.reset();
-    resetEmrTransferFiles();
+}
+
+void SpirometerManager::removeXmlFiles() const
+{
+    // delete CypressOut.xml if it exists
+    //
+    QString fileName = getEMROutXmlName();
+    if(QFile::exists(fileName))
+    {
+        qDebug() << "removed" << fileName;
+        QFile::remove(fileName);
+    }
+
+    // delete CypressIn.xml if it exists
+    //
+    fileName = getEMRInXmlName();
+    if(QFile::exists(fileName))
+    {
+        qDebug() << "removed" << fileName;
+        QFile::remove(fileName);
+    }
 }
 
 QString SpirometerManager::getOutputPdfPath() const

@@ -2,8 +2,8 @@
 #define SPIROMETERMEASUREMENT_H
 
 #include "Measurement.h"
-#include "TrialDataModel.h"
 
+#include "../managers/EMRPluginHelper.h"
 /*!
 * \class SpirometerMeasurement
 * \brief A SpirometerMeasurement class
@@ -17,7 +17,10 @@ public:
     SpirometerMeasurement() = default;
     ~SpirometerMeasurement() = default;
 
-    void fromTrialData(const TrialDataModel&);
+    typedef typename EMRPluginHelper::TrialDataModel trialData;
+    typedef typename EMRPluginHelper::ResultParametersModel parameterData;
+
+    void fromTrialData(const trialData&);
 
     bool isValid() const override;
 
@@ -27,9 +30,10 @@ public:
 
     static SpirometerMeasurement simulate();
 
-    ResultParametersModel getMetaResults() { return metaResults; }
+    parameterData getMetaResults() { return metaResults; }
+
 private:
-    ResultParametersModel metaResults;
+    parameterData metaResults;
     void appendMeasurementAttribute(QString* measurementStr, const QString& key) const;
 };
 

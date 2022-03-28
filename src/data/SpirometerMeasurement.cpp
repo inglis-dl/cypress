@@ -34,24 +34,25 @@ const QList<QString> storeNormalPredictedAsMetaList = { "fev1", "fev1_fvc","fvc"
  *
  */
 
-void SpirometerMeasurement::fromTrialData(const TrialDataModel& trialData)
-{
-    setAttribute(outputTrialDate, trialData.date);
-    setAttribute(outputTrialRank, trialData.rank);
-    setAttribute(outputTrialRankOriginal, trialData.rankOriginal);
-    setAttribute(accepted, trialData.accepted);
-    setAttribute(acceptedOriginal, trialData.acceptedOriginal);
-    setAttribute(manualAmbientOverride, trialData.manualAmbientOverride);
-    setAttribute(flowInterval, trialData.flowInterval);
-    setAttribute(flowValues, trialData.flowValues);
-    setAttribute(trialNumber, trialData.number);
-    setAttribute(volumeInterval, trialData.volumeInterval);
-    setAttribute(volumeValues, trialData.volumeValues);
 
-    foreach(const auto key, trialData.resultParameters.results.keys())
+void SpirometerMeasurement::fromTrialData(const trialData& trial)
+{
+    setAttribute(outputTrialDate, trial.date);
+    setAttribute(outputTrialRank, trial.rank);
+    setAttribute(outputTrialRankOriginal, trial.rankOriginal);
+    setAttribute(accepted, trial.accepted);
+    setAttribute(acceptedOriginal, trial.acceptedOriginal);
+    setAttribute(manualAmbientOverride, trial.manualAmbientOverride);
+    setAttribute(flowInterval, trial.flowInterval);
+    setAttribute(flowValues, trial.flowValues);
+    setAttribute(trialNumber, trial.number);
+    setAttribute(volumeInterval, trial.volumeInterval);
+    setAttribute(volumeValues, trial.volumeValues);
+
+    foreach(const auto key, trial.resultParameters.results.keys())
     {
         qDebug() << key;
-        ResultParameterModel result = trialData.resultParameters.results[key];
+        EMRPluginHelper::ResultParameterModel result = trial.resultParameters.results[key];
         setAttribute(QString("%1_data_value").arg(key.toLower()), result.dataValue, result.unit);
 
         // If the key is in the list of elements that need to store normal 

@@ -33,12 +33,7 @@ HEADERS += \
     ../../data/SpirometerTest.h \
     ../../data/Measurement.h \
     ../../data/TestBase.h \
-    ../../data/OnyxInXml.h \
-    ../../data/OnyxOutXml.h \
-    ../../data/OutDataModel.h \
-    ../../data/ResultParameterModel.h \
-    ../../data/ResultParametersModel.h \
-    ../../data/TrialDataModel.h \
+    ../../managers/EMRPluginHelper.h \
     ../../managers/ManagerBase.h \
     ../../managers/SpirometerManager.h \
     ../../widgets/BarcodeWidget.h \
@@ -52,8 +47,7 @@ SOURCES += \
     ../../data/SpirometerMeasurement.cpp \
     ../../data/SpirometerTest.cpp \
     ../../data/Measurement.cpp \
-    ../../data/OnyxInXml.cpp \
-    ../../data/OnyxOutXml.cpp \
+    ../../managers/EMRPluginHelper.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SpirometerManager.cpp \
     ../../widgets/BarcodeWidget.cpp \

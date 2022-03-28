@@ -65,14 +65,14 @@ void MainWindow::initializeConnections()
 {
   // Disable all buttons by default
   //
-  for(auto&& x : this->findChildren<QPushButton *>())
+  foreach(auto button, this->findChildren<QPushButton *>())
   {
-      x->setEnabled(false);
+      button->setEnabled(false);
 
       // disable enter key press event passing onto auto focus buttons
       //
-      x->setDefault(false);
-      x->setAutoDefault(false);
+      button->setDefault(false);
+      button->setAutoDefault(false);
   }
 
   // Close the application
@@ -84,7 +84,7 @@ void MainWindow::initializeConnections()
   connect(&m_manager,&ManagerBase::message,
           ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
-  if (Constants::RunMode::modeSimulate == m_mode)
+  if(Constants::RunMode::modeSimulate == m_mode)
   {
       ui->barcodeWidget->setBarcode(Constants::DefaultBarcode);
   }
@@ -92,7 +92,7 @@ void MainWindow::initializeConnections()
   connect(ui->barcodeWidget, &BarcodeWidget::validated,
       this, [this](const bool& valid)
       {
-          if (valid)
+          if(valid)
           {
               // launch the manager
               //
@@ -169,7 +169,7 @@ void MainWindow::initializeConnections()
             ui->closeButton->setEnabled(true);
             ui->openButton->setEnabled(true);
             static bool warn = true;
-            if (warn)
+            if(warn)
             {
                 QMessageBox::warning(
                     this, QApplication::applicationName(),
@@ -183,19 +183,19 @@ void MainWindow::initializeConnections()
     connect(ui->openButton, &QPushButton::clicked,
         &m_manager, &SpirometerManager::select);
 
-    connect(&m_manager, &SpirometerManager::canSelectEmrTransferDir,
+    connect(&m_manager, &SpirometerManager::canSelectDataPath,
         this, [this]() {
             for (auto&& x : this->findChildren<QPushButton*>())
                 x->setEnabled(false);
             ui->closeButton->setEnabled(true);
             ui->openButton->setEnabled(true);
             static bool warn = true;
-            if (warn)
+            if(warn)
             {
                 QMessageBox::warning(
                     this, QApplication::applicationName(),
-                    tr("Select the emr transfer directory by clicking Open and browsing to the "
-                        "required transfer directory (likely C:/ProgramData/ndd/Easy on-PC) and selecting the it. "
+                    tr("Select the EMR transfer directory by clicking Open and browsing to the "
+                        "required directory (likely C:/ProgramData/ndd/Easy on-PC) and selecting the it. "
                         "Click the Run button to start the test otherwise check the installation."));
                 warn = false;
             }
@@ -227,7 +227,7 @@ void MainWindow::run()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "close event called";
 
     QDir dir = QCoreApplication::applicationDirPath();
@@ -241,9 +241,9 @@ void MainWindow::readInput()
 {
     // TODO: if the run mode is not debug, an input file name is mandatory, throw an error
     //
-    if (m_inputFileName.isEmpty())
+    if(m_inputFileName.isEmpty())
     {
-        if (Constants::RunMode::modeSimulate == m_mode)
+        if(Constants::RunMode::modeSimulate == m_mode)
         {
             m_inputData["barcode"] = Constants::DefaultBarcode;
         }
@@ -255,7 +255,7 @@ void MainWindow::readInput()
         return;
     }
     QFileInfo info(m_inputFileName);
-    if (info.exists())
+    if(info.exists())
     {
         QFile file;
         file.setFileName(m_inputFileName);
@@ -265,7 +265,7 @@ void MainWindow::readInput()
 
         QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
         m_inputData = jsonDoc.object();
-        if (m_inputData.contains("barcode"))
+        if(m_inputData.contains("barcode"))
             ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }
     else
@@ -277,7 +277,7 @@ void MainWindow::readInput()
 
 void MainWindow::writeOutput()
 {
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "begin write process ... ";
 
     QJsonObject jsonObj = m_manager.toJsonObject();
@@ -285,7 +285,7 @@ void MainWindow::writeOutput()
     QString barcode = ui->barcodeWidget->barcode();
     jsonObj.insert("verification_barcode", QJsonValue(barcode));
 
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "determine file output name ... ";
 
     QString fileName;
@@ -299,7 +299,7 @@ void MainWindow::writeOutput()
 
     // TODO: if the run mode is not debug, an output file name is mandatory, throw an error
     //
-    if (m_outputFileName.isEmpty())
+    if(m_outputFileName.isEmpty())
         constructDefault = true;
     else
     {
@@ -310,10 +310,10 @@ void MainWindow::writeOutput()
         else
             constructDefault = true;
     }
-    if (constructDefault)
+    if(constructDefault)
     {
         QDir dir = QCoreApplication::applicationDirPath();
-        if (m_outputFileName.isEmpty())
+        if(m_outputFileName.isEmpty())
         {
             QStringList list;
             list
@@ -331,7 +331,7 @@ void MainWindow::writeOutput()
     saveFile.open(QIODevice::WriteOnly);
     saveFile.write(QJsonDocument(jsonObj).toJson());
 
-    if (m_verbose)
+    if(m_verbose)
         qDebug() << "wrote to file " << fileName;
 
     ui->statusBar->showMessage("Spirometer data recorded.  Close when ready.");
