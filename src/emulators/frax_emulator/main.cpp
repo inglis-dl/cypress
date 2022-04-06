@@ -5,6 +5,8 @@
 
 int main(int argc, char *argv[])
 {
+    Q_UNUSED(argc)
+
     QFileInfo info(argv[0]);
     QDir path = info.absolutePath();
     QString infile = path.filePath("input.txt");
