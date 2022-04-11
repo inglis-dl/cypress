@@ -1,8 +1,8 @@
 #include "TonometerMeasurement.h"
 
 #include "../auxiliary/Utilities.h"
+#include <QDateTime>
 #include <QDebug>
-#include <QJsonObject>
 #include <QRandomGenerator>
 
 /*
@@ -89,10 +89,10 @@ bool TonometerMeasurement::isValid() const
     return ok;
 }
 
-void TonometerMeasurement::fromJson(const QJsonObject& obj)
+void TonometerMeasurement::fromVariant(const QVariantMap& obj)
 {
     reset();
-    QString side = "L" == obj["Eye"].toVariant().toString() ? "left" : "right";
+    QString side = "L" == obj["Eye"].toString() ? "left" : "right";
     setAttribute("side",side);
     QMap<QString,QString>::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
     while(it != TonometerMeasurement::variableLUT.constEnd())
@@ -103,7 +103,7 @@ void TonometerMeasurement::fromJson(const QJsonObject& obj)
          QString units = TonometerMeasurement::unitsLUT.contains(key) ?
            TonometerMeasurement::unitsLUT[key] : QString();
 
-         setAttribute(key, obj[it.value()].toVariant(), units);
+         setAttribute(key, obj[it.value()], units);
        }
        it++;
     }

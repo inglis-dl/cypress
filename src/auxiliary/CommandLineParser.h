@@ -28,11 +28,11 @@ public:
 
     ParseResult parseCommandLine( const QCoreApplication&, QString*);
 
-    QMap<QString,QVariant> getArgs(){ return m_args; }
+    QVariantMap getArgs(){ return m_args; }
 
 private:
     QCommandLineParser m_parser;
-    QMap<QString,QVariant> m_args;
+    QVariantMap m_args;
 };
 
 #endif // COMMANDLINEPARSER_H

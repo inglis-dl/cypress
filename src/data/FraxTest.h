@@ -10,7 +10,7 @@ public:
     FraxTest();
     ~FraxTest() = default;
 
-    void fromFile(const QString &);
+    void fromFile(const QString&);
 
     // String representation for debug and GUI display purposes
     //
@@ -22,11 +22,10 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
-    void simulate(const QJsonObject&);
+    void simulate(const QVariantMap&);
 
 private:
-
-    QList<QString> m_outputKeyList;
+    QStringList m_outputKeyList;
 
 };
 

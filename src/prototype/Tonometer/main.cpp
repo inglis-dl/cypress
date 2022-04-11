@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     }
 
     MainWindow window;
-    QMap<QString,QVariant> args = parser.getArgs();
+    QVariantMap args = parser.getArgs();
     window.setInputFileName(args["inputFileName"].toString());
     window.setOutputFileName(args["outputFileName"].toString());
     window.setRunMode(args["runMode"].value<Constants::RunMode>());

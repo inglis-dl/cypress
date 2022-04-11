@@ -16,7 +16,7 @@ class SpirometerManager : public ManagerBase
 
 public:
     explicit SpirometerManager(QObject* parent = Q_NULLPTR);
-    ~SpirometerManager();
+    ~SpirometerManager() = default;
 
     void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
@@ -34,7 +34,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QJsonObject &) override;
+    void setInputData(const QVariantMap&) override;
 
 public slots:
 

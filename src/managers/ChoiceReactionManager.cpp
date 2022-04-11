@@ -138,7 +138,7 @@ void ChoiceReactionManager::selectRunnable(const QString &exeName)
        emit canSelectRunnable();
 }
 
-void ChoiceReactionManager::setInputData(const QJsonObject &input)
+void ChoiceReactionManager::setInputData(const QVariantMap& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -162,7 +162,7 @@ void ChoiceReactionManager::setInputData(const QJsonObject &input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
-      const QVariant value = m_inputData[key].toVariant();
+      const QVariant value = m_inputData[key];
       bool valueOk = true;
       QMetaType::Type type;
       if(typeMap.contains(key))
@@ -184,7 +184,7 @@ void ChoiceReactionManager::setInputData(const QJsonObject &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData = QJsonObject();
+      m_inputData = QVariantMap();
     }
     else
       configureProcess();
@@ -385,6 +385,6 @@ QJsonObject ChoiceReactionManager::toJsonObject() const
       json.insert("test_output_file",QString(buffer.toBase64()));
       json.insert("test_output_file_mime_type","csv");
     }
-    json.insert("test_input",m_inputData);
+    json.insert("test_input",QJsonObject::fromVariantMap(m_inputData));
     return json;
 }

@@ -48,23 +48,28 @@ TonometerTest::TonometerTest()
     m_outputKeyList = TonometerTest::metaLUT.keys();
 }
 
-void TonometerTest::fromJson(const QJsonArray &json)
+void TonometerTest::fromVariant(const QVariant& var)
 {
-    // expecting an array of json objects,
+    // expecting an array of QVariantMap objects,
     // one for each row of the ORA mdb Measures table
     //
-    if(0 == json.size()) return;
+    if(!var.canConvert<QList<QVariant>>())
+        return;
+
+    QList<QVariant> list = var.toList();
+    if(list.isEmpty())
+        return;
 
     // check if there are multiple session dates and retain
     // data from the most recent
     //
     QList<QDateTime> dateList;
-    foreach(const auto x, json)
+    foreach(const auto x, list)
     {
-        QJsonObject obj = x.toObject();
+        QVariantMap obj = x.toMap();
         if(obj.contains("SessionDate"))
         {
-          QDateTime t = obj["SessionDate"].toVariant().toDateTime();
+          QDateTime t = obj["SessionDate"].toDateTime();
           if(!dateList.contains(t))
             dateList.push_back(t);
         }
@@ -78,12 +83,12 @@ void TonometerTest::fromJson(const QJsonArray &json)
     QDateTime lastSession = dateList.last();
 
     bool meta = false;
-    foreach(const auto x, json)
+    foreach(const auto x, list)
     {
-        QJsonObject obj = x.toObject();
+        QVariantMap obj = x.toMap();
         if(obj.contains("SessionDate") && obj.contains("Eye"))
         {
-          QDateTime t = obj["SessionDate"].toVariant().toDateTime();
+          QDateTime t = obj["SessionDate"].toDateTime();
           if(lastSession == t)
           {
             // all sessions on one date share the same meta data
@@ -95,7 +100,7 @@ void TonometerTest::fromJson(const QJsonArray &json)
                {
                   if(obj.contains(it.value()))
                   {
-                    addMetaData(it.key(),obj[it.value()].toVariant());
+                    addMetaData(it.key(),obj[it.value()]);
                   }
                   it++;
                }
@@ -103,7 +108,7 @@ void TonometerTest::fromJson(const QJsonArray &json)
             }
 
             TonometerMeasurement m;
-            m.fromJson(obj);
+            m.fromVariant(obj);
             if(m.isValid())
             {
               addMeasurement(m);
@@ -136,14 +141,14 @@ QStringList TonometerTest::getMeasurementStrings(const QString &side) const
     return list;
 }
 
-void TonometerTest::simulate(const QJsonObject &input)
+void TonometerTest::simulate(const QVariantMap& input)
 {
     reset();
     qDebug() << "generating simulated data";
     addMetaData("id",input["barcode"].toString());
     QVariant value = input["sex"].toString().toLower().startsWith("f") ? 0 : -1;
     addMetaData("sex",value);
-    addMetaData("date_of_birth",input["date_of_birth"].toVariant().toDateTime());
+    addMetaData("date_of_birth",input["date_of_birth"].toDateTime());
 
     double mu = QRandomGenerator::global()->generateDouble();
 
@@ -235,7 +240,15 @@ QJsonObject TonometerTest::toJsonObject() const
     }
     QJsonObject json;
     if(hasMetaData())
-      json.insert("test_meta_data",m_metaData.toJsonObject());
+    {
+        QJsonObject deviceJson;
+        QJsonObject metaJson = m_metaData.toJsonObject();
+        deviceJson.insert("ora_serial_number",metaJson.take("ora_serial_number"));
+        deviceJson.insert("ora_software",metaJson.take("ora_software"));
+        deviceJson.insert("pc_software",metaJson.take("pc_software"));
+        json.insert("device_data", deviceJson);
+        json.insert("test_meta_data", metaJson);
+    }
     json.insert("test_results",jsonArr);
     return json;
 }

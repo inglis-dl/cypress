@@ -17,7 +17,7 @@ CypressApplication::~CypressApplication()
 {
 }
 
-void CypressApplication::setArgs(const QMap<QString, QVariant> &args)
+void CypressApplication::setArgs(const QVariantMap& args)
 {
     if(args.contains("inputFileName"))
       m_inputFileName = args["inputFileName"].toString();

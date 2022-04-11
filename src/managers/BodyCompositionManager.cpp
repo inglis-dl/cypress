@@ -414,7 +414,7 @@ void BodyCompositionManager::measure()
     writeDevice();
 }
 
-void BodyCompositionManager::setInputData(const QJsonObject &input)
+void BodyCompositionManager::setInputData(const QVariantMap& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -449,7 +449,7 @@ void BodyCompositionManager::setInputData(const QJsonObject &input)
       }
       else
       {
-        const QVariant value = m_inputData[key].toVariant();
+        const QVariant value = m_inputData[key];
         bool valueOk = true;
         QMetaType::Type type;
         if(typeMap.contains(key))
@@ -472,7 +472,7 @@ void BodyCompositionManager::setInputData(const QJsonObject &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData = QJsonObject();
+      m_inputData = QVariantMap();
     }
     else
     {
@@ -485,7 +485,7 @@ void BodyCompositionManager::setInputData(const QJsonObject &input)
 // inputs should only be set AFTER a successful reset
 // the order of inputs is important
 //
-void BodyCompositionManager::updateInputData(const QMap<QString,QVariant> &input)
+void BodyCompositionManager::updateInputData(const QVariantMap& input)
 {
     if(input.isEmpty()) return;
 
@@ -867,6 +867,6 @@ QJsonObject BodyCompositionManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
-    json.insert("test_input",m_inputData);
+    json.insert("test_input",QJsonObject::fromVariantMap(m_inputData));
     return json;
 }

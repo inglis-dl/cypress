@@ -4,7 +4,7 @@
 #include <QStandardItemModel>
 
 #include "../auxiliary/JsonSettings.h"
-#include "EMRPluginHelper.h"
+#include "EMRPluginWriter.h"
 
 SpirometerManager::SpirometerManager(QObject* parent) : ManagerBase(parent)
 {
@@ -25,10 +25,6 @@ SpirometerManager::SpirometerManager(QObject* parent) : ManagerBase(parent)
     //m_inputKeyList << "asthma"; // true/false
     //m_inputKeyList << "copd";   // true/false
     //m_inputKeyList << "ethnicity"; // caucasian, asian, african, hispanic, other_ethnic
-}
-
-SpirometerManager::~SpirometerManager()
-{
 }
 
 void SpirometerManager::start()
@@ -120,7 +116,7 @@ QJsonObject SpirometerManager::toJsonObject() const
 
         }
     }
-    json.insert("test_input",m_inputData);
+    json.insert("test_input",QJsonObject::fromVariantMap(m_inputData));
     return json;
 }
 
@@ -128,7 +124,8 @@ void SpirometerManager::buildModel(QStandardItemModel* model) const
 {
     // Data from all measurements:
     // First list is a header and each list after is a trial
-    QList<QStringList> data = m_test.getMeasurementsAsLists();
+    QList<QStringList> data = m_test.toStringListList();
+    qDebug() << "build model" << data.size();
     int numLists = data.count();
     int numElementsPerList = numLists > 0 ? data[0].count() : 0;
 
@@ -178,7 +175,7 @@ bool SpirometerManager::isDefined(const QString& value, const SpirometerManager:
     if(fileType == SpirometerManager::FileType::EasyWareExe)
     {
         QFileInfo info(value);
-        if(info.exists() && "exe" == info.completeSuffix())
+        if(info.exists() /* && "exe" == info.completeSuffix()*/)
         {
             ok = true;
         }
@@ -208,7 +205,7 @@ void SpirometerManager::measure()
     m_process.start();
 }
 
-void SpirometerManager::setInputData(const QJsonObject& input)
+void SpirometerManager::setInputData(const QVariantMap& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -220,11 +217,11 @@ void SpirometerManager::setInputData(const QJsonObject& input)
         if(!input.contains("gender"))
             m_inputData["gender"] = "male";  // required
         if(!input.contains("date_of_birth"))
-            m_inputData["date_of_birth"] = "1950-12-25"; // required
+            m_inputData["date_of_birth"] = QDate().fromString("1994-09-25","yyy-MM-dd"); // required
         if(!input.contains("height"))
             m_inputData["height"] = 1.8; // m, required
         if(!input.contains("weight"))
-            m_inputData["weight"] = 80;  // kg, optional, no decimal
+            m_inputData["weight"] = 109;  // kg, optional, no decimal
         if(!input.contains("smoker"))
             m_inputData["smoker"] = false; // optional
     }
@@ -243,11 +240,10 @@ void SpirometerManager::setInputData(const QJsonObject& input)
         if(!m_inputData.contains(key))
         {
             ok = false;
-            if(m_verbose)
-                qDebug() << "ERROR: missing expected input " << key;
+            qCritical() << "ERROR: invalid input data";
             break;
         }
-        const QVariant value = m_inputData[key].toVariant();
+        const QVariant value = m_inputData[key];
         bool valueOk = true;
         QMetaType::Type type;
         if(typeMap.contains(key))
@@ -265,11 +261,9 @@ void SpirometerManager::setInputData(const QJsonObject& input)
     }
     if(!ok)
     {
-        if(m_verbose)
-            qDebug() << "ERROR: invalid input data";
-
+        qCritical() << "ERROR: invalid input data";
         emit message(tr("ERROR: the input data is incorrect"));
-        m_inputData = QJsonObject();
+        m_inputData = QVariantMap();
     }
     else
       configureProcess();
@@ -279,11 +273,11 @@ void SpirometerManager::select()
 {
     QFileDialog dialog;
     // which do we need to select first ?
-    QString caption;
-    QStringList filters;
+    QString caption;    
     bool selectingRunnable = false;
     if(!isDefined(m_runnableName, SpirometerManager::FileType::EasyWareExe))
     {
+        QStringList filters;
         filters << "Applications (*.exe)" << "Any files (*)";
         caption = tr("Select EasyWarePro.exe File");
         selectingRunnable = true;
@@ -338,7 +332,7 @@ void SpirometerManager::selectDataPath(const QString& path)
     if(isDefined(path, SpirometerManager::FileType::EMRDataPath))
     {
         m_dataPath = path;
-        dataPathSelected();
+        emit dataPathSelected();
         configureProcess();
     }
     else
@@ -349,6 +343,7 @@ void SpirometerManager::readOutput()
 {
     if(Constants::RunMode::modeSimulate == m_mode)
     {
+        qDebug() << "manager simulate";
         m_test.simulate(m_inputData);
         if(m_test.isValid())
         {
@@ -375,7 +370,7 @@ void SpirometerManager::readOutput()
       emit canWrite();
     }
     else
-      qDebug() << "ERROR: ora database produced invalid test results";
+      qDebug() << "ERROR: EMR plugin produced invalid xml test results";
 
     emit dataChanged();
 }
@@ -469,9 +464,9 @@ void SpirometerManager::configureProcess()
 
         // write the inputs to EMR xml
         //
-        EMRPluginHelper helper;
-        helper.setInputData(m_inputData);
-        helper.write(m_dataPath);
+        EMRPluginWriter writer;
+        writer.setInputData(m_inputData);
+        writer.write(m_dataPath);
 
         emit message(tr("Ready to measure..."));
         emit canMeasure();
@@ -500,6 +495,7 @@ void SpirometerManager::finish()
     QString pdfFilePath = getOutputPdfPath();
     if(QFile::exists(pdfFilePath))
     {
+        qDebug() << "remove pdf" << pdfFilePath;
         QFile::remove(pdfFilePath);
     }
 
@@ -529,22 +525,22 @@ void SpirometerManager::removeXmlFiles() const
 
 QString SpirometerManager::getOutputPdfPath() const
 {
-    bool hasPdfPath = m_test.getMetaData().getAttributes().contains("pdfPath");
-    if(hasPdfPath)
+    if(m_test.isValid() &&
+       m_test.getMetaData().getAttributes().contains("pdf_report_path"))
     {
-        return m_test.getMetaData().getAttribute("pdfPath").toString();
+      return m_test.getMetaData().getAttribute("pdf_report_path").toString();
     }
-    return QString();
+    else
+      return QString();
 }
 
 bool SpirometerManager::outputPdfExists() const
 {
     bool pdfExists = false;
     QString outPdfPath = getOutputPdfPath();
-    if(outPdfPath != QString())
+    if(!outPdfPath.isEmpty())
     {
-        QFile pdfFile(outPdfPath);
-        pdfExists = pdfFile.exists();
+      pdfExists = QFileInfo::exists(outPdfPath);
     }
     return pdfExists;
 }

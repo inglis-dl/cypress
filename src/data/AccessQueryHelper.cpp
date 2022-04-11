@@ -13,17 +13,17 @@ AccessQueryHelper::AccessQueryHelper():
 {
 }
 
-void AccessQueryHelper::setOperation(const AccessQueryHelper::Operation &op)
+void AccessQueryHelper::setOperation(const AccessQueryHelper::Operation& op)
 {
     m_operation = op;
 }
 
-void AccessQueryHelper::setHeader(const QStringList &header)
+void AccessQueryHelper::setHeader(const QStringList& header)
 {
     m_header = header;
 }
 
-QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, const QSqlDatabase &db)
+QVariant AccessQueryHelper::processQuery(const QVariantMap& input, const QSqlDatabase& db)
 {
     QVariant result = false;
     if(!db.isOpen())
@@ -137,19 +137,19 @@ QVariant AccessQueryHelper::processQuery(const QMap<QString,QVariant> &input, co
       );
       if(query.exec(q_str))
       {
-          QJsonArray arr;
+          QList<QVariant> arr;
           while(query.next())
           {
             QSqlRecord r = query.record();
-            QJsonObject obj;
+            QVariantMap obj;
             for(int i=0;i<r.count();i++)
             {
                QSqlField f = r.field(i);
-               obj.insert(f.name(),QJsonValue::fromVariant(f.value()));
+               obj.insert(f.name(),f.value());
             }
             arr.push_back(obj);
           }
-          result = arr.isEmpty() ? QVariant() : QVariant(arr);
+          result = arr.isEmpty() ? QVariant() : arr;
       }
     }
 

@@ -26,9 +26,9 @@ class SerialPortManager : public ManagerBase
     Q_PROPERTY(QString deviceName MEMBER m_deviceName NOTIFY deviceNameChanged)
 
 public:
-    explicit SerialPortManager(QObject *parent = Q_NULLPTR);
+    explicit SerialPortManager(QObject* parent = Q_NULLPTR);
 
-    bool isDefined(const QString &) const;
+    bool isDefined(const QString&) const;
 
     QJsonObject toJsonObject() const override;
 
@@ -54,7 +54,7 @@ public slots:
     // checks of the named port is in the list of scanned devices
     // and calls setDevice
     //
-    void selectDevice(const QString &);
+    void selectDevice(const QString&);
 
 private slots:
 
@@ -69,7 +69,7 @@ private slots:
 
     // set the serial port
     //
-    void setDevice(const QSerialPortInfo &);
+    void setDevice(const QSerialPortInfo&);
 
 signals:
 
@@ -81,7 +81,7 @@ signals:
     // a single port was discovered during the scan process
     // (update GUI list of ports)
     //
-    void deviceDiscovered(const QString &);
+    void deviceDiscovered(const QString&);
 
     // a list of scanned port devices is avaiable for selection
     // (update GUI to prompt for user to select a port)
@@ -90,14 +90,14 @@ signals:
 
     // a port was selected from the list of discovered ports
     //
-    void deviceSelected(const QString &);
+    void deviceSelected(const QString&);
 
     // port ready to connect
     // (update GUI enable connect button, disable disconnect button)
     //
     void canConnectDevice();
 
-    void deviceNameChanged(const QString &);
+    void deviceNameChanged(const QString&);
 
 protected:
 

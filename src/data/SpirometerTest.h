@@ -3,26 +3,26 @@
 
 #include "TestBase.h"
 #include "SpirometerMeasurement.h"
+#include <QJsonObject>
+
+QT_FORWARD_DECLARE_CLASS(QDomNode)
 
 class SpirometerTest : public TestBase<SpirometerMeasurement>
 {
+
 public:
     SpirometerTest();
     ~SpirometerTest() = default;
 
-    bool loadData(const QString &transferOutPath, const QString& barcode);
-
     void fromFile(const QString&);
 
-    void simulate(const QJsonObject&);
+    void simulate(const QVariantMap&);
 
     // String representation for debug and GUI display purposes
     //
     QString toString() const override;
 
-    QStringList getMeasurementHeaderValues() const;
-
-    QList<QStringList> getMeasurementsAsLists() const;
+    QList<QStringList> toStringListList() const;
 
     bool isValid() const override;
 
@@ -30,8 +30,18 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
+    static const q_stringMap testMetaMap;
+    static const q_stringMap patientMetaMap;
+
 private:
-    QList<QString> m_outputKeyList;
+    QStringList m_outputKeyList;
+
+    void readPDFReportPath(const QDomNode&);
+    void readPatients(const QDomNode&);
+    void readTrials(const QDomNode&);
+    void readParameters(const QDomNode&, SpirometerMeasurement*);
+    void readChannel(const QDomNode&, SpirometerMeasurement*);
+    void readBestValues(const QDomNode&);
 };
 
 Q_DECLARE_METATYPE(SpirometerTest);

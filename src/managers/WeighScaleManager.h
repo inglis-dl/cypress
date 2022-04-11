@@ -22,14 +22,14 @@ class WeighScaleManager : public SerialPortManager
     Q_OBJECT
 
 public:
-    explicit WeighScaleManager(QObject *parent = Q_NULLPTR);
+    explicit WeighScaleManager(QObject* parent = Q_NULLPTR);
 
-    void loadSettings(const QSettings &) override;
+    void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel *) const override;
+    void buildModel(QStandardItemModel*) const override;
 
     // Set the input data.
     // The input data is read from the input
@@ -38,7 +38,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QJsonObject &) override;
+    void setInputData(const QVariantMap&) override;
 
 public slots:
 

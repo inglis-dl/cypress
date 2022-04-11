@@ -58,11 +58,8 @@ private:
     Constants::RunMode m_mode;
     bool m_verbose;
 
-    QJsonObject  m_inputData;
-    QMap<QString, QVariant> m_outputData;
-
+    QVariantMap m_inputData;
     SpirometerManager m_manager;
-
     QStandardItemModel m_model;
 };
 

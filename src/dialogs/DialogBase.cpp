@@ -81,7 +81,7 @@ void DialogBase::readInput()
       file.close();
 
       QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
-      m_inputData = jsonDoc.object();
+      m_inputData = jsonDoc.object().toVariantMap();
       if(m_inputData.contains("barcode"))
           this->setVerificationBarcode(m_inputData["barcode"].toString());
     }

@@ -23,7 +23,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QJsonObject &) override;
+    void setInputData(const QVariantMap void setInputData(const QJsonObject &) override;) override;
 
 public slots:
 

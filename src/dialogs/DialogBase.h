@@ -2,7 +2,6 @@
 #define DIALOGBASE_H
 
 #include <QDialog>
-#include <QJsonObject>
 #include <QStandardItemModel>
 
 #include "../managers/ManagerBase.h"
@@ -52,8 +51,8 @@ protected:
     QString m_outputFileName;
     Constants::RunMode m_mode;
     bool m_verbose;
+    QVariantMap m_inputData;
 
-    QJsonObject m_inputData;
     void readInput();
 
 private:

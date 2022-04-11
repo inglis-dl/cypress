@@ -18,7 +18,7 @@ class BluetoothLEManager : public ManagerBase
     Q_PROPERTY(QString deviceName MEMBER m_deviceName NOTIFY deviceNameChanged)
 
 public:
-    explicit BluetoothLEManager(QObject *parent = Q_NULLPTR);
+    explicit BluetoothLEManager(QObject* parent = Q_NULLPTR);
 
     // the host supports Bluetooth Low Energy discovery
     //
@@ -30,14 +30,14 @@ public:
 
     // the host adapter is paired to the device (BTLE peripheral)
     //
-    bool isPairedTo(const QString &) const;
+    bool isPairedTo(const QString&) const;
 
-    void loadSettings(const QSettings &) override;
-    void saveSettings(QSettings *) const override;
+    void loadSettings(const QSettings&) override;
+    void saveSettings(QSettings*) const override;
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel *) const override;
+    void buildModel(QStandardItemModel*) const override;
 
     // Set the input data.
     // The input data is read from the input
@@ -46,7 +46,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QJsonObject &) override;
+    void setInputData(const QVariantMap&) override;
 
 signals:
 
@@ -58,7 +58,7 @@ signals:
     // A single device was discovered during the scan process
     // (update GUI list of ports)
     //
-    void deviceDiscovered(const QString &);
+    void deviceDiscovered(const QString&);
 
     // A list of scanned devices is avaiable for selection
     // (update GUI to prompt for user to select a port)
@@ -67,14 +67,14 @@ signals:
 
     // A peripheral was selected from the list of discovered devices
     //
-    void deviceSelected(const QString &);
+    void deviceSelected(const QString&);
 
     // Peripheral device amd local adapter ready to connect
     // (update GUI enable connect button)
     //
     void canConnectDevice();
 
-    void deviceNameChanged(const QString &);
+    void deviceNameChanged(const QString&);
 
 public slots:
 
@@ -95,7 +95,7 @@ public slots:
     // checks if the name as a key in the key value pair list of scanned devices
     // and calls setDevice with the QBluetoothInfo value
     //
-    void selectDevice(const QString &);
+    void selectDevice(const QString&);
 
     // Retrieve a measurement from the device
     //
@@ -111,7 +111,7 @@ private slots:
     // If the thermometer (peripheral) was previously paired to the client
     // create and activate a QLowEnergyController to negotiate communication.
     //
-    void deviceDiscoveredInternal(const QBluetoothDeviceInfo &);
+    void deviceDiscoveredInternal(const QBluetoothDeviceInfo&);
 
     // Discovery agent finished or cancelled device discovery.
     //
@@ -119,7 +119,7 @@ private slots:
 
     // Set the bluetooth low energy peripheral
     //
-    void setDevice(const QBluetoothDeviceInfo &);
+    void setDevice(const QBluetoothDeviceInfo&);
 
     // QLowEnergyController signal receptors
     //
@@ -128,7 +128,7 @@ private slots:
     // creates a QLowEnergyService to write the Indicate property
     // of the client characteristic and then receive temperature data changes
     //
-    void serviceDiscovered(const QBluetoothUuid &);
+    void serviceDiscovered(const QBluetoothUuid&);
     void serviceDiscoveryComplete();
 
     // QLowEnergyService signal receptors
@@ -142,8 +142,8 @@ private slots:
 
     // Respond to read requests and indications
     //
-    void updateTemperatureData(const QLowEnergyCharacteristic &, const QByteArray &);
-    void updateInfoData(const QLowEnergyCharacteristic &, const QByteArray &);
+    void updateTemperatureData(const QLowEnergyCharacteristic&, const QByteArray&);
+    void updateInfoData(const QLowEnergyCharacteristic&, const QByteArray&);
 
  private:
 
@@ -165,16 +165,13 @@ private slots:
     QScopedPointer<QLowEnergyService> m_thermo_service;
     QScopedPointer<QLowEnergyService> m_info_service;
 
-    void connectToController(const QBluetoothDeviceInfo &);
+    void connectToController(const QBluetoothDeviceInfo&);
 
-    void setLocalDevice(const QString &);
+    void setLocalDevice(const QString&);
 
     Measurement m_deviceData;
-
     TemperatureTest m_test;
-
     QMap<QString,QBluetoothDeviceInfo> m_deviceList;
-
     QString m_deviceName;
 
     void clearData() override;

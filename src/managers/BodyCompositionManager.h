@@ -23,14 +23,14 @@ class BodyCompositionManager : public SerialPortManager
     Q_OBJECT
 
 public:
-    explicit BodyCompositionManager(QObject *parent = Q_NULLPTR);
+    explicit BodyCompositionManager(QObject* parent = Q_NULLPTR);
 
-    void loadSettings(const QSettings &) override;
+    void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel *) const override;
+    void buildModel(QStandardItemModel*) const override;
 
     static QMap<QString,QByteArray> initDefaultLUT();
     static QMap<QByteArray,QString> initCommandLUT();
@@ -39,11 +39,11 @@ public:
 
     // set inputs from json file or by default
     //
-    void setInputData(const QJsonObject &) override;
+    void setInputData(const QVariantMap&) override;
 
     // update inputs from the UI
     //
-    void updateInputData(const QMap<QString,QVariant> &);
+    void updateInputData(const QVariantMap&);
 
     static int AGE_MIN;
     static int AGE_MAX;
@@ -60,7 +60,7 @@ signals:
 
    void canConfirm();
 
-   void error(const QString &);
+   void error(const QString&);
 
    // notify the UI to fill in the age, height and gender
    //
@@ -110,7 +110,7 @@ private:
     static QMap<QByteArray,QString> incorrectLUT;
     static QMap<QByteArray,QString> confirmLUT;
 
-    bool hasEndCode(const QByteArray &) const;
+    bool hasEndCode(const QByteArray&) const;
 
     void processResponse();
 

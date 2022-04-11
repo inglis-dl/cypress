@@ -3,7 +3,6 @@
 
 #include "Measurement.h"
 
-#include "../managers/EMRPluginHelper.h"
 /*!
 * \class SpirometerMeasurement
 * \brief A SpirometerMeasurement class
@@ -11,30 +10,39 @@
 * \sa Measurement
 */
 
+typedef QMap<QString,QString> q_stringMap;
+
 class SpirometerMeasurement : public Measurement
 {
 public:
+
+    enum ResultType {
+        typeUnknown,
+        typeBestValues,
+        typeTrial
+    };
+
+    void setResultType(const ResultType& type){m_type = type;};
+    ResultType getResultType(){return m_type;}
+
     SpirometerMeasurement() = default;
     ~SpirometerMeasurement() = default;
-
-    typedef typename EMRPluginHelper::TrialDataModel trialData;
-    typedef typename EMRPluginHelper::ResultParametersModel parameterData;
-
-    void fromTrialData(const trialData&);
 
     bool isValid() const override;
 
     QString toString() const override;
 
-    QStringList getHeaderValues() const;
+    void simulate();
 
-    static SpirometerMeasurement simulate();
-
-    parameterData getMetaResults() { return metaResults; }
+    static const QStringList parameterList;
+    static const q_stringMap channelMap;
+    static const q_stringMap resultMap;
+    static const q_stringMap trialMap;
 
 private:
-    parameterData metaResults;
-    void appendMeasurementAttribute(QString* measurementStr, const QString& key) const;
+
+    ResultType m_type { typeUnknown };
+
 };
 
 Q_DECLARE_METATYPE(SpirometerMeasurement);

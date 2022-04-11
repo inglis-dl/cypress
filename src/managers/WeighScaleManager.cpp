@@ -13,7 +13,7 @@
 #include <QStandardItemModel>
 #include <QtMath>
 
-WeighScaleManager::WeighScaleManager(QObject *parent) : SerialPortManager(parent)
+WeighScaleManager::WeighScaleManager(QObject* parent) : SerialPortManager(parent)
 {
   setGroup("weigh_scale");
   m_col = 1;
@@ -40,7 +40,7 @@ void WeighScaleManager::buildModel(QStandardItemModel* model) const
     }
 }
 
-void WeighScaleManager::loadSettings(const QSettings &settings)
+void WeighScaleManager::loadSettings(const QSettings& settings)
 {
     QString name = settings.value(getGroup() + "/client/port").toString();
     if(!name.isEmpty())
@@ -51,7 +51,7 @@ void WeighScaleManager::loadSettings(const QSettings &settings)
     }
 }
 
-void WeighScaleManager::saveSettings(QSettings *settings) const
+void WeighScaleManager::saveSettings(QSettings* settings) const
 {
     if(!m_deviceName.isEmpty())
     {
@@ -63,7 +63,7 @@ void WeighScaleManager::saveSettings(QSettings *settings) const
     }
 }
 
-void WeighScaleManager::setInputData(const QJsonObject &input)
+void WeighScaleManager::setInputData(const QVariantMap& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -87,7 +87,7 @@ void WeighScaleManager::setInputData(const QJsonObject &input)
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
-      const QVariant value = m_inputData[key].toVariant();
+      const QVariant value = m_inputData[key];
       bool valueOk = true;
       QMetaType::Type type;
       if(typeMap.contains(key))
@@ -109,7 +109,7 @@ void WeighScaleManager::setInputData(const QJsonObject &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData = QJsonObject();
+      m_inputData = QVariantMap();
     }
 }
 
@@ -276,6 +276,6 @@ QJsonObject WeighScaleManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
     json.insert("device",m_deviceData.toJsonObject());
-    json.insert("test_input",m_inputData);
+    json.insert("test_input",QJsonObject::fromVariantMap(m_inputData));
     return json;
 }

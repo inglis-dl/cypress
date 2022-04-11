@@ -28,14 +28,14 @@ class AudiometerManager : public SerialPortManager
     Q_OBJECT
 
 public:
-    explicit AudiometerManager(QObject *parent = Q_NULLPTR);
+    explicit AudiometerManager(QObject* parent = Q_NULLPTR);
 
-    void loadSettings(const QSettings &) override;
+    void loadSettings(const QSettings&) override;
     void saveSettings(QSettings*) const override;
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel *) const override;
+    void buildModel(QStandardItemModel*) const override;
 
     static QByteArray initEndCode();
     static QByteArray END_CODE;
@@ -47,7 +47,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QJsonObject &) override;
+    void setInputData(const QVariantMap&) override;
 
 public slots:
 
@@ -71,7 +71,7 @@ private slots:
 
 private:
 
-    bool hasEndCode(const QByteArray &);
+    bool hasEndCode(const QByteArray&);
 
     HearingTest m_test;
 

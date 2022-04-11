@@ -16,7 +16,7 @@ UI_DIR += .
 
 QT += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets xml
 
 CONFIG += c++11 console
 
@@ -33,7 +33,7 @@ HEADERS += \
     ../../data/SpirometerTest.h \
     ../../data/Measurement.h \
     ../../data/TestBase.h \
-    ../../managers/EMRPluginHelper.h \
+    ../../managers/EMRPluginWriter.h \
     ../../managers/ManagerBase.h \
     ../../managers/SpirometerManager.h \
     ../../widgets/BarcodeWidget.h \
@@ -47,7 +47,7 @@ SOURCES += \
     ../../data/SpirometerMeasurement.cpp \
     ../../data/SpirometerTest.cpp \
     ../../data/Measurement.cpp \
-    ../../managers/EMRPluginHelper.cpp \
+    ../../managers/EMRPluginWriter.cpp \
     ../../managers/ManagerBase.cpp \
     ../../managers/SpirometerManager.cpp \
     ../../widgets/BarcodeWidget.cpp \

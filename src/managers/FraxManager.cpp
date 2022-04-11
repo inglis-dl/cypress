@@ -117,7 +117,7 @@ QJsonObject FraxManager::toJsonObject() const
       json.insert("test_output_file",QString(buffer.toBase64()));
       json.insert("test_output_file_mime_type","txt");
     }
-    json.insert("test_input",m_inputData);
+    json.insert("test_input",QJsonObject::fromVariantMap(m_inputData));
     return json;
 }
 
@@ -170,7 +170,7 @@ void FraxManager::measure()
     m_process.start();
 }
 
-void FraxManager::setInputData(const QJsonObject &input)
+void FraxManager::setInputData(const QVariantMap& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -236,7 +236,7 @@ void FraxManager::setInputData(const QJsonObject &input)
       }
       else
       {
-        const QVariant value = m_inputData[key].toVariant();
+        const QVariant value = m_inputData[key];
         bool valueOk = true;
         QMetaType::Type type;
         if(typeMap.contains(key))
@@ -259,7 +259,7 @@ void FraxManager::setInputData(const QJsonObject &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData = QJsonObject();
+      m_inputData = QVariantMap();
     }
     else
       configureProcess();
@@ -346,7 +346,7 @@ void FraxManager::configureProcess()
         {
             if("barcode" == key || "language" == key) continue;
 
-            QVariant value = m_inputData[key].toVariant();
+            QVariant value = m_inputData[key];
             if("sex" == key)
               value = "male" == value.toString() ? 0 : 1;
             else if("femoral_neck_bmd" == key)

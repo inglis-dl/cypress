@@ -14,7 +14,7 @@ public:
     explicit CypressApplication(QObject *parent = Q_NULLPTR);
     ~CypressApplication();
 
-    void setArgs(const QMap<QString,QVariant>&);
+    void setArgs(const QVariantMap&);
     void initialize();
 
 private:

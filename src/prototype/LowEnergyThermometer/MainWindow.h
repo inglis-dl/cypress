@@ -5,7 +5,7 @@
 #include "../../auxiliary/Constants.h"
 
 #include <QDialog>
-#include <QJsonObject>
+#include <QVariantMap>
 #include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
@@ -58,7 +58,7 @@ private:
     Constants::RunMode m_mode;
     bool m_verbose;
 
-    QJsonObject m_inputData;
+    QVariantMap m_inputData;
     BluetoothLEManager m_manager;
     QStandardItemModel m_model;
 };

@@ -264,7 +264,7 @@ void MainWindow::readInput()
         file.close();
 
         QJsonDocument jsonDoc = QJsonDocument::fromJson(val.toUtf8());
-        m_inputData = jsonDoc.object();
+        m_inputData = jsonDoc.object().toVariantMap();
         if(m_inputData.contains("barcode"))
             ui->barcodeWidget->setBarcode(m_inputData["barcode"].toString());
     }

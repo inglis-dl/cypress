@@ -42,7 +42,7 @@ QJsonObject TemplateManager::toJsonObject() const
     {
         // simulate mode code
     }
-    json.insert("test_input",m_inputData);
+    json.insert("test_input",QJsonObject::fromVariantMap(m_inputData));
     return json;
 }
 
@@ -75,7 +75,7 @@ void TemplateManager::measure()
       qDebug() << "starting process from measure";
 }
 
-void TemplateManager::setInputData(const QJsonObject& input)
+void TemplateManager::setInputData(const QVariantMapManager::setInputData(const QJsonObject& input) input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)

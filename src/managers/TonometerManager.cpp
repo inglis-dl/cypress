@@ -113,11 +113,11 @@ void TonometerManager::saveSettings(QSettings* settings) const
 QJsonObject TonometerManager::toJsonObject() const
 {
     QJsonObject json = m_test.toJsonObject();
-    json.insert("test_input",m_inputData);
+    json.insert("test_input",QJsonObject::fromVariantMap(m_inputData));
     return json;
 }
 
-bool TonometerManager::isDefined(const QString &fileName, TonometerManager::FileType type) const
+bool TonometerManager::isDefined(const QString& fileName, const TonometerManager::FileType& type) const
 {
     if(Constants::RunMode::modeSimulate == m_mode)
     {
@@ -222,7 +222,7 @@ void TonometerManager::measure()
     m_process.start();
 }
 
-void TonometerManager::setInputData(const QJsonObject &input)
+void TonometerManager::setInputData(const QVariantMap& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -255,7 +255,7 @@ void TonometerManager::setInputData(const QJsonObject &input)
       }
       else
       {
-        const QVariant value = m_inputData[key].toVariant();
+        const QVariant value = m_inputData[key];
         bool valueOk = true;
         QMetaType::Type type;
         if(typeMap.contains(key))
@@ -278,7 +278,7 @@ void TonometerManager::setInputData(const QJsonObject &input)
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData = QJsonObject();
+      m_inputData = QVariantMap();
     }
 }
 
@@ -312,20 +312,19 @@ void TonometerManager::readOutput()
     {
       // TODO: check if QJsonObject can convert variant back to date
       //
-      QMap<QString,QVariant> input;
+      QVariantMap input;
       input.insert("barcode",m_inputData["barcode"].toString());
       QVariant value = m_inputData["sex"].toString().toLower().startsWith("f") ? 0 : -1;
       input.insert("sex",value);
-      input.insert("date_of_birth",m_inputData["date_of_birth"].toVariant());
+      input.insert("date_of_birth",m_inputData["date_of_birth"]);
 
       AccessQueryHelper helper;
       helper.setOperation(AccessQueryHelper::Operation::Results);
       QVariant result = helper.processQuery(input,db);
       if(result.isValid() && !result.isNull())
       {
-        QJsonArray arr = QJsonValue::fromVariant(result).toArray();
         // if there are multiple session dates, we only want the most recent one
-        m_test.fromJson(arr);
+        m_test.fromVariant(result.toList());
         if(m_test.isValid())
         {
           emit message(tr("Ready to save results..."));
@@ -419,7 +418,7 @@ void TonometerManager::configureProcess()
             input.insert("barcode",m_inputData["barcode"].toString());
             QVariant value = m_inputData["sex"].toString().toLower().startsWith("f") ? 0 : -1;
             input.insert("sex",value);
-            input.insert("date_of_birth",m_inputData["date_of_birth"].toVariant());
+            input.insert("date_of_birth",m_inputData["date_of_birth"]);
 
             bool insert = true;
             AccessQueryHelper helper;
@@ -523,11 +522,11 @@ void TonometerManager::finish()
       AccessQueryHelper helper;
       helper.setOperation(AccessQueryHelper::Operation::DeleteMeasures);
 
-      QMap<QString,QVariant> input;
+      QVariantMap input;
       input.insert("barcode",m_inputData["barcode"].toString());
       QVariant value = m_inputData["sex"].toString().toLower().startsWith("f") ? 0 : -1;
       input.insert("sex",value);
-      input.insert("date_of_birth",m_inputData["date_of_birth"].toVariant());
+      input.insert("date_of_birth",m_inputData["date_of_birth"]);
 
       QVariant result = helper.processQuery(input,db);
       if(!result.toBool())

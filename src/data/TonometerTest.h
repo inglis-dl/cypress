@@ -12,9 +12,9 @@ public:
     TonometerTest();
     ~TonometerTest() = default;
 
-    void fromJson(const QJsonArray&);
+    void fromVariant(const QVariant&);
 
-    void simulate(const QJsonObject&);
+    void simulate(const QVariantMap&);
 
     // String representation for debug purposes
     //
@@ -34,7 +34,7 @@ public:
     static QMap<QString,QString> initMetaLUT();
 
 private:
-    QList<QString> m_outputKeyList;
+    QStringList m_outputKeyList;
 };
 
 Q_DECLARE_METATYPE(TonometerTest);

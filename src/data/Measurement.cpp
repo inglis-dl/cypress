@@ -6,6 +6,10 @@
 
 bool Measurement::isValid() const
 {
+    if(isEmpty())
+    {
+      return false;
+    }
     bool ok = true;
     foreach(const auto x, m_attributes.toStdMap())
     {
@@ -23,14 +27,14 @@ void Measurement::reset()
     m_attributes.clear();
 }
 
-QStringList Measurement::toStringList() const
+QStringList Measurement::toStringList(const bool& no_keys) const
 {
     QStringList list;
     foreach(const auto x, m_attributes.toStdMap())
     {
       QString key = x.first; // the key
       Measurement::Value value = x.second; // the value
-      list << QString("%1: %2").arg(key,value.toString());
+      list << (no_keys ? value.toString() : QString("%1: %2").arg(key,value.toString()));
     }
     return list;
 }

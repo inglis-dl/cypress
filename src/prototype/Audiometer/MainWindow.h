@@ -58,7 +58,7 @@ private:
     Constants::RunMode m_mode;
     bool m_verbose;
 
-    QJsonObject m_inputData;
+    QVariantMap m_inputData;
     AudiometerManager m_manager;
     QStandardItemModel m_model;
 };

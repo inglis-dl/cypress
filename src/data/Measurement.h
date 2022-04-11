@@ -30,6 +30,7 @@
 
 class Measurement
 {
+
 public:
     Measurement() = default;
     virtual ~Measurement() = default;
@@ -52,7 +53,8 @@ public:
         Value() = default;
         Value(const QVariant& value, const QString& units = QString(), const quint16& precision = 0);
         Value(const Value&);
-        Value& operator=(const Value&);
+        Value &operator=(const Value&);
+        ~Value() = default;
 
         bool hasUnits() const;
         bool isNull() const;
@@ -75,7 +77,7 @@ public:
     //
     virtual QString toString() const;
 
-    virtual QStringList toStringList() const;
+    virtual QStringList toStringList(const bool& no_keys = false) const;
 
     virtual bool isValid() const;
 
@@ -126,6 +128,11 @@ public:
     QMap<QString,Value> getAttributes() const
     {
       return m_attributes;
+    }
+
+    QList<QString> getAttributeKeys() const
+    {
+        return m_attributes.keys();
     }
 
     inline bool hasAttribute(const QString &key) const

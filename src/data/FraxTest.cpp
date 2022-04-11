@@ -51,7 +51,7 @@ FraxTest::FraxTest()
     m_outputKeyList << "femoral_neck_tscore";
 }
 
-void FraxTest::fromFile(const QString &fileName)
+void FraxTest::fromFile(const QString& fileName)
 {
     QFile ifile(fileName);
     if(ifile.open(QIODevice::ReadOnly))
@@ -101,13 +101,13 @@ void FraxTest::fromFile(const QString &fileName)
     }
 }
 
-void FraxTest::simulate(const QJsonObject& input)
+void FraxTest::simulate(const QVariantMap& input)
 {
     foreach(auto key, input.keys())
     {
       if("barcode" == key || "language" == key) continue;
 
-      QVariant value = input[key].toVariant();
+      QVariant value = input[key];
       if("sex" == key)
       {
         value = "male" == value.toString() ? 0 : 1;

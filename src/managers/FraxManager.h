@@ -30,12 +30,12 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel *) const override;
+    void buildModel(QStandardItemModel*) const override;
 
     // is the passed string an executable file
     // with the correct path elements ?
     //
-    bool isDefined(const QString &) const;
+    bool isDefined(const QString&) const;
 
     // Set the input data.
     // The input data is read from the input
@@ -44,7 +44,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    void setInputData(const QJsonObject &) override;
+    void setInputData(const QVariantMap&) override;
 
 public slots:
 
@@ -65,7 +65,7 @@ public slots:
     // set the executable full path and name
     // calls isDefined to validate the passed arg
     //
-    void selectRunnable(const QString &);
+    void selectRunnable(const QString&);
 
     void readOutput();
 

@@ -46,7 +46,7 @@ public:
     // and query the provided QSqlDatabase (MS Access file).  The database connection must be
     // established and verified before calling.
     //
-    QVariant processQuery(const QMap<QString,QVariant>&, const QSqlDatabase&);
+    QVariant processQuery(const QVariantMap&, const QSqlDatabase&);
 
     // Set the keys for labelling the data and verifying against record fields
     // returned from the Results operation query.

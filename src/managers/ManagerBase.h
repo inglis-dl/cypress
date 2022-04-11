@@ -69,7 +69,7 @@ public:
     // a test.  Filtering keys are stored in member
     // m_inputKeyList.
     //
-    virtual void setInputData(const QJsonObject &) = 0;
+    virtual void setInputData(const QVariantMap &) = 0;
 
     QVariant getInputDataValue(const QString &);
 
@@ -131,7 +131,7 @@ protected:
 
     // key value pairs sorted by key
     //
-    QJsonObject m_inputData;
+    QVariantMap m_inputData;
 
     // an ordered set of input keys
     //

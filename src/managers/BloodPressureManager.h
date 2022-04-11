@@ -61,7 +61,7 @@ public:
     //
     // TODO: consider adding cuff size and arm side as json inputs
     //
-    void setInputData(const QJsonObject&) override;
+    void setInputData(const QVariantMap&) override;
 
     //TODO: use cypress constant for all use of size and side
     void setCuffSize(const QString&);

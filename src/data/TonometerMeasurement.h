@@ -13,15 +13,13 @@
 * \sa Measurement, TonometerTest
 */
 
-QT_FORWARD_DECLARE_CLASS(QJsonObject)
-
 class TonometerMeasurement : public Measurement
 {
 public:
     TonometerMeasurement() = default;
     ~TonometerMeasurement() = default;
 
-    void fromJson(const QJsonObject&);
+    void fromVariant(const QVariantMap&);
 
     bool isValid() const override;
 

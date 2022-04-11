@@ -3,7 +3,7 @@
 QSettings::Format JsonSettings::JsonFormat =
         QSettings::registerFormat("JsonFormat", &JsonSettings::readSettingsJson, &JsonSettings::writeSettingsJson);
 
-void JsonSettings::paraseJsonObject(QJsonObject &json, QString prefix, QMap<QString, QVariant> &map)
+void JsonSettings::paraseJsonObject(QJsonObject &json, QString prefix, QVariantMap &map)
 {
     QJsonValue value;
     QJsonObject obj;
@@ -24,14 +24,13 @@ void JsonSettings::paraseJsonObject(QJsonObject &json, QString prefix, QMap<QStr
     }
 }
 
-QJsonObject JsonSettings::restoreJsonObject(QMap<QString, QVariant> &map)
+QJsonObject JsonSettings::restoreJsonObject(QVariantMap &map)
 {
     QJsonObject obj;
     QStringList keys = map.keys();
 
-    for(int i=0; i<keys.size(); i++)
+    foreach(const auto key, keys)
     {
-        QString key = keys.at(i);
         QVariant value = map.value(key);
         QStringList sections = key.split('/');
         if(sections.size() > 1)
@@ -45,7 +44,7 @@ QJsonObject JsonSettings::restoreJsonObject(QMap<QString, QVariant> &map)
         }
     }
 
-    QList<QMap<QString, QVariant>> subMaps;
+    QList<QVariantMap> subMaps;
     keys = map.keys();
     for(int i=0; i<keys.size(); i++)
     {
@@ -65,7 +64,7 @@ QJsonObject JsonSettings::restoreJsonObject(QMap<QString, QVariant> &map)
 
         if(!found)
         {
-            QMap<QString, QVariant> tmp;
+            QVariantMap tmp;
             tmp.insert(key.section('/', 0, 0), QString("__key__"));
             tmp.insert(key.section('/', 1), map.value(key));
             subMaps.append(tmp);
@@ -83,7 +82,7 @@ QJsonObject JsonSettings::restoreJsonObject(QMap<QString, QVariant> &map)
     return obj;
 }
 
-bool JsonSettings::readSettingsJson(QIODevice &device, QMap<QString, QVariant> &map)
+bool JsonSettings::readSettingsJson(QIODevice &device, QVariantMap &map)
 {
     QJsonParseError jsonError;
     QJsonObject obj = QJsonDocument::fromJson(device.readAll(), &jsonError).object();
@@ -96,9 +95,9 @@ bool JsonSettings::readSettingsJson(QIODevice &device, QMap<QString, QVariant> &
     return true;
 }
 
-bool JsonSettings::writeSettingsJson(QIODevice &device, const QMap<QString, QVariant> &map)
+bool JsonSettings::writeSettingsJson(QIODevice &device, const QVariantMap &map)
 {
-    QMap<QString, QVariant> tmp_map = map;
+    QVariantMap tmp_map = map;
     QJsonObject buffer = restoreJsonObject(tmp_map);
     device.write(QJsonDocument(buffer).toJson());
     return true;
