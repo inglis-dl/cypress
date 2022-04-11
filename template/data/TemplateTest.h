@@ -10,8 +10,6 @@ public:
     TemplateTest();
     ~TemplateTest() = default;
 
-    void fromFile(const QString& string) { };
-
     // String representation for debug and GUI display purposes
     //
     QString toString() const override;
@@ -23,7 +21,7 @@ public:
     QJsonObject toJsonObject() const override;
 
 private:
-    QList<QString> m_outputKeyList;
+    QStringList m_outputKeyList;
 };
 
 Q_DECLARE_METATYPE(TemplateTest);

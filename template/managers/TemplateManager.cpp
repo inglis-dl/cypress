@@ -75,7 +75,7 @@ void TemplateManager::measure()
       qDebug() << "starting process from measure";
 }
 
-void TemplateManager::setInputData(const QVariantMapManager::setInputData(const QJsonObject& input) input)
+void TemplateManager::setInputData(const QVariantMap& input)
 {
     m_inputData = input;
     if(Constants::RunMode::modeSimulate == m_mode)
@@ -99,7 +99,7 @@ void TemplateManager::setInputData(const QVariantMapManager::setInputData(const 
           qDebug() << "ERROR: missing expected input " << key;
         break;
       }
-      const QVariant value = m_inputData[key].toVariant();
+      const QVariant value = m_inputData[key];
       bool valueOk = true;
       QMetaType::Type type;
       if(typeMap.contains(key))
@@ -121,7 +121,7 @@ void TemplateManager::setInputData(const QVariantMapManager::setInputData(const 
         qDebug() << "ERROR: invalid input data";
 
       emit message(tr("ERROR: the input data is incorrect"));
-      m_inputData = QJsonObject();
+      m_inputData = QVariantMap();
     }
 }
 
