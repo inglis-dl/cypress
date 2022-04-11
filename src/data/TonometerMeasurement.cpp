@@ -27,13 +27,12 @@
     m_outputKeyList << "indexes";         // string comma delim double vector "Indexes"
  *
 */
-const QMap<QString,QString> TonometerMeasurement::variableLUT = TonometerMeasurement::initVariableLUT();
-const QMap<QString,QString> TonometerMeasurement::unitsLUT = TonometerMeasurement::initUnitsLUT();
+const q_stringMap TonometerMeasurement::variableLUT = TonometerMeasurement::initVariableLUT();
+const q_stringMap TonometerMeasurement::unitsLUT = TonometerMeasurement::initUnitsLUT();
 
-QMap<QString,QString> TonometerMeasurement::initVariableLUT()
+q_stringMap TonometerMeasurement::initVariableLUT()
 {
-  QMap<QString,QString> map;
-
+  q_stringMap map;
   map["measure_id"] = "MeasureID";
   map["measure_datetime"] = "MeasureDate";
   map["side"] = "Eye";
@@ -51,14 +50,12 @@ QMap<QString,QString> TonometerMeasurement::initVariableLUT()
   map["time_out"] = "TimeOut";
   map["quality_index"] = "QualityIndex";
   map["indexes"] = "Indexes";
-
   return map;
 }
 
-QMap<QString,QString> TonometerMeasurement::initUnitsLUT()
+q_stringMap TonometerMeasurement::initUnitsLUT()
 {
-  QMap<QString,QString> map;
-
+  q_stringMap map;
   map["iopg"] = "mmHg";
   map["iopcc"] = "mmHg";
   map["crf"] = "mmHg";
@@ -70,7 +67,6 @@ QMap<QString,QString> TonometerMeasurement::initUnitsLUT()
   map["cct_sd"] = "um";
   map["time_in"] = "ms";
   map["time_out"] = "ms";
-
   return map;
 }
 
@@ -94,7 +90,7 @@ void TonometerMeasurement::fromVariant(const QVariantMap& obj)
     reset();
     QString side = "L" == obj["Eye"].toString() ? "left" : "right";
     setAttribute("side",side);
-    QMap<QString,QString>::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
+    q_stringMap::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
     while(it != TonometerMeasurement::variableLUT.constEnd())
     {
        QString key = it.key();
@@ -115,7 +111,7 @@ void TonometerMeasurement::simulate(const QString& side)
     reset();
     setAttribute("side", side);
 
-    QMap<QString,QString>::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
+    q_stringMap::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
     int sample = qRound(Utilities::interp(37.0f,74.0f,mu));
     while(it != TonometerMeasurement::variableLUT.constEnd())
     {
@@ -180,20 +176,20 @@ void TonometerMeasurement::simulate(const QString& side)
 
 QString TonometerMeasurement::toString() const
 {
-    QString s;
+    QString str;
     if(isValid())
     {
         //TODO: print implementation for all attributes
     }
-    return s;
+    return str;
 }
 
-QDebug operator<<(QDebug dbg, const TonometerMeasurement &item)
+QDebug operator<<(QDebug dbg, const TonometerMeasurement& item)
 {
-    const QString s = item.toString();
-    if (s.isEmpty())
-        dbg.nospace() << "Tonometer Measurement()";
+    const QString str = item.toString();
+    if(str.isEmpty())
+      dbg.nospace() << "Tonometer Measurement()";
     else
-        dbg.nospace() << "Tonometer Measurement(" << s << " ...)";
+      dbg.nospace() << "Tonometer Measurement(" << str << " ...)";
     return dbg.maybeSpace();
 }

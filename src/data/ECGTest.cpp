@@ -100,7 +100,7 @@ void ECGTest::readObservationDatetime(const QDomNode& node)
        }
     }
 
-    QString s = QString("%1-%2-%3 %4:%5:%6").arg(
+    QString str = QString("%1-%2-%3 %4:%5:%6").arg(
                     map["Year"],
                     map["Month"],
                     map["Day"],
@@ -108,8 +108,8 @@ void ECGTest::readObservationDatetime(const QDomNode& node)
                     map["Minute"],
                     map["Second"]
                     );
-    QDateTime d = QDateTime::fromString(s, "yyyy-M-d hh:mm:ss");
-    addMetaData("observation_datetime",d);
+    QDateTime dt = QDateTime::fromString(str, "yyyy-M-d hh:mm:ss");
+    addMetaData("observation_datetime",dt);
 }
 
 void ECGTest::readClinicalInfo(const QDomNode& node)
@@ -134,19 +134,17 @@ void ECGTest::readClinicalInfo(const QDomNode& node)
        QString tag = elem.tagName();
        if(map.contains(tag))
        {
-          QString s = elem.text().toLower();
-          if(!s.isEmpty())
+          QString str = elem.text().toLower();
+          if(!str.isEmpty())
           {
-            if("no" == s || "yes" == s)
-              addMetaData(map[tag],"no" ==s ? false : true);
+            if("no" == str || "yes" == str)
+              addMetaData(map[tag],"no" == str ? false : true);
             else
             {
                 if(elem.hasAttribute("units"))
-                {
-                   addMetaData(map[tag],s.toInt(),elem.attribute("units"));
-                }
+                  addMetaData(map[tag],str.toInt(),elem.attribute("units"));
                 else
-                   addMetaData(map[tag],s);
+                  addMetaData(map[tag],str);
             }
           }
        }
@@ -169,13 +167,13 @@ void ECGTest::readPatientInfo(const QDomNode& node)
        QString tag = elem.tagName();
        if(keys.contains(tag))
        {
-          QString s = elem.text().toLower();
-          if(!s.isEmpty())
+          QString str = elem.text().toLower();
+          if(!str.isEmpty())
           {
-            if("no" == s || "yes" == s)
-              addMetaData(tag.toLower(),"no" ==s ? false : true);
+            if("no" == str || "yes" == str)
+              addMetaData(tag.toLower(),"no" == str ? false : true);
             else
-              addMetaData(tag.toLower(),s);
+              addMetaData(tag.toLower(),str);
           }
        }
     }
@@ -199,19 +197,17 @@ void ECGTest::readFilterSetting(const QDomNode& node)
        QString tag = elem.tagName();
        if(map.contains(tag))
        {
-          QString s = elem.text().toLower();
-          if(!s.isEmpty())
+          QString str = elem.text().toLower();
+          if(!str.isEmpty())
           {
-            if("no" == s || "yes" == s)
-              addMetaData(map[tag],"no" ==s ? false : true);
+            if("no" == str || "yes" == str)
+              addMetaData(map[tag],"no" == str ? false : true);
             else
             {
                 if(elem.hasAttribute("units"))
-                {
-                   addMetaData(map[tag],s.toInt(),elem.attribute("units"));
-                }
+                  addMetaData(map[tag],str.toInt(),elem.attribute("units"));
                 else
-                   addMetaData(map[tag],s);
+                  addMetaData(map[tag],str);
             }
           }
        }
@@ -292,8 +288,9 @@ QJsonObject ECGTest::toJsonObject() const
 {
     QJsonObject json;
     if(hasMetaData())
+    {
       json.insert("test_meta_data",m_metaData.toJsonObject());
-
+    }
     ECGMeasurement m = getMeasurement(0);
     json.insert("test_results",m.toJsonObject());
     return json;

@@ -182,20 +182,20 @@ void ECGMeasurement::simulate()
 
 QString ECGMeasurement::toString() const
 {
-    QString s;
+    QString str;
     if(isValid())
     {
         //TODO: make a string
     }
-    return s;
+    return str;
 }
 
-QDebug operator<<(QDebug dbg, const ECGMeasurement &item)
+QDebug operator<<(QDebug dbg, const ECGMeasurement& item)
 {
-    const QString s = item.toString();
-    if (s.isEmpty())
-        dbg.nospace() << "ECG Measurement()";
+    const QString str = item.toString();
+    if(str.isEmpty())
+      dbg.nospace() << "ECG Measurement()";
     else
-        dbg.nospace() << "ECG Measurement(" << s << " ...)";
+      dbg.nospace() << "ECG Measurement(" << str << " ...)";
     return dbg.maybeSpace();
 }

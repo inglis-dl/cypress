@@ -13,6 +13,8 @@
 * \sa Measurement, TonometerTest
 */
 
+typedef QMap<QString,QString> q_stringMap;
+
 class TonometerMeasurement : public Measurement
 {
 public:
@@ -27,10 +29,10 @@ public:
 
     void simulate(const QString&);
 
-    static const QMap<QString,QString> variableLUT;
-    static const QMap<QString,QString> unitsLUT;
-    static QMap<QString,QString> initVariableLUT();
-    static QMap<QString,QString> initUnitsLUT();
+    static const q_stringMap variableLUT;
+    static const q_stringMap unitsLUT;
+    static q_stringMap initVariableLUT();
+    static q_stringMap initUnitsLUT();
 };
 
 Q_DECLARE_METATYPE(TonometerMeasurement);

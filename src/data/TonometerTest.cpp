@@ -8,12 +8,11 @@
 #include <QRandomGenerator>
 #include <algorithm>
 
-const QMap<QString,QString> TonometerTest::metaLUT = TonometerTest::initMetaLUT();
+const q_stringMap TonometerTest::metaLUT = TonometerTest::initMetaLUT();
 
-QMap<QString,QString> TonometerTest::initMetaLUT()
+q_stringMap TonometerTest::initMetaLUT()
 {
-  QMap<QString,QString> map;
-
+  q_stringMap map;
   map["id"] = "ID";                             // in "ID" from Patients table
   map["date_of_birth"] = "BirthDate";           // in "BirthDate" from Patients table
   map["sex"] = "Sex";                           // in "Sex" from Patients table
@@ -38,7 +37,6 @@ QMap<QString,QString> TonometerTest::initMetaLUT()
   map["b_abc"] = "b_ABC";                       // double (range -23.85 - -3.42) "b_ABC"
   map["b_pp"] = "b_PP";                         // double (not applicable? always 6.12) "b_PP"
   map["best_weighted"] = "BestWeighted";        // uint (not applicable? always 0 or false) "BestWeighted"
-
   return map;
 }
 
@@ -95,7 +93,7 @@ void TonometerTest::fromVariant(const QVariant& var)
             //
             if(!meta)
             {
-               QMap<QString,QString>::const_iterator it = TonometerTest::metaLUT.constBegin();
+               q_stringMap::const_iterator it = TonometerTest::metaLUT.constBegin();
                while(it != TonometerTest::metaLUT.constEnd())
                {
                   if(obj.contains(it.value()))
@@ -127,7 +125,7 @@ QStringList TonometerTest::getMeasurementStrings(const QString &side) const
       {
         if(side == m.getAttribute("side").toString())
         {
-            QMap<QString,QString>::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
+            q_stringMap::const_iterator it = TonometerMeasurement::variableLUT.constBegin();
             while(it != TonometerMeasurement::variableLUT.constEnd())
             {
                QString key = it.key();

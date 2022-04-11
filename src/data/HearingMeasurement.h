@@ -10,13 +10,15 @@
  * \sa Measurement, HearingTest
  */
 
+typedef QMap<QString,QString> q_stringMap;
+
 class HearingMeasurement : public Measurement
 {   
 public:
     HearingMeasurement() = default;
     ~HearingMeasurement() = default;
 
-    HearingMeasurement(const QString &, const int &, const QString &);
+    HearingMeasurement(const QString&, const int&, const QString&);
 
     // String representation for debug and GUI display purposes
     //
@@ -24,17 +26,17 @@ public:
 
     bool isValid() const override;
 
-    static QMap<QString,QString> initCodeLookup();
-    static QMap<QString,QString> initOutcomeLookup();
+    static q_stringMap initCodeLookup();
+    static q_stringMap initOutcomeLookup();
     static QMap<int,QString> initFrequencyLookup();
 
     friend class HearingTest;
 
-    void fromCode(const QString &, const int &, const QString &);
+    void fromCode(const QString&, const int&, const QString&);
 
 private:
-    static const QMap<QString,QString> codeLookup;
-    static const QMap<QString,QString> outcomeLookup;
+    static const q_stringMap codeLookup;
+    static const q_stringMap outcomeLookup;
     static const QMap<int,QString> frequencyLookup;
 
 };

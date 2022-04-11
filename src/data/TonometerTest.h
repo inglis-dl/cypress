@@ -30,8 +30,8 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
-    static const QMap<QString,QString> metaLUT;
-    static QMap<QString,QString> initMetaLUT();
+    static const q_stringMap metaLUT;
+    static q_stringMap initMetaLUT();
 
 private:
     QStringList m_outputKeyList;

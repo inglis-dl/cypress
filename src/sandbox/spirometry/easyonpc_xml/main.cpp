@@ -8,7 +8,9 @@
 #include <QDateTime>
 #include <QMetaEnum>
 
-const  QMap<QString, QString> testMetaMap = {
+typedef QMap<QString,QString> q_stringMap;
+
+const  q_stringMap testMetaMap = {
     {"LungAge","lung_age"},
     {"SWVersion","software_version"},
     {"QualityGradeOriginal","original_quality_grade"},
@@ -19,7 +21,7 @@ const  QMap<QString, QString> testMetaMap = {
     {"DeviceType","device_type"}
 };
 
-const QMap<QString,QString> patientMetaMap = {
+const q_stringMap patientMetaMap = {
   {"Height","height"},
   {"Weight","weight"},
   {"Ethnicity","ethnicity"},
@@ -32,14 +34,14 @@ const QMap<QString,QString> patientMetaMap = {
 
 const QStringList paramList = {"DataValue","Unit","PredictedValue","LLNormalValue"};
 
-const QMap<QString,QString> channelMap = {
+const q_stringMap channelMap = {
     {"SamplingInterval","sampling_interval"},
     {"SamplingValues","values"},
     {"TimeZeroOffset","time_zero_offset"},
     {"DefaultVTPlotDrawEndIdx","default_vt_plot_draw_end_index"}
 };
 
-const QMap<QString,QString> resultMap = {
+const q_stringMap resultMap = {
     {"AmbHumidity","ambient_humidity"},
     {"AmbPressure","ambient_pressure"},
     {"AmbTemp","ambient_temperature"},
@@ -101,7 +103,7 @@ const QMap<QString,QString> resultMap = {
     {"VCmax","vcmax"}
 };
 
-const QMap<QString,QString> trialMap =
+const q_stringMap trialMap =
 {
   {"Date","trial_date"},
   {"Number","trial_number"},

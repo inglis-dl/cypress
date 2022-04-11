@@ -4,8 +4,8 @@
 #include <QDebug>
 #include <QRegExp>
 
-const QMap<QString,QString> HearingMeasurement::codeLookup = HearingMeasurement::initCodeLookup();
-const QMap<QString,QString> HearingMeasurement::outcomeLookup = HearingMeasurement::initOutcomeLookup();
+const q_stringMap HearingMeasurement::codeLookup = HearingMeasurement::initCodeLookup();
+const q_stringMap HearingMeasurement::outcomeLookup = HearingMeasurement::initOutcomeLookup();
 const QMap<int,QString> HearingMeasurement::frequencyLookup = HearingMeasurement::initFrequencyLookup();
 
  /*
@@ -61,9 +61,9 @@ RES_LEFT_8K_ERR
 // error code label string (default null)
 // outcome string (default null)
 //
-QMap<QString,QString> HearingMeasurement::initCodeLookup()
+q_stringMap HearingMeasurement::initCodeLookup()
 {
-    QMap<QString,QString> map;
+    q_stringMap map;
     map["AA"] = "NOT_TESTED";
     map["DD"] = "DELETED";
     map["EA"] = "CONTRALATERAL_RECORDED";
@@ -83,9 +83,9 @@ QMap<QString,QString> HearingMeasurement::initCodeLookup()
     return map;
 }
 
-QMap<QString,QString> HearingMeasurement::initOutcomeLookup()
+q_stringMap HearingMeasurement::initOutcomeLookup()
 {
-    QMap<QString,QString> map;
+    q_stringMap map;
     map["NOT_TESTED"] = "RUN_TEST";
     map["DELETED"] = "NONE";
     map["CONTRALATERAL_RECORDED"] = "RERUN_TEST";
@@ -120,9 +120,9 @@ QMap<int,QString> HearingMeasurement::initFrequencyLookup()
 }
 
 HearingMeasurement::HearingMeasurement(
-        const QString &side,
-        const int &index,
-        const QString &code)
+        const QString& side,
+        const int& index,
+        const QString& code)
 {
   fromCode(side,index,code);
 }
@@ -130,7 +130,7 @@ HearingMeasurement::HearingMeasurement(
 // index is the position 0-7 in the returned HTL string from
 // the RA300 RS232 port data
 //
-void HearingMeasurement::fromCode(const QString &side, const int &index, const QString &code)
+void HearingMeasurement::fromCode(const QString& side, const int& index, const QString& code)
 {
     reset();
     if(frequencyLookup.contains(index))
@@ -172,33 +172,33 @@ bool HearingMeasurement::isValid() const
 
 QString HearingMeasurement::toString() const
 {
-  QString s;
+  QString str;
   if(isValid())
   {
-    s = QString("%1 %2").arg(
+    str = QString("%1 %2").arg(
       getAttribute("side").toString(),
       getAttribute("test").toString());
 
     if(hasAttribute("level"))
     {
-      s = QString("%1 %2").arg(s,getAttribute("level").toString());
+      str = QString("%1 %2").arg(str,getAttribute("level").toString());
     }
     else
     {
-      s = QString("%1 %2 %3").arg(s,
+      str = QString("%1 %2 %3").arg(str,
           getAttribute("error").toString(),
           getAttribute("outcome").toString());
     }
   }
-  return s;
+  return str;
 }
 
-QDebug operator<<(QDebug dbg, const HearingMeasurement &item)
+QDebug operator<<(QDebug dbg, const HearingMeasurement& item)
 {
-    const QString s = item.toString();
-    if (s.isEmpty())
-        dbg.nospace() << "Hearing Measurement()";
+    const QString str = item.toString();
+    if(str.isEmpty())
+      dbg.nospace() << "Hearing Measurement()";
     else
-        dbg.nospace() << "Hearing Measurement(" << s << " ...)";
+      dbg.nospace() << "Hearing Measurement(" << str << " ...)";
     return dbg.maybeSpace();
 }
