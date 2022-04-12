@@ -8,6 +8,7 @@
 #include "ECGDialog.h"
 #include "FraxDialog.h"
 //#include "ThermometerDialog.h"
+#include "SpirometerDialog.h"
 #include "TonometerDialog.h"
 #include "WeighScaleDialog.h"
 
@@ -60,7 +61,7 @@ DialogBase* DialogFactory::instantiate(const Constants::MeasureType &type)
         dialog = new TonometerDialog();
         break;
       case Constants::MeasureType::typeSpirometer:
-        //dialog = Q_NULLPTR;
+        dialog = new SpirometerDialog();
         break;
       case Constants::MeasureType::typeBlood_Pressure:
         dialog = new BloodPressureDialog();

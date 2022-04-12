@@ -32,6 +32,8 @@ SOURCES += \
     data/Measurement.cpp \
 #    data/TemperatureMeasurement.cpp \
 #    data/TemperatureTest.cpp \
+    data/SpirometerMeasurement.cpp \
+    data/SpirometerTest.cpp \
     data/TonometerMeasurement.cpp \
     data/TonometerTest.cpp \
     data/WeightMeasurement.cpp \
@@ -39,6 +41,7 @@ SOURCES += \
     managers/AudiometerManager.cpp \
     managers/CDTTManager.cpp \
     managers/ChoiceReactionManager.cpp \
+    managers/EMRPluginWriter.cpp \
     managers/BodyCompositionManager.cpp \
 #    managers/BluetoothLEManager.cpp \
     managers/BloodPressureManager.cpp \
@@ -48,6 +51,7 @@ SOURCES += \
     managers/FraxManager.cpp \
     managers/ManagerBase.cpp \
     managers/SerialPortManager.cpp \
+    managers/SpirometerManager.cpp \
     managers/TonometerManager.cpp \
     managers/WeighScaleManager.cpp \
     widgets/BarcodeWidget.cpp \
@@ -61,6 +65,7 @@ SOURCES += \
     dialogs/FraxDialog.cpp \
     dialogs/ECGDialog.cpp \
 #    dialogs/ThermometerDialog.cpp \
+    dialogs/SpirometerDialog.cpp \
     dialogs/TonometerDialog.cpp \
     dialogs/WeighScaleDialog.cpp \
     CypressApplication.cpp \
@@ -89,6 +94,8 @@ HEADERS += \
     data/HearingTest.h \
     data/Measurement.h \
     data/TestBase.h \
+    data/SpirometerMeasurement.h \
+    data/SpirometerTest.h \
     data/TonometerMeasurement.h \
     data/TonometerTest.h \
 #    data/TemperatureMeasurement.h \
@@ -104,9 +111,11 @@ HEADERS += \
     managers/CDTTManager.h \
     managers/ChoiceReactionManager.h \
     managers/ECGManager.h \
+    managers/EMRPluginWriter.h \
     managers/FraxManager.h \
     managers/ManagerBase.h \
     managers/SerialPortManager.h \
+    managers/SpirometerManager.h \
     managers/TonometerManager.h \
     managers/WeighScaleManager.h \
     widgets/BarcodeWidget.h \
@@ -120,6 +129,7 @@ HEADERS += \
     dialogs/ECGDialog.h \
     dialogs/FraxDialog.h \
 #    dialogs/ThermometerDialog.h \
+    dialogs/SpirometerDialog.h \
     dialogs/TonometerDialog.h \
     dialogs/WeighScaleDialog.h \
     CypressApplication.h

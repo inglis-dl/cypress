@@ -38,9 +38,9 @@ void MainWindow::initialize()
 
 void MainWindow::initializeModel()
 {
-    // allocate 2 columns x 8 rows of hearing measurement items
+    // allocate 4 columns x 8 rows of measurement items
     //
-    for(int col = 0; col < 2; col++)
+    for(int col = 0; col < 4; col++)
     {
         for(int row = 0; row < 8; row++)
         {
@@ -48,8 +48,10 @@ void MainWindow::initializeModel()
             m_model.setItem(row, col, item);
         }
     }
-    m_model.setHeaderData(0, Qt::Horizontal, "Left Test Results", Qt::DisplayRole);
-    m_model.setHeaderData(1, Qt::Horizontal, "Right Test Results", Qt::DisplayRole);
+    m_model.setHeaderData(0, Qt::Horizontal, "Variables", Qt::DisplayRole);
+    m_model.setHeaderData(1, Qt::Horizontal, "Trial 1", Qt::DisplayRole);
+    m_model.setHeaderData(2, Qt::Horizontal, "Trial 2", Qt::DisplayRole);
+    m_model.setHeaderData(3, Qt::Horizontal, "Trial 3", Qt::DisplayRole);
     ui->testdataTableView->setModel(&m_model);
 
     ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -149,7 +151,6 @@ void MainWindow::initializeConnections()
     connect(&m_manager, &SpirometerManager::canWrite,
         this, [this]() {
             ui->saveButton->setEnabled(true);
-            ui->statusBar->showMessage("Measurement complete. Data ready to save");
         });
 
     // Close the application
