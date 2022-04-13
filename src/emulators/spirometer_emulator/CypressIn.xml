@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ndd xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="ndd.EasyWarePro.V1">
+    <Command Type="PerformTest">
+        <Parameter Name="OrderID">1</Parameter>
+        <Parameter Name="TestType">FVC</Parameter>
+    </Command>
+    <Patients>
+        <Patient ID="12345678">
+            <LastName/>
+            <FirstName/>
+            <IsBioCal>false</IsBioCal>
+            <PatientDataAtPresent>
+                <Gender>Male</Gender>
+                <DateOfBirth>1994-09-25</DateOfBirth>
+                <ComputedDateOfBirth>false</ComputedDateOfBirth>
+                <Height>1.8</Height>
+                <Weight>109</Weight>
+                <Smoker></Smoker>
+                <Asthma>false</Asthma>
+                <COPD>false</COPD>
+            </PatientDataAtPresent>
+        </Patient>
+    </Patients>
+</ndd>
