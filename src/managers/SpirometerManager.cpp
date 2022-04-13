@@ -464,9 +464,11 @@ void SpirometerManager::configureProcess()
 
         // write the inputs to EMR xml
         //
+        qDebug() << "creating plugin xml";
         EMRPluginWriter writer;
         writer.setInputData(m_inputData);
-        writer.write(m_dataPath);
+        QDir xmlPath(m_dataPath);
+        writer.write(xmlPath.filePath("CypressIn.xml"));
 
         emit message(tr("Ready to measure..."));
         emit canMeasure();
