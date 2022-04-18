@@ -32,6 +32,8 @@ public:
 
     QString toString() const override;
 
+    QStringList toStringList(const bool& no_keys = false) const override;
+
     void simulate();
 
     static const QStringList parameterList;
