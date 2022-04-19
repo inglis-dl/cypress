@@ -56,6 +56,8 @@ BodyCompositionManager::BodyCompositionManager(QObject *parent) : SerialPortMana
   m_inputKeyList << "height";  // unsigned integer cm
   m_inputKeyList << "age";     // unsigned integer years
   m_inputKeyList << "gender";  // <female,male> or <0,1>
+
+  m_test.setExpectedMeasurementCount(1);
 }
 
 // default command lookup by string

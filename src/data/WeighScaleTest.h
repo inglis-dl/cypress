@@ -38,6 +38,10 @@ public:
     //
     QJsonObject toJsonObject() const override;
 
+    // ms of delay between performing a measurement to allow for
+    // step on/off without implementing a delay timer between
+    // UI measure button click events
+    //
     static const qint64 DELAY { 5 };
 
 };

@@ -21,6 +21,8 @@ ECGManager::ECGManager(QObject* parent):
     //
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
+
+    m_test.setExpectedMeasurementCount(1);
 }
 
 void ECGManager::start()

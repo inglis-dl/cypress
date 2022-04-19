@@ -365,8 +365,8 @@ bool SpirometerTest::isValid() const
          break;
        }
     }
-    bool okTest = 4 == getNumberOfMeasurements();
-    qDebug() << "validating number of measurements (4)"<<getNumberOfMeasurements();
+    bool okTest = getMeasurementCount() == getExpectedMeasurementCount();
+    qDebug() << "validating number of measurements (4)"<<getMeasurementCount();
     if(okTest)
     {
       foreach(const auto m, m_measurementList)
@@ -397,7 +397,7 @@ QJsonObject SpirometerTest::toJsonObject() const
         trialJson.append(measurement.toJsonObject());
     }
     QJsonObject json;
-    if(hasMetaData())
+    if(!metaDataIsEmpty())
     {
       QJsonObject deviceJson;
       QJsonObject metaJson = m_metaData.toJsonObject();

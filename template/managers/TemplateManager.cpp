@@ -50,7 +50,7 @@ void TemplateManager::buildModel(QStandardItemModel* model) const
 {
     // example of a 1 row 1 column model displaying one measurement
     //
-    for(int row = 0; row < m_test.getNumberOfMeasurements(); row++)
+    for(int row = 0; row < m_test.getMeasurementCount(); row++)
     {
         QStandardItem* item = model->item(row, 0);
         if(Q_NULLPTR == item)

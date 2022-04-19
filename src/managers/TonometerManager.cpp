@@ -29,7 +29,7 @@ TonometerManager::TonometerManager(QObject* parent):
     m_inputKeyList << "date_of_birth"; // format dd/MM/YY 00:00:00, BirthDate column in Patients table
     m_inputKeyList << "sex";           // 0  = female, 1 = male, Sex column in Patients table
 
-    m_test.setMaximumNumberOfMeasurements(2);
+    m_test.setExpectedMeasurementCount(2);
 }
 
 TonometerManager::~TonometerManager()

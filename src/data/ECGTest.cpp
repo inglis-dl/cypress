@@ -275,7 +275,7 @@ bool ECGTest::isValid() const
          break;
        }
     }
-    bool okTest = 1 == getNumberOfMeasurements();
+    bool okTest = getMeasurementCount() == getExpectedMeasurementCount();
     if(okTest)
     {
       ECGMeasurement m = getMeasurement(0);
@@ -287,7 +287,7 @@ bool ECGTest::isValid() const
 QJsonObject ECGTest::toJsonObject() const
 {
     QJsonObject json;
-    if(hasMetaData())
+    if(!metaDataIsEmpty())
     {
       json.insert("test_meta_data",m_metaData.toJsonObject());
     }

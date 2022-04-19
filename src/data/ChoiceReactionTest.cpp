@@ -120,7 +120,7 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                 }
             }
             // additional meta data: the number of measurements
-            int n = getNumberOfMeasurements();
+            int n = getMeasurementCount();
             addMetaData("number_of_measurements",n);
         }
         qDebug() << "closed stream";
@@ -156,7 +156,7 @@ bool ChoiceReactionTest::isValid() const
          break;
        }
     }
-    bool okTest = 0 < getNumberOfMeasurements();
+    bool okTest = 0 < getMeasurementCount();
     if(okTest)
     {
       foreach(const auto m, m_measurementList)
@@ -181,8 +181,10 @@ QJsonObject ChoiceReactionTest::toJsonObject() const
       jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    if(hasMetaData())
+    if(!metaDataIsEmpty())
+    {
       json.insert("test_meta_data",m_metaData.toJsonObject());
+    }
     json.insert("test_results",jsonArr);
     return json;
 }

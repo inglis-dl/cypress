@@ -29,7 +29,7 @@ bool BodyCompositionTest::isValid() const
          break;
        }
     }
-    bool okTest = 1 == getNumberOfMeasurements();
+    bool okTest = getMeasurementCount() == getExpectedMeasurementCount();
     if(okTest)
     {
       foreach(const auto m, m_measurementList)
@@ -381,8 +381,10 @@ QJsonObject BodyCompositionTest::toJsonObject() const
       jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    if(hasMetaData())
+    if(!metaDataIsEmpty())
+    {
       json.insert("test_meta_data",m_metaData.toJsonObject());
+    }
     json.insert("test_results",jsonArr);
     return json;
 }

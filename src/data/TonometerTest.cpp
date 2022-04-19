@@ -214,7 +214,7 @@ bool TonometerTest::isValid() const
          break;
        }
     }
-    bool okTest = 2 == getNumberOfMeasurements();
+    bool okTest = getMeasurementCount() == getExpectedMeasurementCount();
     if(okTest)
     {
       foreach(const auto m, m_measurementList)
@@ -237,7 +237,7 @@ QJsonObject TonometerTest::toJsonObject() const
       jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    if(hasMetaData())
+    if(!metaDataIsEmpty())
     {
         QJsonObject deviceJson;
         QJsonObject metaJson = m_metaData.toJsonObject();

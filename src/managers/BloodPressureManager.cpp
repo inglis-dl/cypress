@@ -31,7 +31,7 @@ BloodPressureManager::BloodPressureManager(QObject* parent)
     if(m_verbose)
       qDebug() << "Manager created on thread: " << QThread::currentThreadId();
 
-    m_test.setMaximumNumberOfMeasurements(m_row);
+    m_test.setExpectedMeasurementCount(6);
 }
 
 BloodPressureManager::~BloodPressureManager()
@@ -315,7 +315,7 @@ void BloodPressureManager::buildModel(QStandardItemModel* model) const
 {
     // add measurements one row of one columns at a time
     //
-    int n_total = m_test.getNumberOfMeasurements();
+    int n_total = m_test.getMeasurementCount();
     for(int row = 0; row < n_total; row++)
     {
         BloodPressureMeasurement m = m_test.getMeasurement(row);
