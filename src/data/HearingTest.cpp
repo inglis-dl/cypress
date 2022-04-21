@@ -25,7 +25,7 @@ bool HearingTest::isValid() const
          break;
        }
     }
-    bool okTest = 16 == getNumberOfMeasurements();
+    bool okTest = getMeasurementCount() == getExpectedMeasurementCount();
     if(okTest)
     {
       foreach(const auto m, m_measurementList)
@@ -42,7 +42,7 @@ bool HearingTest::isValid() const
 
 bool HearingTest::isPartial() const
 {
-    bool okTest = 0 < getNumberOfMeasurements();
+    bool okTest = getMeasurementCount() >= getMinimumMeasurementCount();
     if(okTest)
     {
       foreach(const auto m, m_measurementList)
@@ -180,8 +180,10 @@ QJsonObject HearingTest::toJsonObject() const
       jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    if(hasMetaData())
+    if(!metaDataIsEmpty())
+    {
       json.insert("test_meta_data",m_metaData.toJsonObject());
+    }
     json.insert("test_results",jsonArr);
     return json;
 }

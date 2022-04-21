@@ -167,6 +167,34 @@ bool SpirometerMeasurement::isValid() const
     return okResult && okChannel && okTrial;
 }
 
+QStringList SpirometerMeasurement::toStringList(const bool& no_keys) const
+{
+    QStringList list;
+    foreach(const auto x, m_attributes.toStdMap())
+    {
+      QString key = x.first; // the key
+      Measurement::Value value = x.second; // the value
+      QString valueStr = value.toString();
+      if("flow_values" == key || "volume_values" == key)
+      {
+          QStringList valueList = valueStr.split(",");
+          QStringList shorten;
+          // first 3 values truncated at precision of 5
+          if(3 < valueList.size())
+          {
+            for(int i = 0; i < 3; i++)
+            {
+               double val = valueList.at(i).toDouble();
+               shorten.push_back(QString::number(val,'g',5));
+            }
+            valueStr = QString("%1...").arg(shorten.join(","));
+          }
+      }
+      list << (no_keys ? valueStr : QString("%1: %2").arg(key,valueStr));
+    }
+    return list;
+}
+
 // TODO: generate terse output string
 //
 QString SpirometerMeasurement::toString() const

@@ -25,6 +25,8 @@ SpirometerManager::SpirometerManager(QObject* parent) : ManagerBase(parent)
     //m_inputKeyList << "asthma"; // true/false
     //m_inputKeyList << "copd";   // true/false
     //m_inputKeyList << "ethnicity"; // caucasian, asian, african, hispanic, other_ethnic
+
+    m_test.setExpectedMeasurementCount(4);
 }
 
 void SpirometerManager::start()
@@ -528,9 +530,9 @@ void SpirometerManager::removeXmlFiles() const
 QString SpirometerManager::getOutputPdfPath() const
 {
     if(m_test.isValid() &&
-       m_test.getMetaData().getAttributes().contains("pdf_report_path"))
+       m_test.hasMetaData("pdf_report_path"))
     {
-      return m_test.getMetaData().getAttribute("pdf_report_path").toString();
+      return m_test.getMetaDataAsString("pdf_report_path");
     }
     else
       return QString();

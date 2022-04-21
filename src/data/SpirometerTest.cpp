@@ -365,8 +365,8 @@ bool SpirometerTest::isValid() const
          break;
        }
     }
-    bool okTest = 4 == getNumberOfMeasurements();
-    qDebug() << "validating number of measurements (4)"<<getNumberOfMeasurements();
+    bool okTest = getMeasurementCount() == getExpectedMeasurementCount();
+    qDebug() << "validating number of measurements (4)"<<getMeasurementCount();
     if(okTest)
     {
       foreach(const auto m, m_measurementList)
@@ -397,7 +397,7 @@ QJsonObject SpirometerTest::toJsonObject() const
         trialJson.append(measurement.toJsonObject());
     }
     QJsonObject json;
-    if(hasMetaData())
+    if(!metaDataIsEmpty())
     {
       QJsonObject deviceJson;
       QJsonObject metaJson = m_metaData.toJsonObject();
@@ -668,27 +668,27 @@ void SpirometerTest::readChannel(const QDomNode& node, SpirometerMeasurement* me
       QDomNodeList list = elem.elementsByTagName(tag.first);
       if(!list.isEmpty())
       {
-        QDomElement e = list.item(0).toElement();
+        QDomElement elem = list.item(0).toElement();
         QString key = QString("%1_%2").arg(prefix,tag.second);
 
         // only insert the sampling values if the xml element has the correct attribute
         if("SamplingValues" == tag.first)
         {
-          if(e.hasAttribute("TypeOfData"))
+          if(elem.hasAttribute("TypeOfData"))
           {
-            measure->setAttribute(key,e.text().replace(" ",","));
-            QStringList l = e.text().split(" ");
+            QStringList values = elem.text().split(" ");
+            measure->setAttribute(key,values.join(","));
             QString numKey = QString("%1_value_count").arg(prefix);
-            measure->setAttribute(numKey,l.count());
+            measure->setAttribute(numKey,values.count());
           }
         }
         else if("SamplingInterval" == tag.first || "TimeZeroOffset" == tag.first)
         {
-          measure->setAttribute(key,e.text().toDouble());
+          measure->setAttribute(key,elem.text().toDouble());
         }
         else
         {
-          measure->setAttribute(key,e.text().toInt());
+          measure->setAttribute(key,elem.text().toInt());
         }
       }
     }

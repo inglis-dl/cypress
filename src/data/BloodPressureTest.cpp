@@ -48,7 +48,7 @@ QString BloodPressureTest::toString() const
 
 void BloodPressureTest::simulate()
 {
-    int count = getMaximumNumberOfMeasurements();
+    int count = getExpectedMeasurementCount();
     int systolicAvg = 0;
     int diastolicAvg = 0;
     int pulseAvg = 0;
@@ -79,7 +79,7 @@ bool BloodPressureTest::isValid() const
          break;
        }
     }
-    bool okTest = 1 <= getNumberOfMeasurements();
+    bool okTest = 1 <= getMeasurementCount();
     if(okTest)
     {
       foreach(const auto m, m_measurementList)
@@ -104,8 +104,10 @@ QJsonObject BloodPressureTest::toJsonObject() const
       jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    if(hasMetaData())
+    if(!metaDataIsEmpty())
+    {
       json.insert("test_meta_data",m_metaData.toJsonObject());
+    }
     json.insert("test_results",jsonArr);
     return json;
 }

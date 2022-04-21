@@ -63,7 +63,7 @@ void ChoiceReactionManager::buildModel(QStandardItemModel *model) const
 {
     // add measurements one row of two columns at a time
     //
-    int n_total = m_test.getNumberOfMeasurements();
+    int n_total = m_test.getMeasurementCount();
     int n_row = qMax(1, n_total/2);
     if(n_row != model->rowCount())
     {

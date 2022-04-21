@@ -30,7 +30,7 @@ AudiometerManager::AudiometerManager(QObject *parent)
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
 
-    m_test.setMaximumNumberOfMeasurements(16);
+    m_test.setExpectedMeasurementCount(16);
 }
 
 void AudiometerManager::buildModel(QStandardItemModel* model) const

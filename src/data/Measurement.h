@@ -28,6 +28,7 @@
  *
  */
 
+
 class Measurement
 {
 
@@ -155,6 +156,8 @@ protected:
 
 Q_DECLARE_METATYPE(Measurement);
 Q_DECLARE_METATYPE(Measurement::Value)
+
+typedef Measurement MetaData;
 
 inline bool operator==(const Measurement &lhs, const Measurement &rhs)
 {

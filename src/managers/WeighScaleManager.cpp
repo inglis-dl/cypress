@@ -24,7 +24,7 @@ WeighScaleManager::WeighScaleManager(QObject* parent) : SerialPortManager(parent
   m_inputKeyList << "barcode";
   m_inputKeyList << "language";
 
-  m_test.setMaximumNumberOfMeasurements(m_row);
+  m_test.setExpectedMeasurementCount(2);
 }
 
 void WeighScaleManager::buildModel(QStandardItemModel* model) const

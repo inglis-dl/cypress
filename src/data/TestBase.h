@@ -41,6 +41,11 @@ public:
     //
     virtual QString toString() const = 0;
 
+    // derived classes should at minimum check
+    // - number of measurements = expected number of measurements
+    // - meta data received matches on expected keys
+    // - attributes received matched on expected keys
+    //
     virtual bool isValid() const = 0;
 
     // String keys are converted to snake_case
@@ -51,6 +56,8 @@ public:
     //
     virtual void reset();
 
+    // set the system of units for the test
+    //
     void setUnitsSystem(const Constants::UnitsSystem& system)
     {
       m_unitsSystem = system;
@@ -59,16 +66,6 @@ public:
     Constants::UnitsSystem getUnitsSystem() const
     {
       return m_unitsSystem;
-    }
-
-    void setMetataData(const Measurement &other)
-    {
-      m_metaData = other;
-    }
-
-    Measurement getMetaData() const
-    {
-      return m_metaData;
     }
 
     void addMetaData(const QString& key, const QVariant& value, const QString& units)
@@ -86,7 +83,7 @@ public:
       m_metaData.setAttribute(key, value);
     }
 
-    void addMetaData(const QString &key, const Measurement::Value &value)
+    void addMetaData(const QString &key, const MetaData::Value &value)
     {
       m_metaData.setAttribute(key, value);
     }
@@ -101,11 +98,6 @@ public:
       return m_metaData.getAttribute(key).toString();
     }
 
-    bool hasMetaData() const
-    {
-      return !m_metaData.isEmpty();
-    }
-
     bool hasMetaData(const QString &key) const
     {
       return m_metaData.hasAttribute(key);
@@ -117,27 +109,43 @@ public:
 
     T getMeasurement(const int&) const;
 
-    int getNumberOfMeasurements() const
+    int getMeasurementCount() const
     {
       return m_measurementList.size();
     }
 
-    void setMaximumNumberOfMeasurements(const int& max)
+    void setExpectedMeasurementCount(const int& num)
     {
-      m_maximumNumberOfMeasurements = 0 < max ? max : 1;
+      m_expectedMeasurementCount = 0 < num ? num : 1;
     }
 
-    int getMaximumNumberOfMeasurements() const
+    int getExpectedMeasurementCount() const
     {
-      return m_maximumNumberOfMeasurements;
+      return m_expectedMeasurementCount;
+    }
+
+    void setMinimumMeasurementCount(const int& min)
+    {
+      m_minimumMeasurementCount = 0 < min ? min : 1;
+    }
+
+    int getMinimumMeasurementCount() const
+    {
+      return m_minimumMeasurementCount;
     }
 
     T lastMeasurement() const;
 
+    bool metaDataIsEmpty() const
+    {
+      return m_metaData.isEmpty();
+    }
+
 protected:
     QVector<T> m_measurementList;
-    Measurement m_metaData;
-    int m_maximumNumberOfMeasurements { 1000 };
+    MetaData m_metaData;
+    int m_expectedMeasurementCount { 1 };
+    int m_minimumMeasurementCount { 1 };
     Constants::UnitsSystem m_unitsSystem { Constants::UnitsSystem::systemMetric };
 };
 
@@ -156,7 +164,7 @@ void TestBase<T>::addMeasurement(const T &item)
     if(!m_measurementList.contains(item))
     {
       m_measurementList.append(item);
-      if(m_maximumNumberOfMeasurements < m_measurementList.size())
+      if(m_expectedMeasurementCount < m_measurementList.size())
         m_measurementList.pop_front();
     }
 }

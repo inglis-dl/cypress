@@ -27,7 +27,7 @@ BluetoothLEManager::BluetoothLEManager(QObject *parent) : ManagerBase(parent)
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
 
-    m_test.setMaximumNumberOfMeasurements(m_row);
+    m_test.setExpectedMeasurementCount(2);
 }
 
 void BluetoothLEManager::start()

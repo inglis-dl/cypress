@@ -6,7 +6,7 @@
 
 bool TemperatureTest::isValid() const
 {
-    bool okTest = getNumberOfMeasurements() == getMaximumNumberOfMeasurements();
+    bool okTest = getMeasurementCount() == getExpectedMeasurementCount();
     if(okTest)
     {
       foreach(const auto m, m_measurementList)
@@ -59,8 +59,10 @@ QJsonObject TemperatureTest::toJsonObject() const
       jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    if(hasMetaData())
+    if(!metaDataIsEmpty())
+    {
       json.insert("test_meta_data",m_metaData.toJsonObject());
+    }
     json.insert("test_results",jsonArr);
     return json;
 }

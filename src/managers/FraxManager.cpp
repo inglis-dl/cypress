@@ -36,6 +36,8 @@ FraxManager::FraxManager(QObject* parent):
     m_inputKeyList << "secondary_osteoporosis";
     m_inputKeyList << "alcohol";
     m_inputKeyList << "femoral_neck_bmd";
+
+    m_test.setExpectedMeasurementCount(4);
 }
 
 void FraxManager::start()
@@ -73,7 +75,7 @@ void FraxManager::buildModel(QStandardItemModel *model) const
 {
     // add the four probability measurements
     //
-    for(int row = 0; row < m_test.getNumberOfMeasurements(); row++)
+    for(int row = 0; row < m_test.getMeasurementCount(); row++)
     {
         QStandardItem* item = model->item(row, 0);
         if(Q_NULLPTR == item)

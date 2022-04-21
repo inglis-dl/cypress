@@ -40,7 +40,7 @@ bool TemplateTest::isValid() const
          break;
        }
     }
-    bool okTest = 0 < getNumberOfMeasurements();
+    bool okTest = getMeasurementCount() == getExpectedMeasurementCount();
     if(okTest)
     {
       foreach(auto m, m_measurementList)
@@ -63,8 +63,10 @@ QJsonObject TemplateTest::toJsonObject() const
       jsonArr.append(m.toJsonObject());
     }
     QJsonObject json;
-    if(hasMetaData())
+    if(!metaDataIsEmpty())
+    {
       json.insert("test_meta_data",m_metaData.toJsonObject());
+    }
     json.insert("test_results",jsonArr);
     return json;
 }

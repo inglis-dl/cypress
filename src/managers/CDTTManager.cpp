@@ -19,6 +19,9 @@ CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
     //
     m_inputKeyList << "barcode";
     m_inputKeyList << "language";
+
+    // expected measurement (trial) count is not know a priori
+    m_test.setMinimumMeasurementCount(1);
 }
 
 CDTTManager::~CDTTManager()
