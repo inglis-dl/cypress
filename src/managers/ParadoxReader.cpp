@@ -1,6 +1,7 @@
 #include "ParadoxReader.h"
+#include <QJsonDocument>
 
-ParadoxReader::ParadoxReader(QWidget* parent, const QString& filePath)
+ParadoxReader::ParadoxReader(const QString& filePath, QWidget* parent)
 {
     // Open Database connection
     openDatabase(filePath);
@@ -40,10 +41,6 @@ QJsonObject ParadoxReader::Read()
     // Read the actual data
     QList<ParadoxDbBlock> blocks = readBlocks();
 
-    // Close Database connection
-    closeDatabase();
-    qDebug() << "Databases read in";
-
     // Convert to Json Object
     // Return error if there is no data found
     if (blocks.isEmpty()) {
@@ -53,13 +50,26 @@ QJsonObject ParadoxReader::Read()
 
     for (int i = 0; i < blocks.count(); i++) {
         // TODO: add this to json output
-        blocks[i].readRecords(m_dbFile);
+        //QList<ParadoxRecord> records = blocks[i].readRecords(m_dbFile);
+        //writeBlockInJson(&output, records, i);
+        QJsonObject records = blocks[i].readRecords(m_dbFile);
+        int co = records.count();
+        
+        QJsonDocument document;
+        document.setObject(records);
+        QFile jsonFile(QString("C:/Users/clsa/Documents/Test_%1.json").arg(co) );
+        jsonFile.open(QFile::WriteOnly);
+        jsonFile.write(document.toJson());
     }
     //QList<ParadoxRecord> records = blocks[0].readRecords(m_dbFile);
 
+    // Close Database connection
+    closeDatabase();
+    qDebug() << "Databases read in";
+
     // return
     output.insert("ErrorOccured", false);
-    return QJsonObject();
+    return output;
 }
 
 /*
@@ -67,7 +77,7 @@ QJsonObject ParadoxReader::Read()
 */
 void ParadoxReader::openDatabase(const QString& filePath)
 {
-    // Open ZGripTest.DB
+    // Open data base
     m_dbFile.setFileName(filePath);
     m_dbFile.open(QFile::ReadOnly);
 }
@@ -301,3 +311,15 @@ void ParadoxReader::handleError(QJsonObject* json, const QString& errorMsg)
     qDebug() << errorMsg;
     closeDatabase();
 }
+
+//void ParadoxReader::writeBlockInJson(QJsonObject* json, QList<ParadoxRecord> records, int blockNum)
+//{
+//    for (int i = 0; i < records.count(); i++) {
+//        ParadoxRecord record = records[i];
+//        QVariantList values = record.getValues
+//        for(int j = 0; j < )
+//        QString headerName = m_header.fields[i].getName();
+//        QString key = QString("block/%1/%2").arg(blockNum).arg(headerName);
+//        json->insert(key, );
+//    }
+//}

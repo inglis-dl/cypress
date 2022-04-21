@@ -5,41 +5,6 @@
 #include <QFile>
 #include <QList>
 
-class ParadoxReader
-{
-public:
-    ParadoxReader(QWidget* parent = Q_NULLPTR, const QString& filePath);
-    ~ParadoxReader();
-
-	QJsonObject Read();
-    void closeDatabase();
-private:
-    void openDatabase(const QString& filePath);
-
-    // Methods for reading in header data
-    void readHeader();
-    bool headerDataValid();
-    void seekToFieldInfoStart();
-    void readHeaderFieldInfo();
-    void skipPastUneededInfo();
-    void readHeaderFieldNames();
-
-    // Read blocks of data
-    QList<ParadoxDbBlock> readBlocks();
-
-    // Helper methods for reading various types of data
-    qint16 readShort(int offset = -1);
-    quint8 readUByte(int offset = -1);
-    qint32 readInt(int offset = -1);
-    quint16 readUShort(int offset = -1);
-    qint32 readPtr(int offset = -1);
-
-    void handleError(QJsonObject* json, const QString& errorMsg);
-
-    QFile m_dbFile;
-    DbHeader m_header;
-};
-
 enum class FieldType
 {
     Alpha = 0x01,
@@ -118,42 +83,6 @@ public:
     QList<DbHeaderField> fields;
 };
 
-class ParadoxRecord {
-public:
-    ParadoxRecord(const DbHeader* header) {
-        m_header = header;
-        m_values.reserve(header->numFields);
-        // TODO: do this in a cleaner way
-        for (int i = 0; i < header->numFields; i++) {
-            m_values.append(NULL);
-        }
-    }
-    QVariantList getValues() const { return m_values; }
-
-    void setFieldvalue(int i, const QVariant& value) { m_values[i] = value; }
-    QVariant getFieldvalue(int i) const { return m_values[i]; }
-    QVariant getFieldvalue(const QString& fieldName) const { return m_values[getFieldIndex(fieldName)]; }
-
-private:
-    // Assumes values are located at the same index as the header values
-    const DbHeader* m_header;
-    QVariantList m_values;
-
-    /*
-    * Get the field index
-    */
-    int getFieldIndex(QString fieldName) const
-    {
-        for (int i = 0; i < m_header->fields.count(); i++) {
-            if (m_header->fields[i].getName() == fieldName) {
-                return i;
-            }
-        }
-        // TODO: Decide if an error should be thrown instead of -1
-        return -1;
-    }
-};
-
 class ParadoxDbBlock {
 public:
     ParadoxDbBlock(const int& blockNumber, const int& nextBlock, const int& prevBlock,
@@ -171,17 +100,14 @@ public:
     // this method will thus return 0 in this case
     int getNumRecords() { return (m_offsetToLastRecord / m_dbHeader->recordSize) + 1; }
 
-    QList<ParadoxRecord> readRecords(QFile& dbFile)
+    QJsonObject readRecords(QFile& dbFile)
     {
         int numRecords = getNumRecords();
-        QList<ParadoxRecord> records;
-        records.reserve(numRecords);
-        for (int i = 0; i < numRecords; i++) {
-            records.append(m_dbHeader);
-        }
+        QJsonObject records;
         dbFile.seek(m_fileOffset);
         for (int i = 0; i < numRecords; i++) {
-            records[i] = readRecord(dbFile);
+            QJsonObject record = readRecord(dbFile);
+            records.insert(QString::number(i), record);
         }
         return records;
     }
@@ -194,16 +120,16 @@ private:
     const long m_fileOffset;
     const DbHeader* m_dbHeader;
 
-    ParadoxRecord readRecord(QFile& dbFile) {
-        ParadoxRecord record(m_dbHeader);
+    QJsonObject readRecord(QFile& dbFile) {
+        QJsonObject jsonRecord;
         for (int i = 0; i < m_dbHeader->numFields; i++) {
             DbHeaderField field = m_dbHeader->fields[i];
             FieldType type = field.getType();
             QByteArray bytes = dbFile.read(field.getSize());
             QVariant value = getValue(bytes, type);
-            record.setFieldvalue(i, value);
+            jsonRecord.insert(field.getName(), QJsonValue::fromVariant(value));
         }
-        return record;
+        return jsonRecord;
     }
 
     QVariant getValue(QByteArray bytes, FieldType type) {
@@ -253,5 +179,41 @@ private:
         }
         return bytes;
     }
+};
+
+class ParadoxReader
+{
+public:
+    ParadoxReader(const QString& filePath, QWidget* parent = Q_NULLPTR);
+    ~ParadoxReader();
+
+	QJsonObject Read();
+    void closeDatabase();
+private:
+    void openDatabase(const QString& filePath);
+
+    // Methods for reading in header data
+    void readHeader();
+    bool headerDataValid();
+    void seekToFieldInfoStart();
+    void readHeaderFieldInfo();
+    void skipPastUneededInfo();
+    void readHeaderFieldNames();
+
+    // Read blocks of data
+    QList<ParadoxDbBlock> readBlocks();
+
+    // Helper methods for reading various types of data
+    qint16 readShort(int offset = -1);
+    quint8 readUByte(int offset = -1);
+    qint32 readInt(int offset = -1);
+    quint16 readUShort(int offset = -1);
+    qint32 readPtr(int offset = -1);
+
+    void handleError(QJsonObject* json, const QString& errorMsg);
+   // void writeBlockInJson(QJsonObject* json, QList<ParadoxRecord> records, int blockNum);
+
+    QFile m_dbFile;
+    DbHeader m_header;
 };
 
