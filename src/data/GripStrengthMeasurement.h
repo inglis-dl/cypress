@@ -10,19 +10,22 @@
 * \sa Measurement
 */
 
+typedef QMap<QString, QString> q_stringMap;
+
 class GripStrengthMeasurement : public Measurement
 {
 public:
     GripStrengthMeasurement() = default;
     ~GripStrengthMeasurement() = default;
 
-    void fromString(const QString& string) { };
+    void fromRecord(const QJsonObject* record);
 
     bool isValid() const override;
 
     QString toString() const override;
 
     static GripStrengthMeasurement simulate();
+    static const q_stringMap trialMap;
 };
 
 Q_DECLARE_METATYPE(GripStrengthMeasurement);

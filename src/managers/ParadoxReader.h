@@ -5,6 +5,9 @@
 #include <QFile>
 #include <QList>
 
+typedef QList<QJsonObject> q_paradoxRecords;
+typedef QList<q_paradoxRecords> q_paradoxBlocks;
+
 enum class FieldType
 {
     Alpha = 0x01,
@@ -100,14 +103,14 @@ public:
     // this method will thus return 0 in this case
     int getNumRecords() { return (m_offsetToLastRecord / m_dbHeader->recordSize) + 1; }
 
-    QJsonObject readRecords(QFile& dbFile)
+    QList<QJsonObject> readRecords(QFile& dbFile)
     {
         int numRecords = getNumRecords();
-        QJsonObject records;
+        QList<QJsonObject> records;
         dbFile.seek(m_fileOffset);
         for (int i = 0; i < numRecords; i++) {
             QJsonObject record = readRecord(dbFile);
-            records.insert(QString::number(i), record);
+            records.append(record);
         }
         return records;
     }
@@ -187,7 +190,7 @@ public:
     ParadoxReader(const QString& filePath, QWidget* parent = Q_NULLPTR);
     ~ParadoxReader();
 
-	QJsonObject Read();
+    q_paradoxBlocks Read();
     void closeDatabase();
 private:
     void openDatabase(const QString& filePath);

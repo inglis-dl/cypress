@@ -10,19 +10,21 @@
 
 GripStrengthManager::GripStrengthManager(QObject* parent) : ManagerBase(parent)
 {
-    setGroup("template");
+    setGroup("gripstrength");
     m_col = 1;
     m_row = 1;
 
     // all managers must check for barcode and language input values
     //
     m_inputKeyList << "barcode";
-    m_inputKeyList << "language";
 }
 
 void GripStrengthManager::start()
 {
     emit dataChanged();
+    QString testPath = "C:/Users/clsa/Desktop/ZGripTest.DB";
+    QString testDataPath = "C:/Users/clsa/Desktop/ZGripTestData.DB";
+    m_test.fromParradox(testPath, testDataPath);
 }
 
 void GripStrengthManager::loadSettings(const QSettings& settings)

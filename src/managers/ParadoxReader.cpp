@@ -15,11 +15,8 @@ ParadoxReader::~ParadoxReader()
 /*
 * Reads in the data stored in a paradox database
 */
-QJsonObject ParadoxReader::Read()
+q_paradoxBlocks ParadoxReader::Read()
 {
-    // Create output json object
-    QJsonObject output;
-
     // seek to start of database
     m_dbFile.seek(0);
 
@@ -34,8 +31,8 @@ QJsonObject ParadoxReader::Read()
     
     // Report error if header could not be read or if header data is not valid
     if (errorReadingHeader || false == headerDataValid()) {
-        handleError(&output, "Error: Valid header data could not be read");
-        return output;
+        qDebug() << "Error: Valid header data could not be read";
+        return q_paradoxBlocks();
     }
 
     // Read the actual data
@@ -44,32 +41,21 @@ QJsonObject ParadoxReader::Read()
     // Convert to Json Object
     // Return error if there is no data found
     if (blocks.isEmpty()) {
-        handleError(&output, "Error: No data stored in database blocks");
-        return output;
+        qDebug() << "Error: No data stored in database blocks";
+        return q_paradoxBlocks();
     }
 
+    q_paradoxBlocks dataBlocks;
     for (int i = 0; i < blocks.count(); i++) {
-        // TODO: add this to json output
-        //QList<ParadoxRecord> records = blocks[i].readRecords(m_dbFile);
-        //writeBlockInJson(&output, records, i);
-        QJsonObject records = blocks[i].readRecords(m_dbFile);
-        int co = records.count();
-        
-        QJsonDocument document;
-        document.setObject(records);
-        QFile jsonFile(QString("C:/Users/clsa/Documents/Test_%1.json").arg(co) );
-        jsonFile.open(QFile::WriteOnly);
-        jsonFile.write(document.toJson());
+        q_paradoxRecords records = blocks[i].readRecords(m_dbFile);
+        dataBlocks.append(records);
     }
-    //QList<ParadoxRecord> records = blocks[0].readRecords(m_dbFile);
 
     // Close Database connection
     closeDatabase();
     qDebug() << "Databases read in";
 
-    // return
-    output.insert("ErrorOccured", false);
-    return output;
+    return dataBlocks;
 }
 
 /*
