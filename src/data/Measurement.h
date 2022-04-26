@@ -28,7 +28,6 @@
  *
  */
 
-
 class Measurement
 {
 
@@ -54,6 +53,7 @@ public:
         Value() = default;
         Value(const QVariant& value, const QString& units = QString(), const quint16& precision = 0);
         Value(const Value&);
+        Value(const QVariant& value, const quint16& precision);
         Value &operator=(const Value&);
         ~Value() = default;
 
@@ -109,6 +109,11 @@ public:
       setAttribute(key,Measurement::Value(value));
     }
 
+    void setAttribute(const QString& key, const QVariant &value, const quint16& precision)
+    {
+      setAttribute(key,Measurement::Value(value,precision));
+    }
+
     void setAttribute(const QString &key, const Value &value)
     {
       m_attributes[key]=value;
@@ -148,10 +153,29 @@ public:
     }
 
     int size() const { return m_attributes.size(); }
+
     bool isEmpty() const { return m_attributes.isEmpty(); }
+
+    // precision should be set before reading any values from the output.
+    // derived classes can set precision as needed per data variable
+    // ie., setting precision does not apply to all attribute values
+    //
+    void setPrecision(const int& precision)
+    {
+        if(0 < precision) m_precision = precision;
+    }
+
+    int getPrecision() const
+    {
+        return m_precision;
+    }
 
 protected:
     QMap<QString,Value> m_attributes;
+
+    // display precision, actual storage precision is data intrinsic
+    //
+    int m_precision = { 4 };
 };
 
 Q_DECLARE_METATYPE(Measurement);

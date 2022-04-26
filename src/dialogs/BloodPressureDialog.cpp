@@ -19,21 +19,8 @@ BloodPressureDialog::~BloodPressureDialog()
 
 void BloodPressureDialog::initializeModel()
 {
-    QStringList header = (QStringList()<<"#"<<"start time"<<"end time"<<"systolic (mmHg)"<<"diastolic (mmHg)"<<"pulse (bpm)");
-    for(int row = 0; row < m_manager->getNumberOfModelRows(); row++)
-    {
-      for(int col = 0; col < m_manager->getNumberOfModelColumns(); col++)
-      {
-        QStandardItem* item = new QStandardItem();
-        m_model.setItem(row, col, item);
-        m_model.setHeaderData(col, Qt::Horizontal, header.at(col), Qt::DisplayRole);
-      }
-    }
-    ui->testdataTableView->setModel(&m_model);
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->verticalHeader()->hide();
+    m_manager.get()->initializeModel();
+    ui->measureWidget->initialize(m_manager.get()->getModel());
 }
 
 void BloodPressureDialog::initializeConnections()
@@ -73,17 +60,14 @@ void BloodPressureDialog::initializeConnections()
     //
     foreach(auto button, this->findChildren<QPushButton *>())
     {
-        button->setEnabled(false);
+        if("Close" != button->text())
+          button->setEnabled(false);
 
         // disable enter key press event passing onto auto focus buttons
         //
         button->setDefault(false);
         button->setAutoDefault(false);
     }
-
-    // Close the application
-    //
-    ui->closeButton->setEnabled(true);
 
     // Relay messages from the manager to the status bar
     //
@@ -179,8 +163,7 @@ void BloodPressureDialog::initializeConnections()
             this,[this]() {
         ui->connectButton->setEnabled(true);
         ui->disconnectButton->setEnabled(false);
-        ui->measureButton->setEnabled(false);
-        ui->saveButton->setEnabled(false);
+        ui->measureWidget->disableMeasure();
     });
 
     // Connect to the device (bpm)
@@ -194,8 +177,7 @@ void BloodPressureDialog::initializeConnections()
             this,[this](){
         ui->connectButton->setEnabled(false);
         ui->disconnectButton->setEnabled(true);
-        ui->measureButton->setEnabled(true);
-        ui->saveButton->setEnabled(false);
+        ui->measureWidget->disableMeasure();
 
         // Remove blank enty from selection, so that user cannot change answer to blank
         // The user will still be able to change their selection if they make a mistake
@@ -205,62 +187,42 @@ void BloodPressureDialog::initializeConnections()
         ui->armComboBox->removeItem(ui->armComboBox->findText(""));
     });
 
+    connect(derived.get(), &BloodPressureManager::canMeasure,
+            this,[this](){
+        ui->connectButton->setEnabled(false);
+        ui->disconnectButton->setEnabled(true);
+    });
+
     // Disconnect from device
     //
     connect(ui->disconnectButton, &QPushButton::clicked,
             derived.get(), &BloodPressureManager::disconnectDevice);
 
-    // Request a measurement from the device (bpm)
+    // Request a measurement from the device
     //
-    connect(ui->measureButton, &QPushButton::clicked,
-            derived.get(), &BloodPressureManager::measure);
+    connect(ui->measureWidget, &MeasureWidget::measure,
+          derived.get(), &BloodPressureManager::measure);
 
     // Update the UI with any data
     //
-    connect(m_manager.get(), &BloodPressureManager::dataChanged,
-        this, [this]() {
-            auto h = ui->testdataTableView->horizontalHeader();
-            h->setSectionResizeMode(QHeaderView::Fixed);
-            m_manager->buildModel(&m_model);
-            QSize ts_pre = ui->testdataTableView->size();
-            h->resizeSections(QHeaderView::ResizeToContents);
-            int h_sum = 0;
-            for(int col = 0; col < m_manager->getNumberOfModelColumns(); col++)
-            {
-              ui->testdataTableView->setColumnWidth(col, h->sectionSize(col));
-              h_sum += h->sectionSize(col) + 1;
-            }
-            ui->testdataTableView->resize(
-                h_sum + ui->testdataTableView->autoScrollMargin(),
-                m_manager->getNumberOfModelRows() * ui->testdataTableView->rowHeight(0) + 1 +
-                h->height());
-            QSize ts_post = ui->testdataTableView->size();
-            int dx = ts_post.width() - ts_pre.width();
-            int dy = ts_post.height() - ts_pre.height();
-            this->resize(this->width() + dx, this->height() + dy);
-        });
+    connect(derived.get(), &BloodPressureManager::dataChanged,
+        ui->measureWidget, &MeasureWidget::updateModelView);
 
     // All measurements received: enable write test results
     //
-    connect(m_manager.get(), &BloodPressureManager::canWrite,
-        this, [this]() {
-            ui->saveButton->setEnabled(true);
-        });
+    connect(derived.get(), &BloodPressureManager::canWrite,
+        ui->measureWidget, &MeasureWidget::enableWriteToFile);
 
     // Write test data to output
     //
-    connect(ui->saveButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::writeToFile,
         this, &BloodPressureDialog::writeOutput);
 
     // Close the application
     //
-    connect(ui->closeButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::closeApplication,
         this, &BloodPressureDialog::close);
-
-    // Read inputs, such as interview barcode
-    //
-    readInput();
-}
+  }
 
 QString BloodPressureDialog::getVerificationBarcode() const
 {

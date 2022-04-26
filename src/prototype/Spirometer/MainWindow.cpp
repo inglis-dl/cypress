@@ -13,7 +13,6 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QSettings>
-#include <QTimeLine>
 
 MainWindow::MainWindow(QWidget *parent)
     : QDialog(parent)
@@ -33,31 +32,19 @@ void MainWindow::initialize()
 {
   initializeModel();
   initializeConnections();
+
+  // Read inputs required to launch Easy On-PC
+  // In simulate mode the barcode is always populated with a default of "00000000"
+  //
+  readInput();
+
   m_manager.start();
 }
 
 void MainWindow::initializeModel()
 {
-    // allocate 4 columns x 8 rows of measurement items
-    //
-    for(int col = 0; col < 4; col++)
-    {
-        for(int row = 0; row < 8; row++)
-        {
-            QStandardItem* item = new QStandardItem();
-            m_model.setItem(row, col, item);
-        }
-    }
-    m_model.setHeaderData(0, Qt::Horizontal, "Variables", Qt::DisplayRole);
-    m_model.setHeaderData(1, Qt::Horizontal, "Trial 1", Qt::DisplayRole);
-    m_model.setHeaderData(2, Qt::Horizontal, "Trial 2", Qt::DisplayRole);
-    m_model.setHeaderData(3, Qt::Horizontal, "Trial 3", Qt::DisplayRole);
-    ui->testdataTableView->setModel(&m_model);
-
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    ui->testdataTableView->verticalHeader()->hide();
+    m_manager.initializeModel();
+    ui->measureWidget->initialize(m_manager.getModel());
 }
 
 // set up signal slot connections between GUI front end
@@ -69,17 +56,14 @@ void MainWindow::initializeConnections()
   //
   foreach(auto button, this->findChildren<QPushButton *>())
   {
-      button->setEnabled(false);
+      if("Close" != button->text())
+        button->setEnabled(false);
 
       // disable enter key press event passing onto auto focus buttons
       //
       button->setDefault(false);
       button->setAutoDefault(false);
   }
-
-  // Close the application
-  //
-  ui->closeButton->setEnabled(true);
 
   // Relay messages from the manager to the status bar
   //
@@ -108,104 +92,80 @@ void MainWindow::initializeConnections()
           }
       });
 
-
     // Available to start measuring
     //
     connect(&m_manager, &SpirometerManager::canMeasure,
-        this, [this]() {
-            ui->measureButton->setEnabled(true);
-            ui->saveButton->setEnabled(false);
-        });
+            ui->measureWidget, &MeasureWidget::enableMeasure);
 
-    // Request a measurement from the device (run CCB.exe)
+    // Request a measurement from the device
     //
-    connect(ui->measureButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::measure,
         &m_manager, &SpirometerManager::measure);
 
     // Update the UI with any data
     //
     connect(&m_manager, &SpirometerManager::dataChanged,
-        this, [this]() {
-            auto h = ui->testdataTableView->horizontalHeader();
-            h->setSectionResizeMode(QHeaderView::Fixed);
-
-            m_manager.buildModel(&m_model);
-
-            QSize ts_pre = ui->testdataTableView->size();
-            h->resizeSections(QHeaderView::ResizeToContents);
-            ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
-            ui->testdataTableView->setColumnWidth(1, h->sectionSize(1));
-            ui->testdataTableView->resize(
-                h->sectionSize(0) + h->sectionSize(1) +
-                ui->testdataTableView->autoScrollMargin(),
-                8 * ui->testdataTableView->rowHeight(0) + 1 +
-                h->height());
-            QSize ts_post = ui->testdataTableView->size();
-            int dx = ts_post.width() - ts_pre.width();
-            int dy = ts_post.height() - ts_pre.height();
-            this->resize(this->width() + dx, this->height() + dy);
-        });
+        ui->measureWidget, &MeasureWidget::updateModelView);
 
     // All measurements received: enable write test results
     //
     connect(&m_manager, &SpirometerManager::canWrite,
-        this, [this]() {
-            ui->saveButton->setEnabled(true);
-        });
-
-    // Close the application
-    //
-    connect(ui->closeButton, &QPushButton::clicked,
-        this, &MainWindow::close);
+        ui->measureWidget, &MeasureWidget::enableWriteToFile);
 
     // Write test data to output
     //
-    connect(ui->saveButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::writeToFile,
         this, &MainWindow::writeOutput);
 
-    connect(&m_manager, &SpirometerManager::canSelectRunnable,
-        this, [this]() {
-            for (auto&& x : this->findChildren<QPushButton*>())
-                x->setEnabled(false);
-            ui->closeButton->setEnabled(true);
-            ui->openButton->setEnabled(true);
-            static bool warn = true;
-            if(warn)
-            {
-                QMessageBox::warning(
-                    this, QApplication::applicationName(),
-                    tr("Select the exe by clicking Open and browsing to the "
-                        "required executable (EasyWarePro.exe) and selecting the file.  If the executable "
-                        "is valid click the Run button to start the test otherwise check the installation."));
-                warn = false;
-            }
-        });
-
+    // Provide file / path selection dialog as needed
+    //
     connect(ui->openButton, &QPushButton::clicked,
         &m_manager, &SpirometerManager::select);
 
+    connect(&m_manager, &SpirometerManager::canSelectRunnable,
+        this, [this]() {
+        foreach(auto button, this->findChildren<QPushButton *>())
+        {
+          if("Close" != button->text())
+            button->setEnabled(false);
+        }
+        ui->openButton->setEnabled(true);
+        static bool warn = true;
+        if(warn)
+        {
+          QMessageBox::warning(
+            this, QApplication::applicationName(),
+            tr("Select the exe by clicking Open and browsing to the "
+               "required executable (EasyWarePro.exe) and selecting the file.  If the executable "
+               "is valid click the Run button to start the test otherwise check the installation."));
+          warn = false;
+        }
+      });
+
     connect(&m_manager, &SpirometerManager::canSelectDataPath,
         this, [this]() {
-            for (auto&& x : this->findChildren<QPushButton*>())
-                x->setEnabled(false);
-            ui->closeButton->setEnabled(true);
-            ui->openButton->setEnabled(true);
-            static bool warn = true;
-            if(warn)
-            {
-                QMessageBox::warning(
-                    this, QApplication::applicationName(),
-                    tr("Select the EMR transfer directory by clicking Open and browsing to the "
-                        "required directory (likely C:/ProgramData/ndd/Easy on-PC) and selecting the it. "
-                        "Click the Run button to start the test otherwise check the installation."));
-                warn = false;
-            }
-        });
+        foreach(auto button, this->findChildren<QPushButton *>())
+        {
+          if("Close" != button->text())
+            button->setEnabled(false);
+        }
+        ui->openButton->setEnabled(true);
+        static bool warn = true;
+        if(warn)
+        {
+          QMessageBox::warning(
+            this, QApplication::applicationName(),
+            tr("Select the EMR transfer directory by clicking Open and browsing to the "
+               "required directory (likely C:/ProgramData/ndd/Easy on-PC) and selecting the it. "
+               "Click the Run button to start the test otherwise check the installation."));
+          warn = false;
+        }
+      });
 
-    // Read inputs required to launch frax test
-    // In simulate mode the barcode is always populated with a default of "00000000"
+    // Close the application
     //
-    readInput();
+    connect(ui->measureWidget, &MeasureWidget::closeApplication,
+        this, &MainWindow::close);
 }
 
 void MainWindow::run()

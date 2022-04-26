@@ -36,6 +36,7 @@ SOURCES += \
     ../../managers/SerialPortManager.cpp \
     ../../managers/AudiometerManager.cpp \
     ../../widgets/BarcodeWidget.cpp \
+    ../../widgets/MeasureWidget.cpp \
     main.cpp \
     MainWindow.cpp
 
@@ -52,15 +53,16 @@ HEADERS += \
     ../../managers/SerialPortManager.h \
     ../../managers/AudiometerManager.h \
     ../../widgets/BarcodeWidget.h \
+    ../../widgets/MeasureWidget.h \
     MainWindow.h
 
 FORMS += \
     ../../widgets/barcodewidget.ui \
+    ../../widgets/measurewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \
     Audiometer_en_CA.ts
-
 CONFIG += lrelease
 CONFIG += embed_translations
 

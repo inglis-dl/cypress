@@ -39,6 +39,72 @@ BloodPressureManager::~BloodPressureManager()
   delete m_comm;
 }
 
+void BloodPressureManager::initializeModel()
+{
+    QStringList header =
+      (QStringList()<<"#"<<"start time"<<"end time"<<"systolic (mmHg)"<<"diastolic (mmHg)"<<"pulse (bpm)");
+    for(int row = 0; row < m_row; row++)
+    {
+      for(int col = 0; col < m_col; col++)
+      {
+        QStandardItem* item = new QStandardItem();
+        m_model->setItem(row,col,item);
+        m_model->setHeaderData(col, Qt::Horizontal, header.at(col), Qt::DisplayRole);
+      }
+    }
+}
+
+void BloodPressureManager::updateModel()
+{
+    // add measurements one row of one columns at a time
+    //
+    int n_total = m_test.getMeasurementCount();
+    if(0 == n_total)
+    {
+      for(int row = 0; row < m_row; row++)
+      {
+        for(int col = 0; col < m_col; col++)
+        {
+            QStandardItem* item = m_model->item(row,col);
+            if(Q_NULLPTR == item)
+            {
+                item = new QStandardItem();
+                m_model->setItem(row, col, item);
+            }
+            item->setData(QString(), Qt::DisplayRole);
+        }
+      }
+    }
+    else
+    {
+      for(int row = 0; row < n_total; row++)
+      {
+        BloodPressureMeasurement m = m_test.getMeasurement(row);
+        if(m_verbose)
+          qDebug() <<"model build" << m;
+
+        QStringList list = (QStringList()
+          << m.getAttribute("reading_number").toString()
+          << m.getAttribute("start_time").toString()
+          << m.getAttribute("end_time").toString()
+          << m.getAttribute("systolic").toString()
+          << m.getAttribute("diastolic").toString()
+          << m.getAttribute("pulse").toString());
+        for(int col = 0; col < m_col; col ++)
+        {
+            QStandardItem* item = m_model->item(row,col);
+            if(Q_NULLPTR == item)
+            {
+                item = new QStandardItem();
+                m_model->setItem(row, col, item);
+            }
+            item->setData(list.at(col), Qt::DisplayRole);
+        }
+      }
+    }
+    emit dataChanged();
+}
+
 void BloodPressureManager::start()
 {
     // connect manager to communication
@@ -311,37 +377,6 @@ QJsonObject BloodPressureManager::toJsonObject() const
     return json;
 }
 
-void BloodPressureManager::buildModel(QStandardItemModel* model) const
-{
-    // add measurements one row of one columns at a time
-    //
-    int n_total = m_test.getMeasurementCount();
-    for(int row = 0; row < n_total; row++)
-    {
-        BloodPressureMeasurement m = m_test.getMeasurement(row);
-        if(m_verbose)
-          qDebug() <<"model build" << m;
-
-        QStringList list = (QStringList()
-          << m.getAttribute("reading_number").toString()
-          << m.getAttribute("start_time").toString()
-          << m.getAttribute("end_time").toString()
-          << m.getAttribute("systolic").toString()
-          << m.getAttribute("diastolic").toString()
-          << m.getAttribute("pulse").toString());
-        for(int col = 0; col < m_col; col ++)
-        {
-            QStandardItem* item = model->item(row,col);
-            if(Q_NULLPTR == item)
-            {
-                item = new QStandardItem();
-                model->setItem(row, col, item);
-            }
-            item->setData(list.at(col), Qt::DisplayRole);
-        }
-    }
-}
-
 // slot for UI communication
 //
 void BloodPressureManager::measure()
@@ -354,12 +389,12 @@ void BloodPressureManager::measure()
     if(Constants::RunMode::modeSimulate == m_mode)
     {
       m_test.simulate();
-      emit dataChanged();
       if(m_test.isValid())
       {
         emit message(tr("Ready to save results..."));
         emit canWrite();
       }
+      updateModel();
       return;
     }
 
@@ -428,7 +463,7 @@ void BloodPressureManager::setInputData(const QVariantMap& input)
 void BloodPressureManager::clearData()
 {
     m_test.reset();
-    emit dataChanged();
+    updateModel();
 }
 
 // slot for UI communication
@@ -474,7 +509,7 @@ void BloodPressureManager::measurementAvailable(
     {
       m_test.addMeasurement(m);
     }
-    emit dataChanged();
+    updateModel();
 }
 
 // slot for BPMCommunication
@@ -483,7 +518,7 @@ void BloodPressureManager::averageAvailable(
   const int& sbp, const int& dbp, const int& pulse)
 {
     m_test.addDeviceAverage(sbp, dbp, pulse);
-    emit dataChanged();
+    updateModel();
 }
 
 // slot for BPMCommunication
@@ -559,12 +594,16 @@ void BloodPressureManager::deviceInfoAvailable()
     QString serial = m_comm->serialNumber();
     QString manufacturer = m_comm->manufacturer();
     QString version = m_comm->version();
+
     if(!product.isEmpty() && 0 < product.length())
       m_deviceData.setAttribute("usb_hid_product",product);
+
     if(!serial.isEmpty() && 0 < serial.length())
       m_deviceData.setAttribute("usb_hid_serial_number",serial);
+
     if(!manufacturer.isEmpty() && 0 < manufacturer.length())
       m_deviceData.setAttribute("usb_hid_manufacturer",manufacturer);
+
     if(!version.isEmpty() && 0 < version.length())
       m_deviceData.setAttribute("usb_hid_version",version);
 }

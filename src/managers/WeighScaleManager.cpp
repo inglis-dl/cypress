@@ -27,17 +27,48 @@ WeighScaleManager::WeighScaleManager(QObject* parent) : SerialPortManager(parent
   m_test.setExpectedMeasurementCount(2);
 }
 
-void WeighScaleManager::buildModel(QStandardItemModel* model) const
+void WeighScaleManager::initializeModel()
 {
-    for(int row = 0; row < m_row; row++)
+    // allocate 1 column x 2 rows of weight measurement items
+    //
+    for(int row = 0;row < m_row; row++)
     {
-        QString s = "NA";
-        WeightMeasurement m = m_test.getMeasurement(row);
-        if(m.isValid())
-           s = m.toString();
-        QStandardItem* item = model->item(row,0);
-        item->setData(s, Qt::DisplayRole);
+      QStandardItem* item = m_model->item(row,0);
+      if(Q_NULLPTR == item)
+      {
+        item = new QStandardItem();
+        m_model->setItem(row,0,item);
+      }
+      item->setData(QString(), Qt::DisplayRole);
     }
+    m_model->setHeaderData(0,Qt::Horizontal,"Weight Tests",Qt::DisplayRole);
+}
+
+void WeighScaleManager::updateModel()
+{
+    if(m_test.isValid())
+    {
+      for(int row = 0; row < m_row; row++)
+      {
+        WeightMeasurement measure = m_test.getMeasurement(row);
+        if(measure.isValid())
+        {
+          QString str = measure.toString();
+          QStandardItem* item = m_model->item(row,0);
+          if(Q_NULLPTR == item)
+          {
+            item = new QStandardItem();
+            m_model->setItem(row,0,item);
+          }
+          item->setData(str, Qt::DisplayRole);
+        }
+      }
+    }
+    else
+    {
+      initializeModel();
+    }
+    emit dataChanged();
 }
 
 void WeighScaleManager::loadSettings(const QSettings& settings)
@@ -116,7 +147,7 @@ void WeighScaleManager::setInputData(const QVariantMap& input)
 void WeighScaleManager::clearData()
 {
     m_test.reset();
-    emit dataChanged();
+    updateModel();
 }
 
 void WeighScaleManager::finish()
@@ -130,8 +161,6 @@ void WeighScaleManager::finish()
 
 void WeighScaleManager::connectDevice()
 {
-    clearData();
-
     if(Constants::RunMode::modeSimulate == m_mode)
     {
         m_request = QByteArray("i");
@@ -231,12 +260,16 @@ void WeighScaleManager::readDevice()
       else if("p" == QString(m_request))
       {
          m_test.fromArray(m_buffer);
+         qDebug() << "received p request, read buffer" << m_buffer;
          if(m_test.isValid())
          {
+           qDebug() << "test is valid, can save results";
            // emit the can write signal
            emit message(tr("Ready to save results..."));
            emit canWrite();
          }
+         else
+             qDebug() << "invalid test";
       }
       else if("z" == QString(m_request))
       {
@@ -251,7 +284,7 @@ void WeighScaleManager::readDevice()
           }
       }
 
-      emit dataChanged();
+      updateModel();
     }
 }
 
@@ -260,7 +293,6 @@ void WeighScaleManager::writeDevice()
     // prepare to receive data
     //
     m_buffer.clear();
-
     if(Constants::RunMode::modeSimulate == m_mode)
     {
         if(m_verbose)

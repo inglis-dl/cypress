@@ -21,21 +21,8 @@ FraxDialog::~FraxDialog()
 
 void FraxDialog::initializeModel()
 {
-    for(int col = 0;col < m_manager->getNumberOfModelColumns(); col++)
-    {
-      for(int row = 0; row < m_manager->getNumberOfModelRows(); row++)
-      {
-        QStandardItem* item = new QStandardItem();
-        m_model.setItem(row,col,item);
-      }
-    }
-    m_model.setHeaderData(0, Qt::Horizontal, "Frax 10 Year Fracture Risk Probabilities", Qt::DisplayRole);
-    ui->testdataTableView->setModel(&m_model);
-
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->verticalHeader()->hide();
+    m_manager.get()->initializeModel();
+    ui->measureWidget->initialize(m_manager.get()->getModel());
 }
 
 // set up signal slot connections between GUI front end
@@ -49,17 +36,14 @@ void FraxDialog::initializeConnections()
   //
   foreach(auto button, this->findChildren<QPushButton *>())
   {
-    button->setEnabled(false);
+      if("Close" != button->text())
+        button->setEnabled(false);
 
-    // disable enter key press event passing onto auto focus buttons
-    //
-    button->setDefault(false);
-    button->setAutoDefault(false);
+      // disable enter key press event passing onto auto focus buttons
+      //
+      button->setDefault(false);
+      button->setAutoDefault(false);
   }
-
-  // Close the application
-  //
-  ui->closeButton->setEnabled(true);
 
   // Relay messages from the manager to the status bar
   //
@@ -102,9 +86,10 @@ void FraxDialog::initializeConnections()
   connect(derived.get(),&FraxManager::canSelectRunnable,
             this,[this](){
         foreach(auto button, this->findChildren<QPushButton *>())
+        {
+          if("Close" != button->text())
             button->setEnabled(false);
-
-        ui->closeButton->setEnabled(true);
+        }
         ui->openButton->setEnabled(true);
         static bool warn = true;
         if(warn)
@@ -129,61 +114,35 @@ void FraxDialog::initializeConnections()
             derived->selectRunnable(fileName);
         });
 
-  // blackbox.exe was found and inputs valid
+  // Available to start measuring
   //
-  connect(m_manager.get(), &FraxManager::canMeasure,
-        this, [this]() {
-            ui->measureButton->setEnabled(true);
-            ui->saveButton->setEnabled(false);
-        });
+  connect(derived.get(), &FraxManager::canMeasure,
+          ui->measureWidget, &MeasureWidget::enableMeasure);
 
-  // Request a measurement from the device (run blackbox.exe)
+  // Request a measurement from the device
   //
-  connect(ui->measureButton, &QPushButton::clicked,
-        derived.get(), &FraxManager::measure);
+  connect(ui->measureWidget, &MeasureWidget::measure,
+      derived.get(), &FraxManager::measure);
 
   // Update the UI with any data
   //
-  connect(m_manager.get(), &FraxManager::dataChanged,
-        this, [this]() {
-      auto h = ui->testdataTableView->horizontalHeader();
-      h->setSectionResizeMode(QHeaderView::Fixed);
-
-      m_manager->buildModel(&m_model);
-
-      QSize ts_pre = ui->testdataTableView->size();
-      h->resizeSections(QHeaderView::ResizeToContents);
-      ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
-      ui->testdataTableView->resize(
-        h->sectionSize(0) + 1,
-        4*(ui->testdataTableView->rowHeight(0)) + 1 +
-        h->height());
-      QSize ts_post = ui->testdataTableView->size();
-      int dx = ts_post.width() - ts_pre.width();
-      int dy = ts_post.height() - ts_pre.height();
-      this->resize(this->width() + dx, this->height() + dy);
-    });
+  connect(derived.get(), &FraxManager::dataChanged,
+      ui->measureWidget, &MeasureWidget::updateModelView);
 
   // All measurements received: enable write test results
   //
-  connect(m_manager.get(), &FraxManager::canWrite,
-        this, [this]() {
-            ui->saveButton->setEnabled(true);
-        });
+  connect(derived.get(), &FraxManager::canWrite,
+      ui->measureWidget, &MeasureWidget::enableWriteToFile);
 
   // Write test data to output
   //
-  connect(ui->saveButton, &QPushButton::clicked,
-        this, &FraxDialog::writeOutput);
+  connect(ui->measureWidget, &MeasureWidget::writeToFile,
+      this, &DialogBase::writeOutput);
 
   // Close the application
   //
-  connect(ui->closeButton, &QPushButton::clicked,
-        this, &FraxDialog::close);
-
-  // Read inputs required to launch frax test
-  //
-  readInput();
+  connect(ui->measureWidget, &MeasureWidget::closeApplication,
+      this, &DialogBase::close);
 }
 
 QString FraxDialog::getVerificationBarcode() const

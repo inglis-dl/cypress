@@ -95,77 +95,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
-       <layout class="QHBoxLayout" name="measurmentControlHhorizontalLayout">
-        <item>
-         <widget class="QPushButton" name="measureButton">
-          <property name="text">
-           <string>Measure</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="saveButton">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Save</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="closeButton">
-          <property name="text">
-           <string>Close</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="measurementTableHorizontalLayout">
-        <item>
-         <widget class="QTableView" name="testdataTableView">
-          <property name="verticalScrollBarPolicy">
-           <enum>Qt::ScrollBarAlwaysOff</enum>
-          </property>
-          <property name="horizontalScrollBarPolicy">
-           <enum>Qt::ScrollBarAlwaysOff</enum>
-          </property>
-          <property name="autoScroll">
-           <bool>false</bool>
-          </property>
-          <property name="editTriggers">
-           <set>QAbstractItemView::NoEditTriggers</set>
-          </property>
-          <property name="showDropIndicator" stdset="0">
-           <bool>false</bool>
-          </property>
-          <property name="dragDropOverwriteMode">
-           <bool>false</bool>
-          </property>
-          <property name="selectionMode">
-           <enum>QAbstractItemView::NoSelection</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="MeasureWidget" name="measureWidget" native="true"/>
       </item>
      </layout>
     </widget>
@@ -186,9 +116,16 @@
    <header>../../widgets/BarcodeWidget.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>MeasureWidget</class>
+   <extends>QWidget</extends>
+   <header>../../widgets/MeasureWidget.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <includes>
   <include location="local">../../widgets/BarcodeWidget.h</include>
+  <include location="local">../../widgets/MeasureWidget.h</include>
  </includes>
  <resources/>
  <connections/>

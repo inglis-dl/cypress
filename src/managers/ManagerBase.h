@@ -29,7 +29,7 @@ class ManagerBase : public QObject
 
 public:
     explicit ManagerBase(QObject *parent = Q_NULLPTR);
-    ~ManagerBase() = default;
+    ~ManagerBase();
 
     // load and save device, paths and other constant settings to .ini
     //
@@ -52,9 +52,18 @@ public:
     //
     virtual QJsonObject toJsonObject() const = 0;
 
-    // build a model for UI display of the test results etc.
+    // build a model from test and measurement data for UI display
+    // of the results
     //
-    virtual void buildModel(QStandardItemModel *) const = 0;
+    virtual void initializeModel() = 0;
+
+    // update the model whenever the test data changes
+    //
+    virtual void updateModel() = 0;
+
+    // access the model to initialize the UI MeasureWidget
+    //
+    QStandardItemModel* getModel(){ return m_model; };
 
     // get the required model columns and rows depending
     // on test output requirements
@@ -71,6 +80,8 @@ public:
     //
     virtual void setInputData(const QVariantMap &) = 0;
 
+    // convenience method
+    //
     QVariant getInputDataValue(const QString &);
 
 public slots:
@@ -137,6 +148,10 @@ protected:
     //
     QList<QString> m_inputKeyList;
 
+    // the model that is the bridge between the measurement data (model)
+    // the UI (view)
+    //
+    QStandardItemModel* m_model;
     int m_row { 0 };
     int m_col { 0 };
 

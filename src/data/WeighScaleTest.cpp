@@ -6,7 +6,12 @@
 
 bool WeighScaleTest::isValid() const
 {
-    bool okTest = getMeasurementCount() == getExpectedMeasurementCount();
+    //TODO: handle partial cases wherein we want to update the UI
+    // with tests containing the minimum measurement count but
+    // not the full expected count required for writing
+    //
+    bool okTest = (getMeasurementCount() == getExpectedMeasurementCount()) ||
+                  (0 < getMeasurementCount());
     if(okTest)
     {
       foreach(const auto m, m_measurementList)

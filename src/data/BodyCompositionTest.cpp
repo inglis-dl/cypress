@@ -91,7 +91,8 @@ void BodyCompositionTest::simulate(
     QString units = "metric" == sys ? "cm" : "in";
     addMetaData("height", height, units);
 
-    BodyCompositionMeasurement m;
+    BodyCompositionMeasurement measure;
+    int precision = measure.getPrecision();
     units = "metric" == sys ? "kg" : "lb";
 
     double mu = QRandomGenerator::global()->generateDouble();
@@ -105,30 +106,30 @@ void BodyCompositionTest::simulate(
       weight += 2.3f*over;
 
     weight = ("metric" == sys) ? weight : (weight * 2.20462f);
-    m.setAttribute("weight", weight, units);
+    measure.setAttribute("weight", weight, units, precision);
 
     double impedance = QRandomGenerator::global()->bounded(150,900);
-    m.setAttribute("impedance", impedance, "ohm");
+    measure.setAttribute("impedance", impedance, "ohm", precision);
 
     // possible range is gender and age dependent
     // for adults 40 - 60+ range is 14% - 35%
     //
     double pfat = Utilities::interp(14.0f,35.0f,mu);
-    m.setAttribute("percent_fat", pfat, "%");
+    measure.setAttribute("percent_fat", pfat, "%", precision);
     double fmass = 0.01f * pfat * weight;
-    m.setAttribute("fat_mass", fmass, units);
+    measure.setAttribute("fat_mass", fmass, units, precision);
     double ffmass = weight - fmass;
-    m.setAttribute("fat_free_mass", ffmass, units);
+    measure.setAttribute("fat_free_mass", ffmass, units, precision);
 
     // normal range for women varies betw 45% and 60%
     // normal range for men varies betw 50% and 65%
     //
     double wmass = weight * Utilities::interp(0.45f,0.65f,mu);
-    m.setAttribute("total_body_water", wmass, units);
+    measure.setAttribute("total_body_water", wmass, units, precision);
 
     units = "metric" == sys ? "kg/cm2" : "lb/in2";
     double bmi = weight / (height*height);
-    m.setAttribute("body_mass_index", bmi, units);
+    measure.setAttribute("body_mass_index", bmi, units, precision);
 
     // TODO: check if bmr is always givin in kJ
     // conversions:
@@ -152,9 +153,9 @@ void BodyCompositionTest::simulate(
     }
     double bmr = bcoeff + wcoeff*weight + hcoeff*height + acoeff*age;
     bmr = bmr * 4.184f / 1000.0f;
-    m.setAttribute("basal_metabolic_rate", bmr, "kJ");
+    measure.setAttribute("basal_metabolic_rate", bmr, "kJ", precision);
 
-    addMeasurement(m);
+    addMeasurement(measure);
 }
 
 // The manager class provides the data after validating

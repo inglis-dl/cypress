@@ -57,11 +57,11 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
                 }
                 else if(ChoiceReactionMeasurement::TEST_CODE == code)
                 {
-                    ChoiceReactionMeasurement m;
-                    m.fromString(s);                    
-                    addMeasurement(m);
-                    qDebug() << "found "<<(m.isValid()?"VALID":"INVALID")<<"measurement item positions at line " << QString::number(n_line);
-                    qDebug() << m;
+                    ChoiceReactionMeasurement measure;
+                    measure.fromString(s);
+                    addMeasurement(measure);
+                    qDebug() << "found "<<(measure.isValid()?"VALID":"INVALID")<<"measurement item positions at line " << QString::number(n_line);
+                    qDebug() << measure;
                 }
                 else if((ChoiceReactionMeasurement::TEST_CODE+1) == code)
                 {
@@ -122,6 +122,10 @@ void ChoiceReactionTest::fromFile(const QString &fileName)
             // additional meta data: the number of measurements
             int n = getMeasurementCount();
             addMetaData("number_of_measurements",n);
+
+            // we do not know a priori what the count will be, set it here
+            //
+            this->setExpectedMeasurementCount(n);
         }
         qDebug() << "closed stream";
         ifile.close();

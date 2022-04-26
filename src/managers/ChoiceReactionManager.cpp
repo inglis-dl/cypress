@@ -26,6 +26,10 @@ ChoiceReactionManager::ChoiceReactionManager(QObject *parent) :
 
     //TODO:
     // use the "clinic" CCB arg for the site identification ?
+
+    // the number of measures is not known a priori and will
+    // be set by the test at read time
+    //
 }
 
 void ChoiceReactionManager::start()
@@ -59,35 +63,52 @@ void ChoiceReactionManager::start()
     emit dataChanged();
 }
 
-void ChoiceReactionManager::buildModel(QStandardItemModel *model) const
+void ChoiceReactionManager::initializeModel()
+{
+    // allocate 2 columns x 8 rows of hearing measurement items
+    //
+    for(int col=0; col<m_col; col++)
+    {
+      for(int row=0; row<m_row; row++)
+      {
+        QStandardItem* item = new QStandardItem();
+        m_model->setItem(row,col,item);
+      }
+    }
+    m_model->setHeaderData(0,Qt::Horizontal,"Left Test Results",Qt::DisplayRole);
+    m_model->setHeaderData(1,Qt::Horizontal,"Right Test Results",Qt::DisplayRole);
+}
+
+void ChoiceReactionManager::updateModel()
 {
     // add measurements one row of two columns at a time
     //
     int n_total = m_test.getMeasurementCount();
     int n_row = qMax(1, n_total/2);
-    if(n_row != model->rowCount())
+    if(n_row != m_model->rowCount())
     {
-       model->setRowCount(n_row);
+       m_model->setRowCount(n_row);
     }
     int row_left = 0;
     int row_right = 0;
     for(int i=0; i < n_total; i++)
     {
-        QString s = "NA";
-        ChoiceReactionMeasurement m = m_test.getMeasurement(i);
-        if(m.isValid())
-           s = "[" + QString::number(i+1) +"] " + m.toString();
-        int col = "left" == m.getAttributeValue("correct_position").toString() ? 0 : 1;
+        QString str = "NA";
+        ChoiceReactionMeasurement measure = m_test.getMeasurement(i);
+        if(measure.isValid())
+           str = "[" + QString::number(i+1) +"] " + measure.toString();
+        int col = "left" == measure.getAttributeValue("correct_position").toString() ? 0 : 1;
         int *row = 0 == col ? &row_left : &row_right;
-        QStandardItem* item = model->item(*row,col);
+        QStandardItem* item = m_model->item(*row,col);
         if(Q_NULLPTR == item)
         {
           item = new QStandardItem();
-          model->setItem(*row,col,item);
+          m_model->setItem(*row,col,item);
         }
-        item->setData(s, Qt::DisplayRole);
+        item->setData(str, Qt::DisplayRole);
         (*row)++;
     }
+    emit dataChanged();
 }
 
 bool ChoiceReactionManager::isDefined(const QString &exeName) const
@@ -215,7 +236,7 @@ void ChoiceReactionManager::clearData()
 {
     m_test.reset();
     m_outputFile.clear();
-    emit dataChanged();
+    updateModel();
 }
 
 void ChoiceReactionManager::configureProcess()
@@ -281,6 +302,8 @@ void ChoiceReactionManager::readOutput()
 {
     if(Constants::RunMode::modeSimulate == m_mode)
     {
+        //TODO: create simulate method and move to test
+        //
         qDebug() << "simulating read out";
         m_test.reset();
         m_test.addMetaData("start_datetime",QDateTime::currentDateTime());
@@ -289,13 +312,14 @@ void ChoiceReactionManager::readOutput()
         m_test.addMetaData("interviewer_id","simulated");
         m_test.addMetaData("end_datetime",QDateTime::currentDateTime());
         m_test.addMetaData("number_of_measurements",60);
+        m_test.setExpectedMeasurementCount(60);
         for(int i = 0; i < 60; i++)
         {
             m_test.addMeasurement(ChoiceReactionMeasurement::simulate());
         }
         emit message(tr("Ready to save results..."));
         emit canWrite();
-        emit dataChanged();
+        updateModel();
         return;
     }
 
@@ -338,8 +362,7 @@ void ChoiceReactionManager::readOutput()
             qDebug() << "ERROR: input from file produced invalid test results";
             qDebug() << "removing " << fileName;
         }
-
-        emit dataChanged();
+        updateModel();
     }
     else
         qDebug() << "ERROR: no output csv file found";

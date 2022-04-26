@@ -35,7 +35,9 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel*) const override;
+    void initializeModel() override;
+
+    void updateModel() override;
 
     // is the passed string an executable file
     // with the correct path elements ?

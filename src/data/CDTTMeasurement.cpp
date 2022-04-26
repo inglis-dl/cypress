@@ -14,7 +14,7 @@ bool CDTTMeasurement::isValid() const
     return ok;
 }
 
-void CDTTMeasurement::simulate(const quint16& trial)
+void CDTTMeasurement::simulate(const int& trial)
 {
     QJsonArray stimulus;
     QJsonArray response;

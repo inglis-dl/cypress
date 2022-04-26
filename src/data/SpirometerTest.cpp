@@ -580,6 +580,8 @@ void SpirometerTest::readParameters(const QDomNode& node, SpirometerMeasurement*
     </ResultParameter>
      */
 
+    int precision = measure->getPrecision();
+
     QDomNodeList list = node.childNodes();
     if(list.isEmpty())
     {
@@ -630,25 +632,25 @@ void SpirometerTest::readParameters(const QDomNode& node, SpirometerMeasurement*
                if(arr.contains("value"))
                {
                    if(arr.contains("units"))
-                     measure->setAttribute(key,arr["value"].toDouble(),arr["units"].toString());
+                     measure->setAttribute(key,arr["value"].toDouble(),arr["units"].toString(),precision);
                    else
-                     measure->setAttribute(key,arr["value"].toDouble());
+                     measure->setAttribute(key,arr["value"].toDouble(),precision);
                }
                if(pred.contains("value"))
                {
                    QString predName = QString("%1_predicted").arg(key);
                    if(pred.contains("units"))
-                     measure->setAttribute(predName,pred["value"].toDouble(),pred["units"].toString());
+                     measure->setAttribute(predName,pred["value"].toDouble(),pred["units"].toString(),precision);
                    else
-                     measure->setAttribute(predName,pred["value"].toDouble());
+                     measure->setAttribute(predName,pred["value"].toDouble(),precision);
                }
                if(norm.contains("value"))
                {
                    QString normName = QString("%1_ll_normal").arg(key);
                    if(norm.contains("units"))
-                     measure->setAttribute(normName,norm["value"].toDouble(),norm["units"].toString());
+                     measure->setAttribute(normName,norm["value"].toDouble(),norm["units"].toString(),precision);
                    else
-                     measure->setAttribute(normName,norm["value"].toDouble());
+                     measure->setAttribute(normName,norm["value"].toDouble(),precision);
                }
            }
        }
@@ -662,6 +664,7 @@ void SpirometerTest::readChannel(const QDomNode& node, SpirometerMeasurement* me
     QDomElement elem = node.toElement();
     QString prefix = elem.tagName().mid(7).toLower();
     qDebug() << "reading" << prefix << "channel";
+    int precision = measure->getPrecision();
 
     foreach(const auto tag, SpirometerMeasurement::channelMap.toStdMap())
     {
@@ -684,7 +687,7 @@ void SpirometerTest::readChannel(const QDomNode& node, SpirometerMeasurement* me
         }
         else if("SamplingInterval" == tag.first || "TimeZeroOffset" == tag.first)
         {
-          measure->setAttribute(key,elem.text().toDouble());
+          measure->setAttribute(key,elem.text().toDouble(),precision);
         }
         else
         {

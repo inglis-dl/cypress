@@ -71,19 +71,47 @@ void FraxManager::start()
     emit dataChanged();
 }
 
-void FraxManager::buildModel(QStandardItemModel *model) const
+void FraxManager::initializeModel()
+{
+    // allocate 1 columns x 4 rows of frax measurement items
+    //
+    for(int row=0; row<m_row; row++)
+    {
+      QStandardItem* item = new QStandardItem();
+      m_model->setItem(row, 0, item);
+    }
+    m_model->setHeaderData(0, Qt::Horizontal, "Frax 10 Year Fracture Risk Probabilities", Qt::DisplayRole);
+}
+
+void FraxManager::updateModel()
 {
     // add the four probability measurements
     //
-    for(int row = 0; row < m_test.getMeasurementCount(); row++)
+    if(m_test.isValid())
     {
-        QStandardItem* item = model->item(row, 0);
+      for(int row = 0; row < m_test.getMeasurementCount(); row++)
+      {
+        QStandardItem* item = m_model->item(row, 0);
         if(Q_NULLPTR == item)
         {
             item = new QStandardItem();
-            model->setItem(row, 0, item);
+            m_model->setItem(row, 0, item);
         }
         item->setData(m_test.getMeasurement(row).toString(), Qt::DisplayRole);
+      }
+    }
+    else
+    {
+      for(int row = 0; row < m_row; row++)
+      {
+          QStandardItem* item = m_model->item(row,0);
+          if(Q_NULLPTR == item)
+          {
+            item = new QStandardItem();
+            m_model->setItem(row,0,item);
+          }
+          item->setData(QString(), Qt::DisplayRole);
+      }
     }
 }
 
@@ -277,7 +305,7 @@ void FraxManager::readOutput()
         m_test.simulate(m_inputData);
         emit message(tr("Ready to save results..."));
         emit canWrite();
-        emit dataChanged();
+        updateModel();
         return;
     }
 
@@ -301,7 +329,7 @@ void FraxManager::readOutput()
         else
             qDebug() << "ERROR: input from file produced invalid test results";
 
-        emit dataChanged();
+        updateModel();
     }
     else
         qDebug() << "ERROR: no output.txt file found";
@@ -390,7 +418,7 @@ void FraxManager::configureProcess()
 void FraxManager::clearData()
 {
     m_test.reset();
-    emit dataChanged();
+    updateModel();
 }
 
 void FraxManager::finish()

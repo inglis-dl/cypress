@@ -85,6 +85,12 @@ Measurement::Value::Value(const QVariant& value, const QString& units, const qui
     m_precision = precision;
 }
 
+Measurement::Value::Value(const QVariant& value, const quint16& precision)
+{
+    m_value = value;
+    m_precision = precision;
+}
+
 Measurement::Value::Value(const Measurement::Value& other)
 {
     m_value = other.m_value;

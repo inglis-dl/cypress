@@ -55,6 +55,7 @@ SOURCES += \
     managers/TonometerManager.cpp \
     managers/WeighScaleManager.cpp \
     widgets/BarcodeWidget.cpp \
+    widgets/MeasureWidget.cpp \
     dialogs/AudiometerDialog.cpp \
     dialogs/BloodPressureDialog.cpp \
     dialogs/BodyCompositionDialog.cpp \
@@ -119,6 +120,7 @@ HEADERS += \
     managers/TonometerManager.h \
     managers/WeighScaleManager.h \
     widgets/BarcodeWidget.h \
+    widgets/MeasureWidget.h \
     dialogs/AudiometerDialog.h \
     dialogs/BloodPressureDialog.h \
     dialogs/BodyCompositionDialog.h \
@@ -146,6 +148,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 FORMS += \
   widgets/barcodewidget.ui \
+  widgets/measurewidget.ui \
   dialogs/audiometerdialog.ui \
   dialogs/bloodpressuredialog.ui \
   dialogs/bodycompositiondialog.ui \

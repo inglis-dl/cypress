@@ -35,6 +35,7 @@ HEADERS += ./MainWindow.h \
     ../../data/TestBase.h \
     ../../data/BloodPressureTest.h \
     ../../widgets/BarcodeWidget.h \
+    ../../widgets/MeasureWidget.h \
     ../../managers/BPMMessage.h \
     ../../managers/BPMCommunication.h \
     ../../managers/ManagerBase.h \
@@ -50,6 +51,7 @@ SOURCES += ./MainWindow.cpp \
     ../../data/BloodPressureMeasurement.cpp \
     ../../data/BloodPressureTest.cpp \
     ../../widgets/BarcodeWidget.cpp \
+    ../../widgets/MeasureWidget.cpp \
     ../../managers/BPMMessage.cpp \
     ../../managers/BPMCommunication.cpp \
     ../../managers/ManagerBase.cpp \
@@ -57,6 +59,7 @@ SOURCES += ./MainWindow.cpp \
 
 FORMS += \
     ../../widgets/barcodewidget.ui \
+    ../../widgets/measurewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

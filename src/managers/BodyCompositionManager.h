@@ -30,7 +30,9 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel*) const override;
+    void initializeModel() override;
+
+    void updateModel() override;
 
     static QMap<QString,QByteArray> initDefaultLUT();
     static QMap<QByteArray,QString> initCommandLUT();

@@ -36,16 +36,37 @@ void BluetoothLEManager::start()
     emit dataChanged();
 }
 
-void BluetoothLEManager::buildModel(QStandardItemModel *model) const
+void BluetoothLEManager::initializeModel()
 {
+    // allocate 1 column x 2 rows of temperature measurement items
+    //
     for(int row = 0; row < m_row; row++)
     {
-        QString s = "NA";
-        TemperatureMeasurement m = m_test.getMeasurement(row);
-        if(m.isValid())
-           s = m.toString();
-        QStandardItem* item = model->item(row,0);
+      QStandardItem* item = new QStandardItem();
+      m_model->setItem(row,0,item);
+    }
+    m_model->setHeaderData(0,Qt::Horizontal,"Temperature Tests",Qt::DisplayRole);
+}
+
+void BluetoothLEManager::updateModel()
+{
+    if(m_test.isValid())
+    {
+      for(int row = 0; row < m_row; row++)
+      {
+        TemperatureMeasurement measure = m_test.getMeasurement(row);
+        QString s = measure.toString();
+        QStandardItem* item = m_model->item(row,0);
         item->setData(s, Qt::DisplayRole);
+      }
+    }
+    else
+    {
+        for(int row = 0; row < m_row; row++)
+        {
+          QStandardItem* item = m_model->item(row,0);
+          item->setData(QString(), Qt::DisplayRole);
+        }
     }
 }
 
@@ -428,7 +449,7 @@ void BluetoothLEManager::clearData()
 {
     m_deviceData.reset();
     m_test.reset();
-    emit dataChanged();
+    updateModel();
 }
 
 void BluetoothLEManager::finish()
@@ -616,7 +637,7 @@ void BluetoothLEManager::measure()
           emit message(tr("Ready to save results..."));
           emit canWrite();
         }
-        emit dataChanged();
+        updateModel();
         return;
     }
 
@@ -771,7 +792,7 @@ void BluetoothLEManager::updateTemperatureData(const QLowEnergyCharacteristic &c
      emit message(tr("Ready to save results..."));
      emit canWrite();
    }
-   emit dataChanged();
+   updateModel();
 
    QLowEnergyDescriptor cccDesc = c.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
    if(cccDesc.isValid())

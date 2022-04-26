@@ -17,18 +17,22 @@ TonometerManager::TonometerManager(QObject* parent):
 {
     setGroup("tonometer");
     m_col = 2;
-    m_row = 8;
+    m_row = 17;
 
     // all managers must check for barcode and language input values
     //
     m_inputKeyList << "barcode"; // ID column in Patients table
     m_inputKeyList << "language";
 
-    // tonometer specific mandator inputs
+    // tonometer specific mandatory inputs
     //
     m_inputKeyList << "date_of_birth"; // format dd/MM/YY 00:00:00, BirthDate column in Patients table
     m_inputKeyList << "sex";           // 0  = female, 1 = male, Sex column in Patients table
 
+    // the manager coordinates with the test the number of measures
+    // in some cases, such as weigh scale or thermometer, there may be
+    // a need to repeat the measurement
+    //
     m_test.setExpectedMeasurementCount(2);
 }
 
@@ -66,24 +70,55 @@ void TonometerManager::start()
     emit dataChanged();
 }
 
-void TonometerManager::buildModel(QStandardItemModel *model) const
+void TonometerManager::initializeModel()
 {
     QVector<QString> v_side({"left","right"});
     foreach(const auto side, v_side)
     {
       int col = "left" == side ? 0 : 1;
-      QStringList list = m_test.getMeasurementStrings(side);
-      for(int row = 0; row < list.size(); row++)
+      for(int row=0; row<m_row; row++)
       {
-        QStandardItem* item = model->item(row,col);
+        QStandardItem* item = m_model->item(row,col);
         if(Q_NULLPTR == item)
         {
-            item = new QStandardItem();
-            model->setItem(row,col,item);
+          item = new QStandardItem();
+          m_model->setItem(row,col,item);
         }
-        item->setData(list.at(row), Qt::DisplayRole);
+        item->setData(QString(), Qt::DisplayRole);
       }
     }
+    m_model->setHeaderData(0,Qt::Horizontal,"Left",Qt::DisplayRole);
+    m_model->setHeaderData(1,Qt::Horizontal,"Right",Qt::DisplayRole);
+}
+
+void TonometerManager::updateModel()
+{
+    // TODO: format display in 3 columnes: Variable name, Left, Right
+    //
+    QVector<QString> v_side({"left","right"});
+    if(m_test.isValid())
+    {
+      foreach(const auto side, v_side)
+      {
+        int col = "left" == side ? 0 : 1;
+        QStringList list = m_test.getMeasurementStrings(side);
+        for(int row = 0; row < list.size(); row++)
+        {
+          QStandardItem* item = m_model->item(row,col);
+          if(Q_NULLPTR == item)
+          {
+            item = new QStandardItem();
+            m_model->setItem(row,col,item);
+          }
+          item->setData(list.at(row), Qt::DisplayRole);
+        }
+      }
+    }
+    else
+    {
+      initializeModel();
+    }
+    emit dataChanged();
 }
 
 void TonometerManager::loadSettings(const QSettings& settings)
@@ -127,11 +162,11 @@ bool TonometerManager::isDefined(const QString& fileName, const TonometerManager
     QFileInfo info(fileName);
     if(type == TonometerManager::FileType::ORAApplication)
     {
-        ok = info.isExecutable() && info.exists();
+      ok = info.isExecutable() && info.exists();
     }
     else
     {
-        ok = info.isFile() && info.exists();
+      ok = info.isFile() && info.exists();
     }
     return ok;
 }
@@ -233,7 +268,7 @@ void TonometerManager::setInputData(const QVariantMap& input)
           m_inputData["language"] = "en";
       if(!input.contains("date_of_birth"))
         m_inputData["date_of_birth"] =
-          QJsonValue::fromVariant(QVariant(QDate::fromString("1965-12-17","yyyy-MM-dd")));
+          QDate::fromString("1965-12-17","yyyy-MM-dd");
       if(!input.contains("sex"))
         m_inputData["sex"] = "male";
     }
@@ -293,7 +328,7 @@ void TonometerManager::readOutput()
           emit message(tr("Ready to save results..."));
           emit canWrite();
         }
-        emit dataChanged();
+        updateModel();
         return;
     }
 
@@ -333,7 +368,7 @@ void TonometerManager::readOutput()
         else
           qDebug() << "ERROR: ora database produced invalid test results";
       }
-      emit dataChanged();
+      updateModel();
       db.close();
     }
     else
@@ -499,7 +534,7 @@ void TonometerManager::configureProcess()
 void TonometerManager::clearData()
 {
     m_test.reset();
-    emit dataChanged();
+    updateModel();
 }
 
 void TonometerManager::finish()
