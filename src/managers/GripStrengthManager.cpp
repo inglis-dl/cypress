@@ -48,17 +48,30 @@ QJsonObject GripStrengthManager::toJsonObject() const
     return json;
 }
 
-void GripStrengthManager::buildModel(QStandardItemModel* model) const
+void GripStrengthManager::initializeModel()
 {
+    // example of 1 row 1 column display of 1 measurement test
+    //
+    for (int row = 0; row < m_row; row++)
+    {
+        QStandardItem* item = new QStandardItem();
+        m_model->setItem(row, 0, item);
+    }
+    m_model->setHeaderData(0, Qt::Horizontal, "Weight Tests", Qt::DisplayRole);
+}
+
+void GripStrengthManager::updateModel()
+{
+    //TODO: Update, this is from BuildModel class
     // example of a 1 row 1 column model displaying one measurement
     //
-    for(int row = 0; row < m_test.getMeasurementCount(); row++)
+    for (int row = 0; row < m_test.getMeasurementCount(); row++)
     {
-        QStandardItem* item = model->item(row, 0);
-        if(Q_NULLPTR == item)
+        QStandardItem* item = m_model->item(row, 0);
+        if (Q_NULLPTR == item)
         {
             item = new QStandardItem();
-            model->setItem(row, 0, item);
+            m_model->setItem(row, 0, item);
         }
         item->setData(m_test.getMeasurement(row).toString(), Qt::DisplayRole);
     }

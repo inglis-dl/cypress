@@ -31,25 +31,17 @@ void MainWindow::initialize()
 {
   initializeModel();
   initializeConnections();
+
+  // Read inputs required to launch
+  // In simulate mode the barcode is always populated with a default of "00000000"
+  //
+  readInput();
 }
 
 void MainWindow::initializeModel()
 {
-    // example of 1 row 1 column display of 1 measurement test
-    //
-    for(int row = 0;row < m_manager.getNumberOfModelRows(); row++)
-    {
-      QStandardItem* item = new QStandardItem();
-      m_model.setItem(row,0,item);
-    }
-    m_model.setHeaderData(0,Qt::Horizontal,"Weight Tests",Qt::DisplayRole);
-    ui->testdataTableView->setModel(&m_model);
-
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->verticalHeader()->hide();
-
+    m_manager.initializeModel();
+    ui->measureWidget->initialize(m_manager.getModel());
 }
 
 // set up signal slot connections between GUI front end
@@ -57,11 +49,12 @@ void MainWindow::initializeModel()
 //
 void MainWindow::initializeConnections()
 {
-  // Disable all buttons by default
-  //
+    // Disable all buttons by default
+    //
     foreach(auto button, this->findChildren<QPushButton *>())
     {
-        button->setEnabled(false);
+        if ("Close" != button->text())
+            button->setEnabled(false);
 
         // disable enter key press event passing onto auto focus buttons
         //
@@ -69,106 +62,73 @@ void MainWindow::initializeConnections()
         button->setAutoDefault(false);
     }
 
-  // Close the application
-  //
-  ui->closeButton->setEnabled(true);
+    // Relay messages from the manager to the status bar
+    //
+    connect(&m_manager,&ManagerBase::message,
+            ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
 
-  // Relay messages from the manager to the status bar
-  //
-  connect(&m_manager,&ManagerBase::message,
-          ui->statusBar, &QStatusBar::showMessage, Qt::DirectConnection);
-
-  // Every instrument stage launched by an interviewer requires input
-  // of the interview barcode that accompanies a participant.
-  // The expected barcode is passed from upstream via .json file.
-  // In simulate mode this value is ignored and a default barcode "00000000" is
-  // assigned instead.
-  // In production mode the input to the barcodeLineEdit is verified against
-  // the content held by the manager and a message or exception is thrown accordingly
-  //
-  // TODO: for DCS interviews, the first digit corresponds the the wave rank
-  // for inhome interviews there is a host dependent prefix before the barcode
-  //
-  if(Constants::RunMode::modeSimulate == m_mode)
-  {
-    ui->barcodeWidget->setBarcode(Constants::DefaultBarcode);
-  }
-
-  connect(ui->barcodeWidget,&BarcodeWidget::validated,
-          this,[this](const bool& valid)
+    // Every instrument stage launched by an interviewer requires input
+    // of the interview barcode that accompanies a participant.
+    // The expected barcode is passed from upstream via .json file.
+    // In simulate mode this value is ignored and a default barcode "00000000" is
+    // assigned instead.
+    // In production mode the input to the barcodeLineEdit is verified against
+    // the content held by the manager and a message or exception is thrown accordingly
+    //
+    // TODO: for DCS interviews, the first digit corresponds the the wave rank
+    // for inhome interviews there is a host dependent prefix before the barcode
+    //
+    if(Constants::RunMode::modeSimulate == m_mode)
     {
-      if(valid)
-      {
-          // launch the manager
-          //
-          this->run();
-      }
-      else
-      {
-          QMessageBox::critical(
+        ui->barcodeWidget->setBarcode(Constants::DefaultBarcode);
+    }
+
+    connect(ui->barcodeWidget,&BarcodeWidget::validated,
+            this,[this](const bool& valid)
+    {
+        if(valid)
+        {
+            // launch the manager
+            //
+            this->run();
+        }
+        else
+        {
+            QMessageBox::critical(
             this, QApplication::applicationName(),
             tr("The input does not match the expected barcode for this participant."));
-      }
-  });
+        }
+    });
 
     // Available to start measuring
     //
     connect(&m_manager, &GripStrengthManager::canMeasure,
-        this, [this]() {
-            ui->measureButton->setEnabled(true);
-            ui->saveButton->setEnabled(false);
-        });
+        ui->measureWidget, &MeasureWidget::enableMeasure);
 
-    // Request a measurement from the device (run CCB.exe)
+    // Request a measurement from the device
     //
-    connect(ui->measureButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::measure,
         &m_manager, &GripStrengthManager::measure);
 
     // Update the UI with any data
-    //
+  //
     connect(&m_manager, &GripStrengthManager::dataChanged,
-        this, [this]() {
-            auto h = ui->testdataTableView->horizontalHeader();
-            h->setSectionResizeMode(QHeaderView::Fixed);
-
-            m_manager.buildModel(&m_model);
-
-            QSize ts_pre = ui->testdataTableView->size();
-            h->resizeSections(QHeaderView::ResizeToContents);
-            ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
-            ui->testdataTableView->setColumnWidth(1, h->sectionSize(1));
-            ui->testdataTableView->resize(
-                h->sectionSize(0) + h->sectionSize(1) +
-                ui->testdataTableView->autoScrollMargin(),
-                8 * ui->testdataTableView->rowHeight(0) + 1 +
-                h->height());
-            QSize ts_post = ui->testdataTableView->size();
-            int dx = ts_post.width() - ts_pre.width();
-            int dy = ts_post.height() - ts_pre.height();
-            this->resize(this->width() + dx, this->height() + dy);
-        });
+        ui->measureWidget, &MeasureWidget::updateModelView);
 
     // All measurements received: enable write test results
-    //
+//
     connect(&m_manager, &GripStrengthManager::canWrite,
-        this, [this]() {
-            ui->saveButton->setEnabled(true);
-        });
-
-    // Close the application
-    //
-    connect(ui->closeButton, &QPushButton::clicked,
-        this, &MainWindow::close);
+        ui->measureWidget, &MeasureWidget::enableWriteToFile);
 
     // Write test data to output
     //
-    connect(ui->saveButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::writeToFile,
         this, &MainWindow::writeOutput);
 
-    // Read inputs required to launch frax test
-    // In simulate mode the barcode is always populated with a default of "00000000"
+    // Close the application
     //
-    readInput();
+    connect(ui->measureWidget, &MeasureWidget::closeApplication,
+        this, &MainWindow::close);
 }
 
 void MainWindow::run()
