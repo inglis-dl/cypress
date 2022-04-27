@@ -31,29 +31,16 @@ void MainWindow::initialize()
 {
   initializeModel();
   initializeConnections();
+
+  // Read inputs, such as interview barcode
+  //
+  readInput();
 }
 
 void MainWindow::initializeModel()
 {
-    // allocate 2 columns (left eye, right eye) x 14 rows of tonometer measurement items
-    // do not display applanation, pressure, indexes strings
-    //
-    for(int col = 0; col < m_manager.getNumberOfModelColumns(); col++)
-    {
-      for(int row = 0; row < m_manager.getNumberOfModelRows(); row++)
-      {
-        QStandardItem* item = new QStandardItem();
-        m_model.setItem(row, col, item);
-      }
-    }
-    m_model.setHeaderData(0, Qt::Horizontal, "Left Results", Qt::DisplayRole);
-    m_model.setHeaderData(1, Qt::Horizontal, "Right Results", Qt::DisplayRole);
-    ui->testdataTableView->setModel(&m_model);
-
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->verticalHeader()->hide();
+    m_manager.initializeModel();
+    ui->measureWidget->initialize(m_manager.getModel());
 }
 
 // set up signal slot connections between GUI front end
@@ -65,17 +52,14 @@ void MainWindow::initializeConnections()
     //
     foreach(auto button, this->findChildren<QPushButton *>())
     {
-        button->setEnabled(false);
+        if("Close" != button->text())
+          button->setEnabled(false);
 
         // disable enter key press event passing onto auto focus buttons
         //
         button->setDefault(false);
         button->setAutoDefault(false);
     }
-
-  // Close the application
-  //
-  ui->closeButton->setEnabled(true);
 
   // Relay messages from the manager to the status bar
   //
@@ -118,8 +102,10 @@ void MainWindow::initializeConnections()
     connect(&m_manager,&TonometerManager::canSelectRunnable,
             this,[this](){
         foreach(auto button, this->findChildren<QPushButton *>())
+        {
+          if("Close" != button->text())
             button->setEnabled(false);
-        ui->closeButton->setEnabled(true);
+        }
         ui->openButton->setEnabled(true);
         static bool warn = true;
         if(warn)
@@ -139,8 +125,10 @@ void MainWindow::initializeConnections()
     connect(&m_manager,&TonometerManager::canSelectDatabase,
             this,[this](){
         foreach(auto button, this->findChildren<QPushButton *>())
+        {
+          if("Close" != button->text())
             button->setEnabled(false);
-        ui->closeButton->setEnabled(true);
+        }
         ui->openButton->setEnabled(true);
         static bool warn = true;
         if(warn)
@@ -154,64 +142,35 @@ void MainWindow::initializeConnections()
         }
     });
 
-    // ora.exe was found or set up successfully
+    // Available to start measuring
     //
     connect(&m_manager, &TonometerManager::canMeasure,
-        this, [this]() {
-            ui->measureButton->setEnabled(true);
-            ui->saveButton->setEnabled(false);
-        });
+            ui->measureWidget, &MeasureWidget::enableMeasure);
 
-    // Request a measurement from the device (run ora.exe)
+    // Request a measurement from the device
     //
-    connect(ui->measureButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::measure,
         &m_manager, &TonometerManager::measure);
 
     // Update the UI with any data
     //
     connect(&m_manager, &TonometerManager::dataChanged,
-        this, [this]() {
-      auto h = ui->testdataTableView->horizontalHeader();
-      h->setSectionResizeMode(QHeaderView::Fixed);
-
-      m_manager.buildModel(&m_model);
-
-      //TODO: remove 8 row restriction
-      //
-      QSize ts_pre = ui->testdataTableView->size();
-      h->resizeSections(QHeaderView::ResizeToContents);
-      ui->testdataTableView->setColumnWidth(0,h->sectionSize(0));
-      ui->testdataTableView->setColumnWidth(1,h->sectionSize(1));
-      ui->testdataTableView->resize(
-                  h->sectionSize(0)+h->sectionSize(1)+1,
-                  8*ui->testdataTableView->rowHeight(0)+1+
-                  h->height());
-      QSize ts_post = ui->testdataTableView->size();
-      int dx = ts_post.width() - ts_pre.width();
-      int dy = ts_post.height() - ts_pre.height();
-      this->resize(this->width() + dx, this->height() + dy);
-    });
+        ui->measureWidget, &MeasureWidget::updateModelView);
 
     // All measurements received: enable write test results
     //
     connect(&m_manager, &TonometerManager::canWrite,
-        this, [this]() {
-            ui->saveButton->setEnabled(true);
-        });
+        ui->measureWidget, &MeasureWidget::enableWriteToFile);
 
     // Write test data to output
     //
-    connect(ui->saveButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::writeToFile,
         this, &MainWindow::writeOutput);
 
     // Close the application
     //
-    connect(ui->closeButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::closeApplication,
         this, &MainWindow::close);
-
-    // Read inputs, such as interview barcode
-    //
-    readInput();
 }
 
 void MainWindow::run()

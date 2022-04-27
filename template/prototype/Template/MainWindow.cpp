@@ -31,25 +31,17 @@ void MainWindow::initialize()
 {
   initializeModel();
   initializeConnections();
+
+  // Read inputs required to launch
+  // In simulate mode the barcode is always populated with a default of "00000000"
+  //
+  readInput();
 }
 
 void MainWindow::initializeModel()
 {
-    // example of 1 row 1 column display of 1 measurement test
-    //
-    for(int row = 0;row < m_manager.getNumberOfModelRows(); row++)
-    {
-      QStandardItem* item = new QStandardItem();
-      m_model.setItem(row,0,item);
-    }
-    m_model.setHeaderData(0,Qt::Horizontal,"Weight Tests",Qt::DisplayRole);
-    ui->testdataTableView->setModel(&m_model);
-
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->verticalHeader()->hide();
-
+    m_manager.initializeModel();
+    ui->measureWidget->initialize(m_manager.getModel());
 }
 
 // set up signal slot connections between GUI front end
@@ -57,21 +49,18 @@ void MainWindow::initializeModel()
 //
 void MainWindow::initializeConnections()
 {
-  // Disable all buttons by default
-  //
+    // Disable all buttons by default
+    //
     foreach(auto button, this->findChildren<QPushButton *>())
     {
-        button->setEnabled(false);
+        if("Close" != button->text())
+          button->setEnabled(false);
 
         // disable enter key press event passing onto auto focus buttons
         //
         button->setDefault(false);
         button->setAutoDefault(false);
     }
-
-  // Close the application
-  //
-  ui->closeButton->setEnabled(true);
 
   // Relay messages from the manager to the status bar
   //
@@ -111,64 +100,35 @@ void MainWindow::initializeConnections()
       }
   });
 
-    // Available to start measuring
-    //
-    connect(&m_manager, &TemplateManager::canMeasure,
-        this, [this]() {
-            ui->measureButton->setEnabled(true);
-            ui->saveButton->setEnabled(false);
-        });
+  // Available to start measuring
+  //
+  connect(&m_manager, &TemplateManager::canMeasure,
+          ui->measureWidget, &MeasureWidget::enableMeasure);
 
-    // Request a measurement from the device (run CCB.exe)
-    //
-    connect(ui->measureButton, &QPushButton::clicked,
-        &m_manager, &TemplateManager::measure);
+  // Request a measurement from the device
+  //
+  connect(ui->measureWidget, &MeasureWidget::measure,
+      &m_manager, &TemplateManager::measure);
 
-    // Update the UI with any data
-    //
-    connect(&m_manager, &TemplateManager::dataChanged,
-        this, [this]() {
-            auto h = ui->testdataTableView->horizontalHeader();
-            h->setSectionResizeMode(QHeaderView::Fixed);
+  // Update the UI with any data
+  //
+  connect(&m_manager, &TemplateManager::dataChanged,
+      ui->measureWidget, &MeasureWidget::updateModelView);
 
-            m_manager.buildModel(&m_model);
+  // All measurements received: enable write test results
+  //
+  connect(&m_manager, &TemplateManager::canWrite,
+      ui->measureWidget, &MeasureWidget::enableWriteToFile);
 
-            QSize ts_pre = ui->testdataTableView->size();
-            h->resizeSections(QHeaderView::ResizeToContents);
-            ui->testdataTableView->setColumnWidth(0, h->sectionSize(0));
-            ui->testdataTableView->setColumnWidth(1, h->sectionSize(1));
-            ui->testdataTableView->resize(
-                h->sectionSize(0) + h->sectionSize(1) +
-                ui->testdataTableView->autoScrollMargin(),
-                8 * ui->testdataTableView->rowHeight(0) + 1 +
-                h->height());
-            QSize ts_post = ui->testdataTableView->size();
-            int dx = ts_post.width() - ts_pre.width();
-            int dy = ts_post.height() - ts_pre.height();
-            this->resize(this->width() + dx, this->height() + dy);
-        });
+  // Write test data to output
+  //
+  connect(ui->measureWidget, &MeasureWidget::writeToFile,
+      this, &MainWindow::writeOutput);
 
-    // All measurements received: enable write test results
-    //
-    connect(&m_manager, &TemplateManager::canWrite,
-        this, [this]() {
-            ui->saveButton->setEnabled(true);
-        });
-
-    // Close the application
-    //
-    connect(ui->closeButton, &QPushButton::clicked,
-        this, &MainWindow::close);
-
-    // Write test data to output
-    //
-    connect(ui->saveButton, &QPushButton::clicked,
-        this, &MainWindow::writeOutput);
-
-    // Read inputs required to launch frax test
-    // In simulate mode the barcode is always populated with a default of "00000000"
-    //
-    readInput();
+  // Close the application
+  //
+  connect(ui->measureWidget, &MeasureWidget::closeApplication,
+      this, &MainWindow::close);
 }
 
 void MainWindow::run()

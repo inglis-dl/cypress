@@ -29,6 +29,22 @@ SpirometerManager::SpirometerManager(QObject* parent) : ManagerBase(parent)
     m_test.setExpectedMeasurementCount(4);
 }
 
+void SpirometerManager::initializeModel()
+{
+    for(int col = 0; col < 4; col++)
+    {
+        for(int row = 0; row < 8; row++)
+        {
+            QStandardItem* item = new QStandardItem();
+            m_model->setItem(row, col, item);
+        }
+    }
+    m_model->setHeaderData(0, Qt::Horizontal, "Variables", Qt::DisplayRole);
+    m_model->setHeaderData(1, Qt::Horizontal, "Trial 1", Qt::DisplayRole);
+    m_model->setHeaderData(2, Qt::Horizontal, "Trial 2", Qt::DisplayRole);
+    m_model->setHeaderData(3, Qt::Horizontal, "Trial 3", Qt::DisplayRole);
+}
+
 void SpirometerManager::start()
 {
     // connect signals and slots to QProcess one time only
@@ -122,33 +138,33 @@ QJsonObject SpirometerManager::toJsonObject() const
     return json;
 }
 
-void SpirometerManager::buildModel(QStandardItemModel* model) const
+void SpirometerManager::updateModel()
 {
     // Data from all measurements:
     // First list is a header and each list after is a trial
     QList<QStringList> data = m_test.toStringListList();
-    qDebug() << "build model" << data.size();
+    qDebug() << "update model" << data.size();
     int numLists = data.count();
-    int numElementsPerList = numLists > 0 ? data[0].count() : 0;
+    int numElementsPerList = 0 < numLists ? data[0].count() : 0;
 
     // Set row count
     int n_row = qMax(1, numElementsPerList);
-    if(n_row != model->rowCount())
+    if(n_row != m_model->rowCount())
     {
-        model->setRowCount(n_row);
+        m_model->setRowCount(n_row);
     }
 
     // set column count
     int n_col = qMax(1, numLists);
-    if(n_col != model->columnCount())
+    if(n_col != m_model->columnCount())
     {
-        model->setColumnCount(n_col);
+        m_model->setColumnCount(n_col);
     }
 
     for(int i = 0; i < n_col; i++)
     {
         QString colName = 0 == i ? "Data Type": QString("Trial %1").arg(i);
-        model->setHeaderData(i, Qt::Horizontal, colName, Qt::DisplayRole);
+        m_model->setHeaderData(i, Qt::Horizontal, colName, Qt::DisplayRole);
     }
 
     for(int row = 0; row < numElementsPerList; row++)
@@ -157,15 +173,16 @@ void SpirometerManager::buildModel(QStandardItemModel* model) const
         {
             QString dataStr = data[col][row];
 
-            QStandardItem* item = model->item(row, col);
+            QStandardItem* item = m_model->item(row, col);
             if(nullptr == item)
             {
                 item = new QStandardItem();
-                model->setItem(row, col, item);
+                m_model->setItem(row, col, item);
             }
             item->setData(dataStr, Qt::DisplayRole);
         }
     }
+    emit dataChanged();
 }
 
 bool SpirometerManager::isDefined(const QString& value, const SpirometerManager::FileType &fileType) const
@@ -353,7 +370,7 @@ void SpirometerManager::readOutput()
           emit message(tr("Ready to save results..."));
           emit canWrite();
         }
-        emit dataChanged();
+        updateModel();
         return;
     }
 
@@ -374,13 +391,13 @@ void SpirometerManager::readOutput()
     else
       qDebug() << "ERROR: EMR plugin produced invalid xml test results";
 
-    emit dataChanged();
+    updateModel();
 }
 
 void SpirometerManager::clearData()
 {
     m_test.reset();
-    emit dataChanged();
+    updateModel();
 }
 
 void SpirometerManager::backupDatabases() const
@@ -461,7 +478,6 @@ void SpirometerManager::configureProcess()
         m_process.setWorkingDirectory(m_runnablePath);
 
         removeXmlFiles();
-
         backupDatabases();
 
         // write the inputs to EMR xml

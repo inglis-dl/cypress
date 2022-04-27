@@ -21,6 +21,8 @@ CDTTManager::CDTTManager(QObject* parent) : ManagerBase(parent)
     m_inputKeyList << "language";
 
     // expected measurement (trial) count is not know a priori
+    // and it is set by the test itself during read out of the data
+    //
     m_test.setMinimumMeasurementCount(1);
 }
 
@@ -96,19 +98,46 @@ QJsonObject CDTTManager::toJsonObject() const
     return json;
 }
 
-void CDTTManager::buildModel(QStandardItemModel* model) const
+void CDTTManager::initializeModel()
 {
-    int row = 0;
-    foreach(const auto str, m_test.toStringList())
+    // allocate 1 columns x 4 rows of measurement items
+    //
+    for(int row=0; row< m_row; row++)
     {
-        QStandardItem* item = model->item(row, 0);
+      QStandardItem* item = new QStandardItem();
+      m_model->setItem(row, 0, item);
+    }
+
+    m_model->setHeaderData(0, Qt::Horizontal, "CDTT Results", Qt::DisplayRole);
+}
+
+void CDTTManager::updateModel()
+{
+    QStringList list = m_test.toStringList();
+    if(list.isEmpty())
+    {
+      for(int row = 0; row < m_row; row++)
+      {
+          QStandardItem* item = m_model->item(row, 0);
+          if(Q_NULLPTR != item)
+            item->setData(QString(), Qt::DisplayRole);
+      }
+    }
+    else
+    {
+      int row = 0;
+      foreach(const auto str, list)
+      {
+        QStandardItem* item = m_model->item(row, 0);
         if(Q_NULLPTR == item)
         {
             item = new QStandardItem();
-            model->setItem(row, 0, item);
+            m_model->setItem(row, 0, item);
         }
+        qDebug() << "update model with row" << str;
         item->setData(str, Qt::DisplayRole);
         row++;
+      }
     }
 }
 
@@ -162,6 +191,7 @@ void CDTTManager::measure()
     clearData();
     if(Constants::RunMode::modeSimulate == m_mode)
     {
+        qDebug() << "simulate measure ... read out";
         readOutput();
         return;
     }
@@ -226,6 +256,7 @@ void CDTTManager::readOutput()
 {
     if(Constants::RunMode::modeSimulate == m_mode)
     {
+        qDebug() << "simulate read out";
         m_test.simulate(m_inputData["barcode"].toString());
         if(m_test.isValid())
         {
@@ -234,7 +265,8 @@ void CDTTManager::readOutput()
         }
         else
             qDebug() << "invalid test results";
-        emit dataChanged();
+
+        updateModel();
         return;
     }
 
@@ -285,7 +317,7 @@ void CDTTManager::readOutput()
 
         db.close();
       }
-      emit dataChanged();
+      updateModel();
     }
     else
         qDebug() << "ERROR: no output xlsx file found"<<fileName;
@@ -294,7 +326,7 @@ void CDTTManager::readOutput()
 void CDTTManager::clearData()
 {
     m_test.reset();
-    emit dataChanged();
+    updateModel();
 }
 
 void CDTTManager::finish()

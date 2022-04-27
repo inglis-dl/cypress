@@ -36,6 +36,7 @@ HEADERS += \
     ../../managers/ManagerBase.h \
     ../../managers/TonometerManager.h \
     ../../widgets/BarcodeWidget.h \
+    ../../widgets/MeasureWidget.h \
     MainWindow.h
 
 SOURCES += \
@@ -49,11 +50,13 @@ SOURCES += \
     ../../managers/ManagerBase.cpp \
     ../../managers/TonometerManager.cpp \
     ../../widgets/BarcodeWidget.cpp \
+    ../../widgets/MeasureWidget.cpp \
     MainWindow.cpp \
     main.cpp
 
 FORMS += \
     ../../widgets/barcodewidget.ui \
+    ../../widgets/measurewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

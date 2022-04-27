@@ -44,7 +44,6 @@ public:
 private:
 
     ResultType m_type { typeUnknown };
-
 };
 
 Q_DECLARE_METATYPE(SpirometerMeasurement);

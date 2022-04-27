@@ -35,7 +35,9 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel*) const override;
+    void initializeModel() override;
+
+    void updateModel() override;
 
     static QByteArray initEndCode();
     static QByteArray END_CODE;

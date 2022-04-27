@@ -67,13 +67,14 @@ void CDTTTest::simulate(const QString &barcode)
   addMetaData("reversal_count",QRandomGenerator::global()->bounded(6, 20));
 
   int numTrial = 24;
+  this->setExpectedMeasurementCount(numTrial);
   addMetaData("trial_count",numTrial);
   int trial = 1;
   do
   {
-    CDTTMeasurement m;
-    m.simulate(trial);
-    addMeasurement(m);
+    CDTTMeasurement measure;
+    measure.simulate(trial);
+    addMeasurement(measure);
   }
   while(trial++ != numTrial);
 }
@@ -97,9 +98,9 @@ QStringList CDTTTest::toStringList() const
     {
       list << QString("Trials: %1").arg(getMetaDataAsString("trial_count"));
     }
-    foreach(const auto m, m_measurementList)
+    foreach(const auto measure, m_measurementList)
     {
-      list << m.toString();
+      list << measure.toString();
     }
 
     return list;
@@ -314,6 +315,7 @@ bool CDTTTest::readTrialData(const QSqlDatabase &db)
     }
     if(ok)
     {
+      this->setExpectedMeasurementCount(measures.count());
       foreach(const auto m, measures)
         addMeasurement(m);
     }

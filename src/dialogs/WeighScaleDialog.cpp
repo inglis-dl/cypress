@@ -19,22 +19,8 @@ WeighScaleDialog::~WeighScaleDialog()
 
 void WeighScaleDialog::initializeModel()
 {
-    qDebug() <<"weigh scale dialog init model";
-    // allocate 1 column x 2 rows of weight measurement items
-    //
-    for(int row = 0; row < m_manager->getNumberOfModelRows(); row++)
-    {
-      QStandardItem* item = new QStandardItem();
-      m_model.setItem(row,0,item);
-    }
-    m_model.setHeaderData(0,Qt::Horizontal,"Weight Tests",Qt::DisplayRole);
-    ui->testdataTableView->setModel(&m_model);
-
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->verticalHeader()->hide();
-    qDebug() <<"weigh scale dialog init model finished";
+    m_manager.get()->initializeModel();
+    ui->measureWidget->initialize(m_manager.get()->getModel());
 }
 
 void WeighScaleDialog::initializeConnections()
@@ -46,17 +32,14 @@ void WeighScaleDialog::initializeConnections()
   //
   foreach(auto button, this->findChildren<QPushButton *>())
   {
-    button->setEnabled(false);
+      if("Close" != button->text())
+        button->setEnabled(false);
 
-    // disable enter key press event passing onto auto focus buttons
-    //
-    button->setDefault(false);
-    button->setAutoDefault(false);
+      // disable enter key press event passing onto auto focus buttons
+      //
+      button->setDefault(false);
+      button->setAutoDefault(false);
   }
-
-  // Close the application
-  //
-  ui->closeButton->setEnabled(true);
 
   // Relay messages from the manager to the status bar
   //
@@ -151,10 +134,12 @@ void WeighScaleDialog::initializeConnections()
   connect(derived.get(), &WeighScaleManager::canConnectDevice,
           this,[this](){
       ui->connectButton->setEnabled(true);
-      ui->zeroButton->setEnabled(false);
       ui->disconnectButton->setEnabled(false);
-      ui->measureButton->setEnabled(false);
-      ui->saveButton->setEnabled(false);
+
+      //TODO: fix MeasureWidget segfault when adding extra zero button
+      // ui->zeroButton->setEnabled(false);
+      //
+      ui->measureWidget->disableMeasure();
   });
 
   // Connect to device
@@ -164,13 +149,13 @@ void WeighScaleDialog::initializeConnections()
 
   // Connection is established: enable measurement requests
   //
+  connect(derived.get(), &WeighScaleManager::canMeasure,
+          ui->measureWidget, &MeasureWidget::enableMeasure);
+
   connect(m_manager.get(), &WeighScaleManager::canMeasure,
           this,[this](){
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
-      ui->zeroButton->setEnabled(true);
-      ui->measureButton->setEnabled(true);
-      ui->saveButton->setEnabled(false);
   });
 
   // Disconnect from device
@@ -178,54 +163,38 @@ void WeighScaleDialog::initializeConnections()
   connect(ui->disconnectButton, &QPushButton::clicked,
           derived.get(), &WeighScaleManager::disconnectDevice);
 
+  //TODO: fix MeasureWidget segfault when adding extra zero button
+  /*      this code should be integrated into MeasureWidget
   // Zero the scale
   //
   connect(ui->zeroButton, &QPushButton::clicked,
         derived.get(), &WeighScaleManager::zeroDevice);
+  */
 
   // Request a measurement from the device
   //
-  connect(ui->measureButton, &QPushButton::clicked,
+  connect(ui->measureWidget, &MeasureWidget::measure,
         derived.get(), &WeighScaleManager::measure);
 
   // Update the UI with any data
   //
-  connect(m_manager.get(), &WeighScaleManager::dataChanged,
-          this,[this](){
-      m_manager->buildModel(&m_model);
-
-      QSize ts_pre = ui->testdataTableView->size();
-      ui->testdataTableView->setColumnWidth(0,ui->testdataTableView->size().width()-2);
-      ui->testdataTableView->resize(
-                  ui->testdataTableView->width(),
-                  2*(ui->testdataTableView->rowHeight(0)+1)+
-                  ui->testdataTableView->horizontalHeader()->height());
-      QSize ts_post = ui->testdataTableView->size();
-      int dx = ts_post.width()-ts_pre.width();
-      int dy = ts_post.height()-ts_pre.height();
-      this->resize(this->width()+dx,this->height()+dy);
-  });
+  connect(derived.get(), &WeighScaleManager::dataChanged,
+      ui->measureWidget, &MeasureWidget::updateModelView);
 
   // All measurements received: enable write test results
   //
-  connect(m_manager.get(), &WeighScaleManager::canWrite,
-          this,[this](){
-      ui->saveButton->setEnabled(true);
-  });
+  connect(derived.get(), &WeighScaleManager::canWrite,
+      ui->measureWidget, &MeasureWidget::enableWriteToFile);
 
   // Write test data to output
   //
-  connect(ui->saveButton, &QPushButton::clicked,
-    this, &WeighScaleDialog::writeOutput);
+  connect(ui->measureWidget, &MeasureWidget::writeToFile,
+      this, &DialogBase::writeOutput);
 
   // Close the application
   //
-  connect(ui->closeButton, &QPushButton::clicked,
-          this, &WeighScaleDialog::close);
-
-  // Read inputs, such as interview barcode
-  //
-  readInput();
+  connect(ui->measureWidget, &MeasureWidget::closeApplication,
+      this, &DialogBase::close);
 }
 
 QString WeighScaleDialog::getVerificationBarcode() const

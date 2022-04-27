@@ -4,9 +4,6 @@
 #include "../../managers/SpirometerManager.h"
 #include "../../auxiliary/Constants.h"
 #include <QDialog>
-#include <QStandardItemModel>
-
-QT_FORWARD_DECLARE_CLASS(QCloseEvent)
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -59,8 +56,7 @@ private:
     bool m_verbose;
 
     QVariantMap m_inputData;
-    SpirometerManager m_manager;
-    QStandardItemModel m_model;
+    SpirometerManager m_manager;    
 };
 
 #endif // MAINWINDOW_H

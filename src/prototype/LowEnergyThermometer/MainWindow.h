@@ -3,10 +3,7 @@
 
 #include "../../managers/BluetoothLEManager.h"
 #include "../../auxiliary/Constants.h"
-
 #include <QDialog>
-#include <QVariantMap>
-#include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -60,6 +57,5 @@ private:
 
     QVariantMap m_inputData;
     BluetoothLEManager m_manager;
-    QStandardItemModel m_model;
 };
 #endif // MAINWINDOW_H

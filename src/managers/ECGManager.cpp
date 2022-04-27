@@ -56,20 +56,48 @@ void ECGManager::start()
     emit dataChanged();
 }
 
-void ECGManager::buildModel(QStandardItemModel *model) const
+void ECGManager::initializeModel()
+{
+    // allocate 1 columns x n rows of ECG measurement items
+    //
+    for(int row=0; row<m_row; row++)
+    {
+      QStandardItem* item = new QStandardItem();
+      m_model->setItem(row, 0, item);
+    }
+    m_model->setHeaderData(0, Qt::Horizontal, "Electrocardiogram Results ", Qt::DisplayRole);
+}
+
+void ECGManager::updateModel()
 {
     // add the measurement output
     //
     QStringList list = m_test.toStringList();
-    for(int row = 0; row < list.size(); row++)
+    if(list.isEmpty())
     {
-      QStandardItem* item = model->item(row,0);
-      if(Q_NULLPTR == item)
+        for(int row = 0; row < m_row; row++)
+        {
+          QStandardItem* item = m_model->item(row,0);
+          if(Q_NULLPTR == item)
+          {
+            item = new QStandardItem();
+            m_model->setItem(row,0,item);
+          }
+          item->setData(QString(), Qt::DisplayRole);
+        }
+    }
+    else
+    {
+      for(int row = 0; row < list.size(); row++)
       {
+        QStandardItem* item = m_model->item(row,0);
+        if(Q_NULLPTR == item)
+        {
           item = new QStandardItem();
-          model->setItem(row,0,item);
+          m_model->setItem(row,0,item);
+        }
+        item->setData(list.at(row), Qt::DisplayRole);
       }
-      item->setData(list.at(row), Qt::DisplayRole);
     }
 }
 
@@ -81,7 +109,6 @@ void ECGManager::loadSettings(const QSettings& settings)
     selectRunnable(exeName);
     QString workingName = settings.value(getGroup() + "/client/working").toString();
     selectWorking(workingName);
-
 }
 
 void ECGManager::saveSettings(QSettings* settings) const
@@ -282,7 +309,7 @@ void ECGManager::readOutput()
         m_test.simulate();
         emit message(tr("Ready to save results..."));
         emit canWrite();
-        emit dataChanged();
+        updateModel();
         return;
     }
 
@@ -309,7 +336,7 @@ void ECGManager::readOutput()
         else
           qDebug() << "ERROR: input from file produced invalid test results";
 
-        emit dataChanged();
+        updateModel();
     }
     else
       qDebug() << "ERROR: no output xml file found";
@@ -357,7 +384,7 @@ void ECGManager::configureProcess()
 void ECGManager::clearData()
 {
     m_test.reset();
-    emit dataChanged();
+    updateModel();
 }
 
 void ECGManager::finish()
@@ -367,7 +394,6 @@ void ECGManager::finish()
     {
         m_process.kill();
     }
-
     deleteDeviceData();
 }
 

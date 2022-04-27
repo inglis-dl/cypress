@@ -3,10 +3,7 @@
 
 #include "../../managers/AudiometerManager.h"
 #include "../../auxiliary/Constants.h"
-
 #include <QDialog>
-#include <QJsonObject>
-#include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -60,7 +57,6 @@ private:
 
     QVariantMap m_inputData;
     AudiometerManager m_manager;
-    QStandardItemModel m_model;
 };
 
 #endif // MAINWINDOW_H

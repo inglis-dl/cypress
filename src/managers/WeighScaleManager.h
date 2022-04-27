@@ -29,7 +29,9 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel*) const override;
+    void initializeModel() override;
+
+    void updateModel() override;
 
     // Set the input data.
     // The input data is read from the input

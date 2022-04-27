@@ -40,7 +40,7 @@ BodyCompositionManager::BodyCompositionManager(QObject *parent) : SerialPortMana
 {
   setGroup("body_composition");
   m_col = 1;
-  m_row = 8;
+  m_row = 13;
 
   // all managers must check for barcode and language input values
   //
@@ -296,19 +296,33 @@ void BodyCompositionManager::saveSettings(QSettings *settings) const
     }
 }
 
-void BodyCompositionManager::buildModel(QStandardItemModel *model) const
+void BodyCompositionManager::initializeModel()
+{
+    // allocate 1 columns x 8 rows of body composition measurement items
+    //
+    for(int row=0; row<m_row; row++)
+    {
+      QStandardItem* item = new QStandardItem();
+      m_model->setItem(row,0,item);
+    }
+    m_model->setHeaderData(0,Qt::Horizontal,"Body Composition Results",Qt::DisplayRole);
+}
+
+void BodyCompositionManager::updateModel()
 {
     QStringList list = m_test.toStringList();
+    qDebug() << "updating model with test data" << list.size();
     for(int row = 0; row < list.size(); row++)
     {
-      QStandardItem* item = model->item(row,0);
+      QStandardItem* item = m_model->item(row,0);
       if(Q_NULLPTR == item)
       {
         item = new QStandardItem();
-        model->setItem(row,0,item);
+        m_model->setItem(row,0,item);
       }
       item->setData(list.at(row), Qt::DisplayRole);
     }
+    emit dataChanged();
 }
 
 void BodyCompositionManager::clearData()
@@ -792,14 +806,14 @@ void BodyCompositionManager::processResponse()
            else
              qDebug() << "ERROR: invalid test";
 
-          emit dataChanged();
+           updateModel();
       }
       else if("reset" == requestName)
       {
           m_test.reset();
           emit message(tr("Ready to accept inputs..."));
           emit canInput();
-          emit dataChanged();
+          updateModel();
       }
     }
     writeDevice();

@@ -21,6 +21,7 @@ void DialogBase::initialize()
 {
   initializeModel();
   initializeConnections();
+  readInput();
 }
 
 // run should only be called AFTER the user inputs a valid barcode

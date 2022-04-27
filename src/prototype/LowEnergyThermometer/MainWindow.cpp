@@ -30,26 +30,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::initialize()
 {
-  initializeModel();
-  initializeConnections();
+    initializeModel();
+    initializeConnections();
+
+    // Read inputs required to launch
+    // In simulate mode the barcode is always populated with a default of "00000000"
+    //
+    readInput();
 }
 
 void MainWindow::initializeModel()
 {
-    // allocate 1 column x 1 rows of temperature measurement items
-    //
-    for(int row = 0; row < m_manager.getNumberOfModelRows(); row++)
-    {
-      QStandardItem* item = new QStandardItem();
-      m_model.setItem(row,0,item);
-    }
-    m_model.setHeaderData(0,Qt::Horizontal,"Temperature Tests",Qt::DisplayRole);
-    ui->testdataTableView->setModel(&m_model);
-
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->verticalHeader()->hide();
+    m_manager.initializeModel();
+    ui->measureWidget->initialize(m_manager.getModel());
 }
 
 // set up signal slot connections between GUI front end
@@ -57,21 +50,18 @@ void MainWindow::initializeModel()
 //
 void MainWindow::initializeConnections()
 {
-  // Disable all buttons by default
-  //
+    // Disable all buttons by default
+    //
     foreach(auto button, this->findChildren<QPushButton *>())
     {
-        button->setEnabled(false);
+        if("Close" != button->text())
+          button->setEnabled(false);
 
         // disable enter key press event passing onto auto focus buttons
         //
         button->setDefault(false);
         button->setAutoDefault(false);
     }
-
-  // Close the application
-  //
-  ui->closeButton->setEnabled(true);
 
   // Relay messages from the manager to the status bar
   //
@@ -172,8 +162,7 @@ void MainWindow::initializeConnections()
             this,[this](){
         ui->connectButton->setEnabled(true);
         ui->disconnectButton->setEnabled(false);
-        ui->measureButton->setEnabled(false);
-        ui->saveButton->setEnabled(false);
+        ui->measureWidget->disableMeasure();
     });
 
     // Connect to device
@@ -181,14 +170,15 @@ void MainWindow::initializeConnections()
     connect(ui->connectButton, &QPushButton::clicked,
           &m_manager, &BluetoothLEManager::connectDevice);
 
-    // Connection is established: enable measurement requests
+    // Available to start measuring
     //
+    connect(&m_manager, &BluetoothLEManager::canMeasure,
+            ui->measureWidget, &MeasureWidget::enableMeasure);
+
     connect(&m_manager, &BluetoothLEManager::canMeasure,
             this,[this](){
         ui->connectButton->setEnabled(false);
         ui->disconnectButton->setEnabled(true);
-        ui->measureButton->setEnabled(true);
-        ui->saveButton->setEnabled(false);
     });
 
     // Disconnect from device
@@ -198,47 +188,28 @@ void MainWindow::initializeConnections()
 
     // Request a measurement from the device
     //
-    connect(ui->measureButton, &QPushButton::clicked,
-          &m_manager, &BluetoothLEManager::measure);
+    connect(ui->measureWidget, &MeasureWidget::measure,
+        &m_manager, &BluetoothLEManager::measure);
 
     // Update the UI with any data
     //
     connect(&m_manager, &BluetoothLEManager::dataChanged,
-            this,[this](){
-        m_manager.buildModel(&m_model);
-
-        QSize ts_pre = ui->testdataTableView->size();
-        ui->testdataTableView->setColumnWidth(0,ui->testdataTableView->size().width()-2);
-        ui->testdataTableView->resize(
-                    ui->testdataTableView->width(),
-                    2*(ui->testdataTableView->rowHeight(0) + 1) +
-                    ui->testdataTableView->horizontalHeader()->height());
-        QSize ts_post = ui->testdataTableView->size();
-        int dx = ts_post.width()-ts_pre.width();
-        int dy = ts_post.height()-ts_pre.height();
-        this->resize(this->width()+dx,this->height()+dy);
-    });
+        ui->measureWidget, &MeasureWidget::updateModelView);
 
     // All measurements received: enable write test results
     //
     connect(&m_manager, &BluetoothLEManager::canWrite,
-            this,[this](){
-       ui->saveButton->setEnabled(true);
-    });
+        ui->measureWidget, &MeasureWidget::enableWriteToFile);
 
     // Write test data to output
     //
-    connect(ui->saveButton, &QPushButton::clicked,
-      this, &MainWindow::writeOutput);
+    connect(ui->measureWidget, &MeasureWidget::writeToFile,
+        this, &MainWindow::writeOutput);
 
     // Close the application
     //
-    connect(ui->closeButton, &QPushButton::clicked,
-            this, &MainWindow::close);
-
-    // Read inputs, such as interview barcode
-    //
-    readInput();
+    connect(ui->measureWidget, &MeasureWidget::closeApplication,
+        this, &MainWindow::close);
 }
 
 void MainWindow::run()

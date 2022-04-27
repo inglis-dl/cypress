@@ -37,6 +37,7 @@ HEADERS += \
     ../../managers/ManagerBase.h \
     ../../managers/CDTTManager.h \
     ../../widgets/BarcodeWidget.h \
+    ../../widgets/MeasureWidget.h \
     MainWindow.h
 
 SOURCES += \
@@ -50,11 +51,13 @@ SOURCES += \
     ../../managers/ManagerBase.cpp \
     ../../managers/CDTTManager.cpp \
     ../../widgets/BarcodeWidget.cpp \
+    ../../widgets/MeasureWidget.cpp \
     MainWindow.cpp \
     main.cpp
 
 FORMS += \
     ../../widgets/barcodewidget.ui \
+    ../../widgets/measurewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

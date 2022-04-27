@@ -31,31 +31,35 @@ MainWindow::~MainWindow()
 
 void MainWindow::initializeModel()
 {
-    QStringList header = (QStringList()<<"#"<<"start time"<<"end time"<<"systolic (mmHg)"<<"diastolic (mmHg)"<<"pulse (bpm)");
-    for(int row = 0; row < m_manager.getNumberOfModelRows(); row++)
-    {
-      for(int col = 0; col < m_manager.getNumberOfModelColumns(); col++)
-      {
-        QStandardItem* item = new QStandardItem();
-        m_model.setItem(row, col, item);
-        m_model.setHeaderData(col, Qt::Horizontal, header.at(col), Qt::DisplayRole);
-      }
-    }
-    ui->testdataTableView->setModel(&m_model);
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->verticalHeader()->hide();
+    m_manager.initializeModel();
+    ui->measureWidget->initialize(m_manager.getModel());
 }
 
 void MainWindow::initialize()
 {
     initializeModel();
     initializeConnections();
+
+    // Read inputs, such as interview barcode
+    //
+    readInput();
 }
 
 void MainWindow::initializeConnections()
 {
+    // Disable all buttons by default
+    //
+    foreach(auto button, this->findChildren<QPushButton *>())
+    {
+        if("Close" != button->text())
+          button->setEnabled(false);
+
+        // disable enter key press event passing onto auto focus buttons
+        //
+        button->setDefault(false);
+        button->setAutoDefault(false);
+    }
+
     // The qcombobox automatically selects the first item in the list. So a blank entry is
     // added to display that an option has not been picked yet. The blank entry is treated
     // as not being a valid option by the rest of this code. If there was no blank entry, then
@@ -84,22 +88,6 @@ void MainWindow::initializeConnections()
 
     connect(&m_manager, &BloodPressureManager::sideChanged,
             ui->armComboBox, &QComboBox::setCurrentText);
-
-    // Disable all buttons by default
-    //
-    foreach(auto button, this->findChildren<QPushButton *>())
-    {
-        button->setEnabled(false);
-
-        // disable enter key press event passing onto auto focus buttons
-        //
-        button->setDefault(false);
-        button->setAutoDefault(false);
-    }
-
-    // Close the application
-    //
-    ui->closeButton->setEnabled(true);
 
     // Relay messages from the manager to the status bar
     //
@@ -195,8 +183,7 @@ void MainWindow::initializeConnections()
             this,[this]() {
         ui->connectButton->setEnabled(true);
         ui->disconnectButton->setEnabled(false);
-        ui->measureButton->setEnabled(false);
-        ui->saveButton->setEnabled(false);
+        ui->measureWidget->disableMeasure();
     });
 
     // Connect to the device (bpm)
@@ -207,11 +194,12 @@ void MainWindow::initializeConnections()
     // Connection is established: enable measurement requests
     //
     connect(&m_manager, &BloodPressureManager::canMeasure,
+            ui->measureWidget, &MeasureWidget::enableMeasure);
+
+    connect(&m_manager, &BloodPressureManager::canMeasure,
             this,[this](){
         ui->connectButton->setEnabled(false);
         ui->disconnectButton->setEnabled(true);
-        ui->measureButton->setEnabled(true);
-        ui->saveButton->setEnabled(false);
 
         // Remove blank enty from selection, so that user cannot change answer to blank
         // The user will still be able to change their selection if they make a mistake
@@ -226,56 +214,30 @@ void MainWindow::initializeConnections()
     connect(ui->disconnectButton, &QPushButton::clicked,
             &m_manager, &BloodPressureManager::disconnectDevice);
 
-    // Request a measurement from the device (bpm)
+    // Request a measurement from the device
     //
-    connect(ui->measureButton, &QPushButton::clicked,
-            &m_manager, &BloodPressureManager::measure);
+    connect(ui->measureWidget, &MeasureWidget::measure,
+          &m_manager, &BloodPressureManager::measure);
 
     // Update the UI with any data
     //
     connect(&m_manager, &BloodPressureManager::dataChanged,
-        this, [this]() {
-            auto h = ui->testdataTableView->horizontalHeader();
-            h->setSectionResizeMode(QHeaderView::Fixed);
-            m_manager.buildModel(&m_model);
-            QSize ts_pre = ui->testdataTableView->size();
-            h->resizeSections(QHeaderView::ResizeToContents);
-            int h_sum = 0;
-            for(int col = 0; col < m_manager.getNumberOfModelColumns(); col++)
-            {
-              ui->testdataTableView->setColumnWidth(col, h->sectionSize(col));
-              h_sum += h->sectionSize(col) + 1;
-            }
-            ui->testdataTableView->resize(
-                h_sum + ui->testdataTableView->autoScrollMargin(),
-                m_manager.getNumberOfModelRows() * ui->testdataTableView->rowHeight(0) + 1 +
-                h->height());
-            QSize ts_post = ui->testdataTableView->size();
-            int dx = ts_post.width() - ts_pre.width();
-            int dy = ts_post.height() - ts_pre.height();
-            this->resize(this->width() + dx, this->height() + dy);
-        });
+        ui->measureWidget, &MeasureWidget::updateModelView);
 
     // All measurements received: enable write test results
     //
     connect(&m_manager, &BloodPressureManager::canWrite,
-        this, [this]() {
-            ui->saveButton->setEnabled(true);
-        });
+        ui->measureWidget, &MeasureWidget::enableWriteToFile);
 
     // Write test data to output
     //
-    connect(ui->saveButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::writeToFile,
         this, &MainWindow::writeOutput);
 
     // Close the application
     //
-    connect(ui->closeButton, &QPushButton::clicked,
+    connect(ui->measureWidget, &MeasureWidget::closeApplication,
         this, &MainWindow::close);
-
-    // Read inputs, such as interview barcode
-    //
-    readInput();
 }
 
 void MainWindow::run()

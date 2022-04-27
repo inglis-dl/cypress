@@ -33,26 +33,55 @@ AudiometerManager::AudiometerManager(QObject *parent)
     m_test.setExpectedMeasurementCount(16);
 }
 
-void AudiometerManager::buildModel(QStandardItemModel* model) const
+void AudiometerManager::initializeModel()
 {
+    // allocate 2 columns x 8 rows of hearing measurement items
+    //
     QStringList sides = {"left","right"};
     foreach(const auto side, sides)
     {
-      int index = 0;
       int col = "left" == side ? 0 : 1;
       for(int row = 0; row < m_row; row++)
       {
-        HearingMeasurement m = m_test.getMeasurement(side,index);
-        if(!m.isValid())
-           m.fromCode(side,index,"AA");
-
-        qDebug() << m.toString();
-
-        QStandardItem* item = model->item(row,col);
-        item->setData(m.toString(), Qt::DisplayRole);
-        index++;
+        QStandardItem* item = m_model->item(row,col);
+        if(Q_NULLPTR == item)
+        {
+          item = new QStandardItem();
+          m_model->setItem(row,col,item);
+        }
+        item->setData(QString(), Qt::DisplayRole);
       }
     }
+    m_model->setHeaderData(0,Qt::Horizontal,"Left",Qt::DisplayRole);
+    m_model->setHeaderData(1,Qt::Horizontal,"Right",Qt::DisplayRole);
+}
+
+void AudiometerManager::updateModel()
+{
+    if(m_test.isValid())
+    {
+      QStringList sides = {"left","right"};
+      foreach(const auto side, sides)
+      {
+        int index = 0;
+        int col = "left" == side ? 0 : 1;
+        for(int row = 0; row < m_row; row++)
+        {
+          HearingMeasurement m = m_test.getMeasurement(side,index);
+          if(!m.isValid())
+            m.fromCode(side,index,"AA");
+
+          QStandardItem* item = m_model->item(row,col);
+          item->setData(m.toString(), Qt::DisplayRole);
+          index++;
+        }
+      }
+    }
+    else
+    {
+        initializeModel();
+    }
+    emit dataChanged();
 }
 
 void AudiometerManager::loadSettings(const QSettings &settings)
@@ -128,7 +157,7 @@ void AudiometerManager::setInputData(const QVariantMap& input)
 void AudiometerManager::clearData()
 {
     m_test.reset();
-    emit dataChanged();
+    updateModel();
 }
 
 void AudiometerManager::finish()
@@ -202,7 +231,7 @@ void AudiometerManager::readDevice()
             emit message(tr("Ready to save results..."));
             emit canWrite();
         }
-        emit dataChanged();
+        updateModel();
     }
 }
 

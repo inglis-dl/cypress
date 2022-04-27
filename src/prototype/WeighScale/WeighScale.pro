@@ -35,6 +35,7 @@ SOURCES += \
     ../../managers/SerialPortManager.cpp \
     ../../managers/WeighScaleManager.cpp \
     ../../widgets/BarcodeWidget.cpp \
+    ../../widgets/MeasureWidget.cpp \
     main.cpp \
     MainWindow.cpp
 
@@ -51,10 +52,12 @@ HEADERS += \
     ../../managers/SerialPortManager.h \
     ../../managers/WeighScaleManager.h \
     ../../widgets/BarcodeWidget.h \
+    ../../widgets/MeasureWidget.h \
     MainWindow.h
 
 FORMS += \
     ../../widgets/barcodewidget.ui \
+    ../../widgets/measurewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

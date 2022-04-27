@@ -23,7 +23,9 @@ public:
 
     QJsonObject toJsonObject() const override;
 
-    void buildModel(QStandardItemModel*) const override;
+    void initializeModel() override;
+
+    void updateModel() override;
 
     bool isDefined(const QString&, const SpirometerManager::FileType&) const;
 

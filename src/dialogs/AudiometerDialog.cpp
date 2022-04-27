@@ -19,22 +19,8 @@ AudiometerDialog::~AudiometerDialog()
 
 void AudiometerDialog::initializeModel()
 {
-    for(int col = 0; col < m_manager->getNumberOfModelColumns(); col++)
-    {
-      for(int row = 0; row < m_manager->getNumberOfModelRows(); row++)
-      {
-        QStandardItem* item = new QStandardItem();
-        m_model.setItem(row,col,item);
-      }
-    }
-    m_model.setHeaderData(0,Qt::Horizontal,"Left",Qt::DisplayRole);
-    m_model.setHeaderData(1,Qt::Horizontal,"Right",Qt::DisplayRole);
-    ui->testdataTableView->setModel(&m_model);
-
-    ui->testdataTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->testdataTableView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->testdataTableView->verticalHeader()->hide();
+    m_manager.get()->initializeModel();
+    ui->measureWidget->initialize(m_manager.get()->getModel());
 }
 
 // set up signal slot connections between GUI front end
@@ -48,17 +34,14 @@ void AudiometerDialog::initializeConnections()
   //
   foreach(auto button, this->findChildren<QPushButton *>())
   {
-    button->setEnabled(false);
+      if("Close" != button->text())
+        button->setEnabled(false);
 
-    // disable enter key press event passing onto auto focus buttons
-    //
-    button->setDefault(false);
-    button->setAutoDefault(false);
+      // disable enter key press event passing onto auto focus buttons
+      //
+      button->setDefault(false);
+      button->setAutoDefault(false);
   }
-
-  // Close the application
-  //
-  ui->closeButton->setEnabled(true);
 
   // Relay messages from the manager to the status bar
   //
@@ -154,8 +137,7 @@ void AudiometerDialog::initializeConnections()
           this,[this](){
       ui->connectButton->setEnabled(true);
       ui->disconnectButton->setEnabled(false);
-      ui->measureButton->setEnabled(false);
-      ui->saveButton->setEnabled(false);
+      ui->measureWidget->disableMeasure();
   });
 
   // Connect to device
@@ -165,12 +147,13 @@ void AudiometerDialog::initializeConnections()
 
   // Connection is established: enable measurement requests
   //
-  connect(m_manager.get(), &AudiometerManager::canMeasure,
+  connect(derived.get(), &AudiometerManager::canMeasure,
+          ui->measureWidget, &MeasureWidget::enableMeasure);
+
+  connect(derived.get(), &AudiometerManager::canMeasure,
           this,[this](){
       ui->connectButton->setEnabled(false);
       ui->disconnectButton->setEnabled(true);
-      ui->measureButton->setEnabled(true);
-      ui->saveButton->setEnabled(false);
   });
 
   // Disconnect from device
@@ -180,50 +163,28 @@ void AudiometerDialog::initializeConnections()
 
   // Request a measurement from the device
   //
-  connect(ui->measureButton, &QPushButton::clicked,
+  connect(ui->measureWidget, &MeasureWidget::measure,
         derived.get(), &AudiometerManager::measure);
 
   // Update the UI with any data
   //
-  connect(m_manager.get(), &AudiometerManager::dataChanged,
-          this,[this](){
-      m_manager->buildModel(&m_model);
-
-      auto h = ui->testdataTableView->horizontalHeader();
-      QSize ts_pre = ui->testdataTableView->size();
-      h->resizeSections(QHeaderView::ResizeToContents);
-      ui->testdataTableView->setColumnWidth(0,h->sectionSize(0));
-      ui->testdataTableView->setColumnWidth(1,h->sectionSize(1));
-      ui->testdataTableView->resize(
-                  h->sectionSize(0)+h->sectionSize(1)+1,
-                  8*ui->testdataTableView->rowHeight(0)+1+
-                  h->height());
-      QSize ts_post = ui->testdataTableView->size();
-      int dx = ts_post.width()-ts_pre.width();
-      int dy = ts_post.height()-ts_pre.height();
-      this->resize(this->width()+dx,this->height()+dy);
-  });
+  connect(derived.get(), &AudiometerManager::dataChanged,
+      ui->measureWidget, &MeasureWidget::updateModelView);
 
   // All measurements received: enable write test results
   //
-  connect(m_manager.get(), &AudiometerManager::canWrite,
-          this,[this](){
-      ui->saveButton->setEnabled(true);
-  });
+  connect(derived.get(), &AudiometerManager::canWrite,
+      ui->measureWidget, &MeasureWidget::enableWriteToFile);
 
   // Write test data to output
   //
-  connect(ui->saveButton, &QPushButton::clicked,
-    this, &AudiometerDialog::writeOutput);
+  connect(ui->measureWidget, &MeasureWidget::writeToFile,
+      this, &DialogBase::writeOutput);
 
   // Close the application
   //
-  connect(ui->closeButton, &QPushButton::clicked,
-          this, &AudiometerDialog::close);
-
-  // Read inputs, such as interview barcode
-  //
-  readInput();
+  connect(ui->measureWidget, &MeasureWidget::closeApplication,
+      this, &DialogBase::close);
 }
 
 QString AudiometerDialog::getVerificationBarcode() const

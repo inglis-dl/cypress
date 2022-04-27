@@ -34,7 +34,8 @@ HEADERS += ./MainWindow.h \
     ../../data/TemplateMeasurement.h \
     ../../data/TemplateTest.h \
     ../../managers/TemplateManager.h \
-    ../../../src/widgets/BarcodeWidget.h
+    ../../../src/widgets/BarcodeWidget.h \
+    ../../../src/widgets/MeasureWidget.h
 
 SOURCES += ./MainWindow.cpp \
     ./main.cpp \
@@ -46,10 +47,12 @@ SOURCES += ./MainWindow.cpp \
     ../../data/TemplateMeasurement.cpp \
     ../../data/TemplateTest.cpp \
     ../../managers/TemplateManager.cpp \
-    ../../../src/widgets/BarcodeWidget.cpp
+    ../../../src/widgets/BarcodeWidget.cpp \
+    ../../../src/widgets/MeasureWidget.cpp
 
 FORMS += \
     ../../../src/widgets/barcodewidget.ui \
+    ../../../src/widgets/measurewidget.ui \
     MainWindow.ui
 
 TRANSLATIONS += \
