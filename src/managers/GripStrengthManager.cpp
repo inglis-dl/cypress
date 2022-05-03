@@ -21,10 +21,40 @@ GripStrengthManager::GripStrengthManager(QObject* parent) : ManagerBase(parent)
 
 void GripStrengthManager::start()
 {
+    // TODO: Process not launching app. Likely due to admin access requirement of app
+    QProcess process;
+    process.setProgram(m_runnableName);
+    process.setWorkingDirectory(m_runnablePath);
+    process.start();
+
+    /*emit dataChanged();
+    m_test.fromParradox(m_gripTestDbPath, m_gripTestDataDbPath);*/
+
+    // connect signals and slots to QProcess one time only
+    //
+    connect(&m_process, &QProcess::started,
+        this, [this]() {
+            qDebug() << "process started: " << m_process.arguments().join(" ");
+        });
+
+    //connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+    //    this, &GripStrengthManager::readOutput);
+
+    connect(&m_process, &QProcess::errorOccurred,
+        this, [](QProcess::ProcessError error)
+        {
+            QStringList s = QVariant::fromValue(error).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "ERROR: process error occured: " << s.join(" ").toLower();
+        });
+
+    connect(&m_process, &QProcess::stateChanged,
+        this, [](QProcess::ProcessState state) {
+            QStringList s = QVariant::fromValue(state).toString().split(QRegExp("(?=[A-Z])"), Qt::SkipEmptyParts);
+            qDebug() << "process state: " << s.join(" ").toLower();
+        });
+
+    configureProcess();
     emit dataChanged();
-    QString testPath = "C:/Users/clsa/Desktop/ZGripTest.DB";
-    QString testDataPath = "C:/Users/clsa/Desktop/ZGripTestData.DB";
-    m_test.fromParradox(testPath, testDataPath);
 }
 
 void GripStrengthManager::loadSettings(const QSettings& settings)
@@ -75,19 +105,49 @@ void GripStrengthManager::updateModel()
         }
         item->setData(m_test.getMeasurement(row).toString(), Qt::DisplayRole);
     }
+    emit dataChanged();
+}
+
+bool GripStrengthManager::isDefined(const QString& value, const GripStrengthManager::FileType& fileType) const
+{
+    if (value.isEmpty())
+        return false;
+
+    QFileInfo info(value);
+    bool ok = info.exists();
+    if (fileType == GripStrengthManager::FileType::Tracker5Exe)
+    {
+        if ("exe" != info.completeSuffix())
+        {
+            ok = false;
+        }
+    }
+    else if (fileType == GripStrengthManager::FileType::GripTestDbPath 
+        || fileType == GripStrengthManager::FileType::GripTestDataDbPath)
+    {
+        if ("DB" != info.completeSuffix())
+        {
+            ok = false;
+        }
+    }
+    return ok;
 }
 
 void GripStrengthManager::measure()
 {
-    if(Constants::RunMode::modeSimulate == m_mode)
+    if (Constants::RunMode::modeSimulate == m_mode)
     {
         return;
     }
-
     clearData();
     // launch the process
-    if(m_verbose)
-      qDebug() << "starting process from measure";
+    if (m_verbose)
+        qDebug() << "Starting process from measure";
+
+    qDebug() << "Program: " << m_process.program();
+    qDebug() << "Working Directory: " << m_process.workingDirectory();
+
+    m_process.start();
 }
 
 void GripStrengthManager::setInputData(const QVariantMap& input)
@@ -143,7 +203,39 @@ void GripStrengthManager::setInputData(const QVariantMap& input)
 void GripStrengthManager::clearData()
 {
     m_test.reset();
-    emit dataChanged();
+    updateModel();
+}
+
+void GripStrengthManager::configureProcess()
+{
+    if (m_inputData.isEmpty()) return;
+
+    if (Constants::RunMode::modeSimulate == m_mode)
+    {
+        emit message(tr("Ready to measure..."));
+        emit canMeasure();
+        return;
+    }
+
+    QDir working(m_runnablePath);
+    if (isDefined(m_runnableName, GripStrengthManager::FileType::Tracker5Exe) &&
+        isDefined(m_gripTestDbPath, GripStrengthManager::FileType::GripTestDbPath) &&
+        isDefined(m_gripTestDataDbPath, GripStrengthManager::FileType::GripTestDataDbPath) &&
+        working.exists())
+    {
+        qDebug() << "OK: configuring command";
+
+        m_process.setProgram(m_runnableName);
+        m_process.setWorkingDirectory(m_runnablePath);
+
+        /*removeXmlFiles();
+        backupDatabases();*/
+
+        emit message(tr("Ready to measure..."));
+        emit canMeasure();
+    }
+    else
+        qDebug() << "failed to configure process";
 }
 
 void GripStrengthManager::finish()
